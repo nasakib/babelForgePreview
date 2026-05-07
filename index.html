@@ -527,6 +527,16 @@
         const apiStatus = document.getElementById('apiStatus');
         const API_URL = 'https://babel-forge-api-1066096962926.us-central1.run.app/diagnose';
         const FINGERPRINT_LENGTH = 6400;
+        const TERMINAL_COLOR_CLASSES = new Set([
+            'text-slate-300',
+            'text-slate-400',
+            'text-slate-500',
+            'text-blue-400',
+            'text-green-400',
+            'text-emerald-400',
+            'text-rose-300',
+            'text-rose-400'
+        ]);
 
         const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
         const formatBytes = (bytes) => {
@@ -535,11 +545,18 @@
             const sizeIndex = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
             return `${(bytes / Math.pow(1024, sizeIndex)).toFixed(sizeIndex === 0 ? 0 : 1)} ${units[sizeIndex]}`;
         };
+        const sanitizeTerminalText = (value) => String(value).replace(/[&<>"']/g, character => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        }[character]));
 
         const appendTerminalLine = (message = '', colorClass = 'text-slate-300') => {
             const line = document.createElement('div');
-            line.className = colorClass;
-            line.textContent = message;
+            line.className = TERMINAL_COLOR_CLASSES.has(colorClass) ? colorClass : 'text-slate-300';
+            line.textContent = sanitizeTerminalText(message);
             terminalOutput.appendChild(line);
             terminalOutput.scrollTop = terminalOutput.scrollHeight;
         };
@@ -555,6 +572,15 @@
         };
 
         const isValidScanName = (fileName) => /\.nii(\.gz)?$/i.test(fileName);
+        const getApiErrorMessage = (error) => {
+            if (error.name === 'AbortError') {
+                return 'Request timed out after 15 seconds. The diagnosis service may be starting up or temporarily unavailable.';
+            }
+            if (error.name === 'TypeError') {
+                return 'Network request failed. Check connectivity, CORS settings, or service availability.';
+            }
+            return error.message || 'Unexpected API error.';
+        };
 
         const createSeededRandom = (seed) => {
             let state = seed >>> 0;
@@ -645,14 +671,18 @@
             appendTerminalLine('POST /diagnose -> live Babel Forge API', 'text-blue-400');
 
             try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 15000);
                 const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ patient_id: patientId, fingerprint })
+                    body: JSON.stringify({ patient_id: patientId, fingerprint }),
+                    signal: controller.signal
                 });
+                clearTimeout(timeoutId);
 
                 if (!response.ok) {
-                    throw new Error(`API returned ${response.status} ${response.statusText}`);
+                    throw new Error(`Server error: API returned ${response.status} ${response.statusText}`);
                 }
 
                 const result = await response.json();
@@ -682,7 +712,7 @@
                 appendTerminalLine('============================================================', 'text-slate-500');
                 appendTerminalLine('LIVE API REQUEST FAILED', 'text-rose-400');
                 appendTerminalLine('------------------------------------------------------------', 'text-slate-500');
-                appendTerminalLine(error.message, 'text-rose-300');
+                appendTerminalLine(getApiErrorMessage(error), 'text-rose-300');
                 appendTerminalLine('The simulated 6,400-feature extraction completed, but the browser could not reach the diagnosis service.', 'text-slate-400');
                 appendTerminalLine('============================================================', 'text-slate-500');
             }
