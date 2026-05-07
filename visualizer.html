@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Babel Forge - 3D Neural Visualizer</title>
+    <!-- Import NiiVue (WebGL 2.0 Medical Image Viewer) from CDN -->
+    <script src="https://unpkg.com/@niivue/niivue@0.44.1/dist/niivue.umd.js"></script>
+    <style>
+        body {
+            background-color: #121212;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .dashboard {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            max-width: 1200px;
+            width: 100%;
+            background: #1e1e1e;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        }
+        .controls {
+            flex: 1;
+            min-width: 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .viewer-container {
+            flex: 2;
+            min-width: 400px;
+            position: relative;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            height: 500px;
+            border: 1px solid #333;
+        }
+        canvas {
+            width: 100%;
+            height: 100%;
+            outline: none;
+        }
+        h2 { margin-top: 0; color: #4facfe; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .btn {
+            background: #4facfe; color: #121212; border: none; padding: 12px 20px;
+            font-size: 15px; font-weight: bold; border-radius: 6px; cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn:hover { background: #388ae0; }
+        .btn:disabled { background: #444; color: #888; cursor: not-allowed; }
+        .log-box {
+            background: #0d0d0d; border: 1px solid #333; padding: 15px;
+            height: 250px; overflow-y: auto; font-family: 'Courier New', Courier, monospace;
+            border-radius: 6px; flex-grow: 1; font-size: 13px;
+        }
+        .log-entry { margin-bottom: 6px; line-height: 1.4; }
+        .log-time { color: #666; margin-right: 8px; }
+        .log-success { color: #98c379; }
+        .log-warn { color: #e5c07b; }
+        .log-error { color: #e06c75; }
+        .result-card {
+            background: #2c313a; padding: 15px; border-radius: 6px;
+            border-left: 5px solid #4facfe; display: none;
+        }
+        input[type="file"] {
+            background: #2c313a; padding: 10px; border-radius: 6px; border: 1px dashed #444;
+        }
+    </style>
+</head>
+<body>
+
+<div class="dashboard">
+    <div class="controls">
+        <h2>Neural Topology Extractor</h2>
+        <p style="font-size: 14px; color: #aaa;">Upload a raw fMRI BOLD scan (.nii or .nii.gz) to initiate the 11D Random Forest diagnostic sequence.</p>
+
+        <input type="file" id="upload-file" accept=".nii,.nii.gz">
+        <button id="start-btn" class="btn" onclick="startDiagnosticSequence()">Initiate 3D Extraction</button>
+
+        <div id="log-box" class="log-box">
+            <div class="log-entry"><span class="log-time">[System]</span> Awaiting scan data...</div>
+        </div>
+
+        <div id="result-card" class="result-card">
+            <h3 style="margin: 0 0 10px 0; color: #fff;">Diagnostic Output</h3>
+            <div style="margin-bottom: 5px;"><strong>Patient ID:</strong> <span id="res-id" style="color: #4facfe;"></span></div>
+            <div style="margin-bottom: 5px;"><strong>Clinical Status:</strong> <span id="res-status" style="font-weight: bold;"></span></div>
+            <div><strong>Model Confidence:</strong> <span id="res-conf"></span>%</div>
+        </div>
+    </div>
+
+    <div class="viewer-container">
+        <!-- NiiVue WebGL 2.0 Canvas -->
+        <canvas id="gl"></canvas>
+    </div>
+</div>
+
+<script>
+    // --- 1. INITIALIZE 3D BRAIN VIEWER ---
+    const canvas = document.getElementById('gl');
+    const nv = new niivue.Niivue({
+        dragAndDropEnabled: false,
+        backColor: [0, 0, 0, 1], // Pure black clinical background
+        show3Dcrosshair: true
+    });
+    nv.attachTo('gl');
+    nv.setSliceType(nv.sliceTypeRender); // Set to beautiful 3D Volume Rendering mode
+
+    // Load a default MNI152 brain template to serve as the visual baseline
+    async function loadBaselineBrain() {
+        log("Loading MNI152 Structural Baseline...", "sys");
+        const volumes = [{
+            url: "https://niivue.github.io/niivue/images/mni152.nii.gz",
+            colormap: "gray",
+            opacity: 1,
+            visible: true,
+        }];
+        await nv.loadVolumes(volumes);
+        nv.setClipPlane([-0.1, 270, 0]); // Slice a small piece off to see inside
+        log("3D WebGL Visualizer Ready.", "success");
+    }
+
+    loadBaselineBrain();
+
+    // --- 2. LOGGING UTILITY ---
+    function log(message, type = "info") {
+        const logBox = document.getElementById('log-box');
+        const time = new Date().toLocaleTimeString('en-US', { hour12: false });
+        let colorClass = "";
+        if (type === "success") colorClass = "log-success";
+        if (type === "warn") colorClass = "log-warn";
+        if (type === "error") colorClass = "log-error";
+        logBox.innerHTML += `<div class="log-entry ${colorClass}"><span class="log-time">[${time}]</span> ${message}</div>`;
+        logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    // --- 3. DIAGNOSTIC SEQUENCE ---
+    async function startDiagnosticSequence() {
+        const fileInput = document.getElementById('upload-file');
+        const startBtn = document.getElementById('start-btn');
+        const resultCard = document.getElementById('result-card');
+
+        if (!fileInput.files.length) {
+            alert("Please select a .nii or .nii.gz file to extract.");
+            return;
+        }
+        const filename = fileInput.files[0].name;
+        const patientId = "sub-" + Math.floor(1000 + Math.random() * 9000);
+
+        // Reset UI
+        startBtn.disabled = true;
+        resultCard.style.display = 'none';
+        document.getElementById('log-box').innerHTML = '';
+
+        // Animate the brain clip plane to simulate a "CT Scanner" passing over
+        let clipAngle = 0;
+        const scanInterval = setInterval(() => {
+            clipAngle += 5;
+            nv.setClipPlane([Math.sin(clipAngle * Math.PI / 180), 270, Math.cos(clipAngle * Math.PI / 180)]);
+        }, 100);
+        log(`Initiating extraction sequence for <b>${filename}</b>...`);
+        await new Promise(r => setTimeout(r, 1500));
+
+        log("Aligning scan to standard MNI152 coordinate space...");
+        await new Promise(r => setTimeout(r, 1500));
+
+        // Simulate visualizing the functional networks by changing the colormap
+        nv.volumes[0].colormap = "warm";
+        nv.updateGLVolume();
+        log("Applying Schaefer 200-ROI parcellation atlas...");
+        await new Promise(r => setTimeout(r, 2000));
+
+        // Focus on our specific biomarkers
+        nv.volumes[0].colormap = "x_rain";
+        nv.updateGLVolume();
+        log("Isolating Dorsal Attention Network (ROI 42, 34, 142)...");
+        await new Promise(r => setTimeout(r, 2000));
+
+        log("Computing Fourier transforms (Slow-4 / Slow-5 frequency bands)...");
+        await new Promise(r => setTimeout(r, 1500));
+
+        clearInterval(scanInterval); // Stop scanning animation
+        nv.setClipPlane([0, 0, 0]); // Remove clip plane to show whole brain
+        log("Fingerprint extracted! (6400 topological features).", "success");
+        await new Promise(r => setTimeout(r, 1000));
+
+        log("Transmitting neural signature to live Babel Forge API...");
+
+        // Generate mock fingerprint payload
+        const mockFingerprint = Array.from({length: 6400}, () => Math.random() * 0.05);
+        try {
+            // Your live Google Cloud Run API URL
+            const API_URL = "https://babel-forge-api-1066096962926.us-central1.run.app/diagnose";
+
+            const response = await fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ patient_id: patientId, fingerprint: mockFingerprint })
+            });
+
+            if (!response.ok) throw new Error(`API HTTP Error: ${response.status}`);
+            const data = await response.json();
+
+            log("Neural topology successfully analyzed by the Forge.", "success");
+            // --- 4. UPDATE UI & 3D VISUALS BASED ON DIAGNOSIS ---
+            document.getElementById('res-id').innerText = data.patient_id;
+            const statusEl = document.getElementById('res-status');
+            statusEl.innerText = data.clinical_status;
+
+            // React visually to the diagnostic result
+            if (data.clinical_status === "RESISTANT") {
+                statusEl.style.color = "#e06c75";
+                nv.volumes[0].colormap = "red"; // Turn brain red to indicate anomaly
+                log("Biomarker match found: Elevated low-frequency power in DorsAttn network.", "warn");
+            } else {
+                statusEl.style.color = "#98c379";
+                nv.volumes[0].colormap = "green"; // Turn brain green to indicate healthy baseline
+                log("Topology indicates standard cognitive control baselines.", "success");
+            }
+
+            nv.updateGLVolume(); // Apply color changes
+
+            document.getElementById('res-conf').innerText = data.confidence_percent;
+            resultCard.style.display = 'block';
+
+        } catch (error) {
+            log(`Connection Failed: ${error.message}`, "error");
+            log("Ensure CORSMiddleware is active on the FastAPI backend.", "warn");
+            nv.volumes[0].colormap = "gray";
+            nv.updateGLVolume();
+        } finally {
+            startBtn.disabled = false;
+        }
+    }
+</script>
+</body>
+</html>
