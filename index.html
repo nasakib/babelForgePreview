@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Babel Forge | PTSD Prognostic Dashboard</title>
+    <title>babelForge</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -547,7 +547,8 @@
 
         const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
         const formatBytes = (bytes) => {
-            if (bytes <= 0) return '0 B';
+            if (bytes < 0) return 'Invalid size';
+            if (bytes === 0) return '0 B';
             const units = ['B', 'KB', 'MB', 'GB'];
             const sizeIndex = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
             return `${(bytes / Math.pow(1024, sizeIndex)).toFixed(sizeIndex === 0 ? 0 : 1)} ${units[sizeIndex]}`;
@@ -586,7 +587,7 @@
         const createSeededRandom = (seed) => {
             let state = seed >>> 0;
             return () => {
-                // Mulberry32-style PRNG constants provide deterministic mock fingerprints for the same scan metadata.
+                // Mulberry32-style PRNG; 0x6D2B79F5 is the additive constant for the state update.
                 state += 0x6D2B79F5;
                 let value = state;
                 value = Math.imul(value ^ (value >>> 15), value | 1);
@@ -597,7 +598,7 @@
 
         const createMockFingerprint = (file) => {
             const seedSource = `${file.name}:${file.size}:${file.lastModified}`;
-            // FNV-style rolling hash turns scan metadata into a stable unsigned seed.
+            // Lightweight djb2-style rolling hash turns scan metadata into a stable unsigned seed.
             const seed = Array.from(seedSource).reduce((acc, char) => ((acc << 5) - acc + char.charCodeAt(0)) >>> 0, 2166136261);
             const random = createSeededRandom(seed);
             return Array.from({ length: FINGERPRINT_LENGTH }, (_, index) => {
@@ -706,9 +707,12 @@
                 appendTerminalLine(`clinical_status: ${clinicalStatus}`, statusClass);
                 appendTerminalLine(`confidence: ${confidence}${typeof confidence === 'number' ? '%' : ''}`, 'text-slate-300');
                 appendTerminalLine('raw_response:', 'text-slate-400');
+                const rawResponse = JSON.stringify(result, null, 2);
+                const displayResponse = rawResponse.length > 3000
+                    ? `${rawResponse.slice(0, 3000)}\n... truncated for display ...`
+                    : rawResponse;
                 // Each indented JSON line is escaped by appendTerminalLine before it is added to the terminal.
-                JSON.stringify(result, null, 2)
-                    .split('\n')
+                displayResponse.split('\n')
                     .forEach(line => appendTerminalLine(`  ${line}`, 'text-slate-400'));
                 appendTerminalLine('============================================================', 'text-slate-500');
             } catch (error) {
