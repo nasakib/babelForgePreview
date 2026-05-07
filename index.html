@@ -89,7 +89,7 @@
                     <button onclick="scrollToSection('metrics')" class="hover:text-blue-600 transition-colors">Performance Metrics</button>
                     <button onclick="scrollToSection('fingerprint')" class="hover:text-blue-600 transition-colors">Neural Fingerprint</button>
                     <button onclick="scrollToSection('api-reference')" class="hover:text-blue-600 transition-colors">API Reference</button>
-                    <button onclick="scrollToSection('simulator')" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">Run Simulator</button>
+                    <button onclick="scrollToSection('simulator')" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">Run Converter</button>
                 </div>
             </div>
         </div>
@@ -228,7 +228,7 @@
             </div>
         </section>
 
-        <!-- 4. Interactive Diagnostics Simulator -->
+        <!-- 4. Simulated fMRI Extraction Dashboard -->
         <section id="simulator" class="scroll-mt-24 bg-slate-900 text-white rounded-3xl shadow-xl p-8 lg:p-12 border border-slate-800 relative overflow-hidden">
             <!-- Decorative background element -->
             <div class="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 rounded-full bg-blue-600 opacity-20 blur-3xl"></div>
@@ -236,23 +236,41 @@
             <div class="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12">
                 <div>
                     <h2 class="text-3xl font-bold text-white mb-4 flex items-center">
-                        <span class="mr-3">💻</span> Clinical API Prototype
+                        <span class="mr-3">🧠</span> Simulated Extraction Dashboard
                     </h2>
                     <p class="text-slate-300 mb-6 text-lg">
-                        Test the production model interface. This simulator mirrors the Python backend logic, executing a prediction on a sample "spatial-spectral fingerprint" parsed from an fMRI scan.
+                        Upload a sample <code class="font-mono text-blue-300">.nii</code> or <code class="font-mono text-blue-300">.nii.gz</code> scan to simulate the browser-safe preprocessing workflow. The dashboard generates a mock 6,400-dimensional neural fingerprint and submits it to the live Babel Forge API for diagnosis.
                     </p>
                     
-                    <div class="bg-slate-800 rounded-lg p-6 border border-slate-700 font-mono text-sm mb-6 shadow-inner">
-                        <p class="text-slate-400 mb-2">// Select a simulated patient scan to process:</p>
-                        <select id="patientSelect" class="w-full bg-slate-900 border border-slate-600 text-green-400 rounded p-3 outline-none focus:border-blue-500 transition-colors">
-                            <option value="sub-3D-003">subject: sub-3D-003 (Unknown Outcome)</option>
-                            <option value="sub-3D-012">subject: sub-3D-012 (Unknown Outcome)</option>
-                            <option value="sub-3D-088">subject: sub-3D-088 (Unknown Outcome)</option>
-                        </select>
+                    <div class="bg-slate-800 rounded-lg p-6 border border-slate-700 font-mono text-sm mb-6 shadow-inner space-y-4">
+                        <div>
+                            <p class="text-slate-400 mb-2">// Select a simulated patient scan to process:</p>
+                            <label for="scanUpload" class="block cursor-pointer rounded-lg border-2 border-dashed border-slate-600 bg-slate-900 p-6 text-center hover:border-blue-500 transition-colors">
+                                <span class="block text-3xl mb-2">📁</span>
+                                <span class="block text-green-400 font-bold">Choose .nii or .nii.gz file</span>
+                                <span class="block text-slate-500 text-xs mt-2">No imaging data leaves your browser; only a mock fingerprint is sent.</span>
+                            </label>
+                            <input id="scanUpload" type="file" accept=".nii,.nii.gz,application/gzip" class="hidden">
+                        </div>
+                        <div id="fileMeta" class="text-slate-400">No scan selected.</div>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                            <div class="bg-slate-900 rounded p-3 border border-slate-700">
+                                <p class="text-slate-500 uppercase tracking-wide">Fingerprint</p>
+                                <p id="fingerprintStatus" class="text-slate-300 font-bold mt-1">Pending</p>
+                            </div>
+                            <div class="bg-slate-900 rounded p-3 border border-slate-700">
+                                <p class="text-slate-500 uppercase tracking-wide">Vector Size</p>
+                                <p id="vectorSize" class="text-slate-300 font-bold mt-1">0 / 6400</p>
+                            </div>
+                            <div class="bg-slate-900 rounded p-3 border border-slate-700">
+                                <p class="text-slate-500 uppercase tracking-wide">API Status</p>
+                                <p id="apiStatus" class="text-slate-300 font-bold mt-1">Idle</p>
+                            </div>
+                        </div>
                     </div>
 
-                    <button id="runInferenceBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-6 rounded-lg transition-all transform hover:-translate-y-0.5 shadow-lg flex justify-center items-center">
-                        <span id="btnText">EXECUTE MODEL INFERENCE</span>
+                    <button id="runInferenceBtn" disabled class="w-full bg-slate-700 text-white font-bold py-4 px-6 rounded-lg transition-all shadow-lg flex justify-center items-center cursor-not-allowed">
+                        <span id="btnText">UPLOAD A SCAN TO BEGIN</span>
                         <span id="btnLoader" class="hidden ml-2 animate-spin">⚙️</span>
                     </button>
                 </div>
@@ -265,7 +283,7 @@
                         <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
                         <div class="ml-2 text-slate-500 text-xs">root@babel-forge:/inference#</div>
                     </div>
-                    <div id="terminalOutput" class="text-slate-300 whitespace-pre-wrap flex-grow overflow-y-auto">Waiting for input...</div>
+                    <div id="terminalOutput" class="text-slate-300 whitespace-pre-wrap flex-grow overflow-y-auto">Waiting for .nii.gz upload...</div>
                 </div>
             </div>
         </section>
@@ -493,76 +511,173 @@
             Plotly.newPlot('brain-plot', [trace], layout, config);
         };
 
-        // --- 4. Interactive Simulator Logic ---
+        // --- 4. Simulated Extraction Dashboard Logic ---
         const terminalOutput = document.getElementById('terminalOutput');
         const runBtn = document.getElementById('runInferenceBtn');
         const btnText = document.getElementById('btnText');
         const btnLoader = document.getElementById('btnLoader');
-        const patientSelect = document.getElementById('patientSelect');
+        const scanUpload = document.getElementById('scanUpload');
+        const fileMeta = document.getElementById('fileMeta');
+        const fingerprintStatus = document.getElementById('fingerprintStatus');
+        const vectorSize = document.getElementById('vectorSize');
+        const apiStatus = document.getElementById('apiStatus');
+        const API_URL = 'https://babel-forge-api-1066096962926.us-central1.run.app/diagnose';
+        const FINGERPRINT_LENGTH = 6400;
 
         const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+        const formatBytes = (bytes) => {
+            if (bytes === 0) return '0 B';
+            const units = ['B', 'KB', 'MB', 'GB'];
+            const sizeIndex = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+            return `${(bytes / Math.pow(1024, sizeIndex)).toFixed(sizeIndex === 0 ? 0 : 1)} ${units[sizeIndex]}`;
+        };
 
-        const runInference = async () => {
-            const patientId = patientSelect.value;
-            
-            runBtn.disabled = true;
-            runBtn.classList.replace('bg-blue-600', 'bg-slate-700');
-            btnText.innerText = 'PROCESSING...';
-            btnLoader.classList.remove('hidden');
-            
-            terminalOutput.innerHTML = `<span class="text-blue-400">Initialize prediction pipeline for ${patientId}...</span>\n`;
-            
-            await sleep(600);
-            terminalOutput.innerHTML += `<span class="text-slate-400">Loading production_model.pkl... [OK]</span>\n`;
-            
-            await sleep(500);
-            terminalOutput.innerHTML += `<span class="text-slate-400">Parsing spatial-spectral 6400-feature vector... [OK]</span>\n`;
-            
-            await sleep(800);
-            terminalOutput.innerHTML += `<span class="text-slate-400">Executing Random Forest Ensemble...</span>\n\n`;
-            
-            await sleep(1000);
+        const appendTerminalLine = (message = '', colorClass = 'text-slate-300') => {
+            const line = document.createElement('div');
+            line.className = colorClass;
+            line.textContent = message;
+            terminalOutput.appendChild(line);
+            terminalOutput.scrollTop = terminalOutput.scrollHeight;
+        };
 
-            let status, probResist, probResp, colorClass;
-            if (patientId === 'sub-3D-003') {
-                status = 'Resistant';
-                probResist = '100.00%';
-                probResp = '0.00%';
-                colorClass = 'text-rose-500';
-            } else if (patientId === 'sub-3D-012') {
-                status = 'Responsive';
-                probResist = '6.40%';
-                probResp = '93.60%';
-                colorClass = 'text-emerald-400';
-            } else {
-                status = 'Resistant';
-                probResist = '89.20%';
-                probResp = '10.80%';
-                colorClass = 'text-rose-500';
+        const setRunButtonState = (enabled, label) => {
+            runBtn.disabled = !enabled;
+            btnText.innerText = label;
+            runBtn.classList.toggle('bg-blue-600', enabled);
+            runBtn.classList.toggle('hover:bg-blue-500', enabled);
+            runBtn.classList.toggle('hover:-translate-y-0.5', enabled);
+            runBtn.classList.toggle('cursor-not-allowed', !enabled);
+            runBtn.classList.toggle('bg-slate-700', !enabled);
+        };
+
+        const isValidScanName = (fileName) => /\.nii(\.gz)?$/i.test(fileName);
+
+        const createSeededRandom = (seed) => {
+            let state = seed >>> 0;
+            return () => {
+                state += 0x6D2B79F5;
+                let value = state;
+                value = Math.imul(value ^ (value >>> 15), value | 1);
+                value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
+                return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
+            };
+        };
+
+        const createMockFingerprint = (file) => {
+            const seedSource = `${file.name}:${file.size}:${file.lastModified}`;
+            const seed = Array.from(seedSource).reduce((acc, char) => ((acc << 5) - acc + char.charCodeAt(0)) >>> 0, 2166136261);
+            const random = createSeededRandom(seed);
+            return Array.from({ length: FINGERPRINT_LENGTH }, (_, index) => {
+                const regionWave = Math.sin(index / 32) * 0.018;
+                const spectralNoise = (random() - 0.5) * 0.012;
+                const highFrequencyLift = index % 32 > 24 ? 0.01 : 0;
+                return Number((0.025 + regionWave + spectralNoise + highFrequencyLift).toFixed(6));
+            });
+        };
+
+        scanUpload.addEventListener('change', () => {
+            const file = scanUpload.files[0];
+            fingerprintStatus.textContent = 'Pending';
+            vectorSize.textContent = '0 / 6400';
+            apiStatus.textContent = 'Idle';
+            terminalOutput.textContent = 'Waiting for .nii.gz upload...';
+
+            if (!file) {
+                fileMeta.textContent = 'No scan selected.';
+                setRunButtonState(false, 'UPLOAD A SCAN TO BEGIN');
+                return;
             }
 
-            const outputRaw = `============================================================
-INFERENCE COMPLETE
-------------------------------------------------------------
-Breakdown:
-  - Probability of Responsive: ${probResp}
-  - Probability of Resistant:  <span class="${colorClass} font-bold">${probResist}</span>
-============================================================
+            fileMeta.textContent = `Selected: ${file.name} (${formatBytes(file.size)})`;
+            if (!isValidScanName(file.name)) {
+                appendTerminalLine(`Unsupported file extension: ${file.name}`, 'text-rose-400');
+                appendTerminalLine('Please choose a .nii or .nii.gz scan.', 'text-slate-400');
+                setRunButtonState(false, 'INVALID FILE TYPE');
+                return;
+            }
 
-{
-  'patient_id': '${patientId}',
-  'prediction': ${status === 'Resistant' ? 1 : 0},
-  'status': '<span class="${colorClass}">${status}</span>',
-  'confidence': np.float64(${parseFloat((status === 'Resistant' ? probResist : probResp).replace('%', ''))})
-}`;
+            appendTerminalLine(`Loaded local scan metadata for ${file.name}`, 'text-green-400');
+            appendTerminalLine('Ready to simulate preprocessing and API inference.', 'text-slate-400');
+            setRunButtonState(true, 'RUN SIMULATED EXTRACTION');
+        });
+
+        const runInference = async () => {
+            const file = scanUpload.files[0];
+            if (!file || !isValidScanName(file.name)) return;
+            const patientId = file.name.replace(/\.nii(\.gz)?$/i, '') || 'uploaded-scan';
             
-            runBtn.disabled = false;
-            runBtn.classList.replace('bg-slate-700', 'bg-blue-600');
-            btnText.innerText = 'EXECUTE MODEL INFERENCE';
-            btnLoader.classList.add('hidden');
+            setRunButtonState(false, 'PROCESSING...');
+            btnText.innerText = 'PROCESSING...';
+            btnLoader.classList.remove('hidden');
+            fingerprintStatus.textContent = 'Generating';
+            vectorSize.textContent = '0 / 6400';
+            apiStatus.textContent = 'Idle';
+            terminalOutput.textContent = '';
+            
+            appendTerminalLine(`Initialize simulated fMRI pipeline for ${file.name}...`, 'text-blue-400');
+            
+            await sleep(600);
+            appendTerminalLine('Validating NIfTI header and affine matrix... [SIMULATED OK]', 'text-slate-400');
+            
+            await sleep(500);
+            appendTerminalLine('Skull stripping with BET-style brain mask... [SIMULATED OK]', 'text-slate-400');
+            
+            await sleep(700);
+            appendTerminalLine('Registering subject volume to MNI152 template... [SIMULATED OK]', 'text-slate-400');
+            
+            await sleep(800);
+            appendTerminalLine('Applying Schaefer 200-node atlas parcellation... [SIMULATED OK]', 'text-slate-400');
+            
+            await sleep(700);
+            appendTerminalLine('Computing 32-bin Fourier spectrum per region...', 'text-slate-400');
+            const fingerprint = createMockFingerprint(file);
+            fingerprintStatus.textContent = 'Ready';
+            vectorSize.textContent = `${fingerprint.length} / 6400`;
+            appendTerminalLine(`Generated mock fingerprint: ${fingerprint.length} float features`, 'text-green-400');
+            appendTerminalLine(`Preview: [${fingerprint.slice(0, 6).join(', ')}, ...]`, 'text-slate-500');
+            
+            await sleep(500);
+            apiStatus.textContent = 'Calling API';
+            appendTerminalLine('');
+            appendTerminalLine('POST /diagnose -> live Babel Forge API', 'text-blue-400');
 
-            terminalOutput.innerHTML += outputRaw;
-            terminalOutput.scrollTop = terminalOutput.scrollHeight;
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ patient_id: patientId, fingerprint })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API returned ${response.status} ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                const clinicalStatus = result.clinical_status || result.status || result.prediction || 'UNKNOWN';
+                const confidence = result.confidence_percent ?? result.confidence ?? 'n/a';
+                const statusClass = String(clinicalStatus).toLowerCase().includes('resistant') ? 'text-rose-400' : 'text-emerald-400';
+                apiStatus.textContent = 'Complete';
+
+                appendTerminalLine('============================================================', 'text-slate-500');
+                appendTerminalLine('LIVE API DIAGNOSIS COMPLETE', 'text-green-400');
+                appendTerminalLine('------------------------------------------------------------', 'text-slate-500');
+                appendTerminalLine(`patient_id: ${result.patient_id || patientId}`, 'text-slate-300');
+                appendTerminalLine(`clinical_status: ${clinicalStatus}`, statusClass);
+                appendTerminalLine(`confidence: ${confidence}${typeof confidence === 'number' ? '%' : ''}`, 'text-slate-300');
+                appendTerminalLine(`raw_response: ${JSON.stringify(result, null, 2)}`, 'text-slate-400');
+                appendTerminalLine('============================================================', 'text-slate-500');
+            } catch (error) {
+                apiStatus.textContent = 'API Error';
+                appendTerminalLine('============================================================', 'text-slate-500');
+                appendTerminalLine('LIVE API REQUEST FAILED', 'text-rose-400');
+                appendTerminalLine('------------------------------------------------------------', 'text-slate-500');
+                appendTerminalLine(error.message, 'text-rose-300');
+                appendTerminalLine('The simulated 6,400-feature extraction completed, but the browser could not reach the diagnosis service.', 'text-slate-400');
+                appendTerminalLine('============================================================', 'text-slate-500');
+            }
+            
+            setRunButtonState(true, 'RUN SIMULATED EXTRACTION');
+            btnLoader.classList.add('hidden');
         };
 
         runBtn.addEventListener('click', runInference);
