@@ -529,6 +529,14 @@
         const FINGERPRINT_LENGTH = 6400;
         const API_TIMEOUT_MS = 15000;
         const MAX_TERMINAL_RESPONSE_LENGTH = 3000;
+        const MULBERRY32_STEP = 0x6D2B79F5;
+        const HASH_INITIAL_SEED = 2166136261;
+        const SPECTRAL_BIN_COUNT = 32;
+        const BASE_FEATURE_INTENSITY = 0.025;
+        const REGION_WAVE_AMPLITUDE = 0.018;
+        const SPECTRAL_NOISE_AMPLITUDE = 0.012;
+        const HIGH_FREQUENCY_BIN_THRESHOLD = 24;
+        const HIGH_FREQUENCY_LIFT = 0.01;
         const HTML_ESCAPE_ENTITIES = {
             '&': '&amp;',
             '<': '&lt;',
@@ -586,11 +594,15 @@
             return error.message || 'Unexpected API error.';
         };
 
+        const createHashSeed = (seedSource) => {
+            return Array.from(seedSource).reduce((acc, char) => ((acc << 5) - acc + char.charCodeAt(0)) >>> 0, HASH_INITIAL_SEED);
+        };
+
         const createSeededRandom = (seed) => {
             let state = seed >>> 0;
             return () => {
-                // Compact deterministic PRNG based on a Mulberry32-style state update; 0x6D2B79F5 is its additive step constant for well-distributed 32-bit output.
-                state += 0x6D2B79F5;
+                // Compact deterministic PRNG based on a Mulberry32-style state update for well-distributed 32-bit output.
+                state += MULBERRY32_STEP;
                 let value = state;
                 value = Math.imul(value ^ (value >>> 15), value | 1);
                 value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
@@ -600,14 +612,14 @@
 
         const createMockFingerprint = (file) => {
             const seedSource = `${file.name}:${file.size}:${file.lastModified}`;
-            // Lightweight hybrid rolling hash uses the FNV-1a offset basis (2166136261) as a stable unsigned initial seed.
-            const seed = Array.from(seedSource).reduce((acc, char) => ((acc << 5) - acc + char.charCodeAt(0)) >>> 0, 2166136261);
+            // Lightweight hybrid rolling hash uses the FNV-1a offset basis as a stable unsigned initial seed.
+            const seed = createHashSeed(seedSource);
             const random = createSeededRandom(seed);
             return Array.from({ length: FINGERPRINT_LENGTH }, (_, index) => {
-                const regionWave = Math.sin(index / 32) * 0.018;
-                const spectralNoise = (random() - 0.5) * 0.012;
-                const highFrequencyLift = index % 32 > 24 ? 0.01 : 0;
-                return Number((0.025 + regionWave + spectralNoise + highFrequencyLift).toFixed(6));
+                const regionWave = Math.sin(index / SPECTRAL_BIN_COUNT) * REGION_WAVE_AMPLITUDE;
+                const spectralNoise = (random() - 0.5) * SPECTRAL_NOISE_AMPLITUDE;
+                const highFrequencyLift = index % SPECTRAL_BIN_COUNT > HIGH_FREQUENCY_BIN_THRESHOLD ? HIGH_FREQUENCY_LIFT : 0;
+                return Number((BASE_FEATURE_INTENSITY + regionWave + spectralNoise + highFrequencyLift).toFixed(6));
             });
         };
 
