@@ -587,7 +587,7 @@
         const createSeededRandom = (seed) => {
             let state = seed >>> 0;
             return () => {
-                // Mulberry32-style PRNG; 0x6D2B79F5 is the additive constant for the state update.
+                // Compact deterministic PRNG based on a Mulberry32-style state update; 0x6D2B79F5 is the additive constant.
                 state += 0x6D2B79F5;
                 let value = state;
                 value = Math.imul(value ^ (value >>> 15), value | 1);
@@ -598,7 +598,7 @@
 
         const createMockFingerprint = (file) => {
             const seedSource = `${file.name}:${file.size}:${file.lastModified}`;
-            // Lightweight djb2-style rolling hash turns scan metadata into a stable unsigned seed.
+            // Lightweight hybrid rolling hash turns scan metadata into a stable unsigned seed.
             const seed = Array.from(seedSource).reduce((acc, char) => ((acc << 5) - acc + char.charCodeAt(0)) >>> 0, 2166136261);
             const random = createSeededRandom(seed);
             return Array.from({ length: FINGERPRINT_LENGTH }, (_, index) => {
@@ -686,7 +686,7 @@
                 clearTimeout(timeoutId);
 
                 if (!response.ok) {
-                    throw new Error(`Server error: API returned ${response.status} ${response.statusText}`);
+                    throw new Error(`Server error: API returned HTTP ${response.status}`);
                 }
 
                 const result = await response.json();
