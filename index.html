@@ -88,6 +88,7 @@
                     <button onclick="scrollToSection('pipeline')" class="hover:text-blue-600 transition-colors">Methodology</button>
                     <button onclick="scrollToSection('metrics')" class="hover:text-blue-600 transition-colors">Performance Metrics</button>
                     <button onclick="scrollToSection('fingerprint')" class="hover:text-blue-600 transition-colors">Neural Fingerprint</button>
+                    <button onclick="scrollToSection('api-reference')" class="hover:text-blue-600 transition-colors">API Reference</button>
                     <button onclick="scrollToSection('simulator')" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">Run Simulator</button>
                 </div>
             </div>
@@ -265,6 +266,66 @@
                         <div class="ml-2 text-slate-500 text-xs">root@babel-forge:/inference#</div>
                     </div>
                     <div id="terminalOutput" class="text-slate-300 whitespace-pre-wrap flex-grow overflow-y-auto">Waiting for input...</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. API Reference -->
+        <section id="api-reference" class="scroll-mt-24 bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
+            <h2 class="text-3xl font-bold text-slate-900 mb-4">Babel Forge API Reference</h2>
+            <p class="text-slate-600 mb-4">
+                Welcome to the <strong>Babel Forge Neural Engine API</strong>. This service exposes our 11D Random Forest model, providing real-time diagnostics for PTSD treatment resistance based on 6400-dimensional functional connectivity fingerprints.
+            </p>
+            <p class="text-slate-600 mb-6">
+                <span class="font-semibold text-slate-800">Base URL:</span>
+                <code class="font-mono text-sm bg-slate-100 px-2 py-1 rounded">https://babel-forge-api-1066096962926.us-central1.run.app</code>
+            </p>
+
+            <div class="space-y-8">
+                <div class="border border-slate-200 rounded-xl p-6">
+                    <h3 class="text-xl font-bold text-slate-900 mb-2">1. Health Check</h3>
+                    <p class="text-slate-600 mb-4">Verify the operational status of the Forge and ensure the Random Forest model is successfully loaded into memory.</p>
+                    <p class="text-sm text-slate-700 mb-1"><span class="font-semibold">Endpoint:</span> <code class="font-mono bg-slate-100 px-2 py-1 rounded">/health</code></p>
+                    <p class="text-sm text-slate-700 mb-4"><span class="font-semibold">Method:</span> <code class="font-mono bg-slate-100 px-2 py-1 rounded">GET</code></p>
+                    <p class="font-semibold text-slate-800 mb-2">Response</p>
+                    <pre class="bg-slate-950 text-slate-100 rounded-lg p-4 text-sm overflow-x-auto font-mono">{
+  "status": "online",
+  "model_loaded": true
+}</pre>
+                </div>
+
+                <div class="border border-slate-200 rounded-xl p-6">
+                    <h3 class="text-xl font-bold text-slate-900 mb-2">2. Diagnose Patient</h3>
+                    <p class="text-slate-600 mb-4">Analyze a patient's neural signature to predict their likelihood of being treatment-resistant or treatment-responsive.</p>
+                    <p class="text-sm text-slate-700 mb-1"><span class="font-semibold">Endpoint:</span> <code class="font-mono bg-slate-100 px-2 py-1 rounded">/diagnose</code></p>
+                    <p class="text-sm text-slate-700 mb-1"><span class="font-semibold">Method:</span> <code class="font-mono bg-slate-100 px-2 py-1 rounded">POST</code></p>
+                    <p class="text-sm text-slate-700 mb-4"><span class="font-semibold">Content-Type:</span> <code class="font-mono bg-slate-100 px-2 py-1 rounded">application/json</code></p>
+
+                    <p class="font-semibold text-slate-800 mb-2">Request Body</p>
+                    <p class="text-slate-600 mb-3">The endpoint expects a flat array of exactly 6400 <code class="font-mono bg-slate-100 px-1 py-0.5 rounded">float</code> values representing the harmonized neural fingerprint.</p>
+                    <pre class="bg-slate-950 text-slate-100 rounded-lg p-4 text-sm overflow-x-auto font-mono mb-4">{
+  "patient_id": "sub-10294",
+  "fingerprint": [0.014293, 0.013467, 0.012743, ...]
+}</pre>
+
+                    <p class="font-semibold text-slate-800 mb-2">Response</p>
+                    <p class="text-slate-600 mb-3">Returns the clinical prediction along with confidence metrics and raw model probabilities.</p>
+                    <pre class="bg-slate-950 text-slate-100 rounded-lg p-4 text-sm overflow-x-auto font-mono mb-4">{
+  "patient_id": "sub-10294",
+  "prediction_code": 1,
+  "clinical_status": "RESISTANT",
+  "confidence_percent": 95.52,
+  "raw_probabilities": {
+    "responsive_0": 0.0448,
+    "resistant_1": 0.9552
+  }
+}</pre>
+
+                    <p class="font-semibold text-slate-800 mb-2">Error Responses</p>
+                    <ul class="list-disc pl-6 text-slate-600 space-y-1">
+                        <li><code class="font-mono bg-slate-100 px-1 py-0.5 rounded">400 Bad Request</code>: Triggered if the fingerprint array does not contain exactly 6400 elements.</li>
+                        <li><code class="font-mono bg-slate-100 px-1 py-0.5 rounded">503 Service Unavailable</code>: Triggered if the neural model is currently offline or failed to initialize.</li>
+                    </ul>
                 </div>
             </div>
         </section>
