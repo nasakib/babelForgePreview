@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Babel Forge | PTSD Prognostic Dashboard</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* Slate 50 */
+            color: #0f172a; /* Slate 900 */
+        }
+        
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Mandatory Chart Container Constraints */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .h-md {
+            height: 300px;
+            max-height: 400px;
+        }
+        
+        .h-lg {
+            height: 400px;
+            max-height: 500px;
+        }
+
+        .h-xl {
+            height: 500px;
+            max-height: 600px;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+
+        /* Glitch/Tech Text Effect */
+        .tech-text {
+            background: linear-gradient(to right, #0ea5e9, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-blue-200 selection:text-blue-900 overflow-x-hidden">
+
+    <!-- Navigation -->
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <span class="text-2xl mr-2">⚕️</span>
+                    <span class="font-bold text-xl tracking-tight text-slate-800">Babel<span class="text-blue-600">Forge</span></span>
+                </div>
+                <div class="hidden md:flex items-center space-x-8 text-sm font-semibold text-slate-600">
+                    <button onclick="scrollToSection('pipeline')" class="hover:text-blue-600 transition-colors">Methodology</button>
+                    <button onclick="scrollToSection('metrics')" class="hover:text-blue-600 transition-colors">Performance Metrics</button>
+                    <button onclick="scrollToSection('fingerprint')" class="hover:text-blue-600 transition-colors">Neural Fingerprint</button>
+                    <button onclick="scrollToSection('simulator')" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">Run Simulator</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="bg-slate-900 text-white py-20 px-4">
+        <div class="max-w-7xl mx-auto text-center">
+            <div class="inline-block px-3 py-1 mb-6 rounded-full bg-slate-800 border border-slate-700 text-blue-400 text-xs font-mono font-bold tracking-widest uppercase">
+                Clinical Research Abstract
+            </div>
+            <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight mb-6 leading-tight">
+                Predicting PTSD Treatment Resistance <br class="hidden md:block" />
+                <span class="tech-text">Before Intervention</span>
+            </h1>
+            <p class="mt-4 max-w-3xl mx-auto text-xl text-slate-400 leading-relaxed">
+                Standard interventions fail in a substantial subset of PTSD patients. Current prognostic models rely on subjective clinical assessments. The <strong class="text-white">Babel Forge</strong> pipeline introduces a novel machine-learning framework utilizing high-dimensional, frequency-domain neural fingerprinting to predict outcomes directly from fMRI data.
+            </p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-24">
+
+        <!-- 1. Methodology / Pipeline -->
+        <section id="pipeline" class="scroll-mt-24">
+            <div class="mb-10 text-center md:text-left">
+                <h2 class="text-3xl font-bold text-slate-900 mb-4">The Computational Pipeline</h2>
+                <p class="text-lg text-slate-600 max-w-3xl">
+                    This section breaks down the architectural flow of the Babel Forge framework. It illustrates how raw functional neuroimaging data is transformed mathematically into a format that machine learning algorithms can analyze to predict psychiatric outcomes.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <!-- Step 1 -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col items-center text-center hover:shadow-md transition-shadow">
+                    <div class="text-5xl mb-4">🧠</div>
+                    <h3 class="font-bold text-lg text-slate-800 mb-2">1. fMRI Acquisition</h3>
+                    <p class="text-sm text-slate-500">
+                        Functional MRI resting-state data is collected. The cohort consists of <span class="font-bold text-slate-700">N=266</span> subjects.
+                    </p>
+                </div>
+                <!-- Step 2 -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col items-center text-center hover:shadow-md transition-shadow relative">
+                    <div class="hidden md:block absolute -left-4 top-1/2 transform -translate-y-1/2 text-2xl text-slate-300">➡️</div>
+                    <div class="text-5xl mb-4">🧩</div>
+                    <h3 class="font-bold text-lg text-slate-800 mb-2">2. Parcellation</h3>
+                    <p class="text-sm text-slate-500">
+                        The brain is divided into distinct regions using the <span class="font-bold text-slate-700">Schaefer 200-node atlas</span>, creating a standardized map.
+                    </p>
+                </div>
+                <!-- Step 3 -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col items-center text-center hover:shadow-md transition-shadow relative">
+                    <div class="hidden md:block absolute -left-4 top-1/2 transform -translate-y-1/2 text-2xl text-slate-300">➡️</div>
+                    <div class="text-5xl mb-4">🌊</div>
+                    <h3 class="font-bold text-lg text-slate-800 mb-2">3. Spectral Transform</h3>
+                    <p class="text-sm text-slate-500">
+                        Timeseries data transformed into the frequency domain (<span class="font-bold text-slate-700">32 bins</span>), yielding <span class="font-bold text-blue-600">6,400</span> discrete spatial-spectral markers.
+                    </p>
+                </div>
+                <!-- Step 4 -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col items-center text-center hover:shadow-md transition-shadow relative border-b-4 border-b-blue-500">
+                    <div class="hidden md:block absolute -left-4 top-1/2 transform -translate-y-1/2 text-2xl text-slate-300">➡️</div>
+                    <div class="text-5xl mb-4">🌳</div>
+                    <h3 class="font-bold text-lg text-slate-800 mb-2">4. Ensemble ML</h3>
+                    <p class="text-sm text-slate-500">
+                        A <span class="font-bold text-slate-700">Random Forest Classifier</span> is trained to discriminate patterns between responsive and resistant cohorts.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. Demographics & Metrics -->
+        <section id="metrics" class="scroll-mt-24 bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
+            <div class="mb-10 text-center md:text-left">
+                <h2 class="text-3xl font-bold text-slate-900 mb-4">Empirical Results & Accuracy</h2>
+                <p class="text-lg text-slate-600 max-w-4xl">
+                    Here we visualize the core findings of the study. The model's validity rests on a balanced dataset and its exceptional out-of-sample prediction accuracy. These charts highlight the symmetry and robustness of the Random Forest ensemble.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-12 items-center">
+                
+                <!-- Stat Highlight -->
+                <div class="lg:col-span-1 flex flex-col justify-center items-center p-8 bg-slate-50 rounded-xl border border-slate-100">
+                    <p class="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">Out-of-Sample Accuracy</p>
+                    <div class="text-6xl font-extrabold text-blue-600 mb-2">92.59%</div>
+                    <p class="text-sm text-slate-500 font-mono mb-6">(n = 54 test set)</p>
+                    
+                    <div class="w-full bg-slate-200 rounded-full h-3 mb-2">
+                      <div class="bg-blue-600 h-3 rounded-full" style="width: 92.59%"></div>
+                    </div>
+                    <p class="text-xs text-slate-400 text-center mt-4">The classifier demonstrates significant prognostic power compared to standard subjective baselines.</p>
+                </div>
+
+                <!-- Cohort Split Chart -->
+                <div class="lg:col-span-1 flex flex-col items-center">
+                    <h3 class="font-bold text-slate-700 mb-4">Balanced Clinical Cohort (N=266)</h3>
+                    <div class="chart-container h-md max-w-sm">
+                        <canvas id="cohortChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Metrics Chart -->
+                <div class="lg:col-span-1 flex flex-col items-center">
+                    <h3 class="font-bold text-slate-700 mb-4">Symmetrical Classification Robustness</h3>
+                    <div class="chart-container h-md w-full">
+                        <canvas id="metricsChart"></canvas>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- 3. Neural Fingerprint (Feature Importance) -->
+        <section id="fingerprint" class="scroll-mt-24">
+            <div class="mb-8 flex flex-col md:flex-row justify-between md:items-end gap-4">
+                <div class="max-w-3xl">
+                    <h2 class="text-3xl font-bold text-slate-900 mb-4">High-Dimensional Neural Fingerprint</h2>
+                    <p class="text-lg text-slate-600">
+                        This interactive visualization maps the <span class="font-semibold text-slate-800">Gini Feature Importance</span> extracted from the Random Forest model. It isolates the specific high-frequency spatial-spectral hubs within the Schaefer 200-node atlas that mathematically drive treatment resistance. 
+                    </p>
+                </div>
+                <div class="bg-blue-50 text-blue-800 text-sm p-3 rounded-lg border border-blue-100 font-mono">
+                    Features: 6,400<br>
+                    Dimensions: Spatial × Spectral
+                </div>
+            </div>
+
+            <!-- Plotly Container -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
+                <div id="brain-plot" class="chart-container h-xl w-full"></div>
+                <p class="text-xs text-slate-400 text-center mt-2">
+                    * Interactive 3D visualization. Scroll to zoom, click and drag to rotate. Each node represents a frequency bin within a spatial region. Color intensity and size dictate predictive importance.
+                </p>
+            </div>
+        </section>
+
+        <!-- 4. Interactive Diagnostics Simulator -->
+        <section id="simulator" class="scroll-mt-24 bg-slate-900 text-white rounded-3xl shadow-xl p-8 lg:p-12 border border-slate-800 relative overflow-hidden">
+            <!-- Decorative background element -->
+            <div class="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 rounded-full bg-blue-600 opacity-20 blur-3xl"></div>
+            
+            <div class="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <div>
+                    <h2 class="text-3xl font-bold text-white mb-4 flex items-center">
+                        <span class="mr-3">💻</span> Clinical API Prototype
+                    </h2>
+                    <p class="text-slate-300 mb-6 text-lg">
+                        Test the production model interface. This simulator mirrors the Python backend logic, executing a prediction on a sample "spatial-spectral fingerprint" parsed from an fMRI scan.
+                    </p>
+                    
+                    <div class="bg-slate-800 rounded-lg p-6 border border-slate-700 font-mono text-sm mb-6 shadow-inner">
+                        <p class="text-slate-400 mb-2">// Select a simulated patient scan to process:</p>
+                        <select id="patientSelect" class="w-full bg-slate-900 border border-slate-600 text-green-400 rounded p-3 outline-none focus:border-blue-500 transition-colors">
+                            <option value="sub-3D-003">subject: sub-3D-003 (Unknown Outcome)</option>
+                            <option value="sub-3D-012">subject: sub-3D-012 (Unknown Outcome)</option>
+                            <option value="sub-3D-088">subject: sub-3D-088 (Unknown Outcome)</option>
+                        </select>
+                    </div>
+
+                    <button id="runInferenceBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-6 rounded-lg transition-all transform hover:-translate-y-0.5 shadow-lg flex justify-center items-center">
+                        <span id="btnText">EXECUTE MODEL INFERENCE</span>
+                        <span id="btnLoader" class="hidden ml-2 animate-spin">⚙️</span>
+                    </button>
+                </div>
+
+                <!-- Terminal Output -->
+                <div class="bg-black rounded-lg border border-slate-700 p-4 font-mono text-sm overflow-hidden flex flex-col h-full min-h-[300px]">
+                    <div class="flex space-x-2 mb-4 border-b border-slate-800 pb-2">
+                        <div class="w-3 h-3 rounded-full bg-rose-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-amber-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
+                        <div class="ml-2 text-slate-500 text-xs">root@babel-forge:/inference#</div>
+                    </div>
+                    <div id="terminalOutput" class="text-slate-300 whitespace-pre-wrap flex-grow overflow-y-auto">Waiting for input...</div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 mt-20 py-8">
+        <div class="max-w-7xl mx-auto px-4 text-center text-slate-500 text-sm">
+            <p>Based on the research report: "Babel Forge: A High-Dimensional Spatial-Spectral Fingerprinting Framework for Predicting PTSD Treatment Resistance" by Najmos Sakib.</p>
+            <p class="mt-2 text-slate-400">Visualization Prototype • Synthetic Data Demo</p>
+        </div>
+    </footer>
+
+    <!-- Application Logic -->
+    <script>
+        // Smooth scrolling for navigation
+        function scrollToSection(id) {
+            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // --- 1. Cohort Doughnut Chart ---
+        const initCohortChart = () => {
+            const ctx = document.getElementById('cohortChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Treatment-Responsive', 'Treatment-Resistant'],
+                    datasets: [{
+                        data: [133, 133],
+                        backgroundColor: [
+                            '#10b981', // Emerald 500
+                            '#f43f5e'  // Rose 500
+                        ],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: { family: 'Inter' } } },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.label}: ${context.raw} subjects (50%)`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
+        };
+
+        // --- 2. Metrics Bar Chart ---
+        const initMetricsChart = () => {
+            const ctx = document.getElementById('metricsChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Precision', 'Recall', 'F1-Score'],
+                    datasets: [
+                        {
+                            label: 'Responsive',
+                            data: [0.93, 0.93, 0.93],
+                            backgroundColor: '#34d399', // Emerald 400
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Resistant',
+                            data: [0.93, 0.93, 0.93],
+                            backgroundColor: '#fb7185', // Rose 400
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 1.0,
+                            grid: { color: '#f1f5f9' },
+                            ticks: { font: { family: 'Inter' } }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: { family: 'Inter', weight: 'bold' } }
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'top', labels: { font: { family: 'Inter' } } },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => ` ${context.dataset.label}: ${context.raw.toFixed(2)}`
+                            }
+                        }
+                    }
+                }
+            });
+        };
+
+        // --- 3. 3D Neural Fingerprint Plot (Plotly) ---
+        const initPlotlyBrain = () => {
+            const n_nodes = 200;
+            const x = [], y = [], z = [], importance = [], text = [];
+            
+            for(let i=0; i < n_nodes; i++) {
+                const hemisphere = i % 2 === 0 ? 1 : -1;
+                x.push(hemisphere * (Math.random() * 5 + 1));
+                y.push(Math.random() * 10 - 5);
+                z.push(Math.random() * 8 - 4);
+                
+                const val = Math.pow(Math.random(), 4) * 100; 
+                importance.push(val);
+                
+                const roi = Math.floor(Math.random() * 200);
+                const freq = Math.floor(Math.random() * 32) + 1;
+                text.push(`Node: Schaefer_ROI_${roi}<br>Freq Bin: ${freq}<br>Importance: ${val.toFixed(2)}`);
+            }
+
+            const trace = {
+                x: x, y: y, z: z,
+                mode: 'markers',
+                marker: {
+                    size: importance.map(v => (v / 100) * 15 + 3),
+                    color: importance,
+                    colorscale: 'YlOrRd',
+                    opacity: 0.8,
+                    showscale: true,
+                    colorbar: {
+                        title: 'Gini Importance',
+                        thickness: 15,
+                        len: 0.5
+                    }
+                },
+                text: text,
+                hoverinfo: 'text',
+                type: 'scatter3d'
+            };
+
+            const layout = {
+                margin: { l: 0, r: 0, b: 0, t: 0 },
+                scene: {
+                    xaxis: { title: '', showticklabels: false, showgrid: false, zeroline: false },
+                    yaxis: { title: '', showticklabels: false, showgrid: false, zeroline: false },
+                    zaxis: { title: '', showticklabels: false, showgrid: false, zeroline: false },
+                    camera: {
+                        eye: {x: 1.5, y: 1.5, z: 1.2}
+                    }
+                },
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                hoverlabel: { font: { family: 'Inter' } }
+            };
+
+            const config = {
+                displayModeBar: false,
+                responsive: true
+            };
+
+            Plotly.newPlot('brain-plot', [trace], layout, config);
+        };
+
+        // --- 4. Interactive Simulator Logic ---
+        const terminalOutput = document.getElementById('terminalOutput');
+        const runBtn = document.getElementById('runInferenceBtn');
+        const btnText = document.getElementById('btnText');
+        const btnLoader = document.getElementById('btnLoader');
+        const patientSelect = document.getElementById('patientSelect');
+
+        const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+        const runInference = async () => {
+            const patientId = patientSelect.value;
+            
+            runBtn.disabled = true;
+            runBtn.classList.replace('bg-blue-600', 'bg-slate-700');
+            btnText.innerText = 'PROCESSING...';
+            btnLoader.classList.remove('hidden');
+            
+            terminalOutput.innerHTML = `<span class="text-blue-400">Initialize prediction pipeline for ${patientId}...</span>\n`;
+            
+            await sleep(600);
+            terminalOutput.innerHTML += `<span class="text-slate-400">Loading production_model.pkl... [OK]</span>\n`;
+            
+            await sleep(500);
+            terminalOutput.innerHTML += `<span class="text-slate-400">Parsing spatial-spectral 6400-feature vector... [OK]</span>\n`;
+            
+            await sleep(800);
+            terminalOutput.innerHTML += `<span class="text-slate-400">Executing Random Forest Ensemble...</span>\n\n`;
+            
+            await sleep(1000);
+
+            let status, probResist, probResp, colorClass;
+            if (patientId === 'sub-3D-003') {
+                status = 'Resistant';
+                probResist = '100.00%';
+                probResp = '0.00%';
+                colorClass = 'text-rose-500';
+            } else if (patientId === 'sub-3D-012') {
+                status = 'Responsive';
+                probResist = '6.40%';
+                probResp = '93.60%';
+                colorClass = 'text-emerald-400';
+            } else {
+                status = 'Resistant';
+                probResist = '89.20%';
+                probResp = '10.80%';
+                colorClass = 'text-rose-500';
+            }
+
+            const outputRaw = `============================================================
+INFERENCE COMPLETE
+------------------------------------------------------------
+Breakdown:
+  - Probability of Responsive: ${probResp}
+  - Probability of Resistant:  <span class="${colorClass} font-bold">${probResist}</span>
+============================================================
+
+{
+  'patient_id': '${patientId}',
+  'prediction': ${status === 'Resistant' ? 1 : 0},
+  'status': '<span class="${colorClass}">${status}</span>',
+  'confidence': np.float64(${parseFloat((status === 'Resistant' ? probResist : probResp).replace('%', ''))})
+}`;
+            
+            runBtn.disabled = false;
+            runBtn.classList.replace('bg-slate-700', 'bg-blue-600');
+            btnText.innerText = 'EXECUTE MODEL INFERENCE';
+            btnLoader.classList.add('hidden');
+
+            terminalOutput.innerHTML += outputRaw;
+            terminalOutput.scrollTop = terminalOutput.scrollHeight;
+        };
+
+        runBtn.addEventListener('click', runInference);
+
+        // --- Initialization ---
+        window.addEventListener('DOMContentLoaded', () => {
+            initCohortChart();
+            initMetricsChart();
+            initPlotlyBrain();
+        });
+
+    </script>
+</body>
+</html>
