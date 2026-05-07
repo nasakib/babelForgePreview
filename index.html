@@ -89,6 +89,7 @@
                     <button onclick="scrollToSection('metrics')" class="hover:text-blue-600 transition-colors">Performance Metrics</button>
                     <button onclick="scrollToSection('fingerprint')" class="hover:text-blue-600 transition-colors">Neural Fingerprint</button>
                     <button onclick="scrollToSection('api-reference')" class="hover:text-blue-600 transition-colors">API Reference</button>
+                    <button onclick="scrollToSection('visualizer')" class="hover:text-blue-600 transition-colors">3D Visualizer</button>
                     <button onclick="scrollToSection('simulator')" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">Run Converter</button>
                 </div>
             </div>
@@ -228,7 +229,22 @@
             </div>
         </section>
 
-        <!-- 4. Simulated fMRI Extraction Dashboard -->
+        <!-- 4. 3D Neural Visualizer -->
+        <section id="visualizer" class="scroll-mt-24">
+            <div class="mb-8 flex flex-col md:flex-row justify-between md:items-end gap-4">
+                <div class="max-w-3xl">
+                    <h2 class="text-3xl font-bold text-slate-900 mb-4">3D Neural Visualizer</h2>
+                    <p class="text-lg text-slate-600">
+                        Upload a raw fMRI BOLD scan (<code class="font-mono text-sm bg-slate-100 px-1 py-0.5 rounded">.nii</code> or <code class="font-mono text-sm bg-slate-100 px-1 py-0.5 rounded">.nii.gz</code>) to render an interactive 3D brain model and run the 11D Random Forest diagnostic sequence directly in your browser.
+                    </p>
+                </div>
+            </div>
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <iframe src="visualizer.html" title="Babel Forge 3D Neural Visualizer" class="w-full border-0" style="min-height: 80vh;" sandbox="allow-scripts allow-same-origin"></iframe>
+            </div>
+        </section>
+
+        <!-- 5. Simulated fMRI Extraction Dashboard -->
         <section id="simulator" class="scroll-mt-24 bg-slate-900 text-white rounded-3xl shadow-xl p-8 lg:p-12 border border-slate-800 relative overflow-hidden">
             <!-- Decorative background element -->
             <div class="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 rounded-full bg-blue-600 opacity-20 blur-3xl"></div>
@@ -292,7 +308,7 @@
             </div>
         </section>
 
-        <!-- 5. API Reference -->
+        <!-- 6. API Reference -->
         <section id="api-reference" class="scroll-mt-24 bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
             <h2 class="text-3xl font-bold text-slate-900 mb-4">Babel Forge API Reference</h2>
             <p class="text-slate-600 mb-4">
