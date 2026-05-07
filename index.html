@@ -611,7 +611,6 @@
             const patientId = file.name.replace(/\.nii(\.gz)?$/i, '') || 'uploaded-scan';
             
             setRunButtonState(false, 'PROCESSING...');
-            btnText.innerText = 'PROCESSING...';
             btnLoader.classList.remove('hidden');
             fingerprintStatus.textContent = 'Generating';
             vectorSize.textContent = '0 / 6400';
@@ -659,7 +658,12 @@
                 const result = await response.json();
                 const clinicalStatus = result.clinical_status || result.status || result.prediction || 'UNKNOWN';
                 const confidence = result.confidence_percent ?? result.confidence ?? 'n/a';
-                const statusClass = String(clinicalStatus).toLowerCase().includes('resistant') ? 'text-rose-400' : 'text-emerald-400';
+                const normalizedStatus = String(clinicalStatus).toLowerCase();
+                const statusClass = normalizedStatus.includes('resistant')
+                    ? 'text-rose-400'
+                    : normalizedStatus.includes('responsive')
+                        ? 'text-emerald-400'
+                        : 'text-slate-400';
                 apiStatus.textContent = 'Complete';
 
                 appendTerminalLine('============================================================', 'text-slate-500');
@@ -668,7 +672,10 @@
                 appendTerminalLine(`patient_id: ${result.patient_id || patientId}`, 'text-slate-300');
                 appendTerminalLine(`clinical_status: ${clinicalStatus}`, statusClass);
                 appendTerminalLine(`confidence: ${confidence}${typeof confidence === 'number' ? '%' : ''}`, 'text-slate-300');
-                appendTerminalLine(`raw_response: ${JSON.stringify(result, null, 2)}`, 'text-slate-400');
+                appendTerminalLine('raw_response:', 'text-slate-400');
+                JSON.stringify(result, null, 2)
+                    .split('\n')
+                    .forEach(line => appendTerminalLine(`  ${line}`, 'text-slate-400'));
                 appendTerminalLine('============================================================', 'text-slate-500');
             } catch (error) {
                 apiStatus.textContent = 'API Error';
