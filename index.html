@@ -527,6 +527,8 @@
         const apiStatus = document.getElementById('apiStatus');
         const API_URL = 'https://babel-forge-api-1066096962926.us-central1.run.app/diagnose';
         const FINGERPRINT_LENGTH = 6400;
+        const API_TIMEOUT_MS = 15000;
+        const MAX_TERMINAL_RESPONSE_LENGTH = 3000;
         const HTML_ESCAPE_ENTITIES = {
             '&': '&amp;',
             '<': '&lt;',
@@ -576,7 +578,7 @@
         const isValidScanName = (fileName) => /\.nii(\.gz)?$/i.test(fileName);
         const getApiErrorMessage = (error) => {
             if (error.name === 'AbortError') {
-                return 'Request timed out after 15 seconds. The diagnosis service may be starting up or temporarily unavailable.';
+                return `Request timed out after ${API_TIMEOUT_MS / 1000} seconds. The diagnosis service may be starting up or temporarily unavailable.`;
             }
             if (error.name === 'TypeError') {
                 return 'Network request failed. Check connectivity, CORS settings, or service availability.';
@@ -587,7 +589,7 @@
         const createSeededRandom = (seed) => {
             let state = seed >>> 0;
             return () => {
-                // Compact deterministic PRNG based on a Mulberry32-style state update; 0x6D2B79F5 is the additive constant.
+                // Compact deterministic PRNG based on a Mulberry32-style state update; 0x6D2B79F5 is its additive step constant for well-distributed 32-bit output.
                 state += 0x6D2B79F5;
                 let value = state;
                 value = Math.imul(value ^ (value >>> 15), value | 1);
@@ -598,7 +600,7 @@
 
         const createMockFingerprint = (file) => {
             const seedSource = `${file.name}:${file.size}:${file.lastModified}`;
-            // Lightweight hybrid rolling hash turns scan metadata into a stable unsigned seed.
+            // Lightweight hybrid rolling hash uses the FNV-1a offset basis (2166136261) as a stable unsigned initial seed.
             const seed = Array.from(seedSource).reduce((acc, char) => ((acc << 5) - acc + char.charCodeAt(0)) >>> 0, 2166136261);
             const random = createSeededRandom(seed);
             return Array.from({ length: FINGERPRINT_LENGTH }, (_, index) => {
@@ -676,7 +678,7 @@
 
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 15000);
+                const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
                 const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -708,8 +710,8 @@
                 appendTerminalLine(`confidence: ${confidence}${typeof confidence === 'number' ? '%' : ''}`, 'text-slate-300');
                 appendTerminalLine('raw_response:', 'text-slate-400');
                 const rawResponse = JSON.stringify(result, null, 2);
-                const displayResponse = rawResponse.length > 3000
-                    ? `${rawResponse.slice(0, 3000)}\n... truncated for display ...`
+                const displayResponse = rawResponse.length > MAX_TERMINAL_RESPONSE_LENGTH
+                    ? `${rawResponse.slice(0, MAX_TERMINAL_RESPONSE_LENGTH)}\n... truncated for display ...`
                     : rawResponse;
                 // Each indented JSON line is escaped by appendTerminalLine before it is added to the terminal.
                 displayResponse.split('\n')
