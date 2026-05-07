@@ -527,6 +527,13 @@
         const apiStatus = document.getElementById('apiStatus');
         const API_URL = 'https://babel-forge-api-1066096962926.us-central1.run.app/diagnose';
         const FINGERPRINT_LENGTH = 6400;
+        const HTML_ESCAPE_ENTITIES = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        };
         const TERMINAL_COLOR_CLASSES = new Set([
             'text-slate-300',
             'text-slate-400',
@@ -540,18 +547,12 @@
 
         const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
         const formatBytes = (bytes) => {
-            if (bytes === 0) return '0 B';
+            if (bytes <= 0) return '0 B';
             const units = ['B', 'KB', 'MB', 'GB'];
             const sizeIndex = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
             return `${(bytes / Math.pow(1024, sizeIndex)).toFixed(sizeIndex === 0 ? 0 : 1)} ${units[sizeIndex]}`;
         };
-        const sanitizeTerminalText = (value) => String(value).replace(/[&<>"']/g, character => ({
-            '&': '&amp;',
-            '<': '&lt;',
-            '>': '&gt;',
-            '"': '&quot;',
-            "'": '&#39;'
-        }[character]));
+        const sanitizeTerminalText = (value) => String(value).replace(/[&<>"']/g, character => HTML_ESCAPE_ENTITIES[character]);
 
         const appendTerminalLine = (message = '', colorClass = 'text-slate-300') => {
             const line = document.createElement('div');
@@ -585,6 +586,7 @@
         const createSeededRandom = (seed) => {
             let state = seed >>> 0;
             return () => {
+                // Mulberry32-style PRNG constants provide deterministic mock fingerprints for the same scan metadata.
                 state += 0x6D2B79F5;
                 let value = state;
                 value = Math.imul(value ^ (value >>> 15), value | 1);
@@ -595,6 +597,7 @@
 
         const createMockFingerprint = (file) => {
             const seedSource = `${file.name}:${file.size}:${file.lastModified}`;
+            // FNV-style rolling hash turns scan metadata into a stable unsigned seed.
             const seed = Array.from(seedSource).reduce((acc, char) => ((acc << 5) - acc + char.charCodeAt(0)) >>> 0, 2166136261);
             const random = createSeededRandom(seed);
             return Array.from({ length: FINGERPRINT_LENGTH }, (_, index) => {
@@ -703,6 +706,7 @@
                 appendTerminalLine(`clinical_status: ${clinicalStatus}`, statusClass);
                 appendTerminalLine(`confidence: ${confidence}${typeof confidence === 'number' ? '%' : ''}`, 'text-slate-300');
                 appendTerminalLine('raw_response:', 'text-slate-400');
+                // Each indented JSON line is escaped by appendTerminalLine before it is added to the terminal.
                 JSON.stringify(result, null, 2)
                     .split('\n')
                     .forEach(line => appendTerminalLine(`  ${line}`, 'text-slate-400'));
