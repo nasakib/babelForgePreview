@@ -524,7 +524,7 @@
                 crosshairColor: [0.77, 0.71, 0.99, 1]
             });
             nv.attachTo('gl');
-            if (typeof nv.setSliceType === "function" && typeof nv.sliceTypeRender !== "undefined") {
+            if (typeof nv.setSliceType === "function" && typeof nv.sliceTypeRender === "number") {
                 nv.setSliceType(nv.sliceTypeRender);
             }
             setLoadStep("canvas", "done");
@@ -549,8 +549,9 @@
         try {
             await viewerInitPromise;
             return true;
-        } catch {
-            throw new Error(viewerInitError?.message || "3D visualizer is unavailable.");
+        } catch (error) {
+            const details = viewerInitError?.message || error?.message || "3D visualizer is unavailable.";
+            throw new Error(details);
         }
     }
 
@@ -608,7 +609,7 @@
         document.getElementById('log-box').innerHTML = '';
 
         // Reset visualizer color before re-running
-        if (nv.volumes.length) {
+        if (nv && nv.volumes && nv.volumes.length) {
             setPrimaryColormap("gray");
         }
 
@@ -677,7 +678,9 @@
             setPrimaryColormap("gray");
         } finally {
             if (scanInterval !== null) clearInterval(scanInterval);
-            if (nv) nv.setClipPlane([0, 0, 0]);
+            if (nv && typeof nv.setClipPlane === "function") {
+                nv.setClipPlane([0, 0, 0]);
+            }
             startBtn.disabled = false;
             exampleBtns.forEach(btn => btn.disabled = false);
         }
