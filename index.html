@@ -3,192 +3,373 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>babelForge</title>
-    
+    <title>babelForge — Neural Diagnostic Engine</title>
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
+
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
+
     <!-- Plotly.js -->
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
 
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <script>
+        // Tailwind dark-violet theme tokens
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        ink: {
+                            900: '#050108',
+                            850: '#07030d',
+                            800: '#0a0418',
+                            750: '#0f0820',
+                            700: '#18102e',
+                            600: '#1f1640',
+                            500: '#2a1f55'
+                        },
+                        plum: {
+                            300: '#c4b5fd',
+                            400: '#a78bfa',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'ui-monospace', 'monospace']
+                    }
+                }
+            }
+        };
+    </script>
 
     <style>
+        :root {
+            --bg-0: #050108;
+            --bg-1: #07030d;
+            --bg-2: #0f0820;
+            --bg-3: #18102e;
+            --line: rgba(167, 139, 250, 0.18);
+            --line-strong: rgba(167, 139, 250, 0.32);
+            --plum-300: #c4b5fd;
+            --plum-400: #a78bfa;
+            --plum-500: #8b5cf6;
+            --plum-600: #7c3aed;
+            --text-0: #ede9fe;
+            --text-1: #c7bce0;
+            --text-2: #8a82a8;
+            --success: #86efac;
+            --warn: #fcd34d;
+            --error: #fda4af;
+        }
+
+        html, body { background-color: var(--bg-0); }
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f8fafc; /* Slate 50 */
-            color: #0f172a; /* Slate 900 */
-        }
-        
-        .font-mono {
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        /* Mandatory Chart Container Constraints */
-        .chart-container {
-            position: relative;
-            width: 100%;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        
-        .h-md {
-            height: 300px;
-            max-height: 400px;
-        }
-        
-        .h-lg {
-            height: 400px;
-            max-height: 500px;
+            color: var(--text-0);
+            background:
+                radial-gradient(1200px 700px at 85% -10%, rgba(124, 58, 237, 0.22), transparent 60%),
+                radial-gradient(900px 500px at -10% 30%, rgba(139, 92, 246, 0.15), transparent 60%),
+                radial-gradient(1000px 600px at 50% 110%, rgba(76, 29, 149, 0.18), transparent 60%),
+                linear-gradient(180deg, #050108 0%, #0a0418 100%);
+            background-attachment: fixed;
         }
 
-        .h-xl {
-            height: 500px;
-            max-height: 600px;
+        /* Subtle scientific grid overlay on hero */
+        .grid-overlay {
+            background-image:
+                linear-gradient(rgba(167, 139, 250, 0.06) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(167, 139, 250, 0.06) 1px, transparent 1px);
+            background-size: 40px 40px;
+            mask-image: radial-gradient(ellipse at center, black 35%, transparent 85%);
+            -webkit-mask-image: radial-gradient(ellipse at center, black 35%, transparent 85%);
         }
 
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f5f9; 
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1; 
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8; 
-        }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
 
-        /* Glitch/Tech Text Effect */
+        .chart-container { position: relative; width: 100%; margin-left: auto; margin-right: auto; }
+        .h-md { height: 300px; max-height: 400px; }
+        .h-lg { height: 400px; max-height: 500px; }
+        .h-xl { height: 500px; max-height: 600px; }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-1); }
+        ::-webkit-scrollbar-thumb { background: rgba(139, 92, 246, 0.35); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(167, 139, 250, 0.55); }
+
+        /* Gradient violet text */
         .tech-text {
-            background: linear-gradient(to right, #0ea5e9, #3b82f6);
+            background: linear-gradient(90deg, #c4b5fd 0%, #8b5cf6 45%, #a78bfa 100%);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
+        }
+
+        /* Logo mark */
+        .logo-mark {
+            width: 30px; height: 30px; border-radius: 9px;
+            background: conic-gradient(from 210deg, #4c1d95, #8b5cf6, #c4b5fd, #4c1d95);
+            box-shadow: 0 0 22px rgba(139, 92, 246, 0.45), inset 0 0 0 1px rgba(255,255,255,0.08);
+            position: relative;
+        }
+        .logo-mark::after {
+            content: ""; position: absolute; inset: 7px; border-radius: 4px;
+            background: var(--bg-0);
+            box-shadow: inset 0 0 8px rgba(196, 181, 253, 0.55);
+        }
+
+        /* Glass / panel */
+        .panel {
+            background: linear-gradient(180deg, rgba(24, 16, 46, 0.78), rgba(15, 8, 32, 0.85));
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255,255,255,0.03);
+            backdrop-filter: blur(8px);
+        }
+        .panel-soft {
+            background: rgba(24, 16, 46, 0.55);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+        }
+
+        /* Pipeline cards */
+        .step-card {
+            position: relative;
+            background: linear-gradient(180deg, rgba(31, 22, 64, 0.55), rgba(15, 8, 32, 0.7));
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            padding: 24px;
+            transition: transform 0.18s, border-color 0.18s, box-shadow 0.18s;
+            overflow: hidden;
+        }
+        .step-card::before {
+            content: ""; position: absolute; inset: 0;
+            background: radial-gradient(120% 80% at 0% 0%, rgba(139, 92, 246, 0.15), transparent 50%);
+            pointer-events: none;
+        }
+        .step-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(167, 139, 250, 0.5);
+            box-shadow: 0 12px 30px rgba(124, 58, 237, 0.18);
+        }
+        .step-num {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase;
+            color: var(--plum-300);
+        }
+        .step-final { border-color: rgba(167, 139, 250, 0.55); }
+        .step-final::after {
+            content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px;
+            background: linear-gradient(90deg, var(--plum-600), var(--plum-300));
+        }
+
+        /* Pulse dot */
+        .pulse-dot {
+            display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+            background: var(--plum-400); box-shadow: 0 0 12px var(--plum-400);
+            animation: pulse 1.6s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.45; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.25); }
+        }
+
+        /* Code chip */
+        .chip {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+            color: var(--plum-300);
+            border: 1px solid var(--line-strong);
+            padding: 6px 12px; border-radius: 999px;
+            background: rgba(139, 92, 246, 0.08);
+            display: inline-flex; align-items: center; gap: 8px;
+        }
+
+        /* Nav buttons */
+        .nav-link {
+            color: var(--text-1);
+            font-weight: 500;
+            font-size: 13px;
+            transition: color 0.18s;
+        }
+        .nav-link:hover { color: var(--text-0); }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--plum-600), var(--plum-500));
+            color: white;
+            font-weight: 700;
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-size: 13px;
+            box-shadow: 0 8px 20px rgba(124, 58, 237, 0.35), inset 0 1px 0 rgba(255,255,255,0.15);
+            transition: transform 0.15s, filter 0.18s;
+        }
+        .btn-primary:hover { transform: translateY(-1px); filter: brightness(1.08); }
+
+        /* API ref code blocks */
+        .codeblock {
+            background: linear-gradient(180deg, #050108, #08020f);
+            color: var(--text-1);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 16px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12.5px;
+            line-height: 1.55;
+            overflow-x: auto;
+        }
+        .endpoint-card {
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 24px;
+            background: rgba(24, 16, 46, 0.45);
+        }
+
+        /* Connector arrow for pipeline (replaces emoji) */
+        .connector {
+            position: absolute;
+            left: -14px; top: 50%; transform: translateY(-50%);
+            width: 22px; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--plum-400));
+        }
+        .connector::after {
+            content: ""; position: absolute; right: -1px; top: -3px;
+            width: 0; height: 0;
+            border-left: 6px solid var(--plum-400);
+            border-top: 3px solid transparent;
+            border-bottom: 3px solid transparent;
         }
     </style>
 </head>
-<body class="antialiased selection:bg-blue-200 selection:text-blue-900 overflow-x-hidden">
+<body class="antialiased selection:bg-plum-500/40 selection:text-white overflow-x-hidden">
 
     <!-- Navigation -->
-    <nav class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+    <nav class="bg-ink-900/70 border-b border-plum-500/15 sticky top-0 z-50 backdrop-blur-md">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
-                <div class="flex items-center">
-                    <span class="text-2xl mr-2">⚕️</span>
-                    <span class="font-bold text-xl tracking-tight text-slate-800">Babel<span class="text-blue-600">Forge</span></span>
+                <div class="flex items-center gap-3">
+                    <span class="logo-mark" aria-hidden="true"></span>
+                    <span class="font-extrabold text-lg tracking-tight text-white">babel<span class="tech-text">Forge</span></span>
                 </div>
-                <div class="hidden md:flex items-center space-x-8 text-sm font-semibold text-slate-600">
-                    <button onclick="scrollToSection('pipeline')" class="hover:text-blue-600 transition-colors">Methodology</button>
-                    <button onclick="scrollToSection('metrics')" class="hover:text-blue-600 transition-colors">Performance Metrics</button>
-                    <button onclick="scrollToSection('fingerprint')" class="hover:text-blue-600 transition-colors">Neural Fingerprint</button>
-                    <button onclick="scrollToSection('api-reference')" class="hover:text-blue-600 transition-colors">API Reference</button>
-                    <button onclick="scrollToSection('visualizer')" class="hover:text-blue-600 transition-colors">3D Visualizer</button>
-                    <button onclick="scrollToSection('simulator')" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">Run Converter</button>
+                <div class="hidden md:flex items-center space-x-7">
+                    <button onclick="scrollToSection('pipeline')" class="nav-link">Methodology</button>
+                    <button onclick="scrollToSection('metrics')" class="nav-link">Metrics</button>
+                    <button onclick="scrollToSection('fingerprint')" class="nav-link">Fingerprint</button>
+                    <button onclick="scrollToSection('api-reference')" class="nav-link">API</button>
+                    <button onclick="scrollToSection('visualizer')" class="nav-link">Visualizer</button>
+                    <button onclick="scrollToSection('simulator')" class="btn-primary">Run Converter →</button>
                 </div>
             </div>
         </div>
     </nav>
 
     <!-- Hero Section -->
-    <header class="bg-slate-900 text-white py-20 px-4">
-        <div class="max-w-7xl mx-auto text-center">
-            <div class="inline-block px-3 py-1 mb-6 rounded-full bg-slate-800 border border-slate-700 text-blue-400 text-xs font-mono font-bold tracking-widest uppercase">
-                Clinical Research Abstract
+    <header class="relative text-white py-24 px-4 overflow-hidden">
+        <div class="absolute inset-0 grid-overlay pointer-events-none"></div>
+        <div class="relative max-w-7xl mx-auto text-center">
+            <div class="inline-flex chip mb-6">
+                <span class="pulse-dot"></span> Clinical Research Abstract
             </div>
-            <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight mb-6 leading-tight">
+            <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 leading-[1.05]">
                 Predicting PTSD Treatment Resistance <br class="hidden md:block" />
                 <span class="tech-text">Before Intervention</span>
             </h1>
-            <p class="mt-4 max-w-3xl mx-auto text-xl text-slate-400 leading-relaxed">
-                Standard interventions fail in a substantial subset of PTSD patients. Current prognostic models rely on subjective clinical assessments. The <strong class="text-white">Babel Forge</strong> pipeline introduces a novel machine-learning framework utilizing high-dimensional, frequency-domain neural fingerprinting to predict outcomes directly from fMRI data.
+            <p class="mt-4 max-w-3xl mx-auto text-lg md:text-xl text-[color:var(--text-1)] leading-relaxed">
+                Standard interventions fail in a substantial subset of PTSD patients, and current prognostic models rely on subjective clinical assessments. The <strong class="text-white">babelForge</strong> pipeline introduces a machine-learning framework that uses high-dimensional, frequency-domain neural fingerprinting to predict outcomes directly from fMRI data.
             </p>
+            <div class="mt-10 flex flex-wrap justify-center gap-3 text-xs font-mono text-[color:var(--text-2)]">
+                <span class="chip"><span class="text-plum-300">N</span> 266 subjects</span>
+                <span class="chip"><span class="text-plum-300">D</span> 6,400 features</span>
+                <span class="chip"><span class="text-plum-300">ACC</span> 92.59%</span>
+                <span class="chip"><span class="text-plum-300">Atlas</span> Schaefer 200</span>
+            </div>
         </div>
     </header>
 
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-24">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-24">
 
         <!-- 1. Methodology / Pipeline -->
         <section id="pipeline" class="scroll-mt-24">
             <div class="mb-10 text-center md:text-left">
-                <h2 class="text-3xl font-bold text-slate-900 mb-4">The Computational Pipeline</h2>
-                <p class="text-lg text-slate-600 max-w-3xl">
-                    This section breaks down the architectural flow of the Babel Forge framework. It illustrates how raw functional neuroimaging data is transformed mathematically into a format that machine learning algorithms can analyze to predict psychiatric outcomes.
+                <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">The Computational Pipeline</h2>
+                <p class="text-lg text-[color:var(--text-1)] max-w-3xl">
+                    This section breaks down the architectural flow of the babelForge framework. It illustrates how raw functional neuroimaging data is transformed mathematically into a format that machine-learning algorithms can analyze to predict psychiatric outcomes.
                 </p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <!-- Step 1 -->
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col items-center text-center hover:shadow-md transition-shadow">
-                    <div class="text-5xl mb-4">🧠</div>
-                    <h3 class="font-bold text-lg text-slate-800 mb-2">1. fMRI Acquisition</h3>
-                    <p class="text-sm text-slate-500">
-                        Functional MRI resting-state data is collected. The cohort consists of <span class="font-bold text-slate-700">N=266</span> subjects.
+                <div class="step-card">
+                    <div class="step-num mb-3">Step 01 / acquire</div>
+                    <h3 class="font-bold text-lg text-white mb-2">fMRI Acquisition</h3>
+                    <p class="text-sm text-[color:var(--text-1)]">
+                        Functional MRI resting-state data is collected across a balanced cohort of <span class="font-bold text-white">N = 266</span> subjects.
                     </p>
                 </div>
                 <!-- Step 2 -->
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col items-center text-center hover:shadow-md transition-shadow relative">
-                    <div class="hidden md:block absolute -left-4 top-1/2 transform -translate-y-1/2 text-2xl text-slate-300">➡️</div>
-                    <div class="text-5xl mb-4">🧩</div>
-                    <h3 class="font-bold text-lg text-slate-800 mb-2">2. Parcellation</h3>
-                    <p class="text-sm text-slate-500">
-                        The brain is divided into distinct regions using the <span class="font-bold text-slate-700">Schaefer 200-node atlas</span>, creating a standardized map.
+                <div class="step-card relative">
+                    <div class="connector hidden md:block"></div>
+                    <div class="step-num mb-3">Step 02 / parcellate</div>
+                    <h3 class="font-bold text-lg text-white mb-2">Parcellation</h3>
+                    <p class="text-sm text-[color:var(--text-1)]">
+                        The brain is partitioned using the <span class="font-bold text-white">Schaefer 200-node atlas</span>, yielding a standardized regional map.
                     </p>
                 </div>
                 <!-- Step 3 -->
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col items-center text-center hover:shadow-md transition-shadow relative">
-                    <div class="hidden md:block absolute -left-4 top-1/2 transform -translate-y-1/2 text-2xl text-slate-300">➡️</div>
-                    <div class="text-5xl mb-4">🌊</div>
-                    <h3 class="font-bold text-lg text-slate-800 mb-2">3. Spectral Transform</h3>
-                    <p class="text-sm text-slate-500">
-                        Timeseries data transformed into the frequency domain (<span class="font-bold text-slate-700">32 bins</span>), yielding <span class="font-bold text-blue-600">6,400</span> discrete spatial-spectral markers.
+                <div class="step-card relative">
+                    <div class="connector hidden md:block"></div>
+                    <div class="step-num mb-3">Step 03 / transform</div>
+                    <h3 class="font-bold text-lg text-white mb-2">Spectral Transform</h3>
+                    <p class="text-sm text-[color:var(--text-1)]">
+                        Time-series data is projected to the frequency domain (<span class="font-bold text-white">32 bins</span>), producing <span class="font-bold tech-text">6,400</span> spatial-spectral markers.
                     </p>
                 </div>
                 <!-- Step 4 -->
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col items-center text-center hover:shadow-md transition-shadow relative border-b-4 border-b-blue-500">
-                    <div class="hidden md:block absolute -left-4 top-1/2 transform -translate-y-1/2 text-2xl text-slate-300">➡️</div>
-                    <div class="text-5xl mb-4">🌳</div>
-                    <h3 class="font-bold text-lg text-slate-800 mb-2">4. Ensemble ML</h3>
-                    <p class="text-sm text-slate-500">
-                        A <span class="font-bold text-slate-700">Random Forest Classifier</span> is trained to discriminate patterns between responsive and resistant cohorts.
+                <div class="step-card step-final relative">
+                    <div class="connector hidden md:block"></div>
+                    <div class="step-num mb-3">Step 04 / classify</div>
+                    <h3 class="font-bold text-lg text-white mb-2">Ensemble ML</h3>
+                    <p class="text-sm text-[color:var(--text-1)]">
+                        A <span class="font-bold text-white">Random Forest classifier</span> discriminates patterns between responsive and resistant cohorts.
                     </p>
                 </div>
             </div>
         </section>
 
         <!-- 2. Demographics & Metrics -->
-        <section id="metrics" class="scroll-mt-24 bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
+        <section id="metrics" class="scroll-mt-24 panel p-8">
             <div class="mb-10 text-center md:text-left">
-                <h2 class="text-3xl font-bold text-slate-900 mb-4">Empirical Results & Accuracy</h2>
-                <p class="text-lg text-slate-600 max-w-4xl">
-                    Here we visualize the core findings of the study. The model's validity rests on a balanced dataset and its exceptional out-of-sample prediction accuracy. These charts highlight the symmetry and robustness of the Random Forest ensemble.
+                <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">Empirical Results &amp; Accuracy</h2>
+                <p class="text-lg text-[color:var(--text-1)] max-w-4xl">
+                    The model's validity rests on a balanced dataset and exceptional out-of-sample prediction accuracy. These charts visualize the symmetry and robustness of the Random Forest ensemble.
                 </p>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-12 items-center">
-                
+
                 <!-- Stat Highlight -->
-                <div class="lg:col-span-1 flex flex-col justify-center items-center p-8 bg-slate-50 rounded-xl border border-slate-100">
-                    <p class="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">Out-of-Sample Accuracy</p>
-                    <div class="text-6xl font-extrabold text-blue-600 mb-2">92.59%</div>
-                    <p class="text-sm text-slate-500 font-mono mb-6">(n = 54 test set)</p>
-                    
-                    <div class="w-full bg-slate-200 rounded-full h-3 mb-2">
-                      <div class="bg-blue-600 h-3 rounded-full" style="width: 92.59%"></div>
+                <div class="lg:col-span-1 flex flex-col justify-center items-center p-8 panel-soft">
+                    <p class="text-xs font-mono text-[color:var(--text-2)] uppercase tracking-[0.2em] mb-3">Out-of-Sample Accuracy</p>
+                    <div class="text-6xl font-extrabold tech-text mb-2">92.59<span class="text-3xl">%</span></div>
+                    <p class="text-xs text-[color:var(--text-2)] font-mono mb-6">n = 54 test set</p>
+
+                    <div class="w-full bg-ink-700/60 rounded-full h-2 mb-2 overflow-hidden">
+                      <div class="h-2 rounded-full" style="width: 92.59%; background: linear-gradient(90deg, #7c3aed, #c4b5fd);"></div>
                     </div>
-                    <p class="text-xs text-slate-400 text-center mt-4">The classifier demonstrates significant prognostic power compared to standard subjective baselines.</p>
+                    <p class="text-xs text-[color:var(--text-2)] text-center mt-4">Significant prognostic power compared to standard subjective baselines.</p>
                 </div>
 
                 <!-- Cohort Split Chart -->
                 <div class="lg:col-span-1 flex flex-col items-center">
-                    <h3 class="font-bold text-slate-700 mb-4">Balanced Clinical Cohort (N=266)</h3>
+                    <h3 class="font-bold text-[color:var(--text-0)] mb-4">Balanced Clinical Cohort (N = 266)</h3>
                     <div class="chart-container h-md max-w-sm">
                         <canvas id="cohortChart"></canvas>
                     </div>
@@ -196,7 +377,7 @@
 
                 <!-- Metrics Chart -->
                 <div class="lg:col-span-1 flex flex-col items-center">
-                    <h3 class="font-bold text-slate-700 mb-4">Symmetrical Classification Robustness</h3>
+                    <h3 class="font-bold text-[color:var(--text-0)] mb-4">Symmetrical Classification Robustness</h3>
                     <div class="chart-container h-md w-full">
                         <canvas id="metricsChart"></canvas>
                     </div>
@@ -209,22 +390,21 @@
         <section id="fingerprint" class="scroll-mt-24">
             <div class="mb-8 flex flex-col md:flex-row justify-between md:items-end gap-4">
                 <div class="max-w-3xl">
-                    <h2 class="text-3xl font-bold text-slate-900 mb-4">High-Dimensional Neural Fingerprint</h2>
-                    <p class="text-lg text-slate-600">
-                        This interactive visualization maps the <span class="font-semibold text-slate-800">Gini Feature Importance</span> extracted from the Random Forest model. It isolates the specific high-frequency spatial-spectral hubs within the Schaefer 200-node atlas that mathematically drive treatment resistance. 
+                    <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">High-Dimensional Neural Fingerprint</h2>
+                    <p class="text-lg text-[color:var(--text-1)]">
+                        Interactive visualization of the <span class="font-semibold text-white">Gini Feature Importance</span> extracted from the Random Forest model. It isolates the high-frequency spatial-spectral hubs within the Schaefer 200-node atlas that mathematically drive treatment resistance.
                     </p>
                 </div>
-                <div class="bg-blue-50 text-blue-800 text-sm p-3 rounded-lg border border-blue-100 font-mono">
-                    Features: 6,400<br>
-                    Dimensions: Spatial × Spectral
+                <div class="chip self-start md:self-end whitespace-nowrap">
+                    Features 6,400 · Spatial × Spectral
                 </div>
             </div>
 
             <!-- Plotly Container -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
+            <div class="panel p-4">
                 <div id="brain-plot" class="chart-container h-xl w-full"></div>
-                <p class="text-xs text-slate-400 text-center mt-2">
-                    * Interactive 3D visualization. Scroll to zoom, click and drag to rotate. Each node represents a frequency bin within a spatial region. Color intensity and size dictate predictive importance.
+                <p class="text-xs text-[color:var(--text-2)] text-center mt-3 font-mono tracking-wide">
+                    Scroll to zoom · Click + drag to rotate · Each node = a frequency bin within a spatial region · Color &amp; size encode predictive importance
                 </p>
             </div>
         </section>
@@ -233,122 +413,128 @@
         <section id="visualizer" class="scroll-mt-24">
             <div class="mb-8 flex flex-col md:flex-row justify-between md:items-end gap-4">
                 <div class="max-w-3xl">
-                    <h2 class="text-3xl font-bold text-slate-900 mb-4">3D Neural Visualizer</h2>
-                    <p class="text-lg text-slate-600">
-                        Upload a raw fMRI BOLD scan (<code class="font-mono text-sm bg-slate-100 px-1 py-0.5 rounded">.nii</code> or <code class="font-mono text-sm bg-slate-100 px-1 py-0.5 rounded">.nii.gz</code>) to render an interactive 3D brain model and run the 11D Random Forest diagnostic sequence directly in your browser.
+                    <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">3D Neural Visualizer</h2>
+                    <p class="text-lg text-[color:var(--text-1)]">
+                        Upload a raw fMRI BOLD scan (<code class="font-mono text-sm text-plum-300 bg-ink-800/70 px-2 py-0.5 rounded">.nii</code> / <code class="font-mono text-sm text-plum-300 bg-ink-800/70 px-2 py-0.5 rounded">.nii.gz</code>) — or load a built-in example dataset — to render an interactive 3D brain and run the diagnostic sequence directly in your browser.
                     </p>
                 </div>
+                <span class="chip self-start md:self-end"><span class="pulse-dot"></span> NiiVue · WebGL 2.0</span>
             </div>
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                <iframe src="visualizer.html" title="Babel Forge 3D Neural Visualizer" class="w-full border-0" style="min-height: 80vh;" sandbox="allow-scripts allow-same-origin"></iframe>
+            <div class="panel overflow-hidden">
+                <iframe src="visualizer.html" title="babelForge 3D Neural Visualizer" class="w-full border-0 block bg-transparent" style="min-height: 80vh;" sandbox="allow-scripts allow-same-origin"></iframe>
             </div>
         </section>
 
         <!-- 5. Simulated fMRI Extraction Dashboard -->
-        <section id="simulator" class="scroll-mt-24 bg-slate-900 text-white rounded-3xl shadow-xl p-8 lg:p-12 border border-slate-800 relative overflow-hidden">
-            <!-- Decorative background element -->
-            <div class="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 rounded-full bg-blue-600 opacity-20 blur-3xl"></div>
-            
+        <section id="simulator" class="scroll-mt-24 panel p-8 lg:p-12 relative overflow-hidden">
+            <!-- Decorative violet glow -->
+            <div class="absolute top-0 right-0 -mr-24 -mt-24 w-72 h-72 rounded-full bg-plum-600 opacity-25 blur-3xl pointer-events-none"></div>
+            <div class="absolute bottom-0 left-0 -mb-20 -ml-20 w-64 h-64 rounded-full bg-plum-500 opacity-15 blur-3xl pointer-events-none"></div>
+
             <div class="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12">
                 <div>
-                    <h2 class="text-3xl font-bold text-white mb-4 flex items-center">
-                        <span class="mr-3">🧠</span> Simulated Extraction Dashboard
+                    <h2 class="text-3xl md:text-4xl font-bold text-white mb-4 flex items-center gap-3">
+                        <span class="pulse-dot"></span> Simulated Extraction Dashboard
                     </h2>
-                    <p class="text-slate-300 mb-6 text-lg">
-                        Upload a sample <code class="font-mono text-blue-300">.nii</code> or <code class="font-mono text-blue-300">.nii.gz</code> scan to simulate the browser-safe preprocessing workflow. The dashboard generates a mock 6,400-dimensional neural fingerprint and submits it to the live Babel Forge API for diagnosis.
+                    <p class="text-[color:var(--text-1)] mb-6 text-lg">
+                        Upload a sample <code class="font-mono text-plum-300">.nii</code> or <code class="font-mono text-plum-300">.nii.gz</code> scan to simulate the browser-safe preprocessing workflow. The dashboard generates a mock 6,400-dimensional neural fingerprint and submits it to the live babelForge API for diagnosis.
                     </p>
-                    <div class="mb-6 rounded-lg border border-amber-400/40 bg-amber-400/10 p-4 text-sm text-amber-100">
+                    <div class="mb-6 rounded-xl border border-amber-300/30 bg-amber-300/5 p-4 text-sm text-amber-100">
                         <p class="font-bold text-amber-200">Disclaimer</p>
-                        <p class="mt-1">I’m working on a fully functional application that takes in fMRI scans and provides diagnoses. This GitHub Pages dashboard is a portfolio-safe simulation of the extraction workflow while that full application is in development.</p>
+                        <p class="mt-1 text-amber-100/85">I’m working on a fully functional application that takes in fMRI scans and provides diagnoses. This GitHub Pages dashboard is a portfolio-safe simulation of the extraction workflow while that full application is in development.</p>
                     </div>
-                    
-                    <div class="bg-slate-800 rounded-lg p-6 border border-slate-700 font-mono text-sm mb-6 shadow-inner space-y-4">
+
+                    <div class="panel-soft p-6 font-mono text-sm mb-6 space-y-4">
                         <div>
-                            <p class="text-slate-400 mb-2">// Select a simulated patient scan to process:</p>
-                            <label for="scanUpload" class="block cursor-pointer rounded-lg border-2 border-dashed border-slate-600 bg-slate-900 p-6 text-center hover:border-blue-500 transition-colors">
+                            <p class="text-[color:var(--text-2)] mb-2">// Select a simulated patient scan to process:</p>
+                            <label for="scanUpload" class="block cursor-pointer rounded-lg border border-dashed border-plum-500/40 bg-ink-900/60 p-6 text-center hover:border-plum-400 hover:bg-plum-500/5 transition-colors">
                                 <span class="block text-3xl mb-2">📁</span>
-                                <span class="block text-green-400 font-bold">Choose .nii or .nii.gz file</span>
-                                <span class="block text-slate-500 text-xs mt-2">No imaging data leaves your browser; only a mock fingerprint is sent.</span>
+                                <span class="block text-plum-300 font-bold">Choose .nii or .nii.gz file</span>
+                                <span class="block text-[color:var(--text-2)] text-xs mt-2">No imaging data leaves your browser; only a mock fingerprint is sent.</span>
                             </label>
                             <input id="scanUpload" type="file" accept=".nii,.nii.gz,application/gzip" class="hidden">
                         </div>
-                        <div id="fileMeta" class="text-slate-400">No scan selected.</div>
+                        <div id="fileMeta" class="text-[color:var(--text-2)]">No scan selected.</div>
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                            <div class="bg-slate-900 rounded p-3 border border-slate-700">
-                                <p class="text-slate-500 uppercase tracking-wide">Fingerprint</p>
-                                <p id="fingerprintStatus" class="text-slate-300 font-bold mt-1">Pending</p>
+                            <div class="bg-ink-900/70 rounded-lg p-3 border border-plum-500/15">
+                                <p class="text-[color:var(--text-2)] uppercase tracking-wider">Fingerprint</p>
+                                <p id="fingerprintStatus" class="text-[color:var(--text-0)] font-bold mt-1">Pending</p>
                             </div>
-                            <div class="bg-slate-900 rounded p-3 border border-slate-700">
-                                <p class="text-slate-500 uppercase tracking-wide">Vector Size</p>
-                                <p id="vectorSize" class="text-slate-300 font-bold mt-1">0 / 6400</p>
+                            <div class="bg-ink-900/70 rounded-lg p-3 border border-plum-500/15">
+                                <p class="text-[color:var(--text-2)] uppercase tracking-wider">Vector Size</p>
+                                <p id="vectorSize" class="text-[color:var(--text-0)] font-bold mt-1">0 / 6400</p>
                             </div>
-                            <div class="bg-slate-900 rounded p-3 border border-slate-700">
-                                <p class="text-slate-500 uppercase tracking-wide">API Status</p>
-                                <p id="apiStatus" class="text-slate-300 font-bold mt-1">Idle</p>
+                            <div class="bg-ink-900/70 rounded-lg p-3 border border-plum-500/15">
+                                <p class="text-[color:var(--text-2)] uppercase tracking-wider">API Status</p>
+                                <p id="apiStatus" class="text-[color:var(--text-0)] font-bold mt-1">Idle</p>
                             </div>
                         </div>
                     </div>
 
-                    <button id="runInferenceBtn" disabled class="w-full bg-slate-700 text-white font-bold py-4 px-6 rounded-lg transition-all shadow-lg flex justify-center items-center cursor-not-allowed">
+                    <button id="runInferenceBtn" disabled class="w-full bg-ink-700 text-[color:var(--text-2)] font-bold py-4 px-6 rounded-xl transition-all shadow-lg flex justify-center items-center cursor-not-allowed">
                         <span id="btnText">UPLOAD A SCAN TO BEGIN</span>
                         <span id="btnLoader" class="hidden ml-2 animate-spin">⚙️</span>
                     </button>
                 </div>
 
                 <!-- Terminal Output -->
-                <div class="bg-black rounded-lg border border-slate-700 p-4 font-mono text-sm overflow-hidden flex flex-col h-full min-h-[300px]">
-                    <div class="flex space-x-2 mb-4 border-b border-slate-800 pb-2">
+                <div class="bg-black/80 rounded-xl border border-plum-500/25 p-4 font-mono text-sm overflow-hidden flex flex-col h-full min-h-[300px] shadow-[inset_0_0_40px_rgba(124,58,237,0.15)]">
+                    <div class="flex space-x-2 mb-4 border-b border-plum-500/15 pb-2 items-center">
                         <div class="w-3 h-3 rounded-full bg-rose-500"></div>
-                        <div class="w-3 h-3 rounded-full bg-amber-500"></div>
-                        <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
-                        <div class="ml-2 text-slate-500 text-xs">root@babel-forge:/inference#</div>
+                        <div class="w-3 h-3 rounded-full bg-amber-400"></div>
+                        <div class="w-3 h-3 rounded-full bg-emerald-400"></div>
+                        <div class="ml-2 text-[color:var(--text-2)] text-xs">root@babel-forge:/inference#</div>
                     </div>
-                    <div id="terminalOutput" class="text-slate-300 whitespace-pre-wrap flex-grow overflow-y-auto">Waiting for .nii.gz upload...</div>
+                    <div id="terminalOutput" class="text-[color:var(--text-1)] whitespace-pre-wrap flex-grow overflow-y-auto">Waiting for .nii.gz upload...</div>
                 </div>
             </div>
         </section>
 
         <!-- 6. API Reference -->
-        <section id="api-reference" class="scroll-mt-24 bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
-            <h2 class="text-3xl font-bold text-slate-900 mb-4">Babel Forge API Reference</h2>
-            <p class="text-slate-600 mb-4">
-                Welcome to the <strong>Babel Forge Neural Engine API</strong>. This service exposes our 11D Random Forest model, providing real-time diagnostics for PTSD treatment resistance based on 6400-dimensional functional connectivity fingerprints.
+        <section id="api-reference" class="scroll-mt-24 panel p-8">
+            <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">babelForge API Reference</h2>
+            <p class="text-[color:var(--text-1)] mb-4">
+                Welcome to the <strong class="text-white">babelForge Neural Engine API</strong>. This service exposes our 11D Random Forest model, providing real-time diagnostics for PTSD treatment resistance based on 6,400-dimensional functional connectivity fingerprints.
             </p>
-            <p class="text-slate-600 mb-6">
-                <span class="font-semibold text-slate-800">Base URL:</span>
-                <code class="font-mono text-sm bg-slate-100 px-2 py-1 rounded">https://babel-forge-api-1066096962926.us-central1.run.app</code>
+            <p class="text-[color:var(--text-1)] mb-6">
+                <span class="font-semibold text-white">Base URL:</span>
+                <code class="font-mono text-sm text-plum-300 bg-ink-800/70 px-2 py-1 rounded ml-1">https://babel-forge-api-1066096962926.us-central1.run.app</code>
             </p>
 
             <div class="space-y-8">
-                <div class="border border-slate-200 rounded-xl p-6">
-                    <h3 class="text-xl font-bold text-slate-900 mb-2">1. Health Check</h3>
-                    <p class="text-slate-600 mb-4">Verify the operational status of the Forge and ensure the Random Forest model is successfully loaded into memory.</p>
-                    <p class="text-sm text-slate-700 mb-1"><span class="font-semibold">Endpoint:</span> <code class="font-mono bg-slate-100 px-2 py-1 rounded">/health</code></p>
-                    <p class="text-sm text-slate-700 mb-4"><span class="font-semibold">Method:</span> <code class="font-mono bg-slate-100 px-2 py-1 rounded">GET</code></p>
-                    <p class="font-semibold text-slate-800 mb-2">Response</p>
-                    <pre class="bg-slate-950 text-slate-100 rounded-lg p-4 text-sm overflow-x-auto font-mono">{
+                <div class="endpoint-card">
+                    <div class="flex items-center gap-3 mb-3">
+                        <span class="font-mono text-xs px-2 py-1 rounded bg-emerald-400/15 text-emerald-300 border border-emerald-400/30">GET</span>
+                        <h3 class="text-xl font-bold text-white">Health Check</h3>
+                    </div>
+                    <p class="text-[color:var(--text-1)] mb-4">Verify the operational status of the Forge and ensure the Random Forest model is successfully loaded into memory.</p>
+                    <p class="text-sm text-[color:var(--text-1)] mb-4"><span class="font-semibold text-white">Endpoint:</span> <code class="font-mono text-plum-300 bg-ink-800/70 px-2 py-1 rounded">/health</code></p>
+                    <p class="font-semibold text-white mb-2">Response</p>
+                    <pre class="codeblock">{
   "status": "online",
   "model_loaded": true
 }</pre>
                 </div>
 
-                <div class="border border-slate-200 rounded-xl p-6">
-                    <h3 class="text-xl font-bold text-slate-900 mb-2">2. Diagnose Patient</h3>
-                    <p class="text-slate-600 mb-4">Analyze a patient's neural signature to predict their likelihood of being treatment-resistant or treatment-responsive.</p>
-                    <p class="text-sm text-slate-700 mb-1"><span class="font-semibold">Endpoint:</span> <code class="font-mono bg-slate-100 px-2 py-1 rounded">/diagnose</code></p>
-                    <p class="text-sm text-slate-700 mb-1"><span class="font-semibold">Method:</span> <code class="font-mono bg-slate-100 px-2 py-1 rounded">POST</code></p>
-                    <p class="text-sm text-slate-700 mb-4"><span class="font-semibold">Content-Type:</span> <code class="font-mono bg-slate-100 px-2 py-1 rounded">application/json</code></p>
+                <div class="endpoint-card">
+                    <div class="flex items-center gap-3 mb-3">
+                        <span class="font-mono text-xs px-2 py-1 rounded bg-plum-500/20 text-plum-300 border border-plum-500/40">POST</span>
+                        <h3 class="text-xl font-bold text-white">Diagnose Patient</h3>
+                    </div>
+                    <p class="text-[color:var(--text-1)] mb-4">Analyze a patient's neural signature to predict their likelihood of being treatment-resistant or treatment-responsive.</p>
+                    <p class="text-sm text-[color:var(--text-1)] mb-1"><span class="font-semibold text-white">Endpoint:</span> <code class="font-mono text-plum-300 bg-ink-800/70 px-2 py-1 rounded">/diagnose</code></p>
+                    <p class="text-sm text-[color:var(--text-1)] mb-4"><span class="font-semibold text-white">Content-Type:</span> <code class="font-mono text-plum-300 bg-ink-800/70 px-2 py-1 rounded">application/json</code></p>
 
-                    <p class="font-semibold text-slate-800 mb-2">Request Body</p>
-                    <p class="text-slate-600 mb-3">The endpoint expects a flat array of exactly 6400 <code class="font-mono bg-slate-100 px-1 py-0.5 rounded">float</code> values representing the harmonized neural fingerprint.</p>
-                    <pre class="bg-slate-950 text-slate-100 rounded-lg p-4 text-sm overflow-x-auto font-mono mb-4">{
+                    <p class="font-semibold text-white mb-2">Request Body</p>
+                    <p class="text-[color:var(--text-1)] mb-3">The endpoint expects a flat array of exactly 6,400 <code class="font-mono text-plum-300 bg-ink-800/70 px-1 py-0.5 rounded">float</code> values representing the harmonized neural fingerprint.</p>
+                    <pre class="codeblock mb-4">{
   "patient_id": "sub-10294",
   "fingerprint": [0.014293, 0.013467, 0.012743, ...]
 }</pre>
 
-                    <p class="font-semibold text-slate-800 mb-2">Response</p>
-                    <p class="text-slate-600 mb-3">Returns the clinical prediction along with confidence metrics and raw model probabilities.</p>
-                    <pre class="bg-slate-950 text-slate-100 rounded-lg p-4 text-sm overflow-x-auto font-mono mb-4">{
+                    <p class="font-semibold text-white mb-2">Response</p>
+                    <p class="text-[color:var(--text-1)] mb-3">Returns the clinical prediction along with confidence metrics and raw model probabilities.</p>
+                    <pre class="codeblock mb-4">{
   "patient_id": "sub-10294",
   "prediction_code": 1,
   "clinical_status": "RESISTANT",
@@ -359,10 +545,10 @@
   }
 }</pre>
 
-                    <p class="font-semibold text-slate-800 mb-2">Error Responses</p>
-                    <ul class="list-disc pl-6 text-slate-600 space-y-1">
-                        <li><code class="font-mono bg-slate-100 px-1 py-0.5 rounded">400 Bad Request</code>: Triggered if the fingerprint array does not contain exactly 6400 elements.</li>
-                        <li><code class="font-mono bg-slate-100 px-1 py-0.5 rounded">503 Service Unavailable</code>: Triggered if the neural model is currently offline or failed to initialize.</li>
+                    <p class="font-semibold text-white mb-2">Error Responses</p>
+                    <ul class="list-disc pl-6 text-[color:var(--text-1)] space-y-1">
+                        <li><code class="font-mono text-rose-300 bg-ink-800/70 px-1 py-0.5 rounded">400 Bad Request</code> — fingerprint array length ≠ 6,400.</li>
+                        <li><code class="font-mono text-rose-300 bg-ink-800/70 px-1 py-0.5 rounded">503 Service Unavailable</code> — neural model is offline or failed to initialize.</li>
                     </ul>
                 </div>
             </div>
@@ -371,10 +557,14 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-white border-t border-slate-200 mt-20 py-8">
-        <div class="max-w-7xl mx-auto px-4 text-center text-slate-500 text-sm">
-            <p>Based on the research report: "Babel Forge: A High-Dimensional Spatial-Spectral Fingerprinting Framework for Predicting PTSD Treatment Resistance" by Najmos Sakib.</p>
-            <p class="mt-2 text-slate-400">Visualization Prototype • Synthetic Data Demo</p>
+    <footer class="border-t border-plum-500/15 mt-20 py-10 bg-ink-900/40">
+        <div class="max-w-7xl mx-auto px-4 text-center text-[color:var(--text-2)] text-sm">
+            <div class="flex items-center justify-center gap-3 mb-3">
+                <span class="logo-mark" aria-hidden="true"></span>
+                <span class="font-extrabold text-base text-white">babel<span class="tech-text">Forge</span></span>
+            </div>
+            <p>Based on the research report: "babelForge — A High-Dimensional Spatial-Spectral Fingerprinting Framework for Predicting PTSD Treatment Resistance" by Najmos Sakib.</p>
+            <p class="mt-2 text-[color:var(--text-2)]/70 font-mono text-xs tracking-wider">Visualization Prototype · Synthetic Data Demo</p>
         </div>
     </footer>
 
@@ -395,19 +585,25 @@
                     datasets: [{
                         data: [133, 133],
                         backgroundColor: [
-                            '#10b981', // Emerald 500
-                            '#f43f5e'  // Rose 500
+                            '#a78bfa', // plum 400
+                            '#ec4899'  // fuchsia/magenta accent
                         ],
-                        borderWidth: 0,
-                        hoverOffset: 4
+                        borderColor: '#0f0820',
+                        borderWidth: 2,
+                        hoverOffset: 6
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { position: 'bottom', labels: { font: { family: 'Inter' } } },
+                        legend: { position: 'bottom', labels: { color: '#c7bce0', font: { family: 'Inter' } } },
                         tooltip: {
+                            backgroundColor: '#0f0820',
+                            borderColor: 'rgba(167,139,250,0.3)',
+                            borderWidth: 1,
+                            titleColor: '#ede9fe',
+                            bodyColor: '#c7bce0',
                             callbacks: {
                                 label: function(context) {
                                     return ` ${context.label}: ${context.raw} subjects (50%)`;
@@ -431,14 +627,14 @@
                         {
                             label: 'Responsive',
                             data: [0.93, 0.93, 0.93],
-                            backgroundColor: '#34d399', // Emerald 400
-                            borderRadius: 4
+                            backgroundColor: '#c4b5fd', // plum 300
+                            borderRadius: 6
                         },
                         {
                             label: 'Resistant',
                             data: [0.93, 0.93, 0.93],
-                            backgroundColor: '#fb7185', // Rose 400
-                            borderRadius: 4
+                            backgroundColor: '#7c3aed', // plum 600
+                            borderRadius: 6
                         }
                     ]
                 },
@@ -449,17 +645,22 @@
                         y: {
                             beginAtZero: true,
                             max: 1.0,
-                            grid: { color: '#f1f5f9' },
-                            ticks: { font: { family: 'Inter' } }
+                            grid: { color: 'rgba(167,139,250,0.08)' },
+                            ticks: { color: '#8a82a8', font: { family: 'Inter' } }
                         },
                         x: {
                             grid: { display: false },
-                            ticks: { font: { family: 'Inter', weight: 'bold' } }
+                            ticks: { color: '#c7bce0', font: { family: 'Inter', weight: 'bold' } }
                         }
                     },
                     plugins: {
-                        legend: { position: 'top', labels: { font: { family: 'Inter' } } },
+                        legend: { position: 'top', labels: { color: '#c7bce0', font: { family: 'Inter' } } },
                         tooltip: {
+                            backgroundColor: '#0f0820',
+                            borderColor: 'rgba(167,139,250,0.3)',
+                            borderWidth: 1,
+                            titleColor: '#ede9fe',
+                            bodyColor: '#c7bce0',
                             callbacks: {
                                 label: (context) => ` ${context.dataset.label}: ${context.raw.toFixed(2)}`
                             }
@@ -494,13 +695,21 @@
                 marker: {
                     size: importance.map(v => (v / 100) * 15 + 3),
                     color: importance,
-                    colorscale: 'YlOrRd',
-                    opacity: 0.8,
+                    colorscale: [
+                        [0.0, '#1e1b4b'],
+                        [0.25, '#4c1d95'],
+                        [0.5, '#7c3aed'],
+                        [0.75, '#a78bfa'],
+                        [1.0, '#f0abfc']
+                    ],
+                    opacity: 0.85,
                     showscale: true,
                     colorbar: {
-                        title: 'Gini Importance',
-                        thickness: 15,
-                        len: 0.5
+                        title: { text: 'Gini Importance', font: { color: '#c7bce0', family: 'Inter' } },
+                        thickness: 14,
+                        len: 0.5,
+                        tickfont: { color: '#8a82a8', family: 'JetBrains Mono', size: 10 },
+                        outlinewidth: 0
                     }
                 },
                 text: text,
@@ -511,16 +720,17 @@
             const layout = {
                 margin: { l: 0, r: 0, b: 0, t: 0 },
                 scene: {
-                    xaxis: { title: '', showticklabels: false, showgrid: false, zeroline: false },
-                    yaxis: { title: '', showticklabels: false, showgrid: false, zeroline: false },
-                    zaxis: { title: '', showticklabels: false, showgrid: false, zeroline: false },
+                    xaxis: { title: '', showticklabels: false, showgrid: false, zeroline: false, showbackground: false },
+                    yaxis: { title: '', showticklabels: false, showgrid: false, zeroline: false, showbackground: false },
+                    zaxis: { title: '', showticklabels: false, showgrid: false, zeroline: false, showbackground: false },
+                    bgcolor: 'rgba(0,0,0,0)',
                     camera: {
                         eye: {x: 1.5, y: 1.5, z: 1.2}
                     }
                 },
                 paper_bgcolor: 'rgba(0,0,0,0)',
                 plot_bgcolor: 'rgba(0,0,0,0)',
-                hoverlabel: { font: { family: 'Inter' } }
+                hoverlabel: { bgcolor: '#0f0820', bordercolor: 'rgba(167,139,250,0.4)', font: { family: 'Inter', color: '#ede9fe' } }
             };
 
             const config = {
@@ -561,14 +771,15 @@
             "'": '&#39;'
         };
         const TERMINAL_COLOR_CLASSES = new Set([
-            'text-slate-300',
-            'text-slate-400',
-            'text-slate-500',
-            'text-blue-400',
-            'text-green-400',
-            'text-emerald-400',
+            'text-[color:var(--text-0)]',
+            'text-[color:var(--text-1)]',
+            'text-[color:var(--text-2)]',
+            'text-plum-300',
+            'text-plum-400',
+            'text-emerald-300',
             'text-rose-300',
-            'text-rose-400'
+            'text-rose-400',
+            'text-amber-300'
         ]);
 
         const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -581,9 +792,9 @@
         };
         const sanitizeTerminalText = (value) => String(value).replace(/[&<>"']/g, character => HTML_ESCAPE_ENTITIES[character]);
 
-        const appendTerminalLine = (message = '', colorClass = 'text-slate-300') => {
+        const appendTerminalLine = (message = '', colorClass = 'text-[color:var(--text-1)]') => {
             const line = document.createElement('div');
-            line.className = TERMINAL_COLOR_CLASSES.has(colorClass) ? colorClass : 'text-slate-300';
+            line.className = TERMINAL_COLOR_CLASSES.has(colorClass) ? colorClass : 'text-[color:var(--text-1)]';
             line.textContent = sanitizeTerminalText(message);
             terminalOutput.appendChild(line);
             terminalOutput.scrollTop = terminalOutput.scrollHeight;
@@ -592,11 +803,17 @@
         const setRunButtonState = (enabled, label) => {
             runBtn.disabled = !enabled;
             btnText.innerText = label;
-            runBtn.classList.toggle('bg-blue-600', enabled);
-            runBtn.classList.toggle('hover:bg-blue-500', enabled);
-            runBtn.classList.toggle('hover:-translate-y-0.5', enabled);
-            runBtn.classList.toggle('cursor-not-allowed', !enabled);
-            runBtn.classList.toggle('bg-slate-700', !enabled);
+            if (enabled) {
+                runBtn.style.background = 'linear-gradient(135deg, #7c3aed, #8b5cf6)';
+                runBtn.style.color = '#ffffff';
+                runBtn.style.boxShadow = '0 8px 24px rgba(124, 58, 237, 0.4), inset 0 1px 0 rgba(255,255,255,0.15)';
+                runBtn.style.cursor = 'pointer';
+            } else {
+                runBtn.style.background = '#18102e';
+                runBtn.style.color = 'var(--text-2)';
+                runBtn.style.boxShadow = 'none';
+                runBtn.style.cursor = 'not-allowed';
+            }
         };
 
         const isValidScanName = (fileName) => /\.nii(\.gz)?$/i.test(fileName);
@@ -655,13 +872,13 @@
             fileMeta.textContent = `Selected: ${file.name} (${formatBytes(file.size)})`;
             if (!isValidScanName(file.name)) {
                 appendTerminalLine(`Unsupported file extension: ${file.name}`, 'text-rose-400');
-                appendTerminalLine('Please choose a .nii or .nii.gz scan.', 'text-slate-400');
+                appendTerminalLine('Please choose a .nii or .nii.gz scan.', 'text-[color:var(--text-2)]');
                 setRunButtonState(false, 'INVALID FILE TYPE');
                 return;
             }
 
-            appendTerminalLine(`Loaded local scan metadata for ${file.name}`, 'text-green-400');
-            appendTerminalLine('Ready to simulate preprocessing and API inference.', 'text-slate-400');
+            appendTerminalLine(`Loaded local scan metadata for ${file.name}`, 'text-emerald-300');
+            appendTerminalLine('Ready to simulate preprocessing and API inference.', 'text-[color:var(--text-2)]');
             setRunButtonState(true, 'RUN SIMULATED EXTRACTION');
         });
 
@@ -677,32 +894,32 @@
             apiStatus.textContent = 'Idle';
             terminalOutput.textContent = '';
             
-            appendTerminalLine(`Initialize simulated fMRI pipeline for ${file.name}...`, 'text-blue-400');
+            appendTerminalLine(`Initialize simulated fMRI pipeline for ${file.name}...`, 'text-plum-300');
             
             await sleep(600);
-            appendTerminalLine('Validating NIfTI header and affine matrix... [SIMULATED OK]', 'text-slate-400');
+            appendTerminalLine('Validating NIfTI header and affine matrix... [SIMULATED OK]', 'text-[color:var(--text-2)]');
             
             await sleep(500);
-            appendTerminalLine('Skull stripping with BET-style brain mask... [SIMULATED OK]', 'text-slate-400');
+            appendTerminalLine('Skull stripping with BET-style brain mask... [SIMULATED OK]', 'text-[color:var(--text-2)]');
             
             await sleep(700);
-            appendTerminalLine('Registering subject volume to MNI152 template... [SIMULATED OK]', 'text-slate-400');
+            appendTerminalLine('Registering subject volume to MNI152 template... [SIMULATED OK]', 'text-[color:var(--text-2)]');
             
             await sleep(800);
-            appendTerminalLine('Applying Schaefer 200-node atlas parcellation... [SIMULATED OK]', 'text-slate-400');
+            appendTerminalLine('Applying Schaefer 200-node atlas parcellation... [SIMULATED OK]', 'text-[color:var(--text-2)]');
             
             await sleep(700);
-            appendTerminalLine('Computing 32-bin Fourier spectrum per region...', 'text-slate-400');
+            appendTerminalLine('Computing 32-bin Fourier spectrum per region...', 'text-[color:var(--text-2)]');
             const fingerprint = createMockFingerprint(file);
             fingerprintStatus.textContent = 'Ready';
             vectorSize.textContent = `${fingerprint.length} / 6400`;
-            appendTerminalLine(`Generated mock fingerprint: ${fingerprint.length} float features`, 'text-green-400');
-            appendTerminalLine(`Preview: [${fingerprint.slice(0, 6).join(', ')}, ...]`, 'text-slate-500');
+            appendTerminalLine(`Generated mock fingerprint: ${fingerprint.length} float features`, 'text-emerald-300');
+            appendTerminalLine(`Preview: [${fingerprint.slice(0, 6).join(', ')}, ...]`, 'text-[color:var(--text-2)]');
             
             await sleep(500);
             apiStatus.textContent = 'Calling API';
             appendTerminalLine('');
-            appendTerminalLine('POST /diagnose -> live Babel Forge API', 'text-blue-400');
+            appendTerminalLine('POST /diagnose -> live babelForge API', 'text-plum-300');
 
             try {
                 const controller = new AbortController();
@@ -726,33 +943,33 @@
                 const statusClass = normalizedStatus.includes('resistant')
                     ? 'text-rose-400'
                     : normalizedStatus.includes('responsive')
-                        ? 'text-emerald-400'
-                        : 'text-slate-400';
+                        ? 'text-emerald-300'
+                        : 'text-[color:var(--text-2)]';
                 apiStatus.textContent = 'Complete';
 
-                appendTerminalLine('============================================================', 'text-slate-500');
-                appendTerminalLine('LIVE API DIAGNOSIS COMPLETE', 'text-green-400');
-                appendTerminalLine('------------------------------------------------------------', 'text-slate-500');
-                appendTerminalLine(`patient_id: ${result.patient_id || patientId}`, 'text-slate-300');
+                appendTerminalLine('============================================================', 'text-[color:var(--text-2)]');
+                appendTerminalLine('LIVE API DIAGNOSIS COMPLETE', 'text-emerald-300');
+                appendTerminalLine('------------------------------------------------------------', 'text-[color:var(--text-2)]');
+                appendTerminalLine(`patient_id: ${result.patient_id || patientId}`, 'text-[color:var(--text-1)]');
                 appendTerminalLine(`clinical_status: ${clinicalStatus}`, statusClass);
-                appendTerminalLine(`confidence: ${confidence}${typeof confidence === 'number' ? '%' : ''}`, 'text-slate-300');
-                appendTerminalLine('raw_response:', 'text-slate-400');
+                appendTerminalLine(`confidence: ${confidence}${typeof confidence === 'number' ? '%' : ''}`, 'text-[color:var(--text-1)]');
+                appendTerminalLine('raw_response:', 'text-[color:var(--text-2)]');
                 const rawResponse = JSON.stringify(result, null, 2);
                 const displayResponse = rawResponse.length > MAX_TERMINAL_RESPONSE_LENGTH
                     ? `${rawResponse.slice(0, MAX_TERMINAL_RESPONSE_LENGTH)}\n... truncated for display ...`
                     : rawResponse;
                 // Each indented JSON line is escaped by appendTerminalLine before it is added to the terminal.
                 displayResponse.split('\n')
-                    .forEach(line => appendTerminalLine(`  ${line}`, 'text-slate-400'));
-                appendTerminalLine('============================================================', 'text-slate-500');
+                    .forEach(line => appendTerminalLine(`  ${line}`, 'text-[color:var(--text-2)]'));
+                appendTerminalLine('============================================================', 'text-[color:var(--text-2)]');
             } catch (error) {
                 apiStatus.textContent = 'API Error';
-                appendTerminalLine('============================================================', 'text-slate-500');
+                appendTerminalLine('============================================================', 'text-[color:var(--text-2)]');
                 appendTerminalLine('LIVE API REQUEST FAILED', 'text-rose-400');
-                appendTerminalLine('------------------------------------------------------------', 'text-slate-500');
+                appendTerminalLine('------------------------------------------------------------', 'text-[color:var(--text-2)]');
                 appendTerminalLine(getApiErrorMessage(error), 'text-rose-300');
-                appendTerminalLine('The simulated 6,400-feature extraction completed, but the browser could not reach the diagnosis service.', 'text-slate-400');
-                appendTerminalLine('============================================================', 'text-slate-500');
+                appendTerminalLine('The simulated 6,400-feature extraction completed, but the browser could not reach the diagnosis service.', 'text-[color:var(--text-2)]');
+                appendTerminalLine('============================================================', 'text-[color:var(--text-2)]');
             }
             
             setRunButtonState(true, 'RUN SIMULATED EXTRACTION');
