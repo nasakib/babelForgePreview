@@ -504,6 +504,7 @@
         if (mode === "red") return ["#fda4af", "#fb7185", "#7f1d1d"];
         if (mode === "green") return ["#bbf7d0", "#86efac", "#14532d"];
         if (mode === "warm") return ["#fcd34d", "#f97316", "#7c2d12"];
+        // x_rain mirrors the NiiVue colormap name used for spectral overlays.
         if (mode === "x_rain") return ["#c4b5fd", "#8b5cf6", "#22d3ee"];
         return ["#ede9fe", "#a78bfa", "#312e81"];
     }
@@ -544,6 +545,7 @@
         const nodes = [];
         for (let i = 0; i < 64; i++) {
             const hemisphere = i % 2 === 0 ? -1 : 1;
+            // Golden-angle spacing distributes synthetic nodes evenly across the fallback brain silhouette.
             const theta = (i * 2.399963 + phase * 0.1) % (Math.PI * 2);
             const r = radius * (0.18 + ((i * 37) % 100) / 128);
             const x = hemisphere * Math.abs(Math.cos(theta)) * r * 0.9 + Math.sin(i) * 8;
@@ -847,6 +849,7 @@
 
             // Mock fingerprint payload
             const mockFingerprint = Array.from({length: 6400}, (_, index) => {
+                // 32 spectral bins: early bins approximate low-frequency Slow-4/Slow-5 power; bins 24-31 model high-frequency anomalies.
                 const spectralBin = index % 32;
                 const roi = Math.floor(index / 32);
                 const slowBand = spectralBin < 8 ? 0.012 : 0;
