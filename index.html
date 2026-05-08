@@ -230,6 +230,42 @@
             background: rgba(24, 16, 46, 0.45);
         }
 
+        .paper-card {
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            padding: 22px;
+            background: linear-gradient(180deg, rgba(31, 22, 64, 0.48), rgba(10, 4, 24, 0.68));
+        }
+        .paper-card::before {
+            content: ""; position: absolute; inset: 0;
+            background: radial-gradient(80% 60% at 10% 0%, rgba(139, 92, 246, 0.16), transparent 55%);
+            pointer-events: none;
+        }
+        .paper-card > * { position: relative; z-index: 1; }
+        .paper-kicker {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+            color: var(--plum-300);
+            margin-bottom: 10px;
+        }
+        .equation-card {
+            border: 1px solid var(--line-strong);
+            border-radius: 14px;
+            padding: 18px;
+            background: rgba(5, 1, 8, 0.58);
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-1);
+            overflow-x: auto;
+        }
+        .science-note {
+            border-left: 3px solid var(--plum-400);
+            background: rgba(139, 92, 246, 0.08);
+            border-radius: 12px;
+            padding: 16px 18px;
+        }
+
         /* Connector arrow for pipeline (replaces emoji) */
         .connector {
             position: absolute;
@@ -306,6 +342,7 @@
                 <div class="hidden md:flex items-center space-x-7">
                     <button onclick="scrollToSection('pipeline')" class="nav-link">Methodology</button>
                     <button onclick="scrollToSection('metrics')" class="nav-link">Metrics</button>
+                    <button onclick="scrollToSection('science-paper')" class="nav-link">Paper</button>
                     <button onclick="scrollToSection('fingerprint')" class="nav-link">Fingerprint</button>
                     <button onclick="scrollToSection('api-reference')" class="nav-link">API</button>
                     <button onclick="scrollToSection('visualizer')" class="nav-link">Visualizer</button>
@@ -334,6 +371,8 @@
                 <span class="chip"><span class="text-plum-300">D</span> 6,400 features</span>
                 <span class="chip"><span class="text-plum-300">ACC</span> 92.59%</span>
                 <span class="chip"><span class="text-plum-300">Atlas</span> Schaefer 200</span>
+                <span class="chip"><span class="text-plum-300">Topology</span> cliques · cavities · Betti curves</span>
+                <span class="chip"><span class="text-plum-300">Dynamics</span> Kuramoto phase-locking</span>
             </div>
         </div>
     </header>
@@ -385,6 +424,74 @@
                     <p class="text-sm text-[color:var(--text-1)]">
                         A <span class="font-bold text-white">Random Forest classifier</span> discriminates patterns between responsive and resistant cohorts.
                     </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. Interactive Science Paper Synthesis -->
+        <section id="science-paper" class="scroll-mt-24 panel p-8 lg:p-10 relative overflow-hidden">
+            <div class="absolute -top-20 -right-16 w-72 h-72 rounded-full bg-plum-600 opacity-20 blur-3xl pointer-events-none"></div>
+            <div class="relative z-10">
+                <div class="mb-10 max-w-5xl">
+                    <div class="chip mb-4">brainScienceToCode · Najmos Sakib</div>
+                    <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">High-Dimensional Neural Fingerprinting as an Interactive Science Paper</h2>
+                    <p class="text-lg text-[color:var(--text-1)] leading-relaxed">
+                        The added research file reframes babelForge as a synthesis of spatial-spectral fMRI fingerprinting, algebraic topology, nonlinear synchronization, and latent-space compression. The page now reads as a scientific argument: baseline BOLD signals are parcellated into 200 Schaefer regions, converted into 32 frequency bins, tested for persistent topological structure, and interpreted through dynamical systems rather than static connectivity alone.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-5 mb-8">
+                    <div class="paper-card">
+                        <div class="paper-kicker">Feature tensor</div>
+                        <h3 class="font-bold text-white text-lg mb-2">200 × 32 = 6,400</h3>
+                        <p class="text-sm text-[color:var(--text-1)] leading-relaxed">Each subject is represented as a spatial-spectral fingerprint: Schaefer ROI power spectra aggregated into 32 physiologically plausible bins.</p>
+                    </div>
+                    <div class="paper-card">
+                        <div class="paper-kicker">Topology</div>
+                        <h3 class="font-bold text-white text-lg mb-2">Cliques → cavities</h3>
+                        <p class="text-sm text-[color:var(--text-1)] leading-relaxed">All-to-all ROI groups form simplices; persistent cavities summarize robust loops and voids that can survive noise and acquisition variance.</p>
+                    </div>
+                    <div class="paper-card">
+                        <div class="paper-kicker">Dynamics</div>
+                        <h3 class="font-bold text-white text-lg mb-2">Kuramoto order</h3>
+                        <p class="text-sm text-[color:var(--text-1)] leading-relaxed">Phase synchronization provides a mechanistic bridge between spectral abnormalities, critical coupling, and possible intervention timing.</p>
+                    </div>
+                    <div class="paper-card">
+                        <div class="paper-kicker">Latent projection</div>
+                        <h3 class="font-bold text-white text-lg mb-2">Autoencoder bottleneck</h3>
+                        <p class="text-sm text-[color:var(--text-1)] leading-relaxed">Classical or quantum-latent representations are best treated as compression hypotheses until prospectively validated against clinical outcomes.</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                    <div class="space-y-5">
+                        <div class="science-note text-[color:var(--text-1)] leading-relaxed">
+                            <p class="font-bold text-white mb-2">Scientific validity guardrail</p>
+                            <p>This static page is a hypothesis-driven demonstration, not a medical device. Claims about PTSD treatment resistance require prospective validation, leakage-controlled cross-validation, preregistered endpoints, uncertainty reporting, and clinician-supervised interpretation.</p>
+                        </div>
+                        <div class="equation-card">
+                            <p class="text-plum-300 mb-2">Kuramoto synchronization</p>
+                            <p>dθᵢ/dt = ωᵢ + (K/N) Σⱼ Aᵢⱼ sin(θⱼ − θᵢ) + ηᵢ(t)</p>
+                            <p class="mt-4 text-[color:var(--text-2)]">Order parameter: r(t) = |N⁻¹ Σⱼ exp(iθⱼ)|, where r≈0 is asynchronous and r≈1 is globally phase-locked.</p>
+                        </div>
+                        <div class="equation-card">
+                            <p class="text-plum-300 mb-2">Persistent homology readout</p>
+                            <p>β₀ = connected components · β₁ = loops · β₂ = enclosed cavities</p>
+                            <p class="mt-4 text-[color:var(--text-2)]">Stable Betti features across filtration thresholds become candidate biomarkers only after model comparison and external validation.</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-6">
+                        <div class="panel-soft p-5">
+                            <h3 class="font-bold text-white mb-3">Topology signal sketch</h3>
+                            <div class="chart-container h-md w-full"><canvas id="bettiChart"></canvas></div>
+                            <p class="mt-3 text-xs text-[color:var(--text-2)] font-mono">Conceptual sketch only — synthetic values, not actual fMRI data and not clinically validated.</p>
+                        </div>
+                        <div class="panel-soft p-5">
+                            <h3 class="font-bold text-white mb-3">Phase-locking response sketch</h3>
+                            <div class="chart-container h-md w-full"><canvas id="kuramotoChart"></canvas></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -620,7 +727,7 @@
                 </svg>
                 <span class="font-extrabold text-base text-white">babel<span class="tech-text">Forge</span></span>
             </div>
-            <p>Based on the research report: "babelForge — A High-Dimensional Spatial-Spectral Fingerprinting Framework for Predicting PTSD Treatment Resistance" by Najmos Sakib.</p>
+            <p>Based on Najmos Sakib’s brainScienceToCode synthesis: high-dimensional neural fingerprinting, topological neuroscience, Kuramoto dynamics, and latent-space clinical prognostics.</p>
             <p class="mt-2 text-[color:var(--text-2)]/70 font-mono text-xs tracking-wider">Visualization Prototype · Synthetic Data Demo</p>
         </div>
     </footer>
@@ -631,6 +738,58 @@
         function scrollToSection(id) {
             document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
         }
+
+        // --- 0. Interactive paper charts ---
+        const initSciencePaperCharts = () => {
+            const bettiCtx = document.getElementById('bettiChart')?.getContext('2d');
+            if (bettiCtx) {
+                new Chart(bettiCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['0.05', '0.10', '0.15', '0.20', '0.25', '0.30', '0.35', '0.40'],
+                        // Synthetic illustrative Betti curves for conceptual demonstration only; not derived from actual fMRI data or validated for clinical use.
+                        datasets: [
+                            { label: 'β₀ components', data: [88, 64, 38, 20, 12, 7, 4, 2], borderColor: '#c4b5fd', backgroundColor: 'rgba(196,181,253,0.12)', tension: 0.35, fill: true },
+                            { label: 'β₁ loops', data: [2, 9, 23, 31, 24, 16, 8, 3], borderColor: '#8b5cf6', backgroundColor: 'rgba(139,92,246,0.10)', tension: 0.35, fill: true },
+                            { label: 'β₂ cavities', data: [0, 1, 6, 14, 19, 13, 5, 1], borderColor: '#f0abfc', backgroundColor: 'rgba(240,171,252,0.08)', tension: 0.35, fill: true }
+                        ]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        scales: {
+                            x: { title: { display: true, text: 'Filtration threshold', color: '#8a82a8' }, grid: { color: 'rgba(167,139,250,0.08)' }, ticks: { color: '#8a82a8' } },
+                            y: { title: { display: true, text: 'Feature count', color: '#8a82a8' }, beginAtZero: true, grid: { color: 'rgba(167,139,250,0.08)' }, ticks: { color: '#8a82a8' } }
+                        },
+                        plugins: {
+                            subtitle: { display: true, text: 'Conceptual sketch · synthetic illustrative values', color: '#8a82a8', font: { family: 'JetBrains Mono', size: 11 } },
+                            legend: { labels: { color: '#c7bce0', font: { family: 'Inter' } } }
+                        }
+                    }
+                });
+            }
+
+            const kuramotoCtx = document.getElementById('kuramotoChart')?.getContext('2d');
+            if (kuramotoCtx) {
+                new Chart(kuramotoCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['0.0', '0.2', '0.4', '0.6', '0.8', '1.0', '1.2', '1.4', '1.6'],
+                        datasets: [
+                            { label: 'Order parameter r', data: [0.08, 0.10, 0.14, 0.26, 0.48, 0.67, 0.79, 0.86, 0.90], borderColor: '#86efac', backgroundColor: 'rgba(134,239,172,0.08)', tension: 0.35, fill: true },
+                            { label: 'Pathological locking risk', data: [0.05, 0.08, 0.16, 0.36, 0.64, 0.74, 0.70, 0.62, 0.55], borderColor: '#fda4af', backgroundColor: 'rgba(253,164,175,0.08)', tension: 0.35, fill: true }
+                        ]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        scales: {
+                            x: { title: { display: true, text: 'Global coupling K', color: '#8a82a8' }, grid: { color: 'rgba(167,139,250,0.08)' }, ticks: { color: '#8a82a8' } },
+                            y: { min: 0, max: 1, title: { display: true, text: 'Normalized magnitude', color: '#8a82a8' }, grid: { color: 'rgba(167,139,250,0.08)' }, ticks: { color: '#8a82a8' } }
+                        },
+                        plugins: { legend: { labels: { color: '#c7bce0', font: { family: 'Inter' } } } }
+                    }
+                });
+            }
+        };
 
         // --- 1. Cohort Doughnut Chart ---
         const initCohortChart = () => {
@@ -1037,6 +1196,7 @@
 
         // --- Initialization ---
         window.addEventListener('DOMContentLoaded', () => {
+            initSciencePaperCharts();
             initCohortChart();
             initMetricsChart();
             initPlotlyBrain();

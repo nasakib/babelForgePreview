@@ -299,11 +299,11 @@
             background: #000;
             border-radius: 12px;
             overflow: hidden;
-            min-height: 520px;
+            height: clamp(520px, 72vh, 680px);
             border: 1px solid var(--line-strong);
             box-shadow: 0 0 40px rgba(124, 58, 237, 0.18), inset 0 0 0 1px rgba(255,255,255,0.03);
         }
-        .viewer-container canvas { width: 100%; height: 100%; outline: none; display: block; }
+        .viewer-container canvas { position: absolute; inset: 0; width: 100%; height: 100%; outline: none; display: block; }
         .viewer-overlay {
             position: absolute;
             top: 12px; left: 12px;
@@ -462,12 +462,24 @@
 
 <script>
     // --- 1. INITIALIZE 3D BRAIN VIEWER ---
-    const canvas = document.getElementById('gl');
+    let canvas = document.getElementById('gl');
     const viewerLoading = document.getElementById('viewer-loading');
     const viewerLoadingStatus = document.getElementById('viewer-loading-status');
     let nv = null;
     let viewerReady = false;
     let viewerInitError = null;
+    let viewerMode = "loading";
+    let fallbackAnimationId = null;
+    let fallbackColorMode = "gray";
+    let fallbackClipPhase = 0;
+    const GOLDEN_ANGLE_RADIANS = Math.PI * (3 - Math.sqrt(5));
+    const SLOW_BAND_BIN_CUTOFF = 8;
+    const HIGH_FREQ_ANOMALY_BIN_START = 24;
+    const HUB_ROI_STRIDE = 7;
+    const BASELINE_SPECTRAL_POWER = 0.018;
+    const SLOW_BAND_POWER_BOOST = 0.012;
+    const HIGH_FREQ_ANOMALY_POWER_BOOST = 0.018;
+    const NIIVUE_COLORMAP_ALIASES = { spectral: "x_rain" };
 
     function setLoadStep(stage, state, text) {
         const step = document.querySelector(`.load-step[data-stage="${stage}"]`);
@@ -484,10 +496,148 @@
         log(text, "info");
     }
 
+    function resizeCanvasToDisplaySize(targetCanvas) {
+        const rect = targetCanvas.getBoundingClientRect();
+        const width = Math.max(1, Math.floor(rect.width * window.devicePixelRatio));
+        const height = Math.max(1, Math.floor(rect.height * window.devicePixelRatio));
+        if (targetCanvas.width !== width || targetCanvas.height !== height) {
+            targetCanvas.width = width;
+            targetCanvas.height = height;
+        }
+        return { width, height, scale: window.devicePixelRatio || 1 };
+    }
+
+    function fallbackPalette(mode) {
+        if (mode === "red") return ["#fda4af", "#fb7185", "#7f1d1d"];
+        if (mode === "green") return ["#bbf7d0", "#86efac", "#14532d"];
+        if (mode === "warm") return ["#fcd34d", "#f97316", "#7c2d12"];
+        if (mode === "spectral") return ["#c4b5fd", "#8b5cf6", "#22d3ee"];
+        return ["#ede9fe", "#a78bfa", "#312e81"];
+    }
+
+    function drawFallbackBrain(timestamp = 0) {
+        const ctx = canvas.getContext("2d");
+        if (!ctx || viewerMode !== "fallback") return;
+        const { width, height, scale } = resizeCanvasToDisplaySize(canvas);
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.clearRect(0, 0, width, height);
+        ctx.scale(scale, scale);
+        const rect = canvas.getBoundingClientRect();
+        const w = rect.width;
+        const h = rect.height;
+        const cx = w / 2;
+        const cy = h / 2;
+        const radius = Math.min(w, h) * 0.34;
+        const phase = timestamp / 1200 + fallbackClipPhase;
+        const [primary, secondary] = fallbackPalette(fallbackColorMode);
+
+        const bg = ctx.createRadialGradient(cx, cy, radius * 0.1, cx, cy, radius * 1.35);
+        bg.addColorStop(0, "rgba(139, 92, 246, 0.24)");
+        bg.addColorStop(1, "rgba(5, 1, 8, 0.96)");
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, w, h);
+
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(Math.sin(phase * 0.45) * 0.08);
+        ctx.strokeStyle = "rgba(196, 181, 253, 0.28)";
+        ctx.lineWidth = 1;
+        for (let ring = 0.35; ring <= 1.0; ring += 0.16) {
+            ctx.beginPath();
+            ctx.ellipse(0, 0, radius * ring * 1.15, radius * ring * 0.82, Math.sin(phase) * 0.18, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+
+        const nodes = [];
+        for (let i = 0; i < 64; i++) {
+            const hemisphere = i % 2 === 0 ? -1 : 1;
+            // Golden-angle spacing (≈137.508°, ≈2.399963 rad) creates a Fibonacci-like distribution across the fallback brain silhouette.
+            const theta = (i * GOLDEN_ANGLE_RADIANS + phase * 0.1) % (Math.PI * 2);
+            const r = radius * (0.18 + ((i * 37) % 100) / 128);
+            const x = hemisphere * Math.abs(Math.cos(theta)) * r * 0.9 + Math.sin(i) * 8;
+            const y = Math.sin(theta) * r * 0.72 + Math.cos(i * 0.7 + phase) * 5;
+            if ((x / (radius * 1.08)) ** 2 + (y / (radius * 0.86)) ** 2 < 1) nodes.push({ x, y, i });
+        }
+
+        ctx.lineWidth = 0.8;
+        for (let i = 0; i < nodes.length; i++) {
+            for (let j = i + 1; j < nodes.length; j++) {
+                const a = nodes[i], b = nodes[j];
+                const dist = Math.hypot(a.x - b.x, a.y - b.y);
+                if (dist < radius * 0.26 && (a.i + b.i) % 4 !== 0) {
+                    ctx.strokeStyle = `rgba(167, 139, 250, ${0.08 + 0.14 * Math.sin(phase + a.i) ** 2})`;
+                    ctx.beginPath();
+                    ctx.moveTo(a.x, a.y);
+                    ctx.lineTo(b.x, b.y);
+                    ctx.stroke();
+                }
+            }
+        }
+
+        nodes.forEach((node) => {
+            const pulse = 0.6 + 0.4 * Math.sin(phase * 2 + node.i);
+            ctx.fillStyle = node.i % 9 === 0 ? primary : node.i % 5 === 0 ? secondary : "rgba(196,181,253,0.72)";
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, 2.3 + pulse * 1.8, 0, Math.PI * 2);
+            ctx.fill();
+        });
+
+        ctx.strokeStyle = primary;
+        ctx.lineWidth = 2;
+        ctx.globalAlpha = 0.42;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, radius * 1.2, radius * 0.88, Math.sin(phase * 0.7) * 0.25, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = "rgba(7, 3, 13, 0.62)";
+        ctx.fillRect(-radius * 0.58, radius * 0.98, radius * 1.16, 30);
+        ctx.fillStyle = primary;
+        ctx.font = "11px JetBrains Mono, monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("BROWSER-SAFE TOPOLOGY FALLBACK · SYNTHETIC MNI VIEW", 0, radius * 1.16);
+        ctx.restore();
+
+        fallbackAnimationId = requestAnimationFrame(drawFallbackBrain);
+    }
+
+    function startFallbackRenderer(reason) {
+        viewerMode = "fallback";
+        viewerInitError = null;
+        // Replace the canvas so a failed WebGL context cannot block the 2D fallback renderer.
+        const replacement = canvas.cloneNode(false);
+        replacement.id = "gl";
+        canvas.replaceWith(replacement);
+        canvas = replacement;
+        setLoadStep("engine", reason ? "error" : "done");
+        setLoadStep("canvas", "done", "Initialize fallback canvas");
+        setLoadStep("baseline", "done", "Synthetic MNI152 topology");
+        setLoadStep("ready", "done", "Fallback visualizer ready");
+        viewerLoading.classList.add("hidden");
+        viewerReady = true;
+        if (fallbackAnimationId) cancelAnimationFrame(fallbackAnimationId);
+        fallbackAnimationId = requestAnimationFrame(drawFallbackBrain);
+        log(`Fallback topology visualizer active${reason ? `: ${escapeHtml(reason)}` : "."}`, reason ? "warn" : "success");
+    }
+
+    function safeSetClipPlane(values) {
+        if (viewerMode === "fallback") {
+            fallbackClipPhase += 0.12;
+            return;
+        }
+        if (nv && typeof nv.setClipPlane === "function") {
+            nv.setClipPlane(values);
+        }
+    }
+
     function setPrimaryColormap(colormapName) {
+        const niivueColormapName = NIIVUE_COLORMAP_ALIASES[colormapName] || colormapName;
+        if (viewerMode === "fallback") {
+            fallbackColorMode = colormapName;
+            return true;
+        }
         if (!nv || !nv.volumes || !nv.volumes.length) return false;
         try {
-            nv.volumes[0].colormap = colormapName;
+            nv.volumes[0].colormap = niivueColormapName;
             nv.updateGLVolume();
             return true;
         } catch (error) {
@@ -514,7 +664,7 @@
         await nv.loadVolumes(volumes).catch((error) => {
             throw new Error(`Failed to load baseline volume: ${error.message}`);
         });
-        nv.setClipPlane([-0.1, 270, 0]);
+        safeSetClipPlane([-0.1, 270, 0]);
         setLoadStep("baseline", "done");
         setLoadStep("ready", "done");
         setViewerLoadingText("3D visualizer ready.");
@@ -572,7 +722,7 @@
             viewerLoadingStatus.textContent = `Initialization failed: ${error.message}`;
             log(`Visualizer init failed: ${escapeHtml(error.message)}`, "error");
 
-            // Retry once after a short delay
+            // Retry once after a short delay before falling back to a browser-safe synthetic topology renderer.
             try {
                 log("Retrying NiiVue initialization in 2s...", "warn");
                 await new Promise(r => setTimeout(r, 2000));
@@ -598,8 +748,9 @@
                 viewerInitError = null;
                 log("Retry succeeded.", "success");
             } catch (retryError) {
-                log(`Retry also failed: ${escapeHtml(retryError.message)}`, "error");
-                throw error;
+                const reason = retryError?.message || error.message;
+                log(`Retry also failed: ${escapeHtml(reason)}`, "error");
+                startFallbackRenderer(reason);
             }
         }
     }
@@ -680,7 +831,7 @@
             let clipAngle = 0;
             scanInterval = setInterval(() => {
                 clipAngle += 5;
-                nv.setClipPlane([Math.sin(clipAngle * Math.PI / 180), 270, Math.cos(clipAngle * Math.PI / 180)]);
+                safeSetClipPlane([Math.sin(clipAngle * Math.PI / 180), 270, Math.cos(clipAngle * Math.PI / 180)]);
             }, 100);
 
             log(isExample ? `Loading cloud dataset: <b>${safeName}</b>...` : `Initiating extraction sequence for <b>${safeName}</b>...`);
@@ -692,20 +843,29 @@
             log("Applying Schaefer 200-ROI parcellation atlas...");
             await new Promise(r => setTimeout(r, 2000));
 
-            setPrimaryColormap("x_rain");
+            setPrimaryColormap("spectral");
             log("Isolating Dorsal Attention Network (ROI 42, 34, 142)...");
             await new Promise(r => setTimeout(r, 2000));
 
             log("Computing Fourier transforms (Slow-4 / Slow-5 bands)...");
             await new Promise(r => setTimeout(r, 1500));
-            nv.setClipPlane([0, 0, 0]);
+            safeSetClipPlane([0, 0, 0]);
             log("Fingerprint extracted! (6,400 topological features).", "success");
             await new Promise(r => setTimeout(r, 800));
 
             log("Transmitting neural signature to live babelForge API...");
 
             // Mock fingerprint payload
-            const mockFingerprint = Array.from({length: 6400}, () => Math.random() * 0.05);
+            const mockFingerprint = Array.from({length: 6400}, (_, index) => {
+                // 32 zero-indexed spectral bins: early bins approximate low-frequency Slow-4/Slow-5 power; zero-indexed bins 24,25,26,27,28,29,30,31 model high-frequency anomalies.
+                const spectralBin = index % 32;
+                const roi = Math.floor(index / 32);
+                const slowBand = spectralBin < SLOW_BAND_BIN_CUTOFF ? SLOW_BAND_POWER_BOOST : 0;
+                const highFreqAnomaly = spectralBin >= HIGH_FREQ_ANOMALY_BIN_START && roi % HUB_ROI_STRIDE === 0
+                    ? HIGH_FREQ_ANOMALY_POWER_BOOST
+                    : 0;
+                return Number((BASELINE_SPECTRAL_POWER + slowBand + highFreqAnomaly + Math.random() * 0.01).toFixed(6));
+            });
 
             const API_URL = "https://babel-forge-api-1066096962926.us-central1.run.app/diagnose";
             const response = await fetch(API_URL, {
@@ -741,7 +901,7 @@
         } finally {
             if (scanInterval !== null) clearInterval(scanInterval);
             if (nv && typeof nv.setClipPlane === "function") {
-                nv.setClipPlane([0, 0, 0]);
+                safeSetClipPlane([0, 0, 0]);
             }
             startBtn.disabled = false;
             exampleBtns.forEach(btn => btn.disabled = false);
