@@ -114,16 +114,30 @@
 
         /* Logo mark */
         .logo-mark {
-            width: 30px; height: 30px; border-radius: 9px;
-            background: conic-gradient(from 210deg, #4c1d95, #8b5cf6, #c4b5fd, #4c1d95);
-            box-shadow: 0 0 22px rgba(139, 92, 246, 0.45), inset 0 0 0 1px rgba(255,255,255,0.08);
+            width: 30px; height: 30px; border-radius: 999px;
+            background:
+                radial-gradient(circle at 30% 30%, rgba(96, 165, 250, 0.45), transparent 52%),
+                radial-gradient(circle at 70% 72%, rgba(248, 113, 113, 0.35), transparent 58%),
+                linear-gradient(160deg, #0f172a, #1e293b);
+            border: 1px solid rgba(125, 211, 252, 0.45);
+            box-shadow:
+                0 0 18px rgba(14, 165, 233, 0.35),
+                inset 0 0 12px rgba(14, 165, 233, 0.2);
             position: relative;
         }
+        .logo-mark::before,
         .logo-mark::after {
-            content: ""; position: absolute; inset: 7px; border-radius: 4px;
-            background: var(--bg-0);
-            box-shadow: inset 0 0 8px rgba(196, 181, 253, 0.55);
+            content: "";
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            background: linear-gradient(90deg, #bae6fd, #fda4af);
+            border-radius: 2px;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 10px rgba(186, 230, 253, 0.45);
         }
+        .logo-mark::before { width: 14px; height: 3px; }
+        .logo-mark::after { width: 3px; height: 14px; }
 
         /* Glass / panel */
         .panel {

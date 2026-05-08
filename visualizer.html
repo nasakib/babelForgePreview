@@ -60,16 +60,30 @@
             letter-spacing: -0.01em;
         }
         .logo-mark {
-            width: 28px; height: 28px; border-radius: 8px;
-            background: conic-gradient(from 210deg, #4c1d95, #8b5cf6, #c4b5fd, #4c1d95);
-            box-shadow: 0 0 22px var(--violet-glow), inset 0 0 0 1px rgba(255,255,255,0.08);
+            width: 28px; height: 28px; border-radius: 999px;
+            background:
+                radial-gradient(circle at 30% 30%, rgba(96, 165, 250, 0.45), transparent 52%),
+                radial-gradient(circle at 70% 72%, rgba(248, 113, 113, 0.35), transparent 58%),
+                linear-gradient(160deg, #0f172a, #1e293b);
+            border: 1px solid rgba(125, 211, 252, 0.45);
+            box-shadow:
+                0 0 18px rgba(14, 165, 233, 0.35),
+                inset 0 0 12px rgba(14, 165, 233, 0.2);
             position: relative;
         }
+        .logo-mark::before,
         .logo-mark::after {
-            content: ""; position: absolute; inset: 6px; border-radius: 4px;
-            background: var(--bg-0);
-            box-shadow: inset 0 0 8px rgba(196, 181, 253, 0.6);
+            content: "";
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            background: linear-gradient(90deg, #bae6fd, #fda4af);
+            border-radius: 2px;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 10px rgba(186, 230, 253, 0.45);
         }
+        .logo-mark::before { width: 14px; height: 3px; }
+        .logo-mark::after { width: 3px; height: 14px; }
         .logo-text { color: var(--text-0); }
         .logo-text .accent {
             background: linear-gradient(90deg, #c4b5fd, #8b5cf6 50%, #a78bfa);
@@ -234,6 +248,47 @@
         .log-success { color: var(--success); }
         .log-warn { color: var(--warn); }
         .log-error { color: var(--error); }
+        .load-steps {
+            display: grid;
+            gap: 6px;
+            padding: 10px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: rgba(7, 3, 13, 0.55);
+        }
+        .load-step {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-2);
+        }
+        .load-step .step-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            border: 1px solid var(--line-strong);
+            background: transparent;
+            flex: 0 0 8px;
+        }
+        .load-step[data-state="active"] { color: var(--violet-300); }
+        .load-step[data-state="active"] .step-dot {
+            background: var(--violet-400);
+            border-color: var(--violet-400);
+            box-shadow: 0 0 10px var(--violet-400);
+            animation: pulse 1.2s ease-in-out infinite;
+        }
+        .load-step[data-state="done"] { color: var(--success); }
+        .load-step[data-state="done"] .step-dot {
+            background: var(--success);
+            border-color: var(--success);
+            box-shadow: 0 0 8px rgba(134, 239, 172, 0.55);
+        }
+        .load-step[data-state="error"] { color: var(--error); }
+        .load-step[data-state="error"] .step-dot {
+            background: var(--error);
+            border-color: var(--error);
+            box-shadow: 0 0 8px rgba(253, 164, 175, 0.45);
+        }
 
         /* Result card */
         .result-card {
@@ -296,6 +351,39 @@
         .corner.tr { top: 8px; right: 8px; border-left: none; border-bottom: none; }
         .corner.bl { bottom: 8px; left: 8px; border-right: none; border-top: none; }
         .corner.br { bottom: 8px; right: 8px; border-left: none; border-top: none; }
+        .viewer-loading {
+            position: absolute;
+            inset: 0;
+            z-index: 3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(180deg, rgba(7, 3, 13, 0.82), rgba(6, 3, 11, 0.9));
+            backdrop-filter: blur(2px);
+        }
+        .viewer-loading.hidden { display: none; }
+        .viewer-loading-card {
+            min-width: 280px;
+            max-width: 80%;
+            padding: 16px 18px;
+            border-radius: 10px;
+            border: 1px solid var(--line-strong);
+            background: rgba(11, 6, 20, 0.95);
+            box-shadow: 0 16px 35px rgba(0,0,0,0.45);
+        }
+        .viewer-loading-title {
+            margin: 0 0 6px 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--violet-300);
+        }
+        .viewer-loading-status {
+            margin: 0;
+            font-size: 13px;
+            color: var(--text-1);
+        }
     </style>
 </head>
 <body>
@@ -329,6 +417,12 @@
             <div id="log-box" class="log-box" role="log" aria-live="polite">
                 <div class="log-entry"><span class="log-time">[system]</span> Awaiting scan data...</div>
             </div>
+            <div id="load-steps" class="load-steps" aria-live="polite">
+                <div class="load-step" data-stage="engine" data-state="pending"><span class="step-dot"></span><span class="step-text">Load NiiVue engine</span></div>
+                <div class="load-step" data-stage="canvas" data-state="pending"><span class="step-dot"></span><span class="step-text">Initialize WebGL canvas</span></div>
+                <div class="load-step" data-stage="baseline" data-state="pending"><span class="step-dot"></span><span class="step-text">Load MNI152 baseline</span></div>
+                <div class="load-step" data-stage="ready" data-state="pending"><span class="step-dot"></span><span class="step-text">Visualizer ready</span></div>
+            </div>
 
             <div id="result-card" class="result-card">
                 <h3>Diagnostic Output</h3>
@@ -342,6 +436,12 @@
             <span class="corner tl"></span><span class="corner tr"></span>
             <span class="corner bl"></span><span class="corner br"></span>
             <div class="viewer-overlay"><span class="dot"></span> WebGL 2.0 · MNI152</div>
+            <div id="viewer-loading" class="viewer-loading" role="status" aria-live="polite">
+                <div class="viewer-loading-card">
+                    <p class="viewer-loading-title">3D Visualizer Startup</p>
+                    <p id="viewer-loading-status" class="viewer-loading-status">Initializing browser rendering pipeline...</p>
+                </div>
+            </div>
             <canvas id="gl"></canvas>
         </div>
     </div>
@@ -350,28 +450,109 @@
 <script>
     // --- 1. INITIALIZE 3D BRAIN VIEWER ---
     const canvas = document.getElementById('gl');
-    const nv = new niivue.Niivue({
-        dragAndDropEnabled: false,
-        backColor: [0.027, 0.012, 0.051, 1], // deep violet-black to match theme
-        show3Dcrosshair: true,
-        crosshairColor: [0.77, 0.71, 0.99, 1]
-    });
-    nv.attachTo('gl');
-    nv.setSliceType(nv.sliceTypeRender);
+    const viewerLoading = document.getElementById('viewer-loading');
+    const viewerLoadingStatus = document.getElementById('viewer-loading-status');
+    let nv = null;
+    let viewerReady = false;
+    let viewerInitError = null;
+
+    function setLoadStep(stage, state, text) {
+        const step = document.querySelector(`.load-step[data-stage="${stage}"]`);
+        if (!step) return;
+        step.dataset.state = state;
+        if (text) {
+            const label = step.querySelector('.step-text');
+            if (label) label.textContent = text;
+        }
+    }
+
+    function setViewerLoadingText(text) {
+        viewerLoadingStatus.textContent = text;
+        log(text, "info");
+    }
+
+    function setPrimaryColormap(colormapName) {
+        if (!nv || !nv.volumes || !nv.volumes.length) return false;
+        try {
+            nv.volumes[0].colormap = colormapName;
+            nv.updateGLVolume();
+            return true;
+        } catch (error) {
+            log(`Colormap "${escapeHtml(colormapName)}" unavailable; reverting to gray.`, "warn");
+            nv.volumes[0].colormap = "gray";
+            nv.updateGLVolume();
+            return false;
+        }
+    }
 
     async function loadBaselineBrain() {
-        log("Loading MNI152 structural baseline...", "info");
+        setLoadStep("baseline", "active");
+        setViewerLoadingText("Downloading MNI152 baseline volume...");
         const volumes = [{
             url: "https://niivue.github.io/niivue/images/mni152.nii.gz",
             colormap: "gray",
             opacity: 1,
             visible: true,
         }];
-        await nv.loadVolumes(volumes);
+        await nv.loadVolumes(volumes).catch((error) => {
+            throw new Error(`Failed to load baseline volume: ${error.message}`);
+        });
         nv.setClipPlane([-0.1, 270, 0]);
+        setLoadStep("baseline", "done");
+        setLoadStep("ready", "done");
+        setViewerLoadingText("3D visualizer ready.");
+        viewerLoading.classList.add("hidden");
         log("3D WebGL visualizer ready.", "success");
+        viewerReady = true;
     }
-    loadBaselineBrain();
+
+    async function initializeViewer() {
+        try {
+            setLoadStep("engine", "active");
+            setViewerLoadingText("Loading NiiVue runtime...");
+            if (!window.niivue || !window.niivue.Niivue) {
+                throw new Error("NiiVue runtime failed to load from CDN.");
+            }
+            setLoadStep("engine", "done");
+
+            setLoadStep("canvas", "active");
+            setViewerLoadingText("Initializing WebGL context...");
+            nv = new window.niivue.Niivue({
+                dragAndDropEnabled: false,
+                backColor: [0.027, 0.012, 0.051, 1],
+                show3Dcrosshair: true,
+                crosshairColor: [0.77, 0.71, 0.99, 1]
+            });
+            nv.attachTo('gl');
+            if (typeof nv.setSliceType === "function" && typeof nv.sliceTypeRender !== "undefined") {
+                nv.setSliceType(nv.sliceTypeRender);
+            }
+            setLoadStep("canvas", "done");
+
+            await loadBaselineBrain();
+        } catch (error) {
+            viewerInitError = error;
+            setLoadStep("engine", "error");
+            setLoadStep("canvas", "error");
+            setLoadStep("baseline", "error");
+            setLoadStep("ready", "error", "Visualizer failed");
+            viewerLoadingStatus.textContent = `Initialization failed: ${error.message}`;
+            log(`Visualizer init failed: ${escapeHtml(error.message)}`, "error");
+            throw error;
+        }
+    }
+
+    const viewerInitPromise = initializeViewer();
+
+    async function ensureViewerReady() {
+        if (viewerReady) return true;
+        try {
+            await viewerInitPromise;
+            return true;
+        } catch {
+            throw new Error(viewerInitError?.message || "3D visualizer is unavailable.");
+        }
+    }
 
     // --- 2. LOGGING UTILITY ---
     function log(message, type = "info") {
@@ -413,6 +594,13 @@
         const patientId = "sub-" + Math.floor(1000 + Math.random() * 9000);
         const safeName = escapeHtml(filename);
 
+        try {
+            await ensureViewerReady();
+        } catch (error) {
+            log(`Unable to start extraction: ${escapeHtml(error.message)}`, "error");
+            return;
+        }
+
         // Reset UI
         startBtn.disabled = true;
         exampleBtns.forEach(btn => btn.disabled = true);
@@ -421,44 +609,41 @@
 
         // Reset visualizer color before re-running
         if (nv.volumes.length) {
-            nv.volumes[0].colormap = "gray";
-            nv.updateGLVolume();
+            setPrimaryColormap("gray");
         }
 
-        let clipAngle = 0;
-        const scanInterval = setInterval(() => {
-            clipAngle += 5;
-            nv.setClipPlane([Math.sin(clipAngle * Math.PI / 180), 270, Math.cos(clipAngle * Math.PI / 180)]);
-        }, 100);
-
-        log(isExample ? `Loading cloud dataset: <b>${safeName}</b>...` : `Initiating extraction sequence for <b>${safeName}</b>...`);
-        await new Promise(r => setTimeout(r, 1500));
-        log("Aligning scan to standard MNI152 coordinate space...");
-        await new Promise(r => setTimeout(r, 1500));
-
-        nv.volumes[0].colormap = "warm";
-        nv.updateGLVolume();
-        log("Applying Schaefer 200-ROI parcellation atlas...");
-        await new Promise(r => setTimeout(r, 2000));
-
-        nv.volumes[0].colormap = "x_rain";
-        nv.updateGLVolume();
-        log("Isolating Dorsal Attention Network (ROI 42, 34, 142)...");
-        await new Promise(r => setTimeout(r, 2000));
-
-        log("Computing Fourier transforms (Slow-4 / Slow-5 bands)...");
-        await new Promise(r => setTimeout(r, 1500));
-        clearInterval(scanInterval);
-        nv.setClipPlane([0, 0, 0]);
-        log("Fingerprint extracted! (6,400 topological features).", "success");
-        await new Promise(r => setTimeout(r, 800));
-
-        log("Transmitting neural signature to live babelForge API...");
-
-        // Mock fingerprint payload
-        const mockFingerprint = Array.from({length: 6400}, () => Math.random() * 0.05);
-
+        let scanInterval = null;
         try {
+            let clipAngle = 0;
+            scanInterval = setInterval(() => {
+                clipAngle += 5;
+                nv.setClipPlane([Math.sin(clipAngle * Math.PI / 180), 270, Math.cos(clipAngle * Math.PI / 180)]);
+            }, 100);
+
+            log(isExample ? `Loading cloud dataset: <b>${safeName}</b>...` : `Initiating extraction sequence for <b>${safeName}</b>...`);
+            await new Promise(r => setTimeout(r, 1500));
+            log("Aligning scan to standard MNI152 coordinate space...");
+            await new Promise(r => setTimeout(r, 1500));
+
+            setPrimaryColormap("warm");
+            log("Applying Schaefer 200-ROI parcellation atlas...");
+            await new Promise(r => setTimeout(r, 2000));
+
+            setPrimaryColormap("x_rain");
+            log("Isolating Dorsal Attention Network (ROI 42, 34, 142)...");
+            await new Promise(r => setTimeout(r, 2000));
+
+            log("Computing Fourier transforms (Slow-4 / Slow-5 bands)...");
+            await new Promise(r => setTimeout(r, 1500));
+            nv.setClipPlane([0, 0, 0]);
+            log("Fingerprint extracted! (6,400 topological features).", "success");
+            await new Promise(r => setTimeout(r, 800));
+
+            log("Transmitting neural signature to live babelForge API...");
+
+            // Mock fingerprint payload
+            const mockFingerprint = Array.from({length: 6400}, () => Math.random() * 0.05);
+
             const API_URL = "https://babel-forge-api-1066096962926.us-central1.run.app/diagnose";
             const response = await fetch(API_URL, {
                 method: "POST",
@@ -476,23 +661,23 @@
             statusEl.textContent = data.clinical_status;
             if (data.clinical_status === "RESISTANT") {
                 statusEl.style.color = "var(--error)";
-                nv.volumes[0].colormap = "red";
+                setPrimaryColormap("red");
                 log("Biomarker match: elevated low-frequency power in DorsAttn network.", "warn");
             } else {
                 statusEl.style.color = "var(--success)";
-                nv.volumes[0].colormap = "green";
+                setPrimaryColormap("green");
                 log("Topology indicates standard cognitive control baselines.", "success");
             }
-            nv.updateGLVolume();
 
             document.getElementById('res-conf').textContent = data.confidence_percent;
             resultCard.style.display = 'block';
         } catch (error) {
-            log(`Connection failed: ${escapeHtml(error.message)}`, "error");
-            log("Ensure CORSMiddleware is active on the FastAPI backend.", "warn");
-            nv.volumes[0].colormap = "gray";
-            nv.updateGLVolume();
+            log(`Diagnostic sequence failed: ${escapeHtml(error.message)}`, "error");
+            log("If this is an API call error, verify backend availability and CORS settings.", "warn");
+            setPrimaryColormap("gray");
         } finally {
+            if (scanInterval !== null) clearInterval(scanInterval);
+            if (nv) nv.setClipPlane([0, 0, 0]);
             startBtn.disabled = false;
             exampleBtns.forEach(btn => btn.disabled = false);
         }
