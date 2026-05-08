@@ -551,7 +551,7 @@
         const nodes = [];
         for (let i = 0; i < 64; i++) {
             const hemisphere = i % 2 === 0 ? -1 : 1;
-            // Golden-angle spacing (≈137.508°, ≈2.40 rad) creates a Fibonacci-like distribution across the fallback brain silhouette.
+            // Golden-angle spacing (≈137.508°, ≈2.399963 rad) creates a Fibonacci-like distribution across the fallback brain silhouette.
             const theta = (i * GOLDEN_ANGLE_RADIANS + phase * 0.1) % (Math.PI * 2);
             const r = radius * (0.18 + ((i * 37) % 100) / 128);
             const x = hemisphere * Math.abs(Math.cos(theta)) * r * 0.9 + Math.sin(i) * 8;
@@ -603,6 +603,7 @@
     function startFallbackRenderer(reason) {
         viewerMode = "fallback";
         viewerInitError = null;
+        // Replace the canvas so a failed WebGL context cannot block the 2D fallback renderer.
         const replacement = canvas.cloneNode(false);
         replacement.id = "gl";
         canvas.replaceWith(replacement);
@@ -856,7 +857,7 @@
 
             // Mock fingerprint payload
             const mockFingerprint = Array.from({length: 6400}, (_, index) => {
-                // 32 zero-indexed spectral bins: early bins approximate low-frequency Slow-4/Slow-5 power; bins 24-31 (8 bins) model high-frequency anomalies.
+                // 32 zero-indexed spectral bins: early bins approximate low-frequency Slow-4/Slow-5 power; zero-indexed bins 24,25,26,27,28,29,30,31 model high-frequency anomalies.
                 const spectralBin = index % 32;
                 const roi = Math.floor(index / 32);
                 const slowBand = spectralBin < SLOW_BAND_BIN_CUTOFF ? SLOW_BAND_POWER_BOOST : 0;
