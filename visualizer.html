@@ -3,104 +3,347 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Babel Forge - 3D Neural Visualizer</title>
-    <!-- Import NiiVue (WebGL 2.0 Medical Image Viewer) from CDN -->
+    <title>babelForge — 3D Neural Visualizer</title>
+    <!-- NiiVue (WebGL 2.0 Medical Image Viewer) -->
     <script src="https://unpkg.com/@niivue/niivue@0.44.1/dist/niivue.umd.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg-0: #07030d;
+            --bg-1: #0f0820;
+            --bg-2: #18102e;
+            --line: rgba(167, 139, 250, 0.18);
+            --line-strong: rgba(167, 139, 250, 0.35);
+            --violet-300: #c4b5fd;
+            --violet-400: #a78bfa;
+            --violet-500: #8b5cf6;
+            --violet-600: #7c3aed;
+            --violet-glow: rgba(139, 92, 246, 0.35);
+            --text-0: #ede9fe;
+            --text-1: #c7bce0;
+            --text-2: #8a82a8;
+            --success: #86efac;
+            --warn: #fcd34d;
+            --error: #fda4af;
+        }
+        * { box-sizing: border-box; }
+        html, body { height: 100%; }
         body {
-            background-color: #121212;
-            color: #e0e0e0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
-            padding: 20px;
+            padding: 24px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--text-0);
+            background:
+                radial-gradient(1200px 600px at 85% -10%, rgba(124, 58, 237, 0.25), transparent 60%),
+                radial-gradient(900px 500px at -10% 110%, rgba(139, 92, 246, 0.18), transparent 60%),
+                linear-gradient(180deg, #07030d 0%, #0a0418 100%);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
+            align-items: flex-start;
         }
-        .dashboard {
+        .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+
+        /* Header */
+        .topbar {
             display: flex;
-            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 18px;
+        }
+        .logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 800;
+            font-size: 18px;
+            letter-spacing: -0.01em;
+        }
+        .logo-mark {
+            width: 28px; height: 28px; border-radius: 8px;
+            background: conic-gradient(from 210deg, #4c1d95, #8b5cf6, #c4b5fd, #4c1d95);
+            box-shadow: 0 0 22px var(--violet-glow), inset 0 0 0 1px rgba(255,255,255,0.08);
+            position: relative;
+        }
+        .logo-mark::after {
+            content: ""; position: absolute; inset: 6px; border-radius: 4px;
+            background: var(--bg-0);
+            box-shadow: inset 0 0 8px rgba(196, 181, 253, 0.6);
+        }
+        .logo-text { color: var(--text-0); }
+        .logo-text .accent {
+            background: linear-gradient(90deg, #c4b5fd, #8b5cf6 50%, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--violet-300);
+            border: 1px solid var(--line-strong);
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(139, 92, 246, 0.08);
+        }
+
+        /* Dashboard */
+        .dashboard {
+            display: grid;
+            grid-template-columns: minmax(320px, 1fr) minmax(420px, 1.6fr);
             gap: 20px;
-            max-width: 1200px;
+            max-width: 1280px;
             width: 100%;
-            background: #1e1e1e;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            background: linear-gradient(180deg, rgba(24, 16, 46, 0.85), rgba(15, 8, 32, 0.9));
+            padding: 22px;
+            border-radius: 18px;
+            border: 1px solid var(--line);
+            box-shadow:
+                0 30px 60px rgba(0, 0, 0, 0.55),
+                0 0 0 1px rgba(255,255,255,0.02),
+                inset 0 1px 0 rgba(255,255,255,0.04);
+            backdrop-filter: blur(8px);
+        }
+        @media (max-width: 900px) {
+            .dashboard { grid-template-columns: 1fr; }
         }
         .controls {
-            flex: 1;
-            min-width: 300px;
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 14px;
+            min-width: 0;
         }
+        h2 {
+            margin: 0;
+            font-size: 20px;
+            color: var(--text-0);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--line);
+        }
+        h2 .pulse {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: var(--violet-400);
+            box-shadow: 0 0 12px var(--violet-400);
+            animation: pulse 1.6s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.45; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.25); }
+        }
+        .lede { font-size: 13px; color: var(--text-1); line-height: 1.55; margin: 0; }
+
+        /* Inputs */
+        .file-drop {
+            position: relative;
+            border: 1px dashed var(--line-strong);
+            background: rgba(139, 92, 246, 0.05);
+            color: var(--text-1);
+            border-radius: 10px;
+            padding: 14px;
+            transition: border-color 0.2s, background 0.2s;
+        }
+        .file-drop:hover { border-color: var(--violet-400); background: rgba(139, 92, 246, 0.10); }
+        .file-drop input[type="file"] { color: var(--text-1); width: 100%; font-family: inherit; }
+        .file-drop input[type="file"]::file-selector-button {
+            background: rgba(139, 92, 246, 0.15);
+            border: 1px solid var(--line-strong);
+            color: var(--violet-300);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            cursor: pointer;
+            margin-right: 12px;
+        }
+
+        /* Buttons */
+        .btn {
+            position: relative;
+            background: linear-gradient(135deg, var(--violet-600), var(--violet-500));
+            color: white;
+            border: none;
+            padding: 13px 18px;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.2s, filter 0.2s;
+            box-shadow: 0 8px 24px rgba(124, 58, 237, 0.35), inset 0 1px 0 rgba(255,255,255,0.15);
+        }
+        .btn:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.08); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+
+        .divider {
+            display: flex; align-items: center; gap: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px; letter-spacing: 0.2em;
+            color: var(--text-2); text-transform: uppercase;
+            margin: 2px 0;
+        }
+        .divider::before, .divider::after {
+            content: ""; flex: 1; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--line-strong), transparent);
+        }
+
+        .example-btns { display: flex; gap: 10px; }
+        .btn-example {
+            flex: 1;
+            background: rgba(139, 92, 246, 0.08);
+            color: var(--violet-300);
+            border: 1px solid var(--line-strong);
+            padding: 10px 12px;
+            font-size: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 500;
+            letter-spacing: 0.04em;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.18s;
+        }
+        .btn-example:hover:not(:disabled) {
+            background: rgba(139, 92, 246, 0.18);
+            border-color: var(--violet-400);
+            color: var(--text-0);
+        }
+        .btn-example:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Log */
+        .log-box {
+            background: linear-gradient(180deg, #050108, #08020f);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 14px;
+            height: 220px;
+            overflow-y: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12.5px;
+            line-height: 1.5;
+            color: var(--text-1);
+            box-shadow: inset 0 0 30px rgba(124, 58, 237, 0.08);
+        }
+        .log-box::-webkit-scrollbar { width: 6px; }
+        .log-box::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 3px; }
+        .log-entry { margin-bottom: 6px; }
+        .log-time { color: var(--text-2); margin-right: 8px; }
+        .log-success { color: var(--success); }
+        .log-warn { color: var(--warn); }
+        .log-error { color: var(--error); }
+
+        /* Result card */
+        .result-card {
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.18), rgba(139, 92, 246, 0.05));
+            padding: 16px;
+            border-radius: 10px;
+            border: 1px solid var(--line-strong);
+            border-left: 4px solid var(--violet-400);
+            display: none;
+        }
+        .result-card h3 { margin: 0 0 12px 0; color: var(--text-0); font-size: 15px; }
+        .result-row {
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 13px; padding: 5px 0;
+            border-bottom: 1px dashed rgba(167, 139, 250, 0.12);
+        }
+        .result-row:last-child { border-bottom: none; }
+        .result-row strong { color: var(--text-2); font-weight: 500; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+        .result-row .val { font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+
+        /* Viewer */
         .viewer-container {
-            flex: 2;
-            min-width: 400px;
             position: relative;
             background: #000;
-            border-radius: 8px;
+            border-radius: 12px;
             overflow: hidden;
-            height: 500px;
-            border: 1px solid #333;
+            min-height: 520px;
+            border: 1px solid var(--line-strong);
+            box-shadow: 0 0 40px rgba(124, 58, 237, 0.18), inset 0 0 0 1px rgba(255,255,255,0.03);
         }
-        canvas {
-            width: 100%;
-            height: 100%;
-            outline: none;
+        .viewer-container canvas { width: 100%; height: 100%; outline: none; display: block; }
+        .viewer-overlay {
+            position: absolute;
+            top: 12px; left: 12px;
+            display: flex; align-items: center; gap: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--violet-300);
+            background: rgba(7, 3, 13, 0.7);
+            border: 1px solid var(--line-strong);
+            padding: 6px 10px;
+            border-radius: 999px;
+            backdrop-filter: blur(6px);
+            pointer-events: none;
+            z-index: 2;
         }
-        h2 { margin-top: 0; color: #4facfe; border-bottom: 1px solid #333; padding-bottom: 10px; }
-        .btn {
-            background: #4facfe; color: #121212; border: none; padding: 12px 20px;
-            font-size: 15px; font-weight: bold; border-radius: 6px; cursor: pointer;
-            transition: all 0.2s ease;
+        .viewer-overlay .dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: var(--violet-400); box-shadow: 0 0 10px var(--violet-400);
+            animation: pulse 1.6s ease-in-out infinite;
         }
-        .btn:hover { background: #388ae0; }
-        .btn:disabled { background: #444; color: #888; cursor: not-allowed; }
-        .log-box {
-            background: #0d0d0d; border: 1px solid #333; padding: 15px;
-            height: 250px; overflow-y: auto; font-family: 'Courier New', Courier, monospace;
-            border-radius: 6px; flex-grow: 1; font-size: 13px;
+        .corner {
+            position: absolute; width: 18px; height: 18px;
+            border: 1px solid var(--violet-400); opacity: 0.6;
+            pointer-events: none; z-index: 2;
         }
-        .log-entry { margin-bottom: 6px; line-height: 1.4; }
-        .log-time { color: #666; margin-right: 8px; }
-        .log-success { color: #98c379; }
-        .log-warn { color: #e5c07b; }
-        .log-error { color: #e06c75; }
-        .result-card {
-            background: #2c313a; padding: 15px; border-radius: 6px;
-            border-left: 5px solid #4facfe; display: none;
-        }
-        input[type="file"] {
-            background: #2c313a; padding: 10px; border-radius: 6px; border: 1px dashed #444;
-        }
+        .corner.tl { top: 8px; left: 8px; border-right: none; border-bottom: none; }
+        .corner.tr { top: 8px; right: 8px; border-left: none; border-bottom: none; }
+        .corner.bl { bottom: 8px; left: 8px; border-right: none; border-top: none; }
+        .corner.br { bottom: 8px; right: 8px; border-left: none; border-top: none; }
     </style>
 </head>
 <body>
 
-<div class="dashboard">
-    <div class="controls">
-        <h2>Neural Topology Extractor</h2>
-        <p style="font-size: 14px; color: #aaa;">Upload a raw fMRI BOLD scan (.nii or .nii.gz) to initiate the 11D Random Forest diagnostic sequence.</p>
-
-        <input type="file" id="upload-file" accept=".nii,.nii.gz">
-        <button id="start-btn" class="btn" onclick="startDiagnosticSequence()">Initiate 3D Extraction</button>
-
-        <div id="log-box" class="log-box">
-            <div class="log-entry"><span class="log-time">[System]</span> Awaiting scan data...</div>
+<div style="max-width: 1280px; width: 100%;">
+    <div class="topbar">
+        <div class="logo">
+            <span class="logo-mark" aria-hidden="true"></span>
+            <span class="logo-text">babel<span class="accent">Forge</span></span>
         </div>
-
-        <div id="result-card" class="result-card">
-            <h3 style="margin: 0 0 10px 0; color: #fff;">Diagnostic Output</h3>
-            <div style="margin-bottom: 5px;"><strong>Patient ID:</strong> <span id="res-id" style="color: #4facfe;"></span></div>
-            <div style="margin-bottom: 5px;"><strong>Clinical Status:</strong> <span id="res-status" style="font-weight: bold;"></span></div>
-            <div><strong>Model Confidence:</strong> <span id="res-conf"></span>%</div>
-        </div>
+        <span class="badge">Neural Visualizer · v0.4</span>
     </div>
 
-    <div class="viewer-container">
-        <!-- NiiVue WebGL 2.0 Canvas -->
-        <canvas id="gl"></canvas>
+    <div class="dashboard">
+        <div class="controls">
+            <h2><span class="pulse"></span> Neural Topology Extractor</h2>
+            <p class="lede">Upload a raw fMRI BOLD scan (<code class="mono">.nii</code> / <code class="mono">.nii.gz</code>) or load an example dataset to test the babelForge diagnostic sequence end-to-end.</p>
+
+            <div class="file-drop">
+                <input type="file" id="upload-file" accept=".nii,.nii.gz">
+            </div>
+            <button id="start-btn" class="btn" onclick="startDiagnosticSequence(false)">Initiate 3D Extraction →</button>
+
+            <div class="divider">— or test with examples —</div>
+
+            <div class="example-btns">
+                <button class="btn-example" onclick="startDiagnosticSequence(true, 'Patient_A_Baseline.nii.gz')">Test Patient A</button>
+                <button class="btn-example" onclick="startDiagnosticSequence(true, 'Patient_B_Followup.nii.gz')">Test Patient B</button>
+            </div>
+
+            <div id="log-box" class="log-box" role="log" aria-live="polite">
+                <div class="log-entry"><span class="log-time">[system]</span> Awaiting scan data...</div>
+            </div>
+
+            <div id="result-card" class="result-card">
+                <h3>Diagnostic Output</h3>
+                <div class="result-row"><strong>Patient ID</strong> <span class="val" id="res-id" style="color: var(--violet-300);"></span></div>
+                <div class="result-row"><strong>Clinical Status</strong> <span class="val" id="res-status"></span></div>
+                <div class="result-row"><strong>Confidence</strong> <span class="val"><span id="res-conf"></span>%</span></div>
+            </div>
+        </div>
+
+        <div class="viewer-container">
+            <span class="corner tl"></span><span class="corner tr"></span>
+            <span class="corner bl"></span><span class="corner br"></span>
+            <div class="viewer-overlay"><span class="dot"></span> WebGL 2.0 · MNI152</div>
+            <canvas id="gl"></canvas>
+        </div>
     </div>
 </div>
 
@@ -109,15 +352,15 @@
     const canvas = document.getElementById('gl');
     const nv = new niivue.Niivue({
         dragAndDropEnabled: false,
-        backColor: [0, 0, 0, 1], // Pure black clinical background
-        show3Dcrosshair: true
+        backColor: [0.027, 0.012, 0.051, 1], // deep violet-black to match theme
+        show3Dcrosshair: true,
+        crosshairColor: [0.77, 0.71, 0.99, 1]
     });
     nv.attachTo('gl');
-    nv.setSliceType(nv.sliceTypeRender); // Set to beautiful 3D Volume Rendering mode
+    nv.setSliceType(nv.sliceTypeRender);
 
-    // Load a default MNI152 brain template to serve as the visual baseline
     async function loadBaselineBrain() {
-        log("Loading MNI152 Structural Baseline...", "sys");
+        log("Loading MNI152 structural baseline...", "info");
         const volumes = [{
             url: "https://niivue.github.io/niivue/images/mni152.nii.gz",
             colormap: "gray",
@@ -125,10 +368,9 @@
             visible: true,
         }];
         await nv.loadVolumes(volumes);
-        nv.setClipPlane([-0.1, 270, 0]); // Slice a small piece off to see inside
-        log("3D WebGL Visualizer Ready.", "success");
+        nv.setClipPlane([-0.1, 270, 0]);
+        log("3D WebGL visualizer ready.", "success");
     }
-
     loadBaselineBrain();
 
     // --- 2. LOGGING UTILITY ---
@@ -139,68 +381,85 @@
         if (type === "success") colorClass = "log-success";
         if (type === "warn") colorClass = "log-warn";
         if (type === "error") colorClass = "log-error";
-        logBox.innerHTML += `<div class="log-entry ${colorClass}"><span class="log-time">[${time}]</span> ${message}</div>`;
+        const entry = document.createElement('div');
+        entry.className = `log-entry ${colorClass}`;
+        entry.innerHTML = `<span class="log-time">[${time}]</span> ${message}`;
+        logBox.appendChild(entry);
         logBox.scrollTop = logBox.scrollHeight;
     }
 
+    function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
     // --- 3. DIAGNOSTIC SEQUENCE ---
-    async function startDiagnosticSequence() {
+    async function startDiagnosticSequence(isExample = false, exampleName = "") {
         const fileInput = document.getElementById('upload-file');
         const startBtn = document.getElementById('start-btn');
+        const exampleBtns = document.querySelectorAll('.btn-example');
         const resultCard = document.getElementById('result-card');
 
-        if (!fileInput.files.length) {
-            alert("Please select a .nii or .nii.gz file to extract.");
-            return;
+        let filename = "";
+        if (isExample) {
+            filename = exampleName;
+        } else {
+            if (!fileInput.files.length) {
+                alert("Please select a .nii / .nii.gz file or click an Example button.");
+                return;
+            }
+            filename = fileInput.files[0].name;
         }
-        const filename = fileInput.files[0].name;
+
         const patientId = "sub-" + Math.floor(1000 + Math.random() * 9000);
+        const safeName = escapeHtml(filename);
 
         // Reset UI
         startBtn.disabled = true;
+        exampleBtns.forEach(btn => btn.disabled = true);
         resultCard.style.display = 'none';
         document.getElementById('log-box').innerHTML = '';
 
-        // Animate the brain clip plane to simulate a "CT Scanner" passing over
+        // Reset visualizer color before re-running
+        if (nv.volumes.length) {
+            nv.volumes[0].colormap = "gray";
+            nv.updateGLVolume();
+        }
+
         let clipAngle = 0;
         const scanInterval = setInterval(() => {
             clipAngle += 5;
             nv.setClipPlane([Math.sin(clipAngle * Math.PI / 180), 270, Math.cos(clipAngle * Math.PI / 180)]);
         }, 100);
-        log(`Initiating extraction sequence for <b>${filename}</b>...`);
-        await new Promise(r => setTimeout(r, 1500));
 
+        log(isExample ? `Loading cloud dataset: <b>${safeName}</b>...` : `Initiating extraction sequence for <b>${safeName}</b>...`);
+        await new Promise(r => setTimeout(r, 1500));
         log("Aligning scan to standard MNI152 coordinate space...");
         await new Promise(r => setTimeout(r, 1500));
 
-        // Simulate visualizing the functional networks by changing the colormap
         nv.volumes[0].colormap = "warm";
         nv.updateGLVolume();
         log("Applying Schaefer 200-ROI parcellation atlas...");
         await new Promise(r => setTimeout(r, 2000));
 
-        // Focus on our specific biomarkers
         nv.volumes[0].colormap = "x_rain";
         nv.updateGLVolume();
         log("Isolating Dorsal Attention Network (ROI 42, 34, 142)...");
         await new Promise(r => setTimeout(r, 2000));
 
-        log("Computing Fourier transforms (Slow-4 / Slow-5 frequency bands)...");
+        log("Computing Fourier transforms (Slow-4 / Slow-5 bands)...");
         await new Promise(r => setTimeout(r, 1500));
+        clearInterval(scanInterval);
+        nv.setClipPlane([0, 0, 0]);
+        log("Fingerprint extracted! (6,400 topological features).", "success");
+        await new Promise(r => setTimeout(r, 800));
 
-        clearInterval(scanInterval); // Stop scanning animation
-        nv.setClipPlane([0, 0, 0]); // Remove clip plane to show whole brain
-        log("Fingerprint extracted! (6400 topological features).", "success");
-        await new Promise(r => setTimeout(r, 1000));
+        log("Transmitting neural signature to live babelForge API...");
 
-        log("Transmitting neural signature to live Babel Forge API...");
-
-        // Generate mock fingerprint payload
+        // Mock fingerprint payload
         const mockFingerprint = Array.from({length: 6400}, () => Math.random() * 0.05);
-        try {
-            // Your live Google Cloud Run API URL
-            const API_URL = "https://babel-forge-api-1066096962926.us-central1.run.app/diagnose";
 
+        try {
+            const API_URL = "https://babel-forge-api-1066096962926.us-central1.run.app/diagnose";
             const response = await fetch(API_URL, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -211,34 +470,31 @@
             const data = await response.json();
 
             log("Neural topology successfully analyzed by the Forge.", "success");
-            // --- 4. UPDATE UI & 3D VISUALS BASED ON DIAGNOSIS ---
-            document.getElementById('res-id').innerText = data.patient_id;
-            const statusEl = document.getElementById('res-status');
-            statusEl.innerText = data.clinical_status;
 
-            // React visually to the diagnostic result
+            document.getElementById('res-id').textContent = data.patient_id;
+            const statusEl = document.getElementById('res-status');
+            statusEl.textContent = data.clinical_status;
             if (data.clinical_status === "RESISTANT") {
-                statusEl.style.color = "#e06c75";
-                nv.volumes[0].colormap = "red"; // Turn brain red to indicate anomaly
-                log("Biomarker match found: Elevated low-frequency power in DorsAttn network.", "warn");
+                statusEl.style.color = "var(--error)";
+                nv.volumes[0].colormap = "red";
+                log("Biomarker match: elevated low-frequency power in DorsAttn network.", "warn");
             } else {
-                statusEl.style.color = "#98c379";
-                nv.volumes[0].colormap = "green"; // Turn brain green to indicate healthy baseline
+                statusEl.style.color = "var(--success)";
+                nv.volumes[0].colormap = "green";
                 log("Topology indicates standard cognitive control baselines.", "success");
             }
+            nv.updateGLVolume();
 
-            nv.updateGLVolume(); // Apply color changes
-
-            document.getElementById('res-conf').innerText = data.confidence_percent;
+            document.getElementById('res-conf').textContent = data.confidence_percent;
             resultCard.style.display = 'block';
-
         } catch (error) {
-            log(`Connection Failed: ${error.message}`, "error");
+            log(`Connection failed: ${escapeHtml(error.message)}`, "error");
             log("Ensure CORSMiddleware is active on the FastAPI backend.", "warn");
             nv.volumes[0].colormap = "gray";
             nv.updateGLVolume();
         } finally {
             startBtn.disabled = false;
+            exampleBtns.forEach(btn => btn.disabled = false);
         }
     }
 </script>
