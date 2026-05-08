@@ -856,7 +856,7 @@
 
             // Mock fingerprint payload
             const mockFingerprint = Array.from({length: 6400}, (_, index) => {
-                // 32 spectral bins: early bins approximate low-frequency Slow-4/Slow-5 power; bins 24-31 (inclusive, 8 bins total) model high-frequency anomalies.
+                // 32 zero-indexed spectral bins: early bins approximate low-frequency Slow-4/Slow-5 power; bins 24-31 (inclusive, 8 bins total) model high-frequency anomalies.
                 const spectralBin = index % 32;
                 const roi = Math.floor(index / 32);
                 const slowBand = spectralBin < SLOW_BAND_BIN_CUTOFF ? SLOW_BAND_POWER_BOOST : 0;
