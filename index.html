@@ -759,7 +759,10 @@
                             x: { title: { display: true, text: 'Filtration threshold', color: '#8a82a8' }, grid: { color: 'rgba(167,139,250,0.08)' }, ticks: { color: '#8a82a8' } },
                             y: { title: { display: true, text: 'Feature count', color: '#8a82a8' }, beginAtZero: true, grid: { color: 'rgba(167,139,250,0.08)' }, ticks: { color: '#8a82a8' } }
                         },
-                        plugins: { legend: { labels: { color: '#c7bce0', font: { family: 'Inter' } } } }
+                        plugins: {
+                            subtitle: { display: true, text: 'Conceptual sketch · synthetic illustrative values', color: '#8a82a8', font: { family: 'JetBrains Mono', size: 11 } },
+                            legend: { labels: { color: '#c7bce0', font: { family: 'Inter' } } }
+                        }
                     }
                 });
             }
