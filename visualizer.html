@@ -479,8 +479,12 @@
             return true;
         } catch (error) {
             log(`Colormap "${escapeHtml(colormapName)}" unavailable; reverting to gray.`, "warn");
-            nv.volumes[0].colormap = "gray";
-            nv.updateGLVolume();
+            if (nv && nv.volumes && nv.volumes.length) {
+                nv.volumes[0].colormap = "gray";
+                nv.updateGLVolume();
+            } else {
+                log("No loaded volume available for fallback colormap.", "warn");
+            }
             return false;
         }
     }
@@ -507,6 +511,7 @@
     }
 
     async function initializeViewer() {
+        let currentStage = "engine";
         try {
             setLoadStep("engine", "active");
             setViewerLoadingText("Loading NiiVue runtime...");
@@ -515,6 +520,7 @@
             }
             setLoadStep("engine", "done");
 
+            currentStage = "canvas";
             setLoadStep("canvas", "active");
             setViewerLoadingText("Initializing WebGL context...");
             nv = new window.niivue.Niivue({
@@ -529,12 +535,11 @@
             }
             setLoadStep("canvas", "done");
 
+            currentStage = "baseline";
             await loadBaselineBrain();
         } catch (error) {
             viewerInitError = error;
-            setLoadStep("engine", "error");
-            setLoadStep("canvas", "error");
-            setLoadStep("baseline", "error");
+            setLoadStep(currentStage, "error");
             setLoadStep("ready", "error", "Visualizer failed");
             viewerLoadingStatus.textContent = `Initialization failed: ${error.message}`;
             log(`Visualizer init failed: ${escapeHtml(error.message)}`, "error");
