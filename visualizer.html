@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>babelForge — 3D Neural Visualizer</title>
     <!-- NiiVue (WebGL 2.0 Medical Image Viewer) -->
-    <script src="https://unpkg.com/@niivue/niivue@0.44.1/dist/niivue.umd.js"></script>
+    <script src="https://unpkg.com/@niivue/niivue@0.48.8/dist/niivue.umd.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -59,31 +59,15 @@
             font-size: 18px;
             letter-spacing: -0.01em;
         }
-        .logo-mark {
-            width: 28px; height: 28px; border-radius: 999px;
-            background:
-                radial-gradient(circle at 30% 30%, rgba(96, 165, 250, 0.45), transparent 52%),
-                radial-gradient(circle at 70% 72%, rgba(248, 113, 113, 0.35), transparent 58%),
-                linear-gradient(160deg, #0f172a, #1e293b);
-            border: 1px solid rgba(125, 211, 252, 0.45);
-            box-shadow:
-                0 0 18px rgba(14, 165, 233, 0.35),
-                inset 0 0 12px rgba(14, 165, 233, 0.2);
-            position: relative;
+        .logo-svg {
+            width: 28px; height: 28px;
+            filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.5));
+            animation: logoGlow 3s ease-in-out infinite;
         }
-        .logo-mark::before,
-        .logo-mark::after {
-            content: "";
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            background: linear-gradient(90deg, #bae6fd, #fda4af);
-            border-radius: 2px;
-            transform: translate(-50%, -50%);
-            box-shadow: 0 0 10px rgba(186, 230, 253, 0.45);
+        @keyframes logoGlow {
+            0%, 100% { filter: drop-shadow(0 0 6px rgba(139, 92, 246, 0.4)); }
+            50% { filter: drop-shadow(0 0 14px rgba(167, 139, 250, 0.7)); }
         }
-        .logo-mark::before { width: 14px; height: 3px; }
-        .logo-mark::after { width: 3px; height: 14px; }
         .logo-text { color: var(--text-0); }
         .logo-text .accent {
             background: linear-gradient(90deg, #c4b5fd, #8b5cf6 50%, #a78bfa);
@@ -391,7 +375,36 @@
 <div style="max-width: 1280px; width: 100%;">
     <div class="topbar">
         <div class="logo">
-            <span class="logo-mark" aria-hidden="true"></span>
+            <svg class="logo-svg" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <defs>
+                    <linearGradient id="brainGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#c4b5fd"/>
+                        <stop offset="50%" stop-color="#8b5cf6"/>
+                        <stop offset="100%" stop-color="#7c3aed"/>
+                    </linearGradient>
+                    <linearGradient id="waveGrad" x1="0%" y1="50%" x2="100%" y2="50%">
+                        <stop offset="0%" stop-color="#c4b5fd" stop-opacity="0"/>
+                        <stop offset="30%" stop-color="#a78bfa"/>
+                        <stop offset="70%" stop-color="#8b5cf6"/>
+                        <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
+                    </linearGradient>
+                    <radialGradient id="coreGlow" cx="50%" cy="45%" r="35%">
+                        <stop offset="0%" stop-color="#c4b5fd" stop-opacity="0.6"/>
+                        <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
+                    </radialGradient>
+                </defs>
+                <circle cx="32" cy="32" r="29" stroke="url(#brainGrad)" stroke-width="1.5" fill="none" opacity="0.4"/>
+                <circle cx="32" cy="30" r="18" fill="url(#coreGlow)"/>
+                <path d="M32 10 C22 10, 14 18, 14 28 C14 38, 20 46, 28 50" stroke="url(#brainGrad)" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+                <path d="M32 10 C42 10, 50 18, 50 28 C50 38, 44 46, 36 50" stroke="url(#brainGrad)" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+                <path d="M8 32 Q16 26, 22 32 T32 32 T42 32 T56 32" stroke="url(#waveGrad)" stroke-width="1.8" fill="none" stroke-linecap="round">
+                    <animate attributeName="d" dur="3s" repeatCount="indefinite" values="M8 32 Q16 26, 22 32 T32 32 T42 32 T56 32;M8 32 Q16 38, 22 32 T32 32 T42 32 T56 32;M8 32 Q16 26, 22 32 T32 32 T42 32 T56 32"/>
+                </path>
+                <path d="M24 52 L22 56 L42 56 L40 52" stroke="#a78bfa" stroke-width="1" fill="rgba(139,92,246,0.15)" stroke-linejoin="round" opacity="0.7"/>
+                <circle cx="20" cy="20" r="1.5" fill="#c4b5fd" opacity="0.8"/>
+                <circle cx="44" cy="20" r="1.5" fill="#c4b5fd" opacity="0.8"/>
+                <circle cx="32" cy="16" r="1.8" fill="#c4b5fd" opacity="0.9"/>
+            </svg>
             <span class="logo-text">babel<span class="accent">Forge</span></span>
         </div>
         <span class="badge">Neural Visualizer · v0.4</span>
@@ -515,7 +528,12 @@
         try {
             setLoadStep("engine", "active");
             setViewerLoadingText("Loading NiiVue runtime...");
-            if (!window.niivue || !window.niivue.Niivue) {
+
+            // Check multiple possible locations for the NiiVue constructor
+            const NiivueClass = (window.niivue && window.niivue.Niivue)
+                || (window.Niivue)
+                || null;
+            if (!NiivueClass) {
                 throw new Error("NiiVue runtime failed to load from CDN.");
             }
             setLoadStep("engine", "done");
@@ -523,15 +541,25 @@
             currentStage = "canvas";
             setLoadStep("canvas", "active");
             setViewerLoadingText("Initializing WebGL context...");
-            nv = new window.niivue.Niivue({
+            nv = new NiivueClass({
                 dragAndDropEnabled: false,
                 backColor: [0.027, 0.012, 0.051, 1],
                 show3Dcrosshair: true,
                 crosshairColor: [0.77, 0.71, 0.99, 1]
             });
-            nv.attachTo('gl');
-            if (typeof nv.setSliceType === "function" && typeof nv.sliceTypeRender === "number") {
-                nv.setSliceType(nv.sliceTypeRender);
+
+            // Attach to canvas - try both API patterns
+            if (typeof nv.attachToCanvas === "function") {
+                await nv.attachToCanvas(canvas);
+            } else {
+                await nv.attachTo("gl");
+            }
+
+            // Set to 3D render mode (enum value 4)
+            if (typeof nv.setSliceType === "function") {
+                const renderType = (typeof nv.sliceTypeRender === "number")
+                    ? nv.sliceTypeRender : 4;
+                nv.setSliceType(renderType);
             }
             setLoadStep("canvas", "done");
 
@@ -543,7 +571,36 @@
             setLoadStep("ready", "error", "Visualizer failed");
             viewerLoadingStatus.textContent = `Initialization failed: ${error.message}`;
             log(`Visualizer init failed: ${escapeHtml(error.message)}`, "error");
-            throw error;
+
+            // Retry once after a short delay
+            try {
+                log("Retrying NiiVue initialization in 2s...", "warn");
+                await new Promise(r => setTimeout(r, 2000));
+                if (!nv) {
+                    const NiivueClass = (window.niivue && window.niivue.Niivue) || window.Niivue;
+                    if (NiivueClass) {
+                        nv = new NiivueClass({
+                            dragAndDropEnabled: false,
+                            backColor: [0.027, 0.012, 0.051, 1],
+                            show3Dcrosshair: true,
+                        });
+                        if (typeof nv.attachToCanvas === "function") {
+                            await nv.attachToCanvas(canvas);
+                        } else {
+                            await nv.attachTo("gl");
+                        }
+                        if (typeof nv.setSliceType === "function") {
+                            nv.setSliceType(typeof nv.sliceTypeRender === "number" ? nv.sliceTypeRender : 4);
+                        }
+                    }
+                }
+                await loadBaselineBrain();
+                viewerInitError = null;
+                log("Retry succeeded.", "success");
+            } catch (retryError) {
+                log(`Retry also failed: ${escapeHtml(retryError.message)}`, "error");
+                throw error;
+            }
         }
     }
 
