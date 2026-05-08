@@ -300,7 +300,7 @@
             border-radius: 12px;
             overflow: hidden;
             min-height: 520px;
-            height: min(72vh, 680px);
+            height: clamp(520px, 72vh, 680px);
             border: 1px solid var(--line-strong);
             box-shadow: 0 0 40px rgba(124, 58, 237, 0.18), inset 0 0 0 1px rgba(255,255,255,0.03);
         }
@@ -473,6 +473,13 @@
     let fallbackAnimationId = null;
     let fallbackColorMode = "gray";
     let fallbackClipPhase = 0;
+    const GOLDEN_ANGLE_RADIANS = Math.PI * (3 - Math.sqrt(5));
+    const LOW_FREQUENCY_BIN_CUTOFF = 8;
+    const HIGH_FREQUENCY_BIN_START = 24;
+    const HUB_STRIDE = 7;
+    const BASE_SPECTRAL_POWER = 0.018;
+    const SLOW_BAND_BOOST = 0.012;
+    const HIGH_FREQUENCY_ANOMALY_BOOST = 0.018;
 
     function setLoadStep(stage, state, text) {
         const step = document.querySelector(`.load-step[data-stage="${stage}"]`);
@@ -504,8 +511,7 @@
         if (mode === "red") return ["#fda4af", "#fb7185", "#7f1d1d"];
         if (mode === "green") return ["#bbf7d0", "#86efac", "#14532d"];
         if (mode === "warm") return ["#fcd34d", "#f97316", "#7c2d12"];
-        // x_rain mirrors the NiiVue colormap name used for spectral overlays.
-        if (mode === "x_rain") return ["#c4b5fd", "#8b5cf6", "#22d3ee"];
+        if (mode === "spectral") return ["#c4b5fd", "#8b5cf6", "#22d3ee"];
         return ["#ede9fe", "#a78bfa", "#312e81"];
     }
 
@@ -545,8 +551,8 @@
         const nodes = [];
         for (let i = 0; i < 64; i++) {
             const hemisphere = i % 2 === 0 ? -1 : 1;
-            // Golden-angle spacing distributes synthetic nodes evenly across the fallback brain silhouette.
-            const theta = (i * 2.399963 + phase * 0.1) % (Math.PI * 2);
+            // Golden-angle spacing (≈137.5°) creates a Fibonacci-like distribution across the fallback brain silhouette.
+            const theta = (i * GOLDEN_ANGLE_RADIANS + phase * 0.1) % (Math.PI * 2);
             const r = radius * (0.18 + ((i * 37) % 100) / 128);
             const x = hemisphere * Math.abs(Math.cos(theta)) * r * 0.9 + Math.sin(i) * 8;
             const y = Math.sin(theta) * r * 0.72 + Math.cos(i * 0.7 + phase) * 5;
@@ -623,13 +629,14 @@
     }
 
     function setPrimaryColormap(colormapName) {
+        const niivueColormapName = colormapName === "spectral" ? "x_rain" : colormapName;
         if (viewerMode === "fallback") {
             fallbackColorMode = colormapName;
             return true;
         }
         if (!nv || !nv.volumes || !nv.volumes.length) return false;
         try {
-            nv.volumes[0].colormap = colormapName;
+            nv.volumes[0].colormap = niivueColormapName;
             nv.updateGLVolume();
             return true;
         } catch (error) {
@@ -835,7 +842,7 @@
             log("Applying Schaefer 200-ROI parcellation atlas...");
             await new Promise(r => setTimeout(r, 2000));
 
-            setPrimaryColormap("x_rain");
+            setPrimaryColormap("spectral");
             log("Isolating Dorsal Attention Network (ROI 42, 34, 142)...");
             await new Promise(r => setTimeout(r, 2000));
 
@@ -852,9 +859,11 @@
                 // 32 spectral bins: early bins approximate low-frequency Slow-4/Slow-5 power; bins 24-31 model high-frequency anomalies.
                 const spectralBin = index % 32;
                 const roi = Math.floor(index / 32);
-                const slowBand = spectralBin < 8 ? 0.012 : 0;
-                const highFreqAnomaly = spectralBin >= 24 && roi % 7 === 0 ? 0.018 : 0;
-                return Number((0.018 + slowBand + highFreqAnomaly + Math.random() * 0.01).toFixed(6));
+                const slowBand = spectralBin < LOW_FREQUENCY_BIN_CUTOFF ? SLOW_BAND_BOOST : 0;
+                const highFreqAnomaly = spectralBin >= HIGH_FREQUENCY_BIN_START && roi % HUB_STRIDE === 0
+                    ? HIGH_FREQUENCY_ANOMALY_BOOST
+                    : 0;
+                return Number((BASE_SPECTRAL_POWER + slowBand + highFreqAnomaly + Math.random() * 0.01).toFixed(6));
             });
 
             const API_URL = "https://babel-forge-api-1066096962926.us-central1.run.app/diagnose";
