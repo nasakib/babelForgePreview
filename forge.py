@@ -4,67 +4,59 @@ import math
 import os
 
 def generate_topology_data():
-    """Generates data for 11d-projection.html"""
+    """Generates data for 11d-projection.html and index.html dashboard"""
     regions = [
-        "LH_Vis_1", "LH_Vis_2", "LH_SomMot_1", "LH_SomMot_2", "LH_DorsAttn_Post_1", 
-        "LH_DorsAttn_Post_2", "LH_DorsAttn_FEF", "LH_VentAttn_1", "LH_VentAttn_2", 
-        "LH_Limbic_OFC", "LH_Limbic_TempPole", "LH_Cont_Par_1", "LH_Cont_PFCl_1", 
-        "LH_Default_Temp_1", "LH_Default_Par_1", "LH_Default_PFC_1",
-        "RH_Vis_1", "RH_Vis_2", "RH_SomMot_1", "RH_SomMot_2", "RH_DorsAttn_Post_1",
-        "RH_DorsAttn_FEF", "RH_VentAttn_1", "RH_Cont_PFCl_1", "RH_Default_PFC_1"
+        {"name": "LH_Vis_1", "hemi": "LH", "cluster": "Visual", "base_x": -30, "base_y": -40, "base_z": -20},
+        {"name": "LH_Vis_2", "hemi": "LH", "cluster": "Visual", "base_x": -35, "base_y": -45, "base_z": -10},
+        {"name": "LH_SomMot_1", "hemi": "LH", "cluster": "SomatoMotor", "base_x": -40, "base_y": 5, "base_z": 40},
+        {"name": "LH_SomMot_2", "hemi": "LH", "cluster": "SomatoMotor", "base_x": -45, "base_y": 10, "base_z": 35},
+        {"name": "LH_DorsAttn_1", "hemi": "LH", "cluster": "DorsAttn", "base_x": -35, "base_y": -15, "base_z": 45},
+        {"name": "LH_DorsAttn_2", "hemi": "LH", "cluster": "DorsAttn", "base_x": -40, "base_y": -20, "base_z": 40},
+        {"name": "LH_VentAttn_1", "hemi": "LH", "cluster": "VentAttn", "base_x": -50, "base_y": 5, "base_z": 10},
+        {"name": "LH_Limbic_1", "hemi": "LH", "cluster": "Limbic", "base_x": -25, "base_y": 15, "base_z": -30},
+        {"name": "LH_Cont_1", "hemi": "LH", "cluster": "Control", "base_x": -30, "base_y": 35, "base_z": 20},
+        {"name": "LH_Default_1", "hemi": "LH", "cluster": "Default", "base_x": -20, "base_y": -55, "base_z": 25},
+        {"name": "LH_Default_2", "hemi": "LH", "cluster": "Default", "base_x": -15, "base_y": 45, "base_z": 15},
+        {"name": "RH_Vis_1", "hemi": "RH", "cluster": "Visual", "base_x": 30, "base_y": -40, "base_z": -20},
+        {"name": "RH_SomMot_1", "hemi": "RH", "cluster": "SomatoMotor", "base_x": 40, "base_y": 5, "base_z": 40},
+        {"name": "RH_DorsAttn_1", "hemi": "RH", "cluster": "DorsAttn", "base_x": 35, "base_y": -15, "base_z": 45},
+        {"name": "RH_VentAttn_1", "hemi": "RH", "cluster": "VentAttn", "base_x": 50, "base_y": 5, "base_z": 10},
+        {"name": "RH_Limbic_1", "hemi": "RH", "cluster": "Limbic", "base_x": 25, "base_y": 15, "base_z": -30},
+        {"name": "RH_Cont_1", "hemi": "RH", "cluster": "Control", "base_x": 30, "base_y": 35, "base_z": 20},
+        {"name": "RH_Default_1", "hemi": "RH", "cluster": "Default", "base_x": 20, "base_y": -55, "base_z": 25}
     ]
     
     def create_state(is_resistant=False):
-        num_nodes = 50
+        num_nodes = 60
         nodes = []
         for i in range(num_nodes):
-            # Clusters
-            angle = random.uniform(0, 2 * math.pi)
-            dist = random.uniform(20, 80)
-            region = random.choice(regions)
+            reg = random.choice(regions)
+            # Create a more brain-like distribution around base centers
             nodes.append({
                 "id": i,
-                "name": f"{region}_{i}",
-                "region": region.split('_')[1],
-                "x": dist * math.cos(angle) + random.uniform(-10, 10),
-                "y": dist * math.sin(angle) + random.uniform(-10, 10),
-                "z": random.uniform(-30, 30)
+                "name": f"{reg['name']}_{i}",
+                "region": reg['cluster'],
+                "hemi": reg['hemi'],
+                "x": reg['base_x'] + random.uniform(-15, 15),
+                "y": reg['base_y'] + random.uniform(-15, 15),
+                "z": reg['base_z'] + random.uniform(-15, 15)
             })
 
         edges = []
         cliques = []
-        
-        # Connect nodes to form cliques
-        # Healthy has more high-D cliques
-        num_cliques = 5 if is_resistant else 15
-        max_dim = 3 if is_resistant else 11
-        
-        all_clique_nodes = set()
+        num_cliques = 8 if is_resistant else 25
+        max_dim = 4 if is_resistant else 11
         
         for _ in range(num_cliques):
             dim = random.randint(2, max_dim)
-            clique_size = dim + 1
-            c_nodes = random.sample(range(num_nodes), min(clique_size, num_nodes))
-            cliques.append({
-                "nodes": c_nodes,
-                "dimension": dim
-            })
-            all_clique_nodes.update(c_nodes)
-            
-            # Add edges for the clique
+            c_nodes = random.sample(range(num_nodes), min(dim + 1, num_nodes))
+            cliques.append({"nodes": c_nodes, "dimension": dim})
             for i in range(len(c_nodes)):
                 for j in range(i + 1, len(c_nodes)):
                     edges.append({"source": c_nodes[i], "target": c_nodes[j]})
 
-        # Add some random background edges
-        num_extra_edges = 20 if is_resistant else 50
-        for _ in range(num_extra_edges):
-            u, v = random.sample(range(num_nodes), 2)
-            edges.append({"source": u, "target": v})
-
-        # Remove duplicate edges
-        unique_edges = []
         seen = set()
+        unique_edges = []
         for e in edges:
             pair = tuple(sorted((e["source"], e["target"])))
             if pair not in seen:
@@ -75,10 +67,7 @@ def generate_topology_data():
             "nodes": nodes,
             "edges": unique_edges,
             "cliques": cliques,
-            "stats": {
-                "max_dimension_found": max_dim,
-                "total_cliques_2D_plus": len(cliques)
-            }
+            "stats": {"max_dimension_found": max_dim, "total_cliques_2D_plus": len(cliques)}
         }
 
     data = {
@@ -91,19 +80,20 @@ def generate_topology_data():
     print("Generated data/topology_projection.json")
 
 def generate_pharma_data():
-    """Generates data for pharma-projection.html"""
-    num_nodes = 40
+    """Generates data for pharma-projection.html and marketing materials"""
+    num_nodes = 50
     nodes = []
-    colors = ["#9333EA", "#A855F7", "#C084FC", "#D8B4FE", "#E9D5FF"]
+    # Clinical colors
+    colors = ["#9333EA", "#7c3aed", "#6366f1", "#4f46e5", "#3730a3"]
     
     for i in range(num_nodes):
         angle = (i / num_nodes) * 2 * math.pi
-        r = 100 + random.uniform(-20, 20)
+        r = 80 + random.uniform(-10, 10)
         nodes.append({
             "id": f"node_{i}",
             "x": r * math.cos(angle),
             "y": r * math.sin(angle),
-            "z": random.uniform(-50, 50),
+            "z": random.uniform(-40, 40),
             "color": random.choice(colors)
         })
 
@@ -118,35 +108,20 @@ def generate_pharma_data():
                 seen.add(pair)
         return edges
 
-    pre_edges = get_edges(60)
-    post_edges = get_edges(150)
-    
-    # Add some cliques to post_treatment
-    post_cliques = []
-    for _ in range(10):
-        clique_size = random.randint(3, 6)
-        c_nodes = [f"node_{i}" for i in random.sample(range(num_nodes), clique_size)]
-        post_cliques.append(c_nodes)
-        # Ensure edges for cliques exist in post_edges
-        for i in range(len(c_nodes)):
-            for j in range(i + 1, len(c_nodes)):
-                pair = tuple(sorted((c_nodes[i], c_nodes[j])))
-                # This is a bit lazy but works for simulation
-                edge = {"source": c_nodes[i], "target": c_nodes[j]}
-                if edge not in post_edges:
-                    post_edges.append(edge)
-
     data = {
         "nodes": nodes,
         "states": {
-            "pre_treatment": {
-                "edges": pre_edges,
-                "cliques": []
-            },
+            "pre_treatment": {"edges": get_edges(80), "cliques": []},
             "post_treatment": {
-                "edges": post_edges,
-                "cliques": post_cliques
+                "edges": get_edges(200),
+                "cliques": [[f"node_{i}" for i in random.sample(range(num_nodes), random.randint(3, 8))] for _ in range(15)]
             }
+        },
+        "drug_profile": {
+            "name": "ZenBud Agonist (ZB-01)",
+            "target": "Topological Stabilization",
+            "efficacy": "92.6%",
+            "mechanism": "Arnold Tongue phase-locking optimization"
         }
     }
 

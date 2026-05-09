@@ -933,75 +933,196 @@
             });
         };
 
-        // --- 3. 3D Neural Fingerprint Plot (Plotly) ---
-        const initPlotlyBrain = () => {
-            const n_nodes = 200;
-            const x = [], y = [], z = [], importance = [], text = [];
+        // --- 3. High-Fidelity Brain Dashboard (Three.js) ---
+        let dashScene, dashCamera, dashRenderer, dashControls, dashRaycaster, dashMouse;
+        let dashLobeGroup, dashEdgeGroup, dashCliqueGroup;
+        let dashData = null;
+        let dashStatus = 'HEALTHY';
+        let dashPharmaEfficacy = 0;
+        let dashHoveredNode = null;
+
+        const initDashboardBrain = () => {
+            const container = document.getElementById('dashboard-brain-container');
+            if (!container) return;
+
+            dashScene = new THREE.Scene();
+            dashScene.fog = new THREE.FogExp2(0x030008, 0.002);
+
+            dashCamera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 1000);
+            dashCamera.position.set(0, 80, 250);
+
+            dashRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            dashRenderer.setSize(container.clientWidth, container.clientHeight);
+            dashRenderer.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(dashRenderer.domElement);
+
+            dashControls = new THREE.OrbitControls(dashCamera, dashRenderer.domElement);
+            dashControls.enableDamping = true;
+            dashControls.autoRotate = true;
+            dashControls.autoRotateSpeed = 0.4;
+
+            dashRaycaster = new THREE.Raycaster();
+            dashMouse = new THREE.Vector2();
+
+            dashLobeGroup = new THREE.Group();
+            dashEdgeGroup = new THREE.Group();
+            dashCliqueGroup = new THREE.Group();
+            dashScene.add(dashLobeGroup, dashEdgeGroup, dashCliqueGroup);
+
+            // Shell
+            const shell = new THREE.Mesh(
+                new THREE.SphereGeometry(110, 32, 32),
+                new THREE.MeshBasicMaterial({ color: 0x8b5cf6, wireframe: true, transparent: true, opacity: 0.04 })
+            );
+            dashScene.add(shell);
+
+            dashScene.add(new THREE.AmbientLight(0x302060));
+            const pLight = new THREE.PointLight(0x8b5cf6, 2, 500);
+            pLight.position.set(0, 50, 100);
+            dashScene.add(pLight);
+
+            container.addEventListener('mousemove', (e) => {
+                const rect = container.getBoundingClientRect();
+                dashMouse.x = ((e.clientX - rect.left) / container.clientWidth) * 2 - 1;
+                dashMouse.y = -((e.clientY - rect.top) / container.clientHeight) * 2 + 1;
+            });
+
+            fetch('data/topology_projection.json')
+                .then(r => r.json())
+                .then(data => {
+                    dashData = data;
+                    renderDashboardTopology('RESPONSIVE');
+                });
+
+            animateDashboard();
+        };
+
+        const renderDashboardTopology = (status) => {
+            if (!dashData) return;
+            const data = dashData[status];
             
-            for(let i=0; i < n_nodes; i++) {
-                const hemisphere = i % 2 === 0 ? 1 : -1;
-                x.push(hemisphere * (Math.random() * 5 + 1));
-                y.push(Math.random() * 10 - 5);
-                z.push(Math.random() * 8 - 4);
-                
-                const val = Math.pow(Math.random(), 4) * 100; 
-                importance.push(val);
-                
-                const roi = Math.floor(Math.random() * 200);
-                const freq = Math.floor(Math.random() * 32) + 1;
-                text.push(`Node: Schaefer_ROI_${roi}<br>Freq Bin: ${freq}<br>Importance: ${val.toFixed(2)}`);
+            while(dashLobeGroup.children.length > 0) dashLobeGroup.remove(dashLobeGroup.children[0]);
+            while(dashEdgeGroup.children.length > 0) dashEdgeGroup.remove(dashEdgeGroup.children[0]);
+            while(dashCliqueGroup.children.length > 0) dashCliqueGroup.remove(dashCliqueGroup.children[0]);
+
+            const isPTSD = status === 'RESISTANT';
+            const lobeGeo = new THREE.SphereGeometry(5, 16, 16);
+            
+            data.nodes.forEach(n => {
+                const color = isPTSD ? 0x991b1b : 0x7c3aed;
+                const mat = new THREE.MeshPhongMaterial({ color, emissive: color, emissiveIntensity: 0.2, transparent: true, opacity: 0.8 });
+                const mesh = new THREE.Mesh(lobeGeo, mat);
+                mesh.position.set(n.x, n.y, n.z);
+                mesh.userData = { ...n, origin: new THREE.Vector3(n.x, n.y, n.z) };
+                dashLobeGroup.add(mesh);
+            });
+
+            const edgeMat = new THREE.LineBasicMaterial({ color: 0x4c1d95, transparent: true, opacity: 0.15 });
+            data.edges.forEach(e => {
+                const s = data.nodes[e.source], t = data.nodes[e.target];
+                const geo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(s.x, s.y, s.z), new THREE.Vector3(t.x, t.y, t.z)]);
+                dashEdgeGroup.add(new THREE.Line(geo, edgeMat));
+            });
+
+            data.cliques.forEach(c => {
+                if (c.nodes.length >= 3) {
+                    const positions = [];
+                    for (let i = 1; i < c.nodes.length - 1; i++) {
+                        const n0 = data.nodes[c.nodes[0]], ni = data.nodes[c.nodes[i]], ni1 = data.nodes[c.nodes[i+1]];
+                        positions.push(n0.x, n0.y, n0.z, ni.x, ni.y, ni.z, ni1.x, ni1.y, ni1.z);
+                    }
+                    const geo = new THREE.BufferGeometry();
+                    geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+                    const mat = new THREE.MeshPhongMaterial({ color: isPTSD ? 0xff0055 : 0x00ffcc, transparent: true, opacity: 0.1, side: THREE.DoubleSide });
+                    dashCliqueGroup.add(new THREE.Mesh(geo, mat));
+                }
+            });
+        };
+
+        const updateDashboardState = (state) => {
+            dashStatus = state;
+            const isPTSD = state === 'PTSD';
+            document.getElementById('btn-healthy').classList.toggle('active', !isPTSD);
+            document.getElementById('btn-ptsd').classList.toggle('active', isPTSD);
+            document.getElementById('active-scenario-label').innerText = isPTSD ? 'PTSD Flash (D7)' : 'Healthy Baseline';
+            renderDashboardTopology(isPTSD ? 'RESISTANT' : 'RESPONSIVE');
+            updateIntegrityUI();
+        };
+
+        const updatePharmaEfficacy = (val) => {
+            dashPharmaEfficacy = val / 100;
+            document.getElementById('pharma-percent').innerText = val + '%';
+            updateIntegrityUI();
+        };
+
+        const updateIntegrityUI = () => {
+            let score = dashStatus === 'HEALTHY' ? 100 : 24;
+            if (dashStatus === 'PTSD') score += dashPharmaEfficacy * 76;
+            
+            const bar = document.getElementById('integrity-bar');
+            const txt = document.getElementById('integrity-score');
+            score = Math.min(100, Math.round(score));
+            bar.style.width = score + '%';
+            txt.innerText = score + '%';
+            
+            if (score > 80) {
+                bar.className = 'h-1.5 bg-emerald-500 transition-all duration-500';
+                txt.className = 'text-emerald-400 font-mono';
+            } else if (score > 50) {
+                bar.className = 'h-1.5 bg-amber-500 transition-all duration-500';
+                txt.className = 'text-amber-400 font-mono';
+            } else {
+                bar.className = 'h-1.5 bg-rose-500 transition-all duration-500';
+                txt.className = 'text-rose-400 font-mono';
+            }
+        };
+
+        const animateDashboard = () => {
+            requestAnimationFrame(animateDashboard);
+            dashControls.update();
+            const time = Date.now() * 0.001;
+
+            dashRaycaster.setFromCamera(dashMouse, dashCamera);
+            const intersects = dashRaycaster.intersectObjects(dashLobeGroup.children);
+            const inspector = document.getElementById('node-inspector-overlay');
+            
+            if (intersects.length > 0) {
+                dashHoveredNode = intersects[0].object;
+                inspector.style.display = 'block';
+                document.getElementById('insp-name').innerText = dashHoveredNode.userData.name;
+                document.getElementById('insp-power').innerText = (dashHoveredNode.scale.x * 100).toFixed(0) + '%';
+                document.getElementById('insp-sync').innerText = (0.5 + Math.random() * 0.4).toFixed(2) + ' r';
+            } else {
+                dashHoveredNode = null;
             }
 
-            const trace = {
-                x: x, y: y, z: z,
-                mode: 'markers',
-                marker: {
-                    size: importance.map(v => (v / 100) * 15 + 3),
-                    color: importance,
-                    colorscale: [
-                        [0.0, '#1e1b4b'],
-                        [0.25, '#4c1d95'],
-                        [0.5, '#7c3aed'],
-                        [0.75, '#a78bfa'],
-                        [1.0, '#f0abfc']
-                    ],
-                    opacity: 0.85,
-                    showscale: true,
-                    colorbar: {
-                        title: { text: 'Gini Importance', font: { color: '#c7bce0', family: 'Inter' } },
-                        thickness: 14,
-                        len: 0.5,
-                        tickfont: { color: '#8a82a8', family: 'JetBrains Mono', size: 10 },
-                        outlinewidth: 0
-                    }
-                },
-                text: text,
-                hoverinfo: 'text',
-                type: 'scatter3d'
-            };
+            dashLobeGroup.children.forEach(node => {
+                const dist = node.userData.origin.length();
+                const wave = Math.sin(dist * 0.05 - time * 3);
+                
+                if (dashStatus === 'PTSD') {
+                    // Warping effect: Phama reduces jitter/chaos
+                    const jitter = (1 - dashPharmaEfficacy) * 15;
+                    node.position.x = node.userData.origin.x + (Math.random() - 0.5) * jitter;
+                    node.position.z = node.userData.origin.z + (Math.random() - 0.5) * jitter;
+                    
+                    // Scaling based on efficacy
+                    const ptsdScale = 0.5 + dashPharmaEfficacy * 0.7 + wave * 0.3;
+                    node.scale.setScalar(ptsdScale);
+                    
+                    // Color shift to Gold (Pharma)
+                    const pharmaColor = new THREE.Color(0xfcd34d);
+                    const ptsdColor = new THREE.Color(0x991b1b);
+                    node.material.color.lerpColors(ptsdColor, pharmaColor, dashPharmaEfficacy);
+                } else {
+                    const healthyScale = 1.0 + wave * 0.5;
+                    node.scale.setScalar(healthyScale);
+                    node.position.lerp(node.userData.origin, 0.1);
+                    node.material.color.setHex(0x7c3aed);
+                }
+            });
 
-            const layout = {
-                margin: { l: 0, r: 0, b: 0, t: 0 },
-                scene: {
-                    xaxis: { title: '', showticklabels: false, showgrid: false, zeroline: false, showbackground: false },
-                    yaxis: { title: '', showticklabels: false, showgrid: false, zeroline: false, showbackground: false },
-                    zaxis: { title: '', showticklabels: false, showgrid: false, zeroline: false, showbackground: false },
-                    bgcolor: 'rgba(0,0,0,0)',
-                    camera: {
-                        eye: {x: 1.5, y: 1.5, z: 1.2}
-                    }
-                },
-                paper_bgcolor: 'rgba(0,0,0,0)',
-                plot_bgcolor: 'rgba(0,0,0,0)',
-                hoverlabel: { bgcolor: '#0f0820', bordercolor: 'rgba(167,139,250,0.4)', font: { family: 'Inter', color: '#ede9fe' } }
-            };
-
-            const config = {
-                displayModeBar: false,
-                responsive: true
-            };
-
-            Plotly.newPlot('brain-plot', [trace], layout, config);
+            dashRenderer.render(dashScene, dashCamera);
         };
 
         // --- 4. Simulated Extraction Dashboard Logic ---
@@ -1246,7 +1367,7 @@
             initSciencePaperCharts();
             initCohortChart();
             initMetricsChart();
-            initPlotlyBrain();
+            initDashboardBrain();
         });
 
     </script>
