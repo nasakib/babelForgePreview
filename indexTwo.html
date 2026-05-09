@@ -144,7 +144,7 @@
             visible: true,
         }];
         await nv.loadVolumes(volumes);
-        nv.setClipPlane([-0.1, 270, 0]);
+        nv.setClipPlane([-0.1, 0, 0]);
         log("3D WebGL Visualizer Ready.", "success");
     }
 
@@ -196,7 +196,7 @@
         let clipAngle = 0;
         const scanInterval = setInterval(() => {
             clipAngle += 5;
-            nv.setClipPlane([Math.sin(clipAngle * Math.PI / 180), 270, Math.cos(clipAngle * Math.PI / 180)]);
+            nv.setClipPlane([Math.sin(clipAngle * Math.PI / 180), 0, Math.cos(clipAngle * Math.PI / 180)]);
         }, 100);
 
         log(isExample ? `Loading cloud dataset: <b>${filename}</b>...` : `Initiating extraction sequence for <b>${filename}</b>...`);

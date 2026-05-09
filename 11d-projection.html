@@ -155,16 +155,27 @@
             data.cliques.forEach(c => {
                 if (c.nodes.length >= 3) {
                     const geometry = new THREE.BufferGeometry();
-                    const vertices = new Float32Array([
-                        data.nodes[c.nodes[0]].x, data.nodes[c.nodes[0]].y, data.nodes[c.nodes[0]].z,
-                        data.nodes[c.nodes[1]].x, data.nodes[c.nodes[1]].y, data.nodes[c.nodes[1]].z,
-                        data.nodes[c.nodes[2]].x, data.nodes[c.nodes[2]].y, data.nodes[c.nodes[2]].z
-                    ]);
-                    geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+                    const positions = [];
+                    
+                    // Render a fan of triangles for the clique
+                    for (let i = 1; i < c.nodes.length - 1; i++) {
+                        positions.push(data.nodes[c.nodes[0]].x, data.nodes[c.nodes[0]].y, data.nodes[c.nodes[0]].z);
+                        positions.push(data.nodes[c.nodes[i]].x, data.nodes[c.nodes[i]].y, data.nodes[c.nodes[i]].z);
+                        positions.push(data.nodes[c.nodes[i+1]].x, data.nodes[c.nodes[i+1]].y, data.nodes[c.nodes[i+1]].z);
+                    }
+                    
+                    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+                    geometry.computeVertexNormals();
                     
                     // Opacity scales with dimension (higher D = more solid)
                     const opacity = Math.min(0.8, c.dimension * 0.15);
-                    const material = new THREE.MeshBasicMaterial({ color: colorCore, transparent: true, opacity: opacity, side: THREE.DoubleSide });
+                    const material = new THREE.MeshPhongMaterial({ 
+                        color: colorCore, 
+                        transparent: true, 
+                        opacity: opacity, 
+                        side: THREE.DoubleSide,
+                        shininess: 100
+                    });
                     const mesh = new THREE.Mesh(geometry, material);
                     cliqueGroup.add(mesh);
                 }

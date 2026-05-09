@@ -174,15 +174,18 @@
             const status = document.getElementById('status');
             
             isTreated = !isTreated;
-            
+
+            const stateText = document.querySelector('#ui-panel p:nth-child(4)');
+
             if(isTreated) {
                 btn.innerText = "Revert Treatment";
                 status.innerText = "11D CLIQUES RESTORED";
                 status.className = "status-responsive";
-                
+                if (stateText) stateText.innerHTML = "<strong>Current State:</strong> Healthy (11D Topology)";
+
                 buildEdges(postEdges);
                 buildCliques(postCliques);
-                
+
                 controls.autoRotateSpeed = 5.0;
                 setTimeout(() => { controls.autoRotateSpeed = 1.0; }, 2000);
 
@@ -190,13 +193,13 @@
                 btn.innerText = "Inject Simulated Agonist";
                 status.innerText = "TOPOLOGY COLLAPSED";
                 status.className = "status-resistant";
-                
+                if (stateText) stateText.innerHTML = "<strong>Current State:</strong> Treatment-Resistant (1D Collapse)";
+
                 buildEdges(preEdges);
                 while(currentCliquesGroup.children.length > 0){ 
                     currentCliquesGroup.remove(currentCliquesGroup.children[0]); 
                 }
-            }
-        }
+            }        }
 
         function onWindowResize() {
             camera.aspect = window.innerWidth / window.innerHeight;

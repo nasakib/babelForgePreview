@@ -664,7 +664,7 @@
         await nv.loadVolumes(volumes).catch((error) => {
             throw new Error(`Failed to load baseline volume: ${error.message}`);
         });
-        safeSetClipPlane([-0.1, 270, 0]);
+        safeSetClipPlane([-0.1, 0, 0]);
         setLoadStep("baseline", "done");
         setLoadStep("ready", "done");
         setViewerLoadingText("3D visualizer ready.");
@@ -831,7 +831,7 @@
             let clipAngle = 0;
             scanInterval = setInterval(() => {
                 clipAngle += 5;
-                safeSetClipPlane([Math.sin(clipAngle * Math.PI / 180), 270, Math.cos(clipAngle * Math.PI / 180)]);
+                safeSetClipPlane([Math.sin(clipAngle * Math.PI / 180), 0, Math.cos(clipAngle * Math.PI / 180)]);
             }, 100);
 
             log(isExample ? `Loading cloud dataset: <b>${safeName}</b>...` : `Initiating extraction sequence for <b>${safeName}</b>...`);
