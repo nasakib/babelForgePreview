@@ -935,21 +935,23 @@
 
         // --- 3. High-Fidelity Brain Dashboard (Three.js) ---
         let dashScene, dashCamera, dashRenderer, dashControls, dashRaycaster, dashMouse;
-        let dashLobeGroup, dashEdgeGroup, dashCliqueGroup;
+        let dashLobeGroup, dashEdgeGroup, dashCliqueGroup, dashParticleSystem;
         let dashData = null;
         let dashStatus = 'HEALTHY';
         let dashPharmaEfficacy = 0;
         let dashHoveredNode = null;
+        let signalPackets = [];
 
         const initDashboardBrain = () => {
             const container = document.getElementById('dashboard-brain-container');
             if (!container) return;
 
             dashScene = new THREE.Scene();
-            dashScene.fog = new THREE.FogExp2(0x030008, 0.002);
+            dashScene.background = new THREE.Color(0x030008);
+            dashScene.fog = new THREE.FogExp2(0x030008, 0.001);
 
-            dashCamera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 1000);
-            dashCamera.position.set(0, 80, 250);
+            dashCamera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 1500);
+            dashCamera.position.set(0, 100, 300);
 
             dashRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             dashRenderer.setSize(container.clientWidth, container.clientHeight);
@@ -959,7 +961,7 @@
             dashControls = new THREE.OrbitControls(dashCamera, dashRenderer.domElement);
             dashControls.enableDamping = true;
             dashControls.autoRotate = true;
-            dashControls.autoRotateSpeed = 0.4;
+            dashControls.autoRotateSpeed = 0.25;
 
             dashRaycaster = new THREE.Raycaster();
             dashMouse = new THREE.Vector2();
@@ -969,17 +971,37 @@
             dashCliqueGroup = new THREE.Group();
             dashScene.add(dashLobeGroup, dashEdgeGroup, dashCliqueGroup);
 
-            // Shell
-            const shell = new THREE.Mesh(
-                new THREE.SphereGeometry(110, 32, 32),
-                new THREE.MeshBasicMaterial({ color: 0x8b5cf6, wireframe: true, transparent: true, opacity: 0.04 })
-            );
+            // 1. Atmosphere: Neural Dust
+            const partCount = 400;
+            const partGeo = new THREE.BufferGeometry();
+            const partPos = new Float32Array(partCount * 3);
+            for(let i=0; i<partCount*3; i++) partPos[i] = (Math.random() - 0.5) * 600;
+            partGeo.setAttribute('position', new THREE.BufferAttribute(partPos, 3));
+            const partMat = new THREE.PointsMaterial({ color: 0x8b5cf6, size: 1.5, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending });
+            dashParticleSystem = new THREE.Points(partGeo, partMat);
+            dashScene.add(dashParticleSystem);
+
+            // 2. The Holographic Shell
+            const shellGeo = new THREE.SphereGeometry(130, 48, 48);
+            const shellMat = new THREE.MeshPhongMaterial({ 
+                color: 0x8b5cf6, 
+                wireframe: true, 
+                transparent: true, 
+                opacity: 0.02,
+                blending: THREE.AdditiveBlending 
+            });
+            const shell = new THREE.Mesh(shellGeo, shellMat);
             dashScene.add(shell);
 
-            dashScene.add(new THREE.AmbientLight(0x302060));
-            const pLight = new THREE.PointLight(0x8b5cf6, 2, 500);
-            pLight.position.set(0, 50, 100);
-            dashScene.add(pLight);
+            // 3. Lighting
+            dashScene.add(new THREE.AmbientLight(0x150830));
+            const mainLight = new THREE.PointLight(0x8b5cf6, 3, 600);
+            mainLight.position.set(50, 100, 100);
+            dashScene.add(mainLight);
+
+            const rimLight = new THREE.PointLight(0x00ffcc, 1.5, 400);
+            rimLight.position.set(-100, -50, -50);
+            dashScene.add(rimLight);
 
             container.addEventListener('mousemove', (e) => {
                 const rect = container.getBoundingClientRect();
@@ -1004,24 +1026,48 @@
             while(dashLobeGroup.children.length > 0) dashLobeGroup.remove(dashLobeGroup.children[0]);
             while(dashEdgeGroup.children.length > 0) dashEdgeGroup.remove(dashEdgeGroup.children[0]);
             while(dashCliqueGroup.children.length > 0) dashCliqueGroup.remove(dashCliqueGroup.children[0]);
+            signalPackets = [];
 
             const isPTSD = status === 'RESISTANT';
-            const lobeGeo = new THREE.SphereGeometry(5, 16, 16);
+            const lobeGeo = new THREE.SphereGeometry(6, 24, 24);
             
             data.nodes.forEach(n => {
                 const color = isPTSD ? 0x991b1b : 0x7c3aed;
-                const mat = new THREE.MeshPhongMaterial({ color, emissive: color, emissiveIntensity: 0.2, transparent: true, opacity: 0.8 });
+                // High-end Fresnel/Glow look
+                const mat = new THREE.MeshPhongMaterial({ 
+                    color: color, 
+                    emissive: color, 
+                    emissiveIntensity: 0.4, 
+                    transparent: true, 
+                    opacity: 0.85,
+                    shininess: 100 
+                });
                 const mesh = new THREE.Mesh(lobeGeo, mat);
                 mesh.position.set(n.x, n.y, n.z);
                 mesh.userData = { ...n, origin: new THREE.Vector3(n.x, n.y, n.z) };
                 dashLobeGroup.add(mesh);
             });
 
-            const edgeMat = new THREE.LineBasicMaterial({ color: 0x4c1d95, transparent: true, opacity: 0.15 });
+            const edgeMat = new THREE.LineBasicMaterial({ color: 0x4c1d95, transparent: true, opacity: 0.1 });
             data.edges.forEach(e => {
                 const s = data.nodes[e.source], t = data.nodes[e.target];
-                const geo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(s.x, s.y, s.z), new THREE.Vector3(t.x, t.y, t.z)]);
+                const start = new THREE.Vector3(s.x, s.y, s.z);
+                const end = new THREE.Vector3(t.x, t.y, t.z);
+                const geo = new THREE.BufferGeometry().setFromPoints([start, end]);
                 dashEdgeGroup.add(new THREE.Line(geo, edgeMat));
+
+                // Create signal packets for healthy state
+                if (!isPTSD || dashPharmaEfficacy > 0.5) {
+                    if (Math.random() > 0.7) {
+                        signalPackets.push({
+                            pos: start.clone(),
+                            start: start,
+                            end: end,
+                            speed: 0.01 + Math.random() * 0.03,
+                            t: Math.random()
+                        });
+                    }
+                }
             });
 
             data.cliques.forEach(c => {
@@ -1033,7 +1079,13 @@
                     }
                     const geo = new THREE.BufferGeometry();
                     geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-                    const mat = new THREE.MeshPhongMaterial({ color: isPTSD ? 0xff0055 : 0x00ffcc, transparent: true, opacity: 0.1, side: THREE.DoubleSide });
+                    const mat = new THREE.MeshPhongMaterial({ 
+                        color: isPTSD ? 0xff0055 : 0x00ffcc, 
+                        transparent: true, 
+                        opacity: 0.12, 
+                        side: THREE.DoubleSide,
+                        blending: THREE.AdditiveBlending 
+                    });
                     dashCliqueGroup.add(new THREE.Mesh(geo, mat));
                 }
             });
@@ -1082,6 +1134,12 @@
             dashControls.update();
             const time = Date.now() * 0.001;
 
+            // Rotate neural dust
+            if (dashParticleSystem) {
+                dashParticleSystem.rotation.y += 0.0005;
+                dashParticleSystem.rotation.x += 0.0002;
+            }
+
             dashRaycaster.setFromCamera(dashMouse, dashCamera);
             const intersects = dashRaycaster.intersectObjects(dashLobeGroup.children);
             const inspector = document.getElementById('node-inspector-overlay');
@@ -1096,29 +1154,45 @@
                 dashHoveredNode = null;
             }
 
+            // Animate Signal Packets
+            signalPackets.forEach(p => {
+                p.t += p.speed;
+                if (p.t > 1) p.t = 0;
+                p.pos.lerpVectors(p.start, p.end, p.t);
+            });
+
+            // Drawing signal pulses (conceptual lines or points)
+            // For performance and visual pop, we'll pulse the lobes that are targets of signal flow
+            
             dashLobeGroup.children.forEach(node => {
                 const dist = node.userData.origin.length();
-                const wave = Math.sin(dist * 0.05 - time * 3);
+                const wave = Math.sin(dist * 0.06 - time * 4);
                 
                 if (dashStatus === 'PTSD') {
-                    // Warping effect: Phama reduces jitter/chaos
-                    const jitter = (1 - dashPharmaEfficacy) * 15;
+                    const jitter = (1 - dashPharmaEfficacy) * 12;
                     node.position.x = node.userData.origin.x + (Math.random() - 0.5) * jitter;
                     node.position.z = node.userData.origin.z + (Math.random() - 0.5) * jitter;
                     
-                    // Scaling based on efficacy
-                    const ptsdScale = 0.5 + dashPharmaEfficacy * 0.7 + wave * 0.3;
-                    node.scale.setScalar(ptsdScale);
+                    const ptsdScale = 0.5 + dashPharmaEfficacy * 0.7 + wave * 0.4;
+                    node.scale.setScalar(Math.max(0.2, ptsdScale));
                     
-                    // Color shift to Gold (Pharma)
                     const pharmaColor = new THREE.Color(0xfcd34d);
                     const ptsdColor = new THREE.Color(0x991b1b);
                     node.material.color.lerpColors(ptsdColor, pharmaColor, dashPharmaEfficacy);
+                    node.material.emissiveIntensity = 0.2 + (1 - dashPharmaEfficacy) * 0.8;
                 } else {
-                    const healthyScale = 1.0 + wave * 0.5;
+                    const healthyScale = 1.0 + wave * 0.6;
                     node.scale.setScalar(healthyScale);
                     node.position.lerp(node.userData.origin, 0.1);
                     node.material.color.setHex(0x7c3aed);
+                    node.material.emissiveIntensity = 0.4 + wave * 0.3;
+                }
+                
+                if (node === dashHoveredNode) {
+                    node.material.emissive.setHex(0xffffff);
+                    node.material.emissiveIntensity = 2.0;
+                } else {
+                    node.material.emissive.copy(node.material.color);
                 }
             });
 
