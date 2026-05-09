@@ -7,23 +7,74 @@
     <style>
         body { margin: 0; overflow: hidden; background-color: #050816; color: white; font-family: 'Inter', sans-serif; }
         #canvas-container { width: 100vw; height: 100vh; display: block; }
-        #ui-panel { position: absolute; top: 20px; left: 20px; background: rgba(0, 0, 0, 0.8); padding: 20px; border-radius: 8px; border: 1px solid #9333EA; max-width: 350px; }
-        h1 { margin-top: 0; font-size: 1.2rem; color: #9b59b6; }
-        p { font-size: 0.9rem; color: #ccc; }
-        .btn { background: #9333EA; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; transition: background 0.3s; margin-top: 10px; }
+        
+        #banner { 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            right: 0; 
+            background: rgba(5, 8, 22, 0.85); 
+            padding: 15px 25px; 
+            border-bottom: 1px solid #9333EA; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            z-index: 100;
+            backdrop-filter: blur(5px);
+        }
+
+        .header-left { display: flex; flex-direction: column; }
+        .header-right { display: flex; align-items: center; gap: 20px; }
+
+        h1 { margin: 0; font-size: 1.1rem; color: #9b59b6; text-transform: uppercase; letter-spacing: 1px; }
+        p { margin: 2px 0; font-size: 0.8rem; color: #ccc; }
+        
+        .btn { 
+            background: #9333EA; 
+            color: white; 
+            border: none; 
+            padding: 8px 16px; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            font-size: 0.75rem;
+            transition: background 0.3s; 
+        }
         .btn:hover { background: #7e22ce; }
-        #status { margin-top: 15px; font-weight: bold; text-align: center; }
-        .status-resistant { color: #e74c3c; }
-        .status-responsive { color: #2ecc71; }
+        
+        .btn-back { background: transparent; border: 1px solid #444; color: #aaa; }
+        .btn-back:hover { background: #333; color: #fff; }
+
+        #status-overlay {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 15px;
+            border-left: 3px solid #9333EA;
+            font-size: 0.8rem;
+            pointer-events: none;
+        }
+
+        .status-resistant { color: #e74c3c; font-weight: bold; }
+        .status-responsive { color: #2ecc71; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div id="ui-panel">
-        <h1>Babel Forge v39</h1>
-        <p><strong>Experiment:</strong> Pharmacological Topology Repair</p>
-        <p><strong>Target:</strong> DorsAttn @ 0.030 Hz</p>
-        <p><strong>Current State:</strong> Treatment-Resistant (1D Collapse)</p>
-        <button id="inject-btn" class="btn">Inject Simulated Agonist</button>
+    <div id="banner">
+        <div class="header-left">
+            <h1>Babel Forge v39</h1>
+            <p><strong>Experiment:</strong> Pharmacological Topology Repair | <strong>Target:</strong> DorsAttn @ 0.030 Hz</p>
+        </div>
+        
+        <div class="header-right">
+            <button id="inject-btn" class="btn">Inject Simulated Agonist</button>
+            <button class="btn-back" onclick="window.location.href='index.html'">Back to Dashboard</button>
+        </div>
+    </div>
+
+    <div id="status-overlay">
+        <p id="state-text"><strong>Current State:</strong> Treatment-Resistant (1D Collapse)</p>
         <div id="status" class="status-resistant">TOPOLOGY COLLAPSED</div>
     </div>
     <div id="canvas-container"></div>
@@ -172,20 +223,19 @@
         function toggleTreatment() {
             const btn = document.getElementById('inject-btn');
             const status = document.getElementById('status');
+            const stateText = document.getElementById('state-text');
             
             isTreated = !isTreated;
-
-            const stateText = document.querySelector('#ui-panel p:nth-child(4)');
-
+            
             if(isTreated) {
                 btn.innerText = "Revert Treatment";
                 status.innerText = "11D CLIQUES RESTORED";
                 status.className = "status-responsive";
                 if (stateText) stateText.innerHTML = "<strong>Current State:</strong> Healthy (11D Topology)";
-
+                
                 buildEdges(postEdges);
                 buildCliques(postCliques);
-
+                
                 controls.autoRotateSpeed = 5.0;
                 setTimeout(() => { controls.autoRotateSpeed = 1.0; }, 2000);
 
@@ -194,12 +244,13 @@
                 status.innerText = "TOPOLOGY COLLAPSED";
                 status.className = "status-resistant";
                 if (stateText) stateText.innerHTML = "<strong>Current State:</strong> Treatment-Resistant (1D Collapse)";
-
+                
                 buildEdges(preEdges);
                 while(currentCliquesGroup.children.length > 0){ 
                     currentCliquesGroup.remove(currentCliquesGroup.children[0]); 
                 }
-            }        }
+            }
+        }
 
         function onWindowResize() {
             camera.aspect = window.innerWidth / window.innerHeight;

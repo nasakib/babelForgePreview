@@ -7,36 +7,84 @@
     <style>
         body { margin: 0; overflow: hidden; background-color: #050505; font-family: 'Courier New', Courier, monospace; color: #00ffcc; }
         canvas { display: block; }
-        #ui { position: absolute; top: 20px; left: 20px; background: rgba(0, 0, 0, 0.8); padding: 20px; border: 1px solid #00ffcc; border-radius: 5px; box-shadow: 0 0 15px rgba(0,255,204,0.3); pointer-events: none; }
-        h1 { margin: 0 0 10px 0; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 2px; }
-        p { margin: 5px 0; font-size: 0.9rem; }
+        
+        #banner { 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            right: 0; 
+            background: rgba(5, 5, 5, 0.85); 
+            padding: 15px 25px; 
+            border-bottom: 1px solid #00ffcc; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            z-index: 100;
+            backdrop-filter: blur(5px);
+        }
+
+        .header-left { display: flex; flex-direction: column; }
+        .header-right { display: flex; align-items: center; gap: 20px; }
+
+        h1 { margin: 0; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 2px; }
+        p { margin: 2px 0; font-size: 0.8rem; }
+        
         .highlight { color: #ff0055; font-weight: bold; }
-        .button-container { margin-top: 20px; pointer-events: auto; }
-        button { background: transparent; color: #00ffcc; border: 1px solid #00ffcc; padding: 10px 20px; cursor: pointer; text-transform: uppercase; font-weight: bold; transition: all 0.3s; margin-right: 10px;}
-        button:hover { background: #00ffcc; color: #000; box-shadow: 0 0 15px #00ffcc; }
-        #stats { margin-top: 15px; font-size: 0.8rem; opacity: 0.8; }
+        
+        .button-container { display: flex; gap: 10px; }
+        
+        button { 
+            background: transparent; 
+            color: #00ffcc; 
+            border: 1px solid #00ffcc; 
+            padding: 8px 16px; 
+            cursor: pointer; 
+            text-transform: uppercase; 
+            font-weight: bold; 
+            font-size: 0.75rem;
+            transition: all 0.3s; 
+        }
+        button:hover { background: #00ffcc; color: #000; box-shadow: 0 0 10px #00ffcc; }
+        
+        .btn-back { border-color: #aaa; color: #aaa; }
+        .btn-back:hover { background: #aaa; color: #000; box-shadow: 0 0 10px #aaa; }
+
+        #stats-overlay {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 15px;
+            border-left: 3px solid #00ffcc;
+            font-size: 0.8rem;
+            pointer-events: none;
+        }
+
         .glitch { animation: glitch 1s linear infinite; }
         @keyframes glitch { 2%, 64% { transform: translate(2px,0) skew(0deg); } 4%, 60% { transform: translate(-2px,0) skew(0deg); } 62% { transform: translate(0,0) skew(5deg); } }
     </style>
 </head>
 <body>
 
-    <div id="ui">
-        <h1 class="glitch">11D_CLIQUE_DETECTION</h1>
-        <p>Target: <span class="highlight">ds004393 (Dorsal Attention Network)</span></p>
-        <p>Frequency: <span class="highlight">0.030 - 0.039 Hz</span></p>
+    <div id="banner">
+        <div class="header-left">
+            <h1 class="glitch">11D_CLIQUE_DETECTION</h1>
+            <p>Target: <span class="highlight">ds004393 (Dorsal Attention Network)</span> @ <span class="highlight">0.030 - 0.039 Hz</span></p>
+        </div>
         
-        <div class="button-container">
-            <button onclick="loadTopology('RESPONSIVE')">Simulate Healthy (Responsive)</button>
-            <button style="border-color: #ff0055; color: #ff0055;" onclick="loadTopology('RESISTANT')">Trigger Dysfunction (Resistant)</button>
+        <div class="header-right">
+            <div class="button-container">
+                <button onclick="loadTopology('RESPONSIVE')">Simulate Healthy</button>
+                <button style="border-color: #ff0055; color: #ff0055;" onclick="loadTopology('RESISTANT')">Trigger Dysfunction</button>
+            </div>
+            <button class="btn-back" onclick="window.location.href='index.html'">Back to Dashboard</button>
         </div>
+    </div>
 
-        <div id="stats">
-            <p>State: <span id="state-val">AWAITING SIGNAL</span></p>
-            <p>Max Dimensions: <span id="dim-val">0D</span></p>
-            <p>Active Cliques: <span id="clique-val">0</span></p>
-            <p style="margin-top: 10px; font-size: 0.7rem; color: #aaa;">"The brain processes information by building multi-dimensional sandcastles, then washing them away."</p>
-        </div>
+    <div id="stats-overlay">
+        <p>State: <span id="state-val">AWAITING SIGNAL</span></p>
+        <p>Max Dimensions: <span id="dim-val">0D</span></p>
+        <p>Active Cliques: <span id="clique-val">0</span></p>
     </div>
 
     <!-- Load Three.js from CDN -->
