@@ -5,6 +5,14 @@ import os
 
 def generate_topology_data():
     """Generates data for 11d-projection.html"""
+    regions = [
+        "LH_Vis_1", "LH_Vis_2", "LH_SomMot_1", "LH_SomMot_2", "LH_DorsAttn_Post_1", 
+        "LH_DorsAttn_Post_2", "LH_DorsAttn_FEF", "LH_VentAttn_1", "LH_VentAttn_2", 
+        "LH_Limbic_OFC", "LH_Limbic_TempPole", "LH_Cont_Par_1", "LH_Cont_PFCl_1", 
+        "LH_Default_Temp_1", "LH_Default_Par_1", "LH_Default_PFC_1",
+        "RH_Vis_1", "RH_Vis_2", "RH_SomMot_1", "RH_SomMot_2", "RH_DorsAttn_Post_1",
+        "RH_DorsAttn_FEF", "RH_VentAttn_1", "RH_Cont_PFCl_1", "RH_Default_PFC_1"
+    ]
     
     def create_state(is_resistant=False):
         num_nodes = 50
@@ -13,7 +21,11 @@ def generate_topology_data():
             # Clusters
             angle = random.uniform(0, 2 * math.pi)
             dist = random.uniform(20, 80)
+            region = random.choice(regions)
             nodes.append({
+                "id": i,
+                "name": f"{region}_{i}",
+                "region": region.split('_')[1],
                 "x": dist * math.cos(angle) + random.uniform(-10, 10),
                 "y": dist * math.sin(angle) + random.uniform(-10, 10),
                 "z": random.uniform(-30, 30)
