@@ -45,7 +45,14 @@
             transition: all 0.3s; 
         }
         button:hover { background: #00ffcc; color: #000; box-shadow: 0 0 10px #00ffcc; }
+        button.active { background: #00ffcc; color: #000; }
         
+        .btn-stim { border-color: #a78bfa; color: #a78bfa; }
+        .btn-stim:hover, .btn-stim.active { background: #a78bfa; color: #000; box-shadow: 0 0 10px #a78bfa; }
+        
+        .btn-pharma { border-color: #fcd34d; color: #fcd34d; }
+        .btn-pharma:hover, .btn-pharma.active { background: #fcd34d; color: #000; box-shadow: 0 0 10px #fcd34d; }
+
         .btn-back { border-color: #aaa; color: #aaa; }
         .btn-back:hover { background: #aaa; color: #000; box-shadow: 0 0 10px #aaa; }
 
@@ -74,10 +81,12 @@
         
         <div class="header-right">
             <div class="button-container">
-                <button onclick="loadTopology('RESPONSIVE')">Simulate Healthy</button>
-                <button style="border-color: #ff0055; color: #ff0055;" onclick="loadTopology('RESISTANT')">Trigger Dysfunction</button>
+                <button id="btn-responsive" onclick="loadTopology('RESPONSIVE')">Simulate Healthy</button>
+                <button id="btn-resistant" style="border-color: #ff0055; color: #ff0055;" onclick="loadTopology('RESISTANT')">Trigger Dysfunction</button>
+                <button class="btn-stim" id="btn-stim" onclick="toggleStimulus()">Neural Stimulus (taVNS)</button>
+                <button class="btn-pharma" id="btn-pharma" onclick="togglePharma()">ZenBud Agonist</button>
             </div>
-            <button class="btn-back" onclick="window.location.href='index.html'">Back to Dashboard</button>
+            <button class="btn-back" onclick="window.location.href='index.html'">Back</button>
         </div>
     </div>
 
@@ -85,6 +94,7 @@
         <p>State: <span id="state-val">AWAITING SIGNAL</span></p>
         <p>Max Dimensions: <span id="dim-val">0D</span></p>
         <p>Active Cliques: <span id="clique-val">0</span></p>
+        <p id="mod-val" style="color: #fcd34d; margin-top: 5px;"></p>
     </div>
 
     <!-- Load Three.js from CDN -->
@@ -95,6 +105,11 @@
         let scene, camera, renderer, controls;
         let nodeGroup, edgeGroup, cliqueGroup;
         let topologyData = null;
+        
+        let currentStatus = 'RESPONSIVE';
+        let isStimulating = false;
+        let isPharmaActive = false;
+        let stimTime = 0;
 
         // Initialize Three.js
         function init() {
@@ -146,6 +161,30 @@
             animate();
         }
 
+        function toggleStimulus() {
+            isStimulating = !isStimulating;
+            document.getElementById('btn-stim').classList.toggle('active', isStimulating);
+            if (isStimulating) stimTime = 0;
+            updateModText();
+        }
+
+        function togglePharma() {
+            isPharmaActive = !isPharmaActive;
+            document.getElementById('btn-pharma').classList.toggle('active', isPharmaActive);
+            updateModText();
+            // Applying pharma to a resistant state should restore it if stimulating
+            if (isPharmaActive && currentStatus === 'RESISTANT' && isStimulating) {
+                setTimeout(() => loadTopology('RESPONSIVE'), 500);
+            }
+        }
+
+        function updateModText() {
+            let text = "";
+            if (isStimulating) text += "⚡ NEURAL STIMULATION ACTIVE ";
+            if (isPharmaActive) text += "💊 PHARMA MODULATION LOADED";
+            document.getElementById('mod-val').innerText = text;
+        }
+
         function clearTopology() {
             while(nodeGroup.children.length > 0){ 
                 nodeGroup.remove(nodeGroup.children[0]); 
@@ -160,7 +199,12 @@
 
         function loadTopology(status) {
             if (!topologyData) return;
+            currentStatus = status;
             clearTopology();
+            
+            // UI button states
+            document.getElementById('btn-responsive').classList.toggle('active', status === 'RESPONSIVE');
+            document.getElementById('btn-resistant').classList.toggle('active', status === 'RESISTANT');
 
             const data = topologyData[status];
             const isResistant = status === 'RESISTANT';
@@ -174,17 +218,15 @@
 
             // 1. Render Nodes (Neurons)
             const nodeGeometry = new THREE.SphereGeometry(1, 8, 8);
-            const nodeMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
             
-            data.nodes.forEach(n => {
+            data.nodes.forEach((n, i) => {
+                const nodeMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
                 const sphere = new THREE.Mesh(nodeGeometry, nodeMaterial);
                 sphere.position.set(n.x, n.y, n.z);
-                // Jitter resistant nodes slightly to represent dysfunction
-                if (isResistant) {
-                    sphere.position.x += (Math.random() - 0.5) * 5;
-                    sphere.position.y += (Math.random() - 0.5) * 5;
-                    sphere.position.z += (Math.random() - 0.5) * 5;
-                }
+                sphere.userData = { 
+                    origin: new THREE.Vector3(n.x, n.y, n.z),
+                    index: i
+                };
                 nodeGroup.add(sphere);
             });
 
@@ -199,23 +241,19 @@
                 edgeGroup.add(line);
             });
 
-            // 3. Render High-D Cliques (Triangles/Tetrahedrons)
+            // 3. Render High-D Cliques
             data.cliques.forEach(c => {
                 if (c.nodes.length >= 3) {
                     const geometry = new THREE.BufferGeometry();
                     const positions = [];
-                    
-                    // Render a fan of triangles for the clique
                     for (let i = 1; i < c.nodes.length - 1; i++) {
                         positions.push(data.nodes[c.nodes[0]].x, data.nodes[c.nodes[0]].y, data.nodes[c.nodes[0]].z);
                         positions.push(data.nodes[c.nodes[i]].x, data.nodes[c.nodes[i]].y, data.nodes[c.nodes[i]].z);
                         positions.push(data.nodes[c.nodes[i+1]].x, data.nodes[c.nodes[i+1]].y, data.nodes[c.nodes[i+1]].z);
                     }
-                    
                     geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
                     geometry.computeVertexNormals();
                     
-                    // Opacity scales with dimension (higher D = more solid)
                     const opacity = Math.min(0.8, c.dimension * 0.15);
                     const material = new THREE.MeshPhongMaterial({ 
                         color: colorCore, 
@@ -229,7 +267,6 @@
                 }
             });
             
-            // Dramatic camera zoom effect on change
             camera.position.z = 50;
             const targetZ = isResistant ? 200 : 150;
             const zoomInterval = setInterval(() => {
@@ -248,11 +285,47 @@
             requestAnimationFrame(animate);
             controls.update();
             
-            // Pulse effect for healthy high-D cliques
+            const time = Date.now() * 0.001;
+
+            // Cascading Neural Stimulus Effect
+            if (isStimulating) {
+                stimTime += 0.05;
+                nodeGroup.children.forEach((node) => {
+                    const dist = node.userData.origin.length();
+                    const wave = Math.sin(dist * 0.2 - stimTime * 5);
+                    
+                    if (currentStatus === 'RESISTANT' && !isPharmaActive) {
+                        // Cascading dysfunction: nodes fly apart under stress
+                        node.position.x = node.userData.origin.x + wave * 20;
+                        node.position.y = node.userData.origin.y + wave * 20;
+                        node.position.z = node.userData.origin.z + wave * 20;
+                        node.material.color.setHex(0xff0055);
+                    } else if (isPharmaActive) {
+                        // Stabilized flow: gentle ripple
+                        node.position.copy(node.userData.origin);
+                        node.position.addScaledVector(node.userData.origin.clone().normalize(), wave * 2);
+                        node.material.color.setHex(0xfcd34d);
+                    } else {
+                        // Healthy cascade
+                        node.position.copy(node.userData.origin);
+                        node.position.y += wave * 5;
+                        node.material.color.setHex(0xa78bfa);
+                    }
+                });
+            } else {
+                // Reset positions
+                nodeGroup.children.forEach(node => {
+                    node.position.lerp(node.userData.origin, 0.1);
+                    node.material.color.lerp(new THREE.Color(0xffffff), 0.1);
+                });
+            }
+
+            // Pulse effect for cliques
             if (cliqueGroup.children.length > 0) {
-                const time = Date.now() * 0.001;
                 cliqueGroup.children.forEach((child, i) => {
-                    child.material.opacity = (Math.sin(time * 2 + i) * 0.2) + 0.3;
+                    const baseOpacity = child.material.opacity;
+                    const pulse = (Math.sin(time * 3 + i) * 0.2) + 0.4;
+                    child.material.opacity = isStimulating ? pulse + 0.2 : pulse;
                 });
             }
 
@@ -262,4 +335,5 @@
         init();
     </script>
 </body>
+</html></body>
 </html>
