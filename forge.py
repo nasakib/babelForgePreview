@@ -2,78 +2,102 @@ import json
 import random
 import math
 import os
+import copy
 
 def generate_topology_data():
     """Generates data for 11d-projection.html and index.html dashboard"""
-    regions = [
-        {"name": "LH_Vis_1", "hemi": "LH", "cluster": "Visual", "base_x": -30, "base_y": -40, "base_z": -20},
-        {"name": "LH_Vis_2", "hemi": "LH", "cluster": "Visual", "base_x": -35, "base_y": -45, "base_z": -10},
-        {"name": "LH_SomMot_1", "hemi": "LH", "cluster": "SomatoMotor", "base_x": -40, "base_y": 5, "base_z": 40},
-        {"name": "LH_SomMot_2", "hemi": "LH", "cluster": "SomatoMotor", "base_x": -45, "base_y": 10, "base_z": 35},
-        {"name": "LH_DorsAttn_1", "hemi": "LH", "cluster": "DorsAttn", "base_x": -35, "base_y": -15, "base_z": 45},
-        {"name": "LH_DorsAttn_2", "hemi": "LH", "cluster": "DorsAttn", "base_x": -40, "base_y": -20, "base_z": 40},
-        {"name": "LH_VentAttn_1", "hemi": "LH", "cluster": "VentAttn", "base_x": -50, "base_y": 5, "base_z": 10},
-        {"name": "LH_Limbic_1", "hemi": "LH", "cluster": "Limbic", "base_x": -25, "base_y": 15, "base_z": -30},
-        {"name": "LH_Cont_1", "hemi": "LH", "cluster": "Control", "base_x": -30, "base_y": 35, "base_z": 20},
-        {"name": "LH_Default_1", "hemi": "LH", "cluster": "Default", "base_x": -20, "base_y": -55, "base_z": 25},
-        {"name": "LH_Default_2", "hemi": "LH", "cluster": "Default", "base_x": -15, "base_y": 45, "base_z": 15},
-        {"name": "RH_Vis_1", "hemi": "RH", "cluster": "Visual", "base_x": 30, "base_y": -40, "base_z": -20},
-        {"name": "RH_SomMot_1", "hemi": "RH", "cluster": "SomatoMotor", "base_x": 40, "base_y": 5, "base_z": 40},
-        {"name": "RH_DorsAttn_1", "hemi": "RH", "cluster": "DorsAttn", "base_x": 35, "base_y": -15, "base_z": 45},
-        {"name": "RH_VentAttn_1", "hemi": "RH", "cluster": "VentAttn", "base_x": 50, "base_y": 5, "base_z": 10},
-        {"name": "RH_Limbic_1", "hemi": "RH", "cluster": "Limbic", "base_x": 25, "base_y": 15, "base_z": -30},
-        {"name": "RH_Cont_1", "hemi": "RH", "cluster": "Control", "base_x": 30, "base_y": 35, "base_z": 20},
-        {"name": "RH_Default_1", "hemi": "RH", "cluster": "Default", "base_x": 20, "base_y": -55, "base_z": 25}
-    ]
+    num_nodes = 150
+    nodes = []
     
-    def create_state(is_resistant=False):
-        num_nodes = 60
-        nodes = []
-        for i in range(num_nodes):
-            reg = random.choice(regions)
-            # Create a more brain-like distribution around base centers
-            nodes.append({
-                "id": i,
-                "name": f"{reg['name']}_{i}",
-                "region": reg['cluster'],
-                "hemi": reg['hemi'],
-                "x": reg['base_x'] + random.uniform(-15, 15),
-                "y": reg['base_y'] + random.uniform(-15, 15),
-                "z": reg['base_z'] + random.uniform(-15, 15),
-                "cliques": 0 # Initialize
-            })
+    # Brain dimensions (Ellipsoid)
+    a, b, c = 45, 35, 55 # X (Left/Right), Y (Bottom/Top), Z (Back/Front)
+    
+    for i in range(num_nodes):
+        # Rejection sampling for an ellipsoid
+        while True:
+            x = random.uniform(-a, a)
+            y = random.uniform(-b, b)
+            z = random.uniform(-c, c)
+            # Check if point is inside ellipsoid
+            if (x/a)**2 + (y/b)**2 + (z/c)**2 <= 1:
+                # Carve out the interhemispheric fissure (make it slightly split)
+                if abs(x) < 4:
+                    continue
+                break
+                
+        # Assign region based on coordinates
+        hemi = "RH" if x > 0 else "LH"
+        if z < -20:
+            cluster = "Visual"
+            name = f"{hemi}_Vis_{i}"
+        elif y > 15 and -20 <= z <= 20:
+            cluster = "SomatoMotor"
+            name = f"{hemi}_SomMot_{i}"
+        elif z > 20 and y > 0:
+            cluster = "Control"
+            name = f"{hemi}_Cont_{i}"
+        elif z > 20 and y <= 0:
+            cluster = "Limbic"
+            name = f"{hemi}_Limbic_{i}"
+        elif y < 0 and -20 <= z <= 20:
+            cluster = "VentAttn"
+            name = f"{hemi}_VentAttn_{i}"
+        else:
+            cluster = "Default"
+            name = f"{hemi}_Default_{i}"
+            
+        nodes.append({
+            "id": i,
+            "name": name,
+            "region": cluster,
+            "hemi": hemi,
+            "x": x,
+            "y": y,
+            "z": z,
+            "cliques": 0
+        })
 
-        edges = []
-        cliques = []
-        num_cliques = 8 if is_resistant else 25
+    def create_state(is_resistant=False):
+        state_nodes = copy.deepcopy(nodes)
+        
+        state_edges = []
+        state_cliques = []
+        num_cliques = 12 if is_resistant else 45
         max_dim = 4 if is_resistant else 11
         
         for _ in range(num_cliques):
             dim = random.randint(2, max_dim)
-            c_nodes = random.sample(range(num_nodes), min(dim + 1, num_nodes))
-            cliques.append({"nodes": c_nodes, "dimension": dim})
+            clique_size = dim + 1
             
-            # Increment participation count
+            # Find nodes that are somewhat close to each other to form a clique
+            center_node = random.choice(state_nodes)
+            distances = [(j, (n["x"]-center_node["x"])**2 + (n["y"]-center_node["y"])**2 + (n["z"]-center_node["z"])**2) for j, n in enumerate(state_nodes)]
+            distances.sort(key=lambda item: item[1])
+            
+            # Select the closest nodes for the clique to make spatial sense
+            c_nodes = [idx for idx, d in distances[:clique_size]]
+            state_cliques.append({"nodes": c_nodes, "dimension": dim})
+            
             for nid in c_nodes:
-                nodes[nid]["cliques"] += 1
+                state_nodes[nid]["cliques"] += 1
 
             for i in range(len(c_nodes)):
                 for j in range(i + 1, len(c_nodes)):
-                    edges.append({"source": c_nodes[i], "target": c_nodes[j]})
+                    state_edges.append({"source": c_nodes[i], "target": c_nodes[j]})
 
         seen = set()
         unique_edges = []
-        for e in edges:
+        for e in state_edges:
             pair = tuple(sorted((e["source"], e["target"])))
             if pair not in seen:
                 unique_edges.append(e)
                 seen.add(pair)
 
         return {
-            "nodes": nodes,
+            "nodes": state_nodes,
             "edges": unique_edges,
-            "cliques": cliques,
-            "stats": {"max_dimension_found": max_dim, "total_cliques_2D_plus": len(cliques)}
+            "cliques": state_cliques,
+            "stats": {"max_dimension_found": max_dim, "total_cliques_2D_plus": len(state_cliques)}
         }
 
     data = {

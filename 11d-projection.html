@@ -213,9 +213,10 @@
             scene.add(cliqueGroup);
 
             // Subtle brain shell
-            const shellGeo = new THREE.SphereGeometry(120, 32, 32);
+            const shellGeo = new THREE.SphereGeometry(65, 32, 32);
             const shellMat = new THREE.MeshBasicMaterial({ color: 0x8b5cf6, wireframe: true, transparent: true, opacity: 0.03 });
             brainShell = new THREE.Mesh(shellGeo, shellMat);
+            brainShell.scale.set(0.8, 0.6, 1.0);
             scene.add(brainShell);
 
             const ambientLight = new THREE.AmbientLight(0x201040);

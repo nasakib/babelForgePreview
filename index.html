@@ -920,15 +920,16 @@
             dashScene.add(dashParticleSystem);
 
             // 2. The Holographic Shell
-            const shellGeo = new THREE.SphereGeometry(130, 48, 48);
+            const shellGeo = new THREE.SphereGeometry(65, 32, 32);
             const shellMat = new THREE.MeshPhongMaterial({ 
                 color: 0x8b5cf6, 
                 wireframe: true, 
                 transparent: true, 
-                opacity: 0.02,
+                opacity: 0.04,
                 blending: THREE.AdditiveBlending 
             });
             const shell = new THREE.Mesh(shellGeo, shellMat);
+            shell.scale.set(0.8, 0.6, 1.0);
             dashScene.add(shell);
 
             // 3. Lighting
