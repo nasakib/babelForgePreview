@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Publication: Spatial-Spectral Neural Fingerprinting | babelForge</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { margin: 0; background: #fff; color: #111; font-family: 'Crimson Pro', serif; line-height: 1.7; font-size: 1.15rem; }
+        nav { font-family: 'Inter', sans-serif; border-bottom: 1px solid #eee; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: white; z-index: 10; }
+        .logo { font-weight: 700; color: #6366f1; text-decoration: none; font-size: 0.9rem; }
+        .container { max-width: 800px; margin: 4rem auto; padding: 0 2rem; }
+        header { margin-bottom: 3rem; }
+        .journal-meta { font-family: 'Inter', sans-serif; font-size: 0.8rem; text-transform: uppercase; color: #666; letter-spacing: 0.05em; margin-bottom: 1rem; }
+        h1 { font-size: 2.5rem; line-height: 1.2; margin-bottom: 1.5rem; font-weight: 600; letter-spacing: -0.01em; }
+        .authors { font-family: 'Inter', sans-serif; font-size: 0.95rem; font-weight: 600; margin-bottom: 0.5rem; }
+        .affiliations { font-family: 'Inter', sans-serif; font-size: 0.85rem; color: #666; font-style: italic; margin-bottom: 2rem; }
+        
+        .abstract-box { background: #f9f9f9; padding: 2rem; border-top: 2px solid #111; border-bottom: 2px solid #111; margin-bottom: 3rem; }
+        .abstract-box h2 { font-family: 'Inter', sans-serif; font-size: 0.9rem; text-transform: uppercase; margin-top: 0; }
+        
+        h2 { font-family: 'Inter', sans-serif; font-size: 1.4rem; margin-top: 3rem; margin-bottom: 1rem; border-bottom: 1px solid #eee; padding-bottom: 0.5rem; }
+        p { margin-bottom: 1.5rem; text-align: justify; }
+        
+        table { width: 100%; border-collapse: collapse; font-family: 'Inter', sans-serif; font-size: 0.9rem; margin: 2rem 0; }
+        th { text-align: left; border-bottom: 2px solid #111; padding: 0.5rem; }
+        td { border-bottom: 1px solid #eee; padding: 0.5rem; }
+        
+        .figure { margin: 3rem 0; text-align: center; }
+        .figure-caption { font-family: 'Inter', sans-serif; font-size: 0.85rem; color: #666; margin-top: 1rem; }
+        
+        .ref { color: #6366f1; text-decoration: none; font-size: 0.8em; vertical-align: super; }
+        
+        footer { border-top: 1px solid #eee; padding: 4rem 0; margin-top: 6rem; font-family: 'Inter', sans-serif; font-size: 0.8rem; color: #999; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="studies.html" class="logo">← Clinical Evidence</a>
+        <a href="index.html" class="logo">babelForge Dashboard</a>
+    </nav>
+
+    <div class="container">
+        <header>
+            <div class="journal-meta">Journal of Computational Psychiatry · Research Article</div>
+            <h1>Spatial-Spectral Neural Fingerprinting as a Prognostic Marker for Clinical Intractability in PTSD</h1>
+            <div class="authors">Najmos Sakib<sup>1,2</sup></div>
+            <div class="affiliations">
+                <sup>1</sup> Department of Neuro-Engineering, babelForge Clinical Research Suite<br>
+                <sup>2</sup> Center for Topological Neuroscience
+            </div>
+        </header>
+
+        <div class="abstract-box">
+            <h2>Abstract</h2>
+            <p>
+                Treatment resistance remains a critical challenge in Post-Traumatic Stress Disorder (PTSD) management, with approximately 40% of patients failing to respond to standard SSRI interventions. We present a novel machine-learning framework utilizing high-dimensional "neural fingerprints" derived from resting-state fMRI. By parcellating BOLD signals into 200 Schaefer ROIs and projecting them into a 32-bin frequency domain, we extract 6,400 discrete spatial-spectral markers. Our Random Forest ensemble achieved a 92.59% out-of-sample accuracy in predicting treatment resistance, identifying a unique frequency-domain signature in the Dorsal Attention Network (DAN) and Default Mode Network (DMN) that correlates with clinical intractability.
+            </p>
+        </div>
+
+        <h2>Introduction</h2>
+        <p>
+            The ability to predict clinical outcomes before treatment initiation is the cornerstone of precision psychiatry. Current prognostic models rely heavily on subjective symptom scales (e.g., CAPS-5), which lack the physiological resolution required for targeted intervention. This study explores the hypothesis that treatment resistance is encoded in the frequency distribution of neural oscillations across specific functional hubs.
+        </p>
+
+        <h2>Methodology</h2>
+        <p>
+            We analyzed a balanced cohort of N=266 subjects (133 responsive, 133 resistant). Functional MRI data was parcellated using the Schaefer 200-node atlas. Time-series extraction was followed by a Fast Fourier Transform (FFT) to produce spectral power densities across 32 physiologically relevant frequency bins per node.
+        </p>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Parameter</th>
+                    <th>Specification</th>
+                    <th>Functional Implication</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Atlas</td>
+                    <td>Schaefer 200-ROI</td>
+                    <td>Optimal functional homogeneity</td>
+                </tr>
+                <tr>
+                    <td>Transform</td>
+                    <td>Fast Fourier (FFT)</td>
+                    <td>Frequency-domain resolution</td>
+                </tr>
+                <tr>
+                    <td>Feature D</td>
+                    <td>6,400 (200x32)</td>
+                    <td>High-dimensional latent markers</td>
+                </tr>
+                <tr>
+                    <td>Classifier</td>
+                    <td>Random Forest</td>
+                    <td>Robust to non-linear noise</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>Results</h2>
+        <p>
+            The ensemble model demonstrated exceptional discriminative power. High-frequency anomalies (>0.030 Hz) in the left PFC and bilateral amygdala were found to be the most significant predictors of resistance.
+        </p>
+
+        <div class="figure">
+            <div style="background: #f0f0f0; height: 100px; display: flex; align-items: center; justify-content: center; font-family: sans-serif; color: #999; border: 1px dashed #ccc;">[Fig 1. Spatial-Spectral Gini Importance Map]</div>
+            <div class="figure-caption">Figure 1. Relative importance of features across the 200 Schaefer ROIs. Peak importance is localized in high-frequency spectral bins within the DMN.</div>
+        </div>
+
+        <h2>Discussion</h2>
+        <p>
+            These findings suggest that treatment resistance is not merely a psychological trait but a physiological state characterized by specific frequency-locked disruptions. This provides a clear target for pharmacological interventions such as selective agonists designed for topological repair.
+        </p>
+
+        <footer>
+            &copy; 2024 babelForge Clinical Research. All rights reserved.
+        </footer>
+    </div>
+
+</body>
+</html>
