@@ -790,10 +790,10 @@
                 node.scale.setScalar(Math.max(0.1, scaleBase + wave * 0.2));
                 
                 // Color & Emissive
-                let targetColor = new THREE.Color(0x8b5cf6); // Base purple
+                let targetColor = new THREE.Color(node.userData.baseColor); // Base regional color
                 if (v.repair > 0.5 && v.chaos <= 0) targetColor.setHex(0xfcd34d); // Gold repair
-                if (v.dampening > 1.0) targetColor.setHex(0x475569); // Slate grey rigid
-                if (v.chaos > 0.5 || v.arousal > 2.0) targetColor.setHex(0xef4444); // Red toxic
+                else if (v.dampening > 1.0) targetColor.setHex(0x475569); // Slate grey rigid
+                else if (v.chaos > 0.5 || v.arousal > 2.0) targetColor.setHex(0xef4444); // Red toxic
                 
                 node.material.color.lerp(targetColor, 0.1);
                 
