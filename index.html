@@ -500,6 +500,17 @@
                                     </div>
                                     <input type="range" id="pharma-slider" min="0" max="100" value="0" class="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600" oninput="updatePharmaEfficacy(this.value)">
                                     <p id="drug-desc-label" class="text-[10px] text-slate-400 mt-4 leading-relaxed">Adjust precision dosage to monitor regional stabilization and topological repair rate.</p>
+                                    
+                                    <div class="mt-4 pt-4 border-t border-slate-100 flex flex-col items-center">
+                                        <div id="molecule-svg-container" class="h-16 w-full flex items-center justify-center opacity-60">
+                                            <svg viewBox="0 0 100 50" class="h-full w-auto stroke-indigo-600 fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M30 25 L40 15 L55 15 L65 25 L55 35 L40 35 Z"/>
+                                                <path d="M40 15 L35 5 M65 25 L75 25 L80 15 M55 35 L60 45"/>
+                                                <circle cx="35" cy="5" r="2" fill="#4f46e5"/><circle cx="80" cy="15" r="2" fill="#4f46e5"/><circle cx="60" cy="45" r="2" fill="#4f46e5"/>
+                                            </svg>
+                                        </div>
+                                        <p id="molecule-name" class="text-[9px] font-bold text-indigo-400 tracking-widest mt-2 uppercase">ZB-01 (Indole Derivative)</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1046,6 +1057,8 @@
             });
         };
 
+        let currentOptimalDose = 50;
+
         const updateDashboardState = (state) => {
             dashStatus = state;
             
@@ -1058,34 +1071,68 @@
             let drugName = 'ZB-01 Dosage';
             let drugDesc = 'Adjust precision dosage to monitor regional stabilization and topological repair rate.';
             let targetState = 'RESPONSIVE';
+            let sliderMax = 100;
+            currentOptimalDose = 50;
+            let moleculeSVG = `<svg viewBox="0 0 100 50" class="h-full w-auto stroke-indigo-600 fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M30 25 L40 15 L55 15 L65 25 L55 35 L40 35 Z"/>
+                                    <path d="M40 15 L35 5 M65 25 L75 25 L80 15 M55 35 L60 45"/>
+                                    <circle cx="35" cy="5" r="2" fill="#4f46e5"/><circle cx="80" cy="15" r="2" fill="#4f46e5"/><circle cx="60" cy="45" r="2" fill="#4f46e5"/>
+                               </svg>`;
+            let moleculeName = 'ZB-01 (Indole Derivative)';
 
             if (state === 'PTSD') {
                 label = 'PTSD Flash (D7)';
                 drugName = 'ZB-01 Dosage';
                 drugDesc = 'Adjust dosage to stabilize hyperarousal and repair 11D cliques.';
                 targetState = 'RESISTANT';
+                sliderMax = 100;
+                currentOptimalDose = 50;
             } else if (state === 'ADHD') {
                 label = 'ADHD (Inattentive)';
                 drugName = 'SynaptoStim (SS-20) Dosage';
                 drugDesc = 'Adjust dopaminergic stimulant dosage to increase connectivity in frontal networks.';
                 targetState = 'ADHD';
+                sliderMax = 60;
+                currentOptimalDose = 30;
+                moleculeSVG = `<svg viewBox="0 0 100 50" class="h-full w-auto stroke-indigo-600 fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 25 L35 25 L45 10 L60 10 L70 25 L85 25"/>
+                                    <path d="M35 25 L45 40 L60 40 L70 25"/>
+                                    <circle cx="20" cy="25" r="2" fill="#4f46e5"/><circle cx="85" cy="25" r="2" fill="#4f46e5"/><circle cx="60" cy="10" r="2" fill="#4f46e5"/>
+                               </svg>`;
+                moleculeName = 'SS-20 (Phenethylamine Class)';
             } else if (state === 'TOURETTES') {
                 label = 'Tourette\'s (Motor Tic)';
                 drugName = 'DopaReg-D2 (DR-02) Dosage';
                 drugDesc = 'Adjust D2 antagonist dosage to dampen hyper-connected somatomotor loops.';
                 targetState = 'TOURETTES';
+                sliderMax = 10;
+                currentOptimalDose = 5;
+                moleculeSVG = `<svg viewBox="0 0 100 50" class="h-full w-auto stroke-indigo-600 fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M25 25 L35 15 L50 15 L60 25 L50 35 L35 35 Z"/>
+                                    <path d="M60 25 L75 25 L85 15 M75 25 L85 35"/>
+                                    <circle cx="25" cy="25" r="2" fill="#4f46e5"/><circle cx="85" cy="15" r="2" fill="#4f46e5"/><circle cx="85" cy="35" r="2" fill="#4f46e5"/>
+                               </svg>`;
+                moleculeName = 'DR-02 (Butyrophenone Analog)';
             }
 
             document.getElementById('active-scenario-label').innerText = label;
             document.getElementById('drug-name-label').innerText = drugName;
             document.getElementById('drug-desc-label').innerText = drugDesc;
             
+            const slider = document.getElementById('pharma-slider');
+            slider.max = sliderMax;
+            slider.value = 0;
+            
+            document.getElementById('molecule-svg-container').innerHTML = moleculeSVG;
+            document.getElementById('molecule-name').innerText = moleculeName;
+            
+            updatePharmaEfficacy(0);
             renderDashboardTopology(targetState);
             updateIntegrityUI();
         };
 
         const updatePharmaEfficacy = (val) => {
-            dashPharmaEfficacy = val / 50;
+            dashPharmaEfficacy = val / currentOptimalDose;
             document.getElementById('pharma-percent').innerText = val + ' mg';
             updateIntegrityUI();
         };
