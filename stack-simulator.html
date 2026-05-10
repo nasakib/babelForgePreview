@@ -694,38 +694,67 @@
             // 2. Target State Alignment
             html += '<div class="border-t border-slate-200 pt-3 mt-4">';
             html += '<strong class="text-slate-900 block mb-2">Stack Alignment: ' + targetState.toUpperCase() + '</strong>';
-            
-            let currentArousal = 0, currentDampening = 0;
-            currentStack.forEach(m => {
-                const ratio = m.currentDose / (m.optimalDose * patientMultiplier);
-                currentArousal += m.effects.arousal * Math.min(1, ratio);
-                currentDampening += m.effects.dampening * Math.min(1, ratio);
-            });
 
-            if (targetState === 'focus') {
-                if (currentArousal < 1.0) html += '<p class="text-amber-600 text-xs mt-1 flex gap-2"><span>⚠️</span> Add a dopaminergic stimulant (e.g., SS-20, Methylphenidate) to achieve focus.</p>';
-                if (currentDampening > 0.5) html += '<p class="text-rose-600 text-xs mt-1 flex gap-2"><span>❌</span> Remove depressants/antipsychotics; they block focus pathways.</p>';
-            } else if (targetState === 'sleep') {
-                if (currentDampening < 1.0) html += '<p class="text-amber-600 text-xs mt-1 flex gap-2"><span>⚠️</span> Add a depressant (e.g., Zolpidem, Lorazepam) to induce sleep.</p>';
-                if (currentArousal > 0.2) html += '<p class="text-rose-600 text-xs mt-1 flex gap-2"><span>❌</span> Remove stimulants; they will prevent sleep architecture.</p>';
-            } else if (targetState === 'creative') {
-                const hasPsychedelic = currentStack.some(m => m.id === 'psilo' || m.id === 'mdma');
-                if (!hasPsychedelic) html += '<p class="text-amber-600 text-xs mt-1 flex gap-2"><span>💡</span> Consider adding a classic psychedelic (e.g., Psilocybin) for creative topology expansion.</p>';
-            } else if (targetState === 'relaxation') {
-                if (currentDampening < 0.5) html += '<p class="text-amber-600 text-xs mt-1 flex gap-2"><span>⚠️</span> Add a mild cannabinoid (e.g., CBD) or low-dose depressant for relaxation.</p>';
-                if (currentArousal > 0.5) html += '<p class="text-rose-600 text-xs mt-1 flex gap-2"><span>❌</span> Stimulant dosage is too high for relaxation.</p>';
-            } else if (targetState === 'baseline') {
-                if (currentArousal > 1.0 || currentDampening > 1.0) {
-                    html += '<p class="text-amber-600 text-xs mt-1 flex gap-2"><span>⚠️</span> Stack is too heavy. Remove conflicting molecules to restore baseline.</p>';
-                } else {
-                    html += '<p class="text-emerald-600 text-xs mt-1 flex gap-2"><span>✅</span> Stack is well-balanced for healthy baseline operations.</p>';
-                }
+            // Define mathematically valid target vector ranges for each state
+            const targets = {
+                baseline: { arousal: [0, 0.4], dampening: [0, 0.4], chaos: [0, 0.5], repair: [0, 2] },
+                focus: { arousal: [0.8, 1.4], dampening: [0, 0.3], chaos: [0, 0.5], repair: [0, 2] },
+                relaxation: { arousal: [0, 0.3], dampening: [0.5, 1.0], chaos: [0, 0.5], repair: [0, 2] },
+                sleep: { arousal: [0, 0.2], dampening: [1.2, 2.0], chaos: [0, 0.5], repair: [0, 2] },
+                creative: { arousal: [0.3, 0.8], dampening: [0, 0.3], chaos: [0.5, 1.2], repair: [0.5, 2] }
+            };
+
+            const t = targets[targetState];
+            const cv = currentVectors;
+            let aligned = true;
+
+            // Arousal Pharmacokinetics
+            if (cv.arousal < t.arousal[0]) {
+                const deficit = (t.arousal[0] - cv.arousal).toFixed(2);
+                html += `<p class="text-amber-600 text-xs mt-2 flex gap-2 leading-relaxed"><span>⚠️</span> <span><strong>Arousal Deficit (-${deficit}):</strong> Add ~${Math.round(deficit * 20 * patientMultiplier)}mg of a Dopaminergic Stimulant (e.g., SS-20) to reach target synchronization threshold.</span></p>`;
+                aligned = false;
+            } else if (cv.arousal > t.arousal[1]) {
+                const excess = (cv.arousal - t.arousal[1]).toFixed(2);
+                html += `<p class="text-rose-600 text-xs mt-2 flex gap-2 leading-relaxed"><span>❌</span> <span><strong>Arousal Excess (+${excess}):</strong> Reduce stimulant dosage or add ~${Math.round(excess * 10 * patientMultiplier)}mg of a Depressant to counteract hyper-arousal and prevent topological shattering.</span></p>`;
+                aligned = false;
+            }
+
+            // Dampening Pharmacokinetics
+            if (cv.dampening < t.dampening[0]) {
+                const deficit = (t.dampening[0] - cv.dampening).toFixed(2);
+                html += `<p class="text-amber-600 text-xs mt-2 flex gap-2 leading-relaxed"><span>⚠️</span> <span><strong>Dampening Deficit (-${deficit}):</strong> Add ~${Math.round(deficit * 5 * patientMultiplier)}mg of a GABAergic/Depressant (e.g., Alprazolam, CBD) to achieve required neural sedation.</span></p>`;
+                aligned = false;
+            } else if (cv.dampening > t.dampening[1]) {
+                const excess = (cv.dampening - t.dampening[1]).toFixed(2);
+                html += `<p class="text-rose-600 text-xs mt-2 flex gap-2 leading-relaxed"><span>❌</span> <span><strong>Dampening Excess (+${excess}):</strong> Reduce depressant dosage to prevent pathological rigidity and cognitive blunting.</span></p>`;
+                aligned = false;
+            }
+
+            // Chaos/Entropy Pharmacodynamics
+            if (cv.chaos > t.chaos[1]) {
+                const excess = (cv.chaos - t.chaos[1]).toFixed(2);
+                html += `<p class="text-rose-600 text-xs mt-2 flex gap-2 leading-relaxed"><span>❌</span> <span><strong>Topological Chaos (+${excess}):</strong> High spectral noise detected. Reduce overdose quantities or add a Precision Agonist (ZB-01) to repair topological fragmentation.</span></p>`;
+                aligned = false;
+            } else if (cv.chaos < t.chaos[0] && targetState === 'creative') {
+                html += `<p class="text-amber-600 text-xs mt-2 flex gap-2 leading-relaxed"><span>💡</span> <span><strong>Rigid Topology:</strong> Add a 5-HT2A Agonist (e.g., Psilocybin) to introduce beneficial topological variance (entropy) for creative flow.</span></p>`;
+                aligned = false;
+            }
+
+            // Repair/Stabilization Check
+            if (cv.repair < t.repair[0] && targetState === 'creative') {
+                html += `<p class="text-amber-600 text-xs mt-2 flex gap-2 leading-relaxed"><span>⚠️</span> <span><strong>Repair Deficit:</strong> Add ZB-01 to stabilize the high-dimensional cliques during creative divergence.</span></p>`;
+                aligned = false;
+            }
+
+            if (aligned) {
+                html += `<div class="mt-3 p-3 bg-emerald-50 rounded-lg border border-emerald-100 flex gap-2 items-start"><span class="text-emerald-500">✅</span> <p class="text-emerald-700 text-xs leading-relaxed"><strong>Clinically Aligned:</strong> The current polypharmacy stack is mathematically optimized for the <strong>${targetState.toUpperCase()}</strong> state based on the patient's pharmacokinetic profile.</p></div>`;
+            } else {
+                html += `<p class="text-slate-400 text-[10px] mt-4 italic text-center">Use the Auto-Adjust button above to automatically clamp existing stack dosages to safe therapeutic thresholds.</p>`;
             }
 
             html += '</div></ul>';
             feedbackBox.innerHTML = html;
-        }
-
+            }
         function applyOptimalDoses() {
             if (currentStack.length === 0 || assistantRecommendations.length === 0) return;
             
