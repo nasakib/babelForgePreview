@@ -263,63 +263,63 @@
 
         const molecules = [
             // Novel Therapeutics
-            { id: 'zb01', name: 'ZenBud™ (ZB-01)', class: 'novel', classLabel: 'Precision Agonist', svg: svgIndole, minDose: 0, maxDose: 100, optimalDose: 50, effects: { arousal: 0.1, dampening: 0.0, chaos: -0.8, repair: 1.5 } },
-            { id: 'ss20', name: 'SynaptoStim (SS-20)', class: 'novel', classLabel: 'Precision Stimulant', svg: svgPhen, minDose: 0, maxDose: 60, optimalDose: 30, effects: { arousal: 0.8, dampening: -0.2, chaos: -0.2, repair: 0.8 } },
-            { id: 'dr02', name: 'DopaReg-D2 (DR-02)', class: 'novel', classLabel: 'Precision Antagonist', svg: svgTricyclic, minDose: 0, maxDose: 10, optimalDose: 5, effects: { arousal: -0.5, dampening: 0.6, chaos: -0.5, repair: 0.6 } },
-            { id: 'psilo', name: 'Psilocybin', class: 'novel', classLabel: 'Classic Psychedelic', svg: svgIndole, minDose: 0, maxDose: 30, optimalDose: 15, effects: { arousal: 0.8, dampening: -0.2, chaos: 1.2, repair: 0.5 } },
-            { id: 'mdma', name: 'MDMA', class: 'novel', classLabel: 'Empathogen', svg: svgPhen, minDose: 0, maxDose: 150, optimalDose: 80, effects: { arousal: 1.2, dampening: -0.3, chaos: 0.4, repair: 0.7 } },
-            { id: 'ketamine', name: 'Ketamine', class: 'novel', classLabel: 'Dissociative', svg: svgTricyclic, minDose: 0, maxDose: 100, optimalDose: 50, effects: { arousal: -0.2, dampening: 0.5, chaos: 1.0, repair: 0.9 } },
+            { id: 'zb01', name: 'ZenBud™ (ZB-01)', class: 'novel', classLabel: 'Precision Agonist', svg: svgIndole, minDose: 0, maxDose: 100, optimalDose: 50, doses: { low: 20, mild: 50, high: 80 }, effects: { arousal: 0.1, dampening: 0.0, chaos: -0.8, repair: 1.5 } },
+            { id: 'ss20', name: 'SynaptoStim (SS-20)', class: 'novel', classLabel: 'Precision Stimulant', svg: svgPhen, minDose: 0, maxDose: 60, optimalDose: 30, doses: { low: 10, mild: 30, high: 50 }, effects: { arousal: 0.8, dampening: -0.2, chaos: -0.2, repair: 0.8 } },
+            { id: 'dr02', name: 'DopaReg-D2 (DR-02)', class: 'novel', classLabel: 'Precision Antagonist', svg: svgTricyclic, minDose: 0, maxDose: 10, optimalDose: 5, doses: { low: 2, mild: 5, high: 8 }, effects: { arousal: -0.5, dampening: 0.6, chaos: -0.5, repair: 0.6 } },
+            { id: 'psilo', name: 'Psilocybin', class: 'novel', classLabel: 'Classic Psychedelic', svg: svgIndole, minDose: 0, maxDose: 30, optimalDose: 15, doses: { low: 5, mild: 15, high: 25 }, effects: { arousal: 0.8, dampening: -0.2, chaos: 1.2, repair: 0.5 } },
+            { id: 'mdma', name: 'MDMA', class: 'novel', classLabel: 'Empathogen', svg: svgPhen, minDose: 0, maxDose: 150, optimalDose: 80, doses: { low: 50, mild: 80, high: 120 }, effects: { arousal: 1.2, dampening: -0.3, chaos: 0.4, repair: 0.7 } },
+            { id: 'ketamine', name: 'Ketamine', class: 'novel', classLabel: 'Dissociative', svg: svgTricyclic, minDose: 0, maxDose: 100, optimalDose: 50, doses: { low: 20, mild: 50, high: 80 }, effects: { arousal: -0.2, dampening: 0.5, chaos: 1.0, repair: 0.9 } },
             
             // SSRIs & SNRIs
-            { id: 'sert', name: 'Sertraline', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, minDose: 0, maxDose: 200, optimalDose: 100, effects: { arousal: -0.2, dampening: 0.8, chaos: -0.1, repair: 0.0 } },
-            { id: 'fluox', name: 'Fluoxetine', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, minDose: 0, maxDose: 80, optimalDose: 40, effects: { arousal: -0.1, dampening: 0.7, chaos: 0.0, repair: 0.0 } },
-            { id: 'escit', name: 'Escitalopram', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, minDose: 0, maxDose: 40, optimalDose: 20, effects: { arousal: -0.3, dampening: 0.9, chaos: -0.2, repair: 0.0 } },
-            { id: 'venla', name: 'Venlafaxine', class: 'ssri', classLabel: 'SNRI', svg: svgTricyclic, minDose: 0, maxDose: 225, optimalDose: 75, effects: { arousal: 0.1, dampening: 0.6, chaos: 0.0, repair: 0.0 } },
-            { id: 'dulox', name: 'Duloxetine', class: 'ssri', classLabel: 'SNRI', svg: svgTricyclic, minDose: 0, maxDose: 120, optimalDose: 60, effects: { arousal: 0.2, dampening: 0.5, chaos: 0.1, repair: 0.0 } },
-            { id: 'citalo', name: 'Citalopram', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, minDose: 0, maxDose: 40, optimalDose: 20, effects: { arousal: -0.2, dampening: 0.8, chaos: -0.1, repair: 0.0 } },
-            { id: 'parox', name: 'Paroxetine', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, minDose: 0, maxDose: 60, optimalDose: 20, effects: { arousal: -0.4, dampening: 1.0, chaos: -0.2, repair: 0.0 } },
+            { id: 'sert', name: 'Sertraline', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, minDose: 0, maxDose: 200, optimalDose: 100, doses: { low: 50, mild: 100, high: 150 }, effects: { arousal: -0.2, dampening: 0.8, chaos: -0.1, repair: 0.0 } },
+            { id: 'fluox', name: 'Fluoxetine', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, minDose: 0, maxDose: 80, optimalDose: 40, doses: { low: 20, mild: 40, high: 60 }, effects: { arousal: -0.1, dampening: 0.7, chaos: 0.0, repair: 0.0 } },
+            { id: 'escit', name: 'Escitalopram', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, minDose: 0, maxDose: 40, optimalDose: 20, doses: { low: 10, mild: 20, high: 30 }, effects: { arousal: -0.3, dampening: 0.9, chaos: -0.2, repair: 0.0 } },
+            { id: 'venla', name: 'Venlafaxine', class: 'ssri', classLabel: 'SNRI', svg: svgTricyclic, minDose: 0, maxDose: 225, optimalDose: 75, doses: { low: 37.5, mild: 75, high: 150 }, effects: { arousal: 0.1, dampening: 0.6, chaos: 0.0, repair: 0.0 } },
+            { id: 'dulox', name: 'Duloxetine', class: 'ssri', classLabel: 'SNRI', svg: svgTricyclic, minDose: 0, maxDose: 120, optimalDose: 60, doses: { low: 30, mild: 60, high: 90 }, effects: { arousal: 0.2, dampening: 0.5, chaos: 0.1, repair: 0.0 } },
+            { id: 'citalo', name: 'Citalopram', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, minDose: 0, maxDose: 40, optimalDose: 20, doses: { low: 10, mild: 20, high: 30 }, effects: { arousal: -0.2, dampening: 0.8, chaos: -0.1, repair: 0.0 } },
+            { id: 'parox', name: 'Paroxetine', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, minDose: 0, maxDose: 60, optimalDose: 20, doses: { low: 10, mild: 20, high: 40 }, effects: { arousal: -0.4, dampening: 1.0, chaos: -0.2, repair: 0.0 } },
             
             // Stimulants
-            { id: 'amph', name: 'Amphetamine Salts', class: 'stimulant', classLabel: 'Stimulant', svg: svgPhen, minDose: 0, maxDose: 60, optimalDose: 20, effects: { arousal: 1.5, dampening: -0.5, chaos: 0.8, repair: -0.2 } },
-            { id: 'mph', name: 'Methylphenidate', class: 'stimulant', classLabel: 'Stimulant', svg: svgPhen, minDose: 0, maxDose: 72, optimalDose: 36, effects: { arousal: 1.2, dampening: -0.3, chaos: 0.5, repair: -0.1 } },
-            { id: 'lisdexamph', name: 'Lisdexamfetamine', class: 'stimulant', classLabel: 'Stimulant', svg: svgPhen, minDose: 0, maxDose: 70, optimalDose: 30, effects: { arousal: 1.3, dampening: -0.4, chaos: 0.6, repair: -0.1 } },
-            { id: 'dexmph', name: 'Dexmethylphenidate', class: 'stimulant', classLabel: 'Stimulant', svg: svgPhen, minDose: 0, maxDose: 40, optimalDose: 15, effects: { arousal: 1.1, dampening: -0.2, chaos: 0.4, repair: 0.0 } },
-            { id: 'modaf', name: 'Modafinil', class: 'stimulant', classLabel: 'Eugeroic', svg: svgPhen, minDose: 0, maxDose: 400, optimalDose: 200, effects: { arousal: 0.8, dampening: 0.0, chaos: 0.1, repair: 0.1 } },
+            { id: 'amph', name: 'Amphetamine Salts', class: 'stimulant', classLabel: 'Stimulant', svg: svgPhen, minDose: 0, maxDose: 60, optimalDose: 20, doses: { low: 10, mild: 20, high: 40 }, effects: { arousal: 1.5, dampening: -0.5, chaos: 0.8, repair: -0.2 } },
+            { id: 'mph', name: 'Methylphenidate', class: 'stimulant', classLabel: 'Stimulant', svg: svgPhen, minDose: 0, maxDose: 72, optimalDose: 36, doses: { low: 18, mild: 36, high: 54 }, effects: { arousal: 1.2, dampening: -0.3, chaos: 0.5, repair: -0.1 } },
+            { id: 'lisdexamph', name: 'Lisdexamfetamine', class: 'stimulant', classLabel: 'Stimulant', svg: svgPhen, minDose: 0, maxDose: 70, optimalDose: 30, doses: { low: 20, mild: 40, high: 60 }, effects: { arousal: 1.3, dampening: -0.4, chaos: 0.6, repair: -0.1 } },
+            { id: 'dexmph', name: 'Dexmethylphenidate', class: 'stimulant', classLabel: 'Stimulant', svg: svgPhen, minDose: 0, maxDose: 40, optimalDose: 15, doses: { low: 5, mild: 15, high: 30 }, effects: { arousal: 1.1, dampening: -0.2, chaos: 0.4, repair: 0.0 } },
+            { id: 'modaf', name: 'Modafinil', class: 'stimulant', classLabel: 'Eugeroic', svg: svgPhen, minDose: 0, maxDose: 400, optimalDose: 200, doses: { low: 100, mild: 200, high: 300 }, effects: { arousal: 0.8, dampening: 0.0, chaos: 0.1, repair: 0.1 } },
             
             // Antipsychotics
-            { id: 'halo', name: 'Haloperidol', class: 'antipsychotic', classLabel: 'Typical Antipsychotic', svg: svgTricyclic, minDose: 0, maxDose: 10, optimalDose: 2, effects: { arousal: -1.0, dampening: 1.8, chaos: -0.5, repair: -0.5 } },
-            { id: 'queti', name: 'Quetiapine', class: 'antipsychotic', classLabel: 'Atypical Antipsychotic', svg: svgTricyclic, minDose: 0, maxDose: 800, optimalDose: 300, effects: { arousal: -0.8, dampening: 1.5, chaos: -0.3, repair: -0.2 } },
-            { id: 'arip', name: 'Aripiprazole', class: 'antipsychotic', classLabel: 'Atypical Antipsychotic', svg: svgTricyclic, minDose: 0, maxDose: 30, optimalDose: 10, effects: { arousal: -0.4, dampening: 1.2, chaos: -0.2, repair: 0.0 } },
-            { id: 'risper', name: 'Risperidone', class: 'antipsychotic', classLabel: 'Atypical Antipsychotic', svg: svgTricyclic, minDose: 0, maxDose: 8, optimalDose: 2, effects: { arousal: -0.6, dampening: 1.4, chaos: -0.3, repair: -0.1 } },
-            { id: 'olan', name: 'Olanzapine', class: 'antipsychotic', classLabel: 'Atypical Antipsychotic', svg: svgTricyclic, minDose: 0, maxDose: 20, optimalDose: 10, effects: { arousal: -0.7, dampening: 1.6, chaos: -0.4, repair: -0.1 } },
-            { id: 'cloz', name: 'Clozapine', class: 'antipsychotic', classLabel: 'Atypical Antipsychotic', svg: svgTricyclic, minDose: 0, maxDose: 900, optimalDose: 300, effects: { arousal: -0.9, dampening: 1.7, chaos: -0.6, repair: -0.3 } },
+            { id: 'halo', name: 'Haloperidol', class: 'antipsychotic', classLabel: 'Typical Antipsychotic', svg: svgTricyclic, minDose: 0, maxDose: 10, optimalDose: 2, doses: { low: 1, mild: 2, high: 5 }, effects: { arousal: -1.0, dampening: 1.8, chaos: -0.5, repair: -0.5 } },
+            { id: 'queti', name: 'Quetiapine', class: 'antipsychotic', classLabel: 'Atypical Antipsychotic', svg: svgTricyclic, minDose: 0, maxDose: 800, optimalDose: 300, doses: { low: 100, mild: 300, high: 600 }, effects: { arousal: -0.8, dampening: 1.5, chaos: -0.3, repair: -0.2 } },
+            { id: 'arip', name: 'Aripiprazole', class: 'antipsychotic', classLabel: 'Atypical Antipsychotic', svg: svgTricyclic, minDose: 0, maxDose: 30, optimalDose: 10, doses: { low: 5, mild: 10, high: 20 }, effects: { arousal: -0.4, dampening: 1.2, chaos: -0.2, repair: 0.0 } },
+            { id: 'risper', name: 'Risperidone', class: 'antipsychotic', classLabel: 'Atypical Antipsychotic', svg: svgTricyclic, minDose: 0, maxDose: 8, optimalDose: 2, doses: { low: 1, mild: 2, high: 4 }, effects: { arousal: -0.6, dampening: 1.4, chaos: -0.3, repair: -0.1 } },
+            { id: 'olan', name: 'Olanzapine', class: 'antipsychotic', classLabel: 'Atypical Antipsychotic', svg: svgTricyclic, minDose: 0, maxDose: 20, optimalDose: 10, doses: { low: 5, mild: 10, high: 15 }, effects: { arousal: -0.7, dampening: 1.6, chaos: -0.4, repair: -0.1 } },
+            { id: 'cloz', name: 'Clozapine', class: 'antipsychotic', classLabel: 'Atypical Antipsychotic', svg: svgTricyclic, minDose: 0, maxDose: 900, optimalDose: 300, doses: { low: 100, mild: 300, high: 500 }, effects: { arousal: -0.9, dampening: 1.7, chaos: -0.6, repair: -0.3 } },
             
             // Cannabinoids
-            { id: 'thc', name: 'Delta-9-THC', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 100, optimalDose: 10, effects: { arousal: 0.2, dampening: 0.5, chaos: 0.6, repair: -0.1 } },
-            { id: 'cbd', name: 'Cannabidiol (CBD)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 1500, optimalDose: 300, effects: { arousal: -0.2, dampening: 0.6, chaos: -0.4, repair: 0.1 } },
-            { id: 'delta8', name: 'Delta-8-THC', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 100, optimalDose: 25, effects: { arousal: 0.1, dampening: 0.7, chaos: 0.3, repair: 0.0 } },
-            { id: 'hhc', name: 'HHC (Hexahydrocannabinol)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 100, optimalDose: 20, effects: { arousal: 0.15, dampening: 0.6, chaos: 0.4, repair: -0.05 } },
-            { id: 'cbga', name: 'CBGA (Cannabigerolic acid)', class: 'cannabinoid', classLabel: 'Cannabinoid Precursor', svg: svgCannabinoid, minDose: 0, maxDose: 1000, optimalDose: 150, effects: { arousal: 0.0, dampening: 0.3, chaos: -0.1, repair: 0.2 } },
-            { id: 'cbn', name: 'Cannabinol (CBN)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 50, optimalDose: 10, effects: { arousal: -0.4, dampening: 0.9, chaos: -0.1, repair: 0.0 } },
-            { id: 'cbg', name: 'Cannabigerol (CBG)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 150, optimalDose: 25, effects: { arousal: 0.1, dampening: 0.4, chaos: -0.2, repair: 0.3 } },
-            { id: 'thcv', name: 'Tetrahydrocannabivarin (THCV)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 50, optimalDose: 10, effects: { arousal: 0.5, dampening: 0.1, chaos: 0.1, repair: 0.0 } },
-            { id: 'cbdv', name: 'Cannabidivarin (CBDV)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 800, optimalDose: 100, effects: { arousal: -0.1, dampening: 0.4, chaos: -0.3, repair: 0.2 } },
-            { id: 'thcp', name: 'THC-P (Tetrahydrocannabiphorol)', class: 'cannabinoid', classLabel: 'Potent Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 10, optimalDose: 2, effects: { arousal: 0.3, dampening: 0.7, chaos: 0.8, repair: -0.2 } },
-            { id: 'thco', name: 'THC-O-Acetate', class: 'cannabinoid', classLabel: 'Synthetic Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 50, optimalDose: 15, effects: { arousal: 0.4, dampening: 0.8, chaos: 1.0, repair: -0.3 } },
+            { id: 'thc', name: 'Delta-9-THC', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 100, optimalDose: 10, doses: { low: 5, mild: 10, high: 25 }, effects: { arousal: 0.2, dampening: 0.5, chaos: 0.6, repair: -0.1 } },
+            { id: 'cbd', name: 'Cannabidiol (CBD)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 1500, optimalDose: 300, doses: { low: 50, mild: 300, high: 800 }, effects: { arousal: -0.2, dampening: 0.6, chaos: -0.4, repair: 0.1 } },
+            { id: 'delta8', name: 'Delta-8-THC', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 100, optimalDose: 25, doses: { low: 10, mild: 25, high: 50 }, effects: { arousal: 0.1, dampening: 0.7, chaos: 0.3, repair: 0.0 } },
+            { id: 'hhc', name: 'HHC (Hexahydrocannabinol)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 100, optimalDose: 20, doses: { low: 10, mild: 20, high: 40 }, effects: { arousal: 0.15, dampening: 0.6, chaos: 0.4, repair: -0.05 } },
+            { id: 'cbga', name: 'CBGA (Cannabigerolic acid)', class: 'cannabinoid', classLabel: 'Cannabinoid Precursor', svg: svgCannabinoid, minDose: 0, maxDose: 1000, optimalDose: 150, doses: { low: 50, mild: 150, high: 300 }, effects: { arousal: 0.0, dampening: 0.3, chaos: -0.1, repair: 0.2 } },
+            { id: 'cbn', name: 'Cannabinol (CBN)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 50, optimalDose: 10, doses: { low: 5, mild: 10, high: 20 }, effects: { arousal: -0.4, dampening: 0.9, chaos: -0.1, repair: 0.0 } },
+            { id: 'cbg', name: 'Cannabigerol (CBG)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 150, optimalDose: 25, doses: { low: 10, mild: 25, high: 50 }, effects: { arousal: 0.1, dampening: 0.4, chaos: -0.2, repair: 0.3 } },
+            { id: 'thcv', name: 'Tetrahydrocannabivarin (THCV)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 50, optimalDose: 10, doses: { low: 5, mild: 10, high: 20 }, effects: { arousal: 0.5, dampening: 0.1, chaos: 0.1, repair: 0.0 } },
+            { id: 'cbdv', name: 'Cannabidivarin (CBDV)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 800, optimalDose: 100, doses: { low: 25, mild: 100, high: 200 }, effects: { arousal: -0.1, dampening: 0.4, chaos: -0.3, repair: 0.2 } },
+            { id: 'thcp', name: 'THC-P (Tetrahydrocannabiphorol)', class: 'cannabinoid', classLabel: 'Potent Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 10, optimalDose: 2, doses: { low: 1, mild: 2, high: 4 }, effects: { arousal: 0.3, dampening: 0.7, chaos: 0.8, repair: -0.2 } },
+            { id: 'thco', name: 'THC-O-Acetate', class: 'cannabinoid', classLabel: 'Synthetic Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 50, optimalDose: 15, doses: { low: 5, mild: 15, high: 25 }, effects: { arousal: 0.4, dampening: 0.8, chaos: 1.0, repair: -0.3 } },
             
             // Depressants / Benzos / Gabapentinoids
-            { id: 'alpraz', name: 'Alprazolam', class: 'depressant', classLabel: 'Benzodiazepine', svg: svgTricyclic, minDose: 0, maxDose: 4, optimalDose: 1, effects: { arousal: -1.2, dampening: 1.4, chaos: -0.6, repair: -0.3 } },
-            { id: 'clonaz', name: 'Clonazepam', class: 'depressant', classLabel: 'Benzodiazepine', svg: svgTricyclic, minDose: 0, maxDose: 4, optimalDose: 1, effects: { arousal: -1.0, dampening: 1.3, chaos: -0.5, repair: -0.2 } },
-            { id: 'diaz', name: 'Diazepam', class: 'depressant', classLabel: 'Benzodiazepine', svg: svgTricyclic, minDose: 0, maxDose: 40, optimalDose: 10, effects: { arousal: -0.9, dampening: 1.2, chaos: -0.4, repair: -0.1 } },
-            { id: 'loraz', name: 'Lorazepam', class: 'depressant', classLabel: 'Benzodiazepine', svg: svgTricyclic, minDose: 0, maxDose: 6, optimalDose: 2, effects: { arousal: -1.1, dampening: 1.3, chaos: -0.5, repair: -0.2 } },
-            { id: 'pregab', name: 'Pregabalin', class: 'depressant', classLabel: 'Gabapentinoid', svg: svgPhen, minDose: 0, maxDose: 600, optimalDose: 150, effects: { arousal: -0.6, dampening: 0.9, chaos: -0.3, repair: 0.1 } },
-            { id: 'gaba', name: 'Gabapentin', class: 'depressant', classLabel: 'Gabapentinoid', svg: svgPhen, minDose: 0, maxDose: 3600, optimalDose: 900, effects: { arousal: -0.5, dampening: 0.8, chaos: -0.2, repair: 0.0 } },
-            { id: 'zolp', name: 'Zolpidem', class: 'depressant', classLabel: 'Z-Drug', svg: svgTricyclic, minDose: 0, maxDose: 20, optimalDose: 10, effects: { arousal: -1.5, dampening: 1.6, chaos: 0.2, repair: -0.4 } },
+            { id: 'alpraz', name: 'Alprazolam', class: 'depressant', classLabel: 'Benzodiazepine', svg: svgTricyclic, minDose: 0, maxDose: 4, optimalDose: 1, doses: { low: 0.25, mild: 1, high: 2 }, effects: { arousal: -1.2, dampening: 1.4, chaos: -0.6, repair: -0.3 } },
+            { id: 'clonaz', name: 'Clonazepam', class: 'depressant', classLabel: 'Benzodiazepine', svg: svgTricyclic, minDose: 0, maxDose: 4, optimalDose: 1, doses: { low: 0.5, mild: 1, high: 2 }, effects: { arousal: -1.0, dampening: 1.3, chaos: -0.5, repair: -0.2 } },
+            { id: 'diaz', name: 'Diazepam', class: 'depressant', classLabel: 'Benzodiazepine', svg: svgTricyclic, minDose: 0, maxDose: 40, optimalDose: 10, doses: { low: 2, mild: 10, high: 20 }, effects: { arousal: -0.9, dampening: 1.2, chaos: -0.4, repair: -0.1 } },
+            { id: 'loraz', name: 'Lorazepam', class: 'depressant', classLabel: 'Benzodiazepine', svg: svgTricyclic, minDose: 0, maxDose: 6, optimalDose: 2, doses: { low: 0.5, mild: 2, high: 4 }, effects: { arousal: -1.1, dampening: 1.3, chaos: -0.5, repair: -0.2 } },
+            { id: 'pregab', name: 'Pregabalin', class: 'depressant', classLabel: 'Gabapentinoid', svg: svgPhen, minDose: 0, maxDose: 600, optimalDose: 150, doses: { low: 50, mild: 150, high: 300 }, effects: { arousal: -0.6, dampening: 0.9, chaos: -0.3, repair: 0.1 } },
+            { id: 'gaba', name: 'Gabapentin', class: 'depressant', classLabel: 'Gabapentinoid', svg: svgPhen, minDose: 0, maxDose: 3600, optimalDose: 900, doses: { low: 300, mild: 900, high: 1800 }, effects: { arousal: -0.5, dampening: 0.8, chaos: -0.2, repair: 0.0 } },
+            { id: 'zolp', name: 'Zolpidem', class: 'depressant', classLabel: 'Z-Drug', svg: svgTricyclic, minDose: 0, maxDose: 20, optimalDose: 10, doses: { low: 5, mild: 10, high: 15 }, effects: { arousal: -1.5, dampening: 1.6, chaos: 0.2, repair: -0.4 } },
             
             // Acetylcholine & Other
-            { id: 'donepezil', name: 'Donepezil', class: 'stimulant', classLabel: 'AChEI', svg: svgTricyclic, minDose: 0, maxDose: 23, optimalDose: 10, effects: { arousal: 0.4, dampening: 0.0, chaos: -0.1, repair: 0.2 } },
-            { id: 'memantine', name: 'Memantine', class: 'depressant', classLabel: 'NMDA Antagonist', svg: svgTricyclic, minDose: 0, maxDose: 28, optimalDose: 10, effects: { arousal: -0.1, dampening: 0.3, chaos: -0.2, repair: 0.3 } },
-            { id: 'bupropion', name: 'Bupropion', class: 'stimulant', classLabel: 'NDRI', svg: svgPhen, minDose: 0, maxDose: 450, optimalDose: 300, effects: { arousal: 0.9, dampening: -0.1, chaos: 0.2, repair: 0.1 } }
+            { id: 'donepezil', name: 'Donepezil', class: 'stimulant', classLabel: 'AChEI', svg: svgTricyclic, minDose: 0, maxDose: 23, optimalDose: 10, doses: { low: 5, mild: 10, high: 15 }, effects: { arousal: 0.4, dampening: 0.0, chaos: -0.1, repair: 0.2 } },
+            { id: 'memantine', name: 'Memantine', class: 'depressant', classLabel: 'NMDA Antagonist', svg: svgTricyclic, minDose: 0, maxDose: 28, optimalDose: 10, doses: { low: 5, mild: 10, high: 20 }, effects: { arousal: -0.1, dampening: 0.3, chaos: -0.2, repair: 0.3 } },
+            { id: 'bupropion', name: 'Bupropion', class: 'stimulant', classLabel: 'NDRI', svg: svgPhen, minDose: 0, maxDose: 450, optimalDose: 300, doses: { low: 150, mild: 300, high: 450 }, effects: { arousal: 0.9, dampening: -0.1, chaos: 0.2, repair: 0.1 } }
         ];
 
         let currentStack = [];
@@ -405,16 +405,32 @@
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                             </button>
                         </div>
-                        <div class="flex items-center gap-3 w-full px-1">
-                            <span class="text-[9px] font-bold text-slate-400 uppercase w-8">Dose</span>
-                            <input type="range" min="${mol.minDose}" max="${mol.maxDose}" value="${mol.currentDose}" class="flex-grow h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-500" oninput="updateStackDose(${idx}, this.value)">
-                            <span class="text-[10px] font-mono font-bold text-slate-600 w-12 text-right" id="dose-val-${idx}">${mol.currentDose} mg</span>
+                        <div class="flex flex-col gap-2 w-full px-1 mt-1 border-t border-slate-100 pt-2">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[9px] font-bold text-slate-400 uppercase">Presets</span>
+                                <div class="flex gap-1">
+                                    <button onclick="updateStackDoseUI(${idx}, ${mol.doses.low})" class="px-2 py-0.5 text-[9px] font-bold rounded bg-slate-100 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">Low</button>
+                                    <button onclick="updateStackDoseUI(${idx}, ${mol.doses.mild})" class="px-2 py-0.5 text-[9px] font-bold rounded bg-slate-100 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">Mild</button>
+                                    <button onclick="updateStackDoseUI(${idx}, ${mol.doses.high})" class="px-2 py-0.5 text-[9px] font-bold rounded bg-slate-100 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">High</button>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3 w-full">
+                                <span class="text-[9px] font-bold text-slate-400 uppercase w-8">Dose</span>
+                                <input type="range" id="slider-${idx}" min="${mol.minDose}" max="${mol.maxDose}" value="${mol.currentDose}" class="flex-grow h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-500" oninput="updateStackDose(${idx}, this.value)">
+                                <span class="text-[10px] font-mono font-bold text-slate-600 w-12 text-right" id="dose-val-${idx}">${mol.currentDose} mg</span>
+                            </div>
                         </div>
                     </div>
                 `;
             });
         }
 
+        
+        function updateStackDoseUI(index, val) {
+            const slider = document.getElementById(`slider-${index}`);
+            if (slider) slider.value = val;
+            updateStackDose(index, val);
+        }
         function updateStackDose(index, val) {
             currentStack[index].currentDose = parseFloat(val);
             document.getElementById(`dose-val-${index}`).innerText = val + ' mg';
