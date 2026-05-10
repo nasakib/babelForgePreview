@@ -156,20 +156,20 @@
         const svgCannabinoid = `<svg viewBox="0 0 100 50" class="h-full w-auto stroke-current fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="30,25 40,10 55,10 65,25 55,40 40,40" /><polygon points="65,25 75,10 90,10 100,25 90,40 75,40" /><path d="M55,10 L75,10" /><path d="M20,15 L30,25 L20,35" /><circle cx="65" cy="25" r="2" fill="currentColor" /></svg>`;
 
         const molecules = [
-            { id: 'zb01', name: 'ZenBud™ (ZB-01)', class: 'novel', classLabel: 'Precision Agonist', svg: svgIndole, effects: { arousal: 0.1, dampening: 0.0, chaos: -0.8, repair: 1.5 } },
-            { id: 'ss20', name: 'SynaptoStim (SS-20)', class: 'novel', classLabel: 'Precision Stimulant', svg: svgPhen, effects: { arousal: 0.8, dampening: -0.2, chaos: -0.2, repair: 0.8 } },
-            { id: 'dr02', name: 'DopaReg-D2 (DR-02)', class: 'novel', classLabel: 'Precision Antagonist', svg: svgTricyclic, effects: { arousal: -0.5, dampening: 0.6, chaos: -0.5, repair: 0.6 } },
-            { id: 'sert', name: 'Sertraline', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, effects: { arousal: -0.2, dampening: 0.8, chaos: -0.1, repair: 0.0 } },
-            { id: 'fluox', name: 'Fluoxetine', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, effects: { arousal: -0.1, dampening: 0.7, chaos: 0.0, repair: 0.0 } },
-            { id: 'escit', name: 'Escitalopram', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, effects: { arousal: -0.3, dampening: 0.9, chaos: -0.2, repair: 0.0 } },
-            { id: 'amph', name: 'Amphetamine Salts', class: 'stimulant', classLabel: 'Stimulant', svg: svgPhen, effects: { arousal: 1.5, dampening: -0.5, chaos: 0.8, repair: -0.2 } },
-            { id: 'mph', name: 'Methylphenidate', class: 'stimulant', classLabel: 'Stimulant', svg: svgPhen, effects: { arousal: 1.2, dampening: -0.3, chaos: 0.5, repair: -0.1 } },
-            { id: 'halo', name: 'Haloperidol', class: 'antipsychotic', classLabel: 'Typical Antipsychotic', svg: svgTricyclic, effects: { arousal: -1.0, dampening: 1.8, chaos: -0.5, repair: -0.5 } },
-            { id: 'queti', name: 'Quetiapine', class: 'antipsychotic', classLabel: 'Atypical Antipsychotic', svg: svgTricyclic, effects: { arousal: -0.8, dampening: 1.5, chaos: -0.3, repair: -0.2 } },
-            { id: 'thc', name: 'THC (Delta-9)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, effects: { arousal: 0.2, dampening: 0.5, chaos: 0.6, repair: -0.1 } },
-            { id: 'cbd', name: 'Cannabidiol (CBD)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, effects: { arousal: -0.2, dampening: 0.6, chaos: -0.4, repair: 0.1 } },
-            { id: 'alpraz', name: 'Alprazolam', class: 'depressant', classLabel: 'Benzodiazepine', svg: svgTricyclic, effects: { arousal: -1.2, dampening: 1.4, chaos: -0.6, repair: -0.3 } },
-            { id: 'psilo', name: 'Psilocybin', class: 'novel', classLabel: 'Classic Psychedelic', svg: svgIndole, effects: { arousal: 0.8, dampening: -0.2, chaos: 1.2, repair: 0.5 } }
+            { id: 'zb01', name: 'ZenBud™ (ZB-01)', class: 'novel', classLabel: 'Precision Agonist', svg: svgIndole, minDose: 0, maxDose: 100, optimalDose: 50, effects: { arousal: 0.1, dampening: 0.0, chaos: -0.8, repair: 1.5 } },
+            { id: 'ss20', name: 'SynaptoStim (SS-20)', class: 'novel', classLabel: 'Precision Stimulant', svg: svgPhen, minDose: 0, maxDose: 60, optimalDose: 30, effects: { arousal: 0.8, dampening: -0.2, chaos: -0.2, repair: 0.8 } },
+            { id: 'dr02', name: 'DopaReg-D2 (DR-02)', class: 'novel', classLabel: 'Precision Antagonist', svg: svgTricyclic, minDose: 0, maxDose: 10, optimalDose: 5, effects: { arousal: -0.5, dampening: 0.6, chaos: -0.5, repair: 0.6 } },
+            { id: 'sert', name: 'Sertraline', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, minDose: 0, maxDose: 200, optimalDose: 100, effects: { arousal: -0.2, dampening: 0.8, chaos: -0.1, repair: 0.0 } },
+            { id: 'fluox', name: 'Fluoxetine', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, minDose: 0, maxDose: 80, optimalDose: 40, effects: { arousal: -0.1, dampening: 0.7, chaos: 0.0, repair: 0.0 } },
+            { id: 'escit', name: 'Escitalopram', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, minDose: 0, maxDose: 40, optimalDose: 20, effects: { arousal: -0.3, dampening: 0.9, chaos: -0.2, repair: 0.0 } },
+            { id: 'amph', name: 'Amphetamine Salts', class: 'stimulant', classLabel: 'Stimulant', svg: svgPhen, minDose: 0, maxDose: 60, optimalDose: 20, effects: { arousal: 1.5, dampening: -0.5, chaos: 0.8, repair: -0.2 } },
+            { id: 'mph', name: 'Methylphenidate', class: 'stimulant', classLabel: 'Stimulant', svg: svgPhen, minDose: 0, maxDose: 72, optimalDose: 36, effects: { arousal: 1.2, dampening: -0.3, chaos: 0.5, repair: -0.1 } },
+            { id: 'halo', name: 'Haloperidol', class: 'antipsychotic', classLabel: 'Typical Antipsychotic', svg: svgTricyclic, minDose: 0, maxDose: 10, optimalDose: 2, effects: { arousal: -1.0, dampening: 1.8, chaos: -0.5, repair: -0.5 } },
+            { id: 'queti', name: 'Quetiapine', class: 'antipsychotic', classLabel: 'Atypical Antipsychotic', svg: svgTricyclic, minDose: 0, maxDose: 800, optimalDose: 300, effects: { arousal: -0.8, dampening: 1.5, chaos: -0.3, repair: -0.2 } },
+            { id: 'thc', name: 'THC (Delta-9)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 100, optimalDose: 10, effects: { arousal: 0.2, dampening: 0.5, chaos: 0.6, repair: -0.1 } },
+            { id: 'cbd', name: 'Cannabidiol (CBD)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 1500, optimalDose: 300, effects: { arousal: -0.2, dampening: 0.6, chaos: -0.4, repair: 0.1 } },
+            { id: 'alpraz', name: 'Alprazolam', class: 'depressant', classLabel: 'Benzodiazepine', svg: svgTricyclic, minDose: 0, maxDose: 4, optimalDose: 1, effects: { arousal: -1.2, dampening: 1.4, chaos: -0.6, repair: -0.3 } },
+            { id: 'psilo', name: 'Psilocybin', class: 'novel', classLabel: 'Classic Psychedelic', svg: svgIndole, minDose: 0, maxDose: 30, optimalDose: 15, effects: { arousal: 0.8, dampening: -0.2, chaos: 1.2, repair: 0.5 } }
         ];
 
         let currentStack = [];
@@ -201,7 +201,7 @@
             const mol = molecules.find(m => m.id === id);
             
             if (mol) {
-                currentStack.push(mol);
+                currentStack.push({ ...mol, currentDose: mol.optimalDose });
                 renderStack();
                 updateSimulation();
             }
@@ -234,22 +234,35 @@
                 const bgClass = isNovel ? 'bg-indigo-50 border-indigo-200' : 'bg-white border-slate-200';
                 
                 list.innerHTML += `
-                    <div class="stack-item flex items-center justify-between p-3 rounded-xl border ${bgClass} shadow-sm">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 flex-none opacity-80 ${colorClass}">
-                                ${mol.svg}
+                    <div class="stack-item flex flex-col p-3 rounded-xl border ${bgClass} shadow-sm gap-2">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 flex-none opacity-80 ${colorClass}">
+                                    ${mol.svg}
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-xs text-slate-900">${mol.name}</h4>
+                                    <p class="text-[9px] uppercase tracking-widest font-bold ${colorClass}">${mol.classLabel}</p>
+                                </div>
                             </div>
-                            <div>
-                                <h4 class="font-bold text-xs text-slate-900">${mol.name}</h4>
-                                <p class="text-[9px] uppercase tracking-widest font-bold ${colorClass}">${mol.classLabel}</p>
-                            </div>
+                            <button onclick="removeFromStack(${idx})" class="text-slate-400 hover:text-red-500 p-1 self-start">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            </button>
                         </div>
-                        <button onclick="removeFromStack(${idx})" class="text-slate-400 hover:text-red-500 p-1">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                        </button>
+                        <div class="flex items-center gap-3 w-full px-1">
+                            <span class="text-[9px] font-bold text-slate-400 uppercase w-8">Dose</span>
+                            <input type="range" min="${mol.minDose}" max="${mol.maxDose}" value="${mol.currentDose}" class="flex-grow h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-500" oninput="updateStackDose(${idx}, this.value)">
+                            <span class="text-[10px] font-mono font-bold text-slate-600 w-12 text-right" id="dose-val-${idx}">${mol.currentDose} mg</span>
+                        </div>
                     </div>
                 `;
             });
+        }
+
+        function updateStackDose(index, val) {
+            currentStack[index].currentDose = parseFloat(val);
+            document.getElementById(`dose-val-${index}`).innerText = val + ' mg';
+            updateSimulation();
         }
 
         // --- Three.js Simulation Logic ---
@@ -334,13 +347,33 @@
         }
 
         function updateSimulation() {
-            // Calculate Net Vectors
+            // Calculate Net Vectors based on dosage
             let net = { arousal: 0, dampening: 0, chaos: 0, repair: 0 };
             currentStack.forEach(mol => {
-                net.arousal += mol.effects.arousal;
-                net.dampening += mol.effects.dampening;
-                net.chaos += mol.effects.chaos;
-                net.repair += mol.effects.repair;
+                const ratio = mol.currentDose / mol.optimalDose;
+                const overDose = Math.max(0, ratio - 1);
+                
+                // Scale baseline effects
+                net.arousal += mol.effects.arousal * Math.min(1, ratio);
+                net.dampening += mol.effects.dampening * Math.min(1, ratio);
+                net.repair += mol.effects.repair * Math.min(1, ratio);
+                net.chaos += mol.effects.chaos * Math.min(1, ratio);
+                
+                // Overdose toxicity penalties
+                if (overDose > 0) {
+                    if (mol.class === 'stimulant' || mol.class === 'novel' && mol.effects.arousal > 0) {
+                        net.chaos += overDose * 1.5;
+                        net.arousal += overDose * 0.5;
+                        net.repair -= overDose * 0.5;
+                    } else if (mol.class === 'antipsychotic' || mol.class === 'depressant' || mol.class === 'ssri') {
+                        net.dampening += overDose * 2.0; // severe rigidity
+                        net.chaos += overDose * 0.5;
+                        net.repair -= overDose * 0.5;
+                    } else {
+                        net.chaos += overDose * 1.0;
+                        net.repair -= overDose * 0.5;
+                    }
+                }
             });
             
             currentVectors = net;
