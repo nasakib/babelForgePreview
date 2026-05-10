@@ -492,7 +492,7 @@
                                         <label class="text-[10px] uppercase font-bold text-indigo-600 tracking-widest">ZB-01 Dosage</label>
                                         <span id="pharma-percent" class="font-mono text-sm font-bold text-indigo-600">0 mg</span>
                                     </div>
-                                    <input type="range" id="pharma-slider" min="0" max="50" value="0" class="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600" oninput="updatePharmaEfficacy(this.value)">
+                                    <input type="range" id="pharma-slider" min="0" max="100" value="0" class="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600" oninput="updatePharmaEfficacy(this.value)">
                                     <p class="text-[10px] text-slate-400 mt-4 leading-relaxed">Adjust precision dosage to monitor regional stabilization and topological repair rate.</p>
                                 </div>
                             </div>
@@ -1047,8 +1047,14 @@
 
         const updateIntegrityUI = () => {
             let score = dashStatus === 'HEALTHY' ? 100 : 24;
-            // Efficacy increases integrity score
-            if (dashStatus === 'PTSD') score += dashPharmaEfficacy * 76;
+            // Efficacy increases integrity score up to 50mg, then hyper-synchrony degrades it
+            if (dashStatus === 'PTSD') {
+                if (dashPharmaEfficacy <= 1) {
+                    score += dashPharmaEfficacy * 76;
+                } else {
+                    score = 100 - ((dashPharmaEfficacy - 1) * 60);
+                }
+            }
             
             const bar = document.getElementById('integrity-bar');
             const txt = document.getElementById('integrity-score');
@@ -1058,7 +1064,7 @@
             
             // Map score to lobe scaling factor
             const baseScale = dashStatus === 'HEALTHY' ? 1.0 : 0.4;
-            const pharmaBonus = dashPharmaEfficacy * 0.8;
+            const pharmaBonus = dashPharmaEfficacy <= 1 ? dashPharmaEfficacy * 0.8 : 0.8 - ((dashPharmaEfficacy - 1) * 0.4);
             
             dashLobeGroup.children.forEach(node => {
                 // Topological mapping: higher D participation = larger node in healthy/pharma state
@@ -1099,7 +1105,14 @@
                 inspector.style.display = 'block';
                 document.getElementById('insp-name').innerText = dashHoveredNode.userData.name;
                 document.getElementById('insp-power').innerText = (dashHoveredNode.scale.x * 100).toFixed(0) + '%';
-                document.getElementById('insp-sync').innerText = (0.5 + Math.random() * 0.4).toFixed(2) + ' r';
+                // Sync becomes unstable if overdose
+                let syncVal = 0.5 + Math.random() * 0.4;
+                if (dashStatus === 'PTSD' && dashPharmaEfficacy > 1) {
+                     syncVal = 1.0; // Hyper-sync
+                } else if (dashStatus === 'PTSD' && dashPharmaEfficacy === 1) {
+                     syncVal = 0.88; // Optimal sync
+                }
+                document.getElementById('insp-sync').innerText = syncVal.toFixed(2) + ' r';
             } else {
                 dashHoveredNode = null;
             }
@@ -1122,17 +1135,36 @@
                 const targetBaseScale = node.userData.targetScale || 1.0;
                 
                 if (dashStatus === 'PTSD') {
-                    const jitter = (1 - dashPharmaEfficacy) * 12;
-                    node.position.x = node.userData.origin.x + (Math.random() - 0.5) * jitter;
-                    node.position.z = node.userData.origin.z + (Math.random() - 0.5) * jitter;
-                    
-                    const ptsdScale = targetBaseScale + wave * 0.4;
-                    node.scale.setScalar(Math.max(0.2, ptsdScale));
-                    
-                    const pharmaColor = new THREE.Color(0xfcd34d);
-                    const ptsdColor = new THREE.Color(0x991b1b);
-                    node.material.color.lerpColors(ptsdColor, pharmaColor, dashPharmaEfficacy);
-                    node.material.emissiveIntensity = 0.2 + (1 - dashPharmaEfficacy) * 0.8;
+                    if (dashPharmaEfficacy <= 1) {
+                        const jitter = (1 - dashPharmaEfficacy) * 12;
+                        node.position.x = node.userData.origin.x + (Math.random() - 0.5) * jitter;
+                        node.position.z = node.userData.origin.z + (Math.random() - 0.5) * jitter;
+                        
+                        const ptsdScale = targetBaseScale + wave * 0.4;
+                        node.scale.setScalar(Math.max(0.2, ptsdScale));
+                        
+                        const pharmaColor = new THREE.Color(0xfcd34d);
+                        const ptsdColor = new THREE.Color(0x991b1b);
+                        node.material.color.lerpColors(ptsdColor, pharmaColor, dashPharmaEfficacy);
+                        node.material.emissiveIntensity = 0.2 + (1 - dashPharmaEfficacy) * 0.8;
+                    } else {
+                        // Hyper-synchrony / Toxicity (> 50mg)
+                        const overDose = dashPharmaEfficacy - 1; // 0 to 1
+                        const jitter = overDose * 6; 
+                        node.position.x = node.userData.origin.x + (Math.random() - 0.5) * jitter;
+                        node.position.y = node.userData.origin.y + (Math.random() - 0.5) * jitter;
+                        node.position.z = node.userData.origin.z + (Math.random() - 0.5) * jitter;
+                        
+                        // Shrink to rigid points
+                        const rigidScale = targetBaseScale * (1 - (overDose * 0.5));
+                        node.scale.setScalar(Math.max(0.1, rigidScale));
+                        
+                        // Unnatural stark white/cyan color
+                        const pharmaColor = new THREE.Color(0xfcd34d);
+                        const toxicColor = new THREE.Color(0xe0f2fe);
+                        node.material.color.lerpColors(pharmaColor, toxicColor, overDose);
+                        node.material.emissiveIntensity = 0.2 + (overDose * 2.0);
+                    }
                 } else {
                     const healthyScale = targetBaseScale + wave * 0.6;
                     node.scale.setScalar(healthyScale);
