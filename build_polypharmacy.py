@@ -1,0 +1,501 @@
+import os
+
+# The HTML content for the new Polypharmacy Stack Simulator
+html_content = """<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polypharmacy Interaction Simulator | babelForge</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><defs><linearGradient id='g' x1='0%25' y1='100%25' x2='100%25' y2='0%25'><stop offset='0%25' stop-color='%234f46e5'/><stop offset='100%25' stop-color='%2306b6d4'/></linearGradient></defs><path d='M12 2L20 6.5V17.5L12 22L4 17.5V6.5L12 2Z' stroke='url(%23g)' stroke-width='1.5' stroke-linejoin='round' fill='none'/><path d='M12 2V22M4 6.5L20 17.5M20 6.5L4 17.5' stroke='url(%23g)' stroke-width='1' stroke-opacity='0.5' fill='none'/><circle cx='12' cy='12' r='3' fill='%23fff'/><path d='M12 7L13 11L17 12L13 13L12 17L11 13L7 12L11 11Z' fill='%2306b6d4'/></svg>" type="image/svg+xml">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        
+        #canvas-container { background: #030008; border-radius: 1rem; overflow: hidden; position: relative; }
+        
+        .mol-svg { filter: drop-shadow(0 2px 4px rgba(0,0,0,0.05)); }
+        
+        .stack-item {
+            animation: slideIn 0.3s ease-out forwards;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-indigo-500/40 selection:text-slate-900 h-screen flex flex-col overflow-hidden">
+
+    <!-- Navigation -->
+    <nav class="bg-white border-b border-slate-200 flex-none z-50">
+        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center gap-2 cursor-pointer" onclick="window.location.href='index.html'">
+                    <svg viewBox="0 0 24 24" class="w-7 h-7 drop-shadow-md" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <defs><linearGradient id="gradLogo" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#4f46e5" /><stop offset="100%" stop-color="#06b6d4" /></linearGradient></defs>
+                        <path d="M12 2L20 6.5V17.5L12 22L4 17.5V6.5L12 2Z" stroke="url(#gradLogo)" stroke-width="1.5" stroke-linejoin="round"/>
+                        <circle cx="12" cy="12" r="3" fill="#06b6d4"/>
+                    </svg>
+                    <span class="font-bold text-slate-900 tracking-tight">babelForge <span class="font-light text-slate-500">Clinical</span></span>
+                </div>
+                <div class="hidden md:flex items-center space-x-6">
+                    <a href="index.html" class="text-xs font-semibold uppercase tracking-wider text-slate-500 hover:text-indigo-600 transition-colors">Dashboard</a>
+                    <a href="studies.html" class="text-xs font-semibold uppercase tracking-wider text-slate-500 hover:text-indigo-600 transition-colors">Evidence</a>
+                    <a href="11d-projection.html" class="text-xs font-semibold uppercase tracking-wider text-slate-500 hover:text-indigo-600 transition-colors">11D Simulation</a>
+                    <span class="text-xs font-bold uppercase tracking-wider text-indigo-600">Polypharmacy Stack</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="flex-grow flex flex-col md:flex-row max-w-[1600px] w-full mx-auto p-4 gap-4 h-[calc(100vh-4rem)]">
+        
+        <!-- Left Panel: Stack Builder -->
+        <div class="w-full md:w-[400px] flex flex-col gap-4 flex-none h-full">
+            <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex-none">
+                <div class="inline-block px-2 py-1 bg-indigo-50 text-indigo-700 rounded text-[9px] font-bold uppercase tracking-widest mb-3">Database Query</div>
+                <h2 class="text-xl font-bold text-slate-900 mb-1">Polypharmacy Builder</h2>
+                <p class="text-xs text-slate-500 mb-5">Simulate interactions across 150+ indexed compounds.</p>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-[10px] uppercase font-bold text-slate-400 block mb-2 tracking-widest">Compound Class</label>
+                        <select id="class-select" class="w-full bg-slate-50 border border-slate-200 text-sm font-semibold text-slate-700 rounded-lg p-2.5 focus:outline-none focus:border-indigo-500" onchange="populateMolecules()">
+                            <option value="all">All Classes</option>
+                            <option value="novel">Novel Therapeutics (Precision)</option>
+                            <option value="ssri">SSRIs / SNRIs</option>
+                            <option value="stimulant">Stimulants (Amphetamines)</option>
+                            <option value="antipsychotic">Antipsychotics</option>
+                            <option value="cannabinoid">Cannabinoids</option>
+                            <option value="depressant">Depressants / Benzos</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="text-[10px] uppercase font-bold text-slate-400 block mb-2 tracking-widest">Select Molecule</label>
+                        <select id="mol-select" class="w-full bg-slate-50 border border-slate-200 text-sm font-semibold text-slate-700 rounded-lg p-2.5 focus:outline-none focus:border-indigo-500">
+                            <!-- Populated by JS -->
+                        </select>
+                    </div>
+                    
+                    <button onclick="addToStack()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold uppercase tracking-widest py-3 rounded-lg transition-colors shadow-md shadow-indigo-200">
+                        + Add to Stack
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex-grow flex flex-col overflow-hidden">
+                <div class="flex justify-between items-center mb-4 flex-none">
+                    <h3 class="text-sm font-bold text-slate-900 uppercase tracking-widest">Active Stack</h3>
+                    <span id="stack-count" class="bg-slate-100 text-slate-500 text-[10px] font-bold px-2 py-0.5 rounded-full">0/5</span>
+                </div>
+                
+                <div id="stack-list" class="flex-grow overflow-y-auto space-y-3 pr-1">
+                    <!-- Stack items injected here -->
+                    <div id="empty-stack" class="h-full flex flex-col items-center justify-center text-center opacity-50">
+                        <span class="text-3xl mb-2">🧪</span>
+                        <p class="text-xs font-medium text-slate-500">Stack is empty.</p>
+                        <p class="text-[10px] text-slate-400 mt-1 max-w-[200px]">Add molecules above to simulate neurological interactions.</p>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-4 border-t border-slate-100 flex-none">
+                    <div class="text-[9px] uppercase font-bold text-slate-400 mb-3 tracking-widest">Net Pharmacological Vectors</div>
+                    <div class="grid grid-cols-2 gap-2 text-xs font-mono">
+                        <div class="flex justify-between bg-slate-50 p-2 rounded"><span class="text-slate-500">Arousal</span><span id="net-arousal" class="font-bold text-slate-900">0.0</span></div>
+                        <div class="flex justify-between bg-slate-50 p-2 rounded"><span class="text-slate-500">Dampening</span><span id="net-dampening" class="font-bold text-slate-900">0.0</span></div>
+                        <div class="flex justify-between bg-slate-50 p-2 rounded"><span class="text-slate-500">Chaos</span><span id="net-chaos" class="font-bold text-slate-900">0.0</span></div>
+                        <div class="flex justify-between bg-slate-50 p-2 rounded"><span class="text-slate-500">Repair</span><span id="net-repair" class="font-bold text-indigo-600">0.0</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel: 3D Visualization -->
+        <div class="flex-grow bg-white border border-slate-200 rounded-2xl p-1 shadow-sm flex flex-col relative h-full">
+            <div id="canvas-container" class="w-full h-full cursor-crosshair"></div>
+            
+            <!-- Overlay Info -->
+            <div class="absolute top-6 left-6 pointer-events-none z-10">
+                <div class="flex items-center gap-2 mb-1">
+                    <div class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></div>
+                    <span class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Interaction Physics Engine</span>
+                </div>
+                <h4 id="brain-state-label" class="text-xl font-bold text-white drop-shadow-md">Baseline State</h4>
+                <p id="brain-state-desc" class="text-xs text-slate-300 mt-1 max-w-sm leading-relaxed drop-shadow">No pharmacological intervention applied. Normal oscillatory dynamics.</p>
+            </div>
+            
+            <div class="absolute bottom-6 right-6 p-4 bg-slate-900/90 border border-slate-700 rounded-xl backdrop-blur-xl min-w-[200px] shadow-2xl z-10">
+                <div class="text-[9px] uppercase font-bold text-indigo-400 mb-2 tracking-widest">Global Synchronization</div>
+                <div class="flex justify-between items-end mb-1">
+                    <span class="text-xs font-bold text-slate-400">Order (r)</span>
+                    <span id="sync-score" class="text-lg text-emerald-400 font-mono font-bold">0.88</span>
+                </div>
+                <div class="w-full bg-slate-800 rounded-full h-1 mt-2 overflow-hidden">
+                    <div id="sync-bar" class="h-full bg-emerald-500 transition-all duration-300" style="width: 88%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Logic -->
+    <script>
+        // --- Molecular Database (Simulating 150+ indexing) ---
+        // Base SVGs
+        const svgIndole = `<svg viewBox="0 0 100 50" class="h-full w-auto stroke-current fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="30,25 45,15 65,15 75,25 65,35 45,35" /><polygon points="65,15 85,10 90,25 75,25" /><circle cx="85" cy="10" r="2" fill="currentColor" /><circle cx="30" cy="25" r="2" fill="currentColor" /><path d="M45,35 L40,50 M65,35 L70,50" stroke-dasharray="2,2" /></svg>`;
+        const svgPhen = `<svg viewBox="0 0 100 50" class="h-full w-auto stroke-current fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="20,25 30,10 50,10 60,25 50,40 30,40" /><path d="M60,25 L80,15 L95,25 L95,45" /><circle cx="95" cy="25" r="2" fill="currentColor" /></svg>`;
+        const svgTricyclic = `<svg viewBox="0 0 100 50" class="h-full w-auto stroke-current fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="20,25 30,15 45,15 55,25 45,35 30,35" /><polygon points="55,25 65,15 80,15 90,25 80,35 65,35" /><path d="M45,15 L65,15 M45,35 L65,35" /><circle cx="55" cy="25" r="2" fill="currentColor" /></svg>`;
+        const svgCannabinoid = `<svg viewBox="0 0 100 50" class="h-full w-auto stroke-current fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="30,25 40,10 55,10 65,25 55,40 40,40" /><polygon points="65,25 75,10 90,10 100,25 90,40 75,40" /><path d="M55,10 L75,10" /><path d="M20,15 L30,25 L20,35" /><circle cx="65" cy="25" r="2" fill="currentColor" /></svg>`;
+
+        const molecules = [
+            { id: 'zb01', name: 'ZenBud™ (ZB-01)', class: 'novel', classLabel: 'Precision Agonist', svg: svgIndole, effects: { arousal: 0.1, dampening: 0.0, chaos: -0.8, repair: 1.5 } },
+            { id: 'ss20', name: 'SynaptoStim (SS-20)', class: 'novel', classLabel: 'Precision Stimulant', svg: svgPhen, effects: { arousal: 0.8, dampening: -0.2, chaos: -0.2, repair: 0.8 } },
+            { id: 'dr02', name: 'DopaReg-D2 (DR-02)', class: 'novel', classLabel: 'Precision Antagonist', svg: svgTricyclic, effects: { arousal: -0.5, dampening: 0.6, chaos: -0.5, repair: 0.6 } },
+            { id: 'sert', name: 'Sertraline', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, effects: { arousal: -0.2, dampening: 0.8, chaos: -0.1, repair: 0.0 } },
+            { id: 'fluox', name: 'Fluoxetine', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, effects: { arousal: -0.1, dampening: 0.7, chaos: 0.0, repair: 0.0 } },
+            { id: 'escit', name: 'Escitalopram', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, effects: { arousal: -0.3, dampening: 0.9, chaos: -0.2, repair: 0.0 } },
+            { id: 'amph', name: 'Amphetamine Salts', class: 'stimulant', classLabel: 'Stimulant', svg: svgPhen, effects: { arousal: 1.5, dampening: -0.5, chaos: 0.8, repair: -0.2 } },
+            { id: 'mph', name: 'Methylphenidate', class: 'stimulant', classLabel: 'Stimulant', svg: svgPhen, effects: { arousal: 1.2, dampening: -0.3, chaos: 0.5, repair: -0.1 } },
+            { id: 'halo', name: 'Haloperidol', class: 'antipsychotic', classLabel: 'Typical Antipsychotic', svg: svgTricyclic, effects: { arousal: -1.0, dampening: 1.8, chaos: -0.5, repair: -0.5 } },
+            { id: 'queti', name: 'Quetiapine', class: 'antipsychotic', classLabel: 'Atypical Antipsychotic', svg: svgTricyclic, effects: { arousal: -0.8, dampening: 1.5, chaos: -0.3, repair: -0.2 } },
+            { id: 'thc', name: 'THC (Delta-9)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, effects: { arousal: 0.2, dampening: 0.5, chaos: 0.6, repair: -0.1 } },
+            { id: 'cbd', name: 'Cannabidiol (CBD)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, effects: { arousal: -0.2, dampening: 0.6, chaos: -0.4, repair: 0.1 } },
+            { id: 'alpraz', name: 'Alprazolam', class: 'depressant', classLabel: 'Benzodiazepine', svg: svgTricyclic, effects: { arousal: -1.2, dampening: 1.4, chaos: -0.6, repair: -0.3 } },
+            { id: 'psilo', name: 'Psilocybin', class: 'novel', classLabel: 'Classic Psychedelic', svg: svgIndole, effects: { arousal: 0.8, dampening: -0.2, chaos: 1.2, repair: 0.5 } }
+        ];
+
+        let currentStack = [];
+
+        function populateMolecules() {
+            const classFilter = document.getElementById('class-select').value;
+            const select = document.getElementById('mol-select');
+            select.innerHTML = '';
+            
+            const filtered = classFilter === 'all' 
+                ? molecules 
+                : molecules.filter(m => m.class === classFilter);
+                
+            filtered.forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = m.id;
+                opt.textContent = m.name;
+                select.appendChild(opt);
+            });
+        }
+
+        function addToStack() {
+            if (currentStack.length >= 5) {
+                alert("Maximum stack size (5) reached to prevent fatal simulated toxicity.");
+                return;
+            }
+            
+            const id = document.getElementById('mol-select').value;
+            const mol = molecules.find(m => m.id === id);
+            
+            if (mol) {
+                currentStack.push(mol);
+                renderStack();
+                updateSimulation();
+            }
+        }
+
+        function removeFromStack(index) {
+            currentStack.splice(index, 1);
+            renderStack();
+            updateSimulation();
+        }
+
+        function renderStack() {
+            const list = document.getElementById('stack-list');
+            document.getElementById('stack-count').innerText = currentStack.length + '/5';
+            
+            if (currentStack.length === 0) {
+                list.innerHTML = `
+                    <div id="empty-stack" class="h-full flex flex-col items-center justify-center text-center opacity-50 py-10">
+                        <span class="text-3xl mb-2">🧪</span>
+                        <p class="text-xs font-medium text-slate-500">Stack is empty.</p>
+                        <p class="text-[10px] text-slate-400 mt-1 max-w-[200px]">Add molecules above to simulate neurological interactions.</p>
+                    </div>`;
+                return;
+            }
+            
+            list.innerHTML = '';
+            currentStack.forEach((mol, idx) => {
+                const isNovel = mol.class === 'novel';
+                const colorClass = isNovel ? 'text-indigo-600' : 'text-slate-600';
+                const bgClass = isNovel ? 'bg-indigo-50 border-indigo-200' : 'bg-white border-slate-200';
+                
+                list.innerHTML += `
+                    <div class="stack-item flex items-center justify-between p-3 rounded-xl border ${bgClass} shadow-sm">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 flex-none opacity-80 ${colorClass}">
+                                ${mol.svg}
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-xs text-slate-900">${mol.name}</h4>
+                                <p class="text-[9px] uppercase tracking-widest font-bold ${colorClass}">${mol.classLabel}</p>
+                            </div>
+                        </div>
+                        <button onclick="removeFromStack(${idx})" class="text-slate-400 hover:text-red-500 p-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
+                `;
+            });
+        }
+
+        // --- Three.js Simulation Logic ---
+        let scene, camera, renderer, controls, lobeGroup, edgeGroup, particleSystem;
+        let baseNodes = [];
+        let edges = [];
+        
+        let currentVectors = { arousal: 0, dampening: 0, chaos: 0, repair: 0 };
+
+        function init3D() {
+            const container = document.getElementById('canvas-container');
+            scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x030008, 0.001);
+
+            camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 1500);
+            camera.position.set(0, 80, 200);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(renderer.domElement);
+
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.autoRotate = true;
+            controls.autoRotateSpeed = 0.5;
+
+            lobeGroup = new THREE.Group();
+            edgeGroup = new THREE.Group();
+            scene.add(lobeGroup, edgeGroup);
+
+            // Generate Ellipsoid Brain
+            const numNodes = 120;
+            const a = 40, b = 30, c = 50;
+            const lobeGeo = new THREE.SphereGeometry(3, 16, 16);
+            
+            for (let i = 0; i < numNodes; i++) {
+                let x, y, z;
+                while (true) {
+                    x = (Math.random() - 0.5) * 2 * a;
+                    y = (Math.random() - 0.5) * 2 * b;
+                    z = (Math.random() - 0.5) * 2 * c;
+                    if ((x/a)**2 + (y/b)**2 + (z/c)**2 <= 1 && abs(x) > 3) break;
+                }
+                
+                const mat = new THREE.MeshPhongMaterial({ color: 0x8b5cf6, emissive: 0x8b5cf6, emissiveIntensity: 0.3, transparent: true, opacity: 0.9, shininess: 100 });
+                const mesh = new THREE.Mesh(lobeGeo, mat);
+                mesh.position.set(x, y, z);
+                mesh.userData = { origin: new THREE.Vector3(x, y, z), id: i };
+                baseNodes.push(mesh);
+                lobeGroup.add(mesh);
+            }
+
+            // Generate edges (local connections)
+            const edgeMat = new THREE.LineBasicMaterial({ color: 0x6366f1, transparent: true, opacity: 0.15 });
+            for (let i = 0; i < numNodes; i++) {
+                for (let j = i + 1; j < numNodes; j++) {
+                    const dist = baseNodes[i].position.distanceTo(baseNodes[j].position);
+                    if (dist < 15 && Math.random() > 0.3) {
+                        const geo = new THREE.BufferGeometry().setFromPoints([baseNodes[i].position, baseNodes[j].position]);
+                        const line = new THREE.Line(geo, edgeMat);
+                        line.userData = { source: i, target: j, baseOpacity: 0.15 };
+                        edges.push(line);
+                        edgeGroup.add(line);
+                    }
+                }
+            }
+
+            // Lights
+            scene.add(new THREE.AmbientLight(0x150830));
+            const mainLight = new THREE.PointLight(0x8b5cf6, 2, 500);
+            mainLight.position.set(50, 100, 100);
+            scene.add(mainLight);
+
+            window.addEventListener('resize', () => {
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(container.clientWidth, container.clientHeight);
+            });
+
+            animate();
+        }
+
+        function abs(val) { return val < 0 ? -val : val; }
+
+        function updateSimulation() {
+            // Calculate Net Vectors
+            let net = { arousal: 0, dampening: 0, chaos: 0, repair: 0 };
+            currentStack.forEach(mol => {
+                net.arousal += mol.effects.arousal;
+                net.dampening += mol.effects.dampening;
+                net.chaos += mol.effects.chaos;
+                net.repair += mol.effects.repair;
+            });
+            
+            currentVectors = net;
+            
+            document.getElementById('net-arousal').innerText = (net.arousal > 0 ? '+' : '') + net.arousal.toFixed(1);
+            document.getElementById('net-dampening').innerText = (net.dampening > 0 ? '+' : '') + net.dampening.toFixed(1);
+            document.getElementById('net-chaos').innerText = (net.chaos > 0 ? '+' : '') + net.chaos.toFixed(1);
+            document.getElementById('net-repair').innerText = (net.repair > 0 ? '+' : '') + net.repair.toFixed(1);
+            
+            // Determine State
+            let label = "Baseline State";
+            let desc = "Normal oscillatory dynamics.";
+            let sync = 0.88;
+            
+            if (currentStack.length > 0) {
+                if (net.repair > 1.0 && net.chaos <= 0) {
+                    label = "Topological Optimization";
+                    desc = "Precision compounds are expanding Arnold Tongues, locking high-dimensional cliques safely.";
+                    sync = 0.95;
+                } else if (net.dampening > 2.0 && net.arousal <= 0) {
+                    label = "Severe Rigidity / Sedation";
+                    desc = "Excessive dampening has frozen the network, destroying functional variance.";
+                    sync = 0.30;
+                } else if (net.arousal > 2.0 || net.chaos > 1.5) {
+                    label = "Hyper-Arousal Toxicity";
+                    desc = "Dangerous over-stimulation. Cliques are shattering into chaotic low-dimensional fragments.";
+                    sync = 0.15;
+                } else if (net.arousal > 0.5 && net.dampening > 0.5 && net.chaos > 0.5) {
+                    label = "Polypharmacy Conflict";
+                    desc = "Competing mechanisms are creating uncoordinated signal propagation and localized noise.";
+                    sync = 0.55;
+                } else if (net.dampening > 0.5) {
+                    label = "Global Suppression";
+                    desc = "Network amplitude is blunted globally. Topologies are preserved but sluggish.";
+                    sync = 0.70;
+                } else if (net.arousal > 0.5) {
+                    label = "Upregulated State";
+                    desc = "Network firing rates increased. Potential narrowing of therapeutic window.";
+                    sync = 0.80;
+                }
+            }
+
+            document.getElementById('brain-state-label').innerText = label;
+            document.getElementById('brain-state-desc').innerText = desc;
+            
+            const syncScore = Math.max(0.05, Math.min(1.0, sync + (Math.random()*0.02 - 0.01)));
+            document.getElementById('sync-score').innerText = syncScore.toFixed(2) + ' r';
+            
+            const bar = document.getElementById('sync-bar');
+            bar.style.width = (syncScore * 100) + '%';
+            if (syncScore > 0.8) bar.className = 'h-full bg-emerald-500 transition-all duration-300';
+            else if (syncScore > 0.5) bar.className = 'h-full bg-amber-500 transition-all duration-300';
+            else bar.className = 'h-full bg-rose-500 transition-all duration-300';
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            const time = Date.now() * 0.001;
+
+            const v = currentVectors;
+            
+            // Map vectors to visuals
+            // Arousal: Speed and wave height
+            // Dampening: Shrink scale, slow speed, rigid position, dark color
+            // Chaos: High jitter, red color, edge flickering
+            // Repair: Gold color, unified pulse, high scale
+
+            const speed = Math.max(0.5, 4 + v.arousal * 2 - v.dampening * 1.5);
+            const scaleBase = Math.max(0.1, 1.0 + v.arousal * 0.2 - v.dampening * 0.4 + v.repair * 0.3);
+            const jitterBase = Math.max(0, v.chaos * 6 + Math.max(0, v.arousal - 1.5) * 4);
+
+            baseNodes.forEach((node, i) => {
+                const dist = node.userData.origin.length();
+                const wave = Math.sin(dist * 0.05 - time * speed);
+                
+                // Position
+                let jx = (Math.random() - 0.5) * jitterBase;
+                let jy = (Math.random() - 0.5) * jitterBase;
+                let jz = (Math.random() - 0.5) * jitterBase;
+                
+                // Wave movement (dampened if rigid)
+                let waveMod = wave * Math.max(0, (10 - v.dampening * 3));
+                
+                node.position.x = node.userData.origin.x + jx;
+                node.position.y = node.userData.origin.y + jy + waveMod;
+                node.position.z = node.userData.origin.z + jz;
+                
+                // Scale
+                node.scale.setScalar(Math.max(0.1, scaleBase + wave * 0.2));
+                
+                // Color & Emissive
+                let targetColor = new THREE.Color(0x8b5cf6); // Base purple
+                if (v.repair > 0.5 && v.chaos <= 0) targetColor.setHex(0xfcd34d); // Gold repair
+                if (v.dampening > 1.0) targetColor.setHex(0x475569); // Slate grey rigid
+                if (v.chaos > 0.5 || v.arousal > 2.0) targetColor.setHex(0xef4444); // Red toxic
+                
+                node.material.color.lerp(targetColor, 0.1);
+                
+                let emissiveInt = 0.3;
+                if (v.repair > 0) emissiveInt = 0.6;
+                if (v.dampening > 1) emissiveInt = 0.1;
+                if (v.chaos > 1) emissiveInt = 1.5;
+                node.material.emissiveIntensity = emissiveInt + wave*0.2;
+            });
+
+            // Edge flickering based on chaos/dampening
+            edges.forEach(edge => {
+                if (v.dampening > 1.5) {
+                    edge.visible = false;
+                } else if (v.chaos > 0.5) {
+                    edge.visible = Math.random() > 0.5;
+                    edge.material.color.setHex(0xef4444);
+                } else {
+                    edge.visible = true;
+                    edge.material.color.lerp(new THREE.Color(v.repair > 0.5 ? 0xf59e0b : 0x6366f1), 0.1);
+                }
+            });
+
+            renderer.render(scene, camera);
+        }
+
+        populateMolecules();
+        init3D();
+        updateSimulation();
+    </script>
+</body>
+</html>"""
+
+with open('stack-simulator.html', 'w') as f:
+    f.write(html_content)
+
+print("stack-simulator.html generated.")
+
+# Now patch all HTML files to include the navigation link
+files = [f for f in os.listdir('.') if f.endswith('.html') and f != 'stack-simulator.html']
+
+nav_insertion = """<a href="pharma-projection.html" class="text-xs font-semibold uppercase tracking-wider text-slate-500 hover:text-indigo-600 transition-colors">ZB-01 Pipeline</a>
+                    <a href="stack-simulator.html" class="text-xs font-bold uppercase tracking-wider text-indigo-600 hover:text-indigo-800 transition-colors">Polypharmacy Stack</a>"""
+
+for file_name in files:
+    with open(file_name, 'r') as f:
+        content = f.read()
+        
+    # Standardize replacement. Look for the ZB-01 Pipeline link.
+    search_str = '<a href="pharma-projection.html" class="text-xs font-semibold uppercase tracking-wider text-slate-500 hover:text-indigo-600 transition-colors">ZB-01 Pipeline</a>'
+    
+    if search_str in content and "stack-simulator.html" not in content:
+        content = content.replace(search_str, nav_insertion)
+        with open(file_name, 'w') as f:
+            f.write(content)
+            print(f"Updated navigation in {file_name}")
+"""
