@@ -11,8 +11,9 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <!-- Plotly.js -->
-    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -510,11 +511,11 @@
                     </div>
 
                     <!-- 3D Canvas Area -->
-                    <div class="lg:col-span-3 relative bg-[#030008] cursor-crosshair">
-                        <div id="dashboard-brain-container" class="w-full h-full"></div>
+                    <div class="lg:col-span-3 relative bg-[#030008] cursor-crosshair overflow-hidden">
+                        <div id="dashboard-brain-container" class="absolute inset-0"></div>
                         
                         <!-- Overlay Labels -->
-                        <div class="absolute top-8 left-8 pointer-events-none">
+                        <div class="absolute top-8 left-8 pointer-events-none z-10">
                             <div class="flex items-center gap-3 mb-2">
                                 <div class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></div>
                                 <span class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Real-time Transposition</span>
@@ -522,7 +523,44 @@
                             <h4 id="active-scenario-label" class="text-2xl font-bold text-white">Healthy Baseline</h4>
                         </div>
                         
-                        <div id="node-inspector-overlay" class="absolute bottom-8 right-8 p-6 bg-slate-900/90 border border-slate-700 rounded-xl backdrop-blur-xl hidden min-w-[220px] shadow-2xl">
+                        <!-- Explanation Toggle -->
+                        <div class="absolute top-8 right-8 z-20">
+                            <button onclick="toggleExplanation()" class="bg-indigo-600/80 hover:bg-indigo-500 text-white text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-md transition-all border border-indigo-400/50 backdrop-blur-md shadow-lg flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                Explain Science
+                            </button>
+                        </div>
+
+                        <!-- Science Explanation Overlay -->
+                        <div id="science-explanation" class="absolute inset-0 bg-slate-950/95 backdrop-blur-xl z-30 hidden p-10 overflow-y-auto border-l border-indigo-500/20">
+                            <div class="max-w-2xl mx-auto mt-12 relative">
+                                <button onclick="toggleExplanation()" class="absolute -top-12 -right-4 text-slate-400 hover:text-white transition-colors">
+                                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </button>
+                                
+                                <h3 class="text-3xl font-bold text-white mb-6">The Mathematical Model</h3>
+                                <p class="text-indigo-200 text-lg mb-8 leading-relaxed font-light">This simulation is not a pre-rendered animation. It is a live WebGL transposition driven by the mathematical principles of topological neuroscience and Kuramoto dynamics.</p>
+                                
+                                <div class="space-y-8">
+                                    <div class="border-l-2 border-indigo-500 pl-6">
+                                        <h4 class="text-xl font-bold text-white mb-2">1. Topological Cliques (The Lobes)</h4>
+                                        <p class="text-slate-400 leading-relaxed text-sm">In algebraic topology, a 'clique' represents an all-to-all connected network of neurons forming high-dimensional geometric structures (simplices). The size of each lobe in this simulation is dynamically calculated based on its <strong class="text-white">Clique Participation Count</strong>. Larger nodes participate in structures up to 11 dimensions (11D).</p>
+                                    </div>
+                                    
+                                    <div class="border-l-2 border-indigo-500 pl-6">
+                                        <h4 class="text-xl font-bold text-white mb-2">2. PTSD Flash (Topological Collapse)</h4>
+                                        <p class="text-slate-400 leading-relaxed text-sm">When traumatic recall is triggered, high-frequency spectral noise disrupts global synchronization. Mathematically, the 11D cliques 'shatter' into low-dimensional fragments (max 3D or 4D). You observe this visually as the nodes physically shrink, scatter, and turn red (indicating uncoordinated, localized hyperarousal).</p>
+                                    </div>
+                                    
+                                    <div class="border-l-2 border-indigo-500 pl-6">
+                                        <h4 class="text-xl font-bold text-white mb-2">3. ZenBud™ (ZB-01) Optimization</h4>
+                                        <p class="text-slate-400 leading-relaxed text-sm">The dosage slider modulates the <strong class="text-white">Global Coupling Constant (K)</strong> in the Kuramoto phase-locking equation. As dosage increases, ZB-01 physically widens the regions of stability (Arnold Tongues). The simulation responds by pulling the scattered nodes back to their origin coordinates, stabilizing their scale, and restoring the global order parameter (r ≈ 0.88), represented by the cohesive gold pulsing.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="node-inspector-overlay" class="absolute bottom-8 right-8 p-6 bg-slate-900/90 border border-slate-700 rounded-xl backdrop-blur-xl hidden min-w-[220px] shadow-2xl z-20">
                             <div class="text-[9px] uppercase font-bold text-indigo-400 mb-2 tracking-widest">Region Data</div>
                             <div id="insp-name" class="text-base font-bold text-white mb-4">LH_Default_PFC</div>
                             <div class="grid grid-cols-2 gap-6">
@@ -679,6 +717,11 @@
         // Smooth scrolling for navigation
         function scrollToSection(id) {
             document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function toggleExplanation() {
+            const overlay = document.getElementById('science-explanation');
+            overlay.classList.toggle('hidden');
         }
 
         // --- 0. Interactive paper charts ---
