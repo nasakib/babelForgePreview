@@ -205,7 +205,7 @@
             </div>
         </div>
 
-        <!-- Right Panel: 3D Visualization -->
+            <!-- Right Panel: 3D Visualization -->
         <div class="flex-grow bg-white border border-slate-200 rounded-2xl p-1 shadow-sm flex flex-col relative min-h-[500px] lg:min-h-full">
             <div id="canvas-container" class="w-full h-full min-h-[500px] lg:min-h-[auto] cursor-crosshair rounded-xl overflow-hidden bg-[#030008]"></div>
             
@@ -217,6 +217,17 @@
                 </div>
                 <h4 id="brain-state-label" class="text-xl font-bold text-white drop-shadow-md">Baseline State</h4>
                 <p id="brain-state-desc" class="text-xs text-slate-300 mt-1 max-w-sm leading-relaxed drop-shadow">No pharmacological intervention applied. Normal oscillatory dynamics.</p>
+            </div>
+
+            <!-- Anatomical Legend -->
+            <div class="absolute top-6 right-32 z-10 bg-slate-900/80 border border-slate-700 rounded-lg p-3 backdrop-blur-md pointer-events-none">
+                <div class="text-[9px] uppercase font-bold text-slate-400 mb-2 tracking-widest border-b border-slate-700 pb-1">Anatomical Map (Z-Axis)</div>
+                <ul class="text-[10px] text-slate-300 space-y-1 font-mono">
+                    <li><span class="text-indigo-400">Frontal (z > 20):</span> Control / Executive</li>
+                    <li><span class="text-emerald-400">Superior (y > 15):</span> Somatomotor</li>
+                    <li><span class="text-amber-400">Inferior (y < 0):</span> Limbic / Ventral Attn</li>
+                    <li><span class="text-rose-400">Posterior (z < -20):</span> Visual Cortex</li>
+                </ul>
             </div>
 
             <!-- Explanation Toggle -->
@@ -514,9 +525,10 @@
         }
 
         // --- Three.js Simulation Logic ---
-        let scene, camera, renderer, controls, lobeGroup, edgeGroup, particleSystem;
+        let scene, camera, renderer, controls, lobeGroup, edgeGroup, particleSystem, packetSystem;
         let baseNodes = [];
         let edges = [];
+        let signalPackets = [];
         
         let currentVectors = { arousal: 0, dampening: 0, chaos: 0, repair: 0 };
 
@@ -567,8 +579,10 @@
                 lobeGroup.add(mesh);
             }
 
-            // Generate edges (local connections)
+            // Generate edges and signal packets
             const edgeMat = new THREE.LineBasicMaterial({ color: 0x6366f1, transparent: true, opacity: 0.15 });
+            let packetPos = [];
+            
             for (let i = 0; i < numNodes; i++) {
                 for (let j = i + 1; j < numNodes; j++) {
                     const dist = baseNodes[i].position.distanceTo(baseNodes[j].position);
@@ -578,9 +592,26 @@
                         line.userData = { source: i, target: j, baseOpacity: 0.15 };
                         edges.push(line);
                         edgeGroup.add(line);
+                        
+                        // Spawn a signal packet on 40% of the edges
+                        if (Math.random() > 0.6) {
+                            signalPackets.push({
+                                start: baseNodes[i].position.clone(),
+                                end: baseNodes[j].position.clone(),
+                                speed: 0.005 + Math.random() * 0.015,
+                                t: Math.random()
+                            });
+                            packetPos.push(0, 0, 0); // Placeholder coordinate
+                        }
                     }
                 }
             }
+            
+            const packetGeo = new THREE.BufferGeometry();
+            packetGeo.setAttribute('position', new THREE.Float32BufferAttribute(packetPos, 3));
+            const packetMat = new THREE.PointsMaterial({ color: 0x38bdf8, size: 1.5, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending });
+            packetSystem = new THREE.Points(packetGeo, packetMat);
+            scene.add(packetSystem);
 
             // Lights
             scene.add(new THREE.AmbientLight(0x150830));
@@ -785,6 +816,29 @@
                     edge.material.color.lerp(new THREE.Color(v.repair > 0.5 ? 0xf59e0b : 0x6366f1), 0.1);
                 }
             });
+
+            // Animate Signal Packets (Real-time connection flow)
+            if (packetSystem && signalPackets.length > 0) {
+                const positions = packetSystem.geometry.attributes.position.array;
+                const packetSpeed = Math.max(0.5, 4 + v.arousal * 2 - v.dampening * 1.5) * 0.01;
+                let activePackets = 0;
+                signalPackets.forEach((p, i) => {
+                    if (v.dampening > 1.5 || v.chaos > 1.0) {
+                        // Suppress packets if highly dampened or chaotic
+                        positions[i*3] = 0; positions[i*3+1] = 0; positions[i*3+2] = 0;
+                    } else {
+                        activePackets++;
+                        p.t += p.speed * packetSpeed;
+                        if (p.t > 1) p.t = 0;
+                        const curPos = new THREE.Vector3().lerpVectors(p.start, p.end, p.t);
+                        positions[i*3] = curPos.x;
+                        positions[i*3+1] = curPos.y;
+                        positions[i*3+2] = curPos.z;
+                    }
+                });
+                packetSystem.geometry.attributes.position.needsUpdate = true;
+                packetSystem.material.opacity = (activePackets > 0) ? (0.8 + Math.sin(time*2) * 0.2) : 0;
+            }
 
             renderer.render(scene, camera);
         }
