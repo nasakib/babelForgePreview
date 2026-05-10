@@ -484,16 +484,22 @@
                                         <button id="btn-ptsd" class="w-full text-left px-4 py-3 rounded-lg border border-slate-200 font-semibold text-sm transition-all" onclick="updateDashboardState('PTSD')">
                                             PTSD Flash (D7)
                                         </button>
+                                        <button id="btn-adhd" class="w-full text-left px-4 py-3 rounded-lg border border-slate-200 font-semibold text-sm transition-all" onclick="updateDashboardState('ADHD')">
+                                            ADHD (Inattentive)
+                                        </button>
+                                        <button id="btn-tourettes" class="w-full text-left px-4 py-3 rounded-lg border border-slate-200 font-semibold text-sm transition-all" onclick="updateDashboardState('TOURETTES')">
+                                            Tourette's (Motor Tic)
+                                        </button>
                                     </div>
                                 </div>
                                 
                                 <div class="p-5 bg-white border border-slate-200 rounded-xl shadow-sm">
                                     <div class="flex justify-between items-center mb-4">
-                                        <label class="text-[10px] uppercase font-bold text-indigo-600 tracking-widest">ZB-01 Dosage</label>
+                                        <label id="drug-name-label" class="text-[10px] uppercase font-bold text-indigo-600 tracking-widest">ZB-01 Dosage</label>
                                         <span id="pharma-percent" class="font-mono text-sm font-bold text-indigo-600">0 mg</span>
                                     </div>
                                     <input type="range" id="pharma-slider" min="0" max="100" value="0" class="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600" oninput="updatePharmaEfficacy(this.value)">
-                                    <p class="text-[10px] text-slate-400 mt-4 leading-relaxed">Adjust precision dosage to monitor regional stabilization and topological repair rate.</p>
+                                    <p id="drug-desc-label" class="text-[10px] text-slate-400 mt-4 leading-relaxed">Adjust precision dosage to monitor regional stabilization and topological repair rate.</p>
                                 </div>
                             </div>
                         </div>
@@ -551,10 +557,20 @@
                                         <h4 class="text-xl font-bold text-white mb-2">2. PTSD Flash (Topological Collapse)</h4>
                                         <p class="text-slate-400 leading-relaxed text-sm">When traumatic recall is triggered, high-frequency spectral noise disrupts global synchronization. Mathematically, the 11D cliques 'shatter' into low-dimensional fragments (max 3D or 4D). You observe this visually as the nodes physically shrink, scatter, and turn red (indicating uncoordinated, localized hyperarousal).</p>
                                     </div>
+
+                                    <div class="border-l-2 border-indigo-500 pl-6">
+                                        <h4 class="text-xl font-bold text-white mb-2">3. ADHD (Inattentive Topologies)</h4>
+                                        <p class="text-slate-400 leading-relaxed text-sm">Modeled as a state of 'hypo-connectivity' in the frontal and control networks. The underlying topological dimensionality is blunted (max ~6D). Simulating the dopaminergic agent <strong class="text-white">SynaptoStim (SS-20)</strong> mathematically 'upregulates' these nodes, expanding their scale and restoring cohesive wave dynamics until an overdose threshold induces chaotic jitter.</p>
+                                    </div>
+
+                                    <div class="border-l-2 border-indigo-500 pl-6">
+                                        <h4 class="text-xl font-bold text-white mb-2">4. Tourette's (Motor Tic Hyper-Sync)</h4>
+                                        <p class="text-slate-400 leading-relaxed text-sm">Characterized by pathological 'hyper-connectivity' within somatomotor loops, causing sudden, rigid synchronization spikes (tics). The D2 antagonist <strong class="text-white">DopaReg-D2 (DR-02)</strong> acts as a dampening parameter in the Kuramoto model, softening the erratic tics into a smooth baseline wave. Overdosing leads to extreme network rigidity (simulating Parkinsonian-like adverse effects).</p>
+                                    </div>
                                     
                                     <div class="border-l-2 border-indigo-500 pl-6">
-                                        <h4 class="text-xl font-bold text-white mb-2">3. ZenBud™ (ZB-01) Optimization</h4>
-                                        <p class="text-slate-400 leading-relaxed text-sm">The dosage slider modulates the <strong class="text-white">Global Coupling Constant (K)</strong> in the Kuramoto phase-locking equation. As dosage increases, ZB-01 physically widens the regions of stability (Arnold Tongues). The simulation responds by pulling the scattered nodes back to their origin coordinates, stabilizing their scale, and restoring the global order parameter (r ≈ 0.88), represented by the cohesive gold pulsing.</p>
+                                        <h4 class="text-xl font-bold text-white mb-2">5. Pharmacological Optimization</h4>
+                                        <p class="text-slate-400 leading-relaxed text-sm">The dosage slider modulates the <strong class="text-white">Global Coupling Constant (K)</strong> in the Kuramoto phase-locking equation. As dosage increases to the optimal 50mg threshold, it physically widens the regions of stability (Arnold Tongues). Pushing the dose beyond 50mg introduces toxic 'hyper-synchrony,' where nodes lock rigidly and lose their organic breathing rhythm.</p>
                                     </div>
                                 </div>
                             </div>
@@ -1032,11 +1048,39 @@
 
         const updateDashboardState = (state) => {
             dashStatus = state;
-            const isPTSD = state === 'PTSD';
-            document.getElementById('btn-healthy').classList.toggle('active', !isPTSD);
-            document.getElementById('btn-ptsd').classList.toggle('active', isPTSD);
-            document.getElementById('active-scenario-label').innerText = isPTSD ? 'PTSD Flash (D7)' : 'Healthy Baseline';
-            renderDashboardTopology(isPTSD ? 'RESISTANT' : 'RESPONSIVE');
+            
+            document.getElementById('btn-healthy').classList.toggle('active', state === 'HEALTHY');
+            document.getElementById('btn-ptsd').classList.toggle('active', state === 'PTSD');
+            document.getElementById('btn-adhd').classList.toggle('active', state === 'ADHD');
+            document.getElementById('btn-tourettes').classList.toggle('active', state === 'TOURETTES');
+            
+            let label = 'Healthy Baseline';
+            let drugName = 'ZB-01 Dosage';
+            let drugDesc = 'Adjust precision dosage to monitor regional stabilization and topological repair rate.';
+            let targetState = 'RESPONSIVE';
+
+            if (state === 'PTSD') {
+                label = 'PTSD Flash (D7)';
+                drugName = 'ZB-01 Dosage';
+                drugDesc = 'Adjust dosage to stabilize hyperarousal and repair 11D cliques.';
+                targetState = 'RESISTANT';
+            } else if (state === 'ADHD') {
+                label = 'ADHD (Inattentive)';
+                drugName = 'SynaptoStim (SS-20) Dosage';
+                drugDesc = 'Adjust dopaminergic stimulant dosage to increase connectivity in frontal networks.';
+                targetState = 'ADHD';
+            } else if (state === 'TOURETTES') {
+                label = 'Tourette\'s (Motor Tic)';
+                drugName = 'DopaReg-D2 (DR-02) Dosage';
+                drugDesc = 'Adjust D2 antagonist dosage to dampen hyper-connected somatomotor loops.';
+                targetState = 'TOURETTES';
+            }
+
+            document.getElementById('active-scenario-label').innerText = label;
+            document.getElementById('drug-name-label').innerText = drugName;
+            document.getElementById('drug-desc-label').innerText = drugDesc;
+            
+            renderDashboardTopology(targetState);
             updateIntegrityUI();
         };
 
@@ -1047,28 +1091,53 @@
         };
 
         const updateIntegrityUI = () => {
-            let score = dashStatus === 'HEALTHY' ? 100 : 24;
-            // Efficacy increases integrity score up to 50mg, then hyper-synchrony degrades it
-            if (dashStatus === 'PTSD') {
+            let score = 100;
+            let baseScale = 1.0;
+            let pharmaBonus = 0;
+
+            if (dashStatus === 'HEALTHY') {
+                score = 100;
+                baseScale = 1.0;
+                pharmaBonus = 0;
+            } else if (dashStatus === 'PTSD') {
+                score = 24;
                 if (dashPharmaEfficacy <= 1) {
                     score += dashPharmaEfficacy * 76;
+                    pharmaBonus = dashPharmaEfficacy * 0.8;
                 } else {
                     score = 100 - ((dashPharmaEfficacy - 1) * 60);
+                    pharmaBonus = 0.8 - ((dashPharmaEfficacy - 1) * 0.4);
                 }
+                baseScale = 0.4;
+            } else if (dashStatus === 'ADHD') {
+                score = 45;
+                if (dashPharmaEfficacy <= 1) {
+                    score += dashPharmaEfficacy * 55;
+                    pharmaBonus = dashPharmaEfficacy * 0.4;
+                } else {
+                    score = 100 - ((dashPharmaEfficacy - 1) * 50);
+                    pharmaBonus = 0.4 + ((dashPharmaEfficacy - 1) * 0.6); // over-stim
+                }
+                baseScale = 0.6;
+            } else if (dashStatus === 'TOURETTES') {
+                score = 35;
+                if (dashPharmaEfficacy <= 1) {
+                    score += dashPharmaEfficacy * 65;
+                    pharmaBonus = -(dashPharmaEfficacy * 0.6); // dampens
+                } else {
+                    score = 100 - ((dashPharmaEfficacy - 1) * 40);
+                    pharmaBonus = -0.6 - ((dashPharmaEfficacy - 1) * 0.4); // over-dampens
+                }
+                baseScale = 1.6; // hyper-connected base
             }
             
             const bar = document.getElementById('integrity-bar');
             const txt = document.getElementById('integrity-score');
-            score = Math.min(100, Math.round(score));
+            score = Math.max(0, Math.min(100, Math.round(score)));
             bar.style.width = score + '%';
             txt.innerText = score + '%';
             
-            // Map score to lobe scaling factor
-            const baseScale = dashStatus === 'HEALTHY' ? 1.0 : 0.4;
-            const pharmaBonus = dashPharmaEfficacy <= 1 ? dashPharmaEfficacy * 0.8 : 0.8 - ((dashPharmaEfficacy - 1) * 0.4);
-            
             dashLobeGroup.children.forEach(node => {
-                // Topological mapping: higher D participation = larger node in healthy/pharma state
                 const cliqueParticipation = node.userData.cliques || 1;
                 const targetScale = baseScale + pharmaBonus + (cliqueParticipation * 0.05);
                 node.userData.targetScale = targetScale;
@@ -1156,15 +1225,66 @@
                         node.position.y = node.userData.origin.y + (Math.random() - 0.5) * jitter;
                         node.position.z = node.userData.origin.z + (Math.random() - 0.5) * jitter;
                         
-                        // Shrink to rigid points
                         const rigidScale = targetBaseScale * (1 - (overDose * 0.5));
                         node.scale.setScalar(Math.max(0.1, rigidScale));
                         
-                        // Unnatural stark white/cyan color
                         const pharmaColor = new THREE.Color(0xfcd34d);
                         const toxicColor = new THREE.Color(0xe0f2fe);
                         node.material.color.lerpColors(pharmaColor, toxicColor, overDose);
                         node.material.emissiveIntensity = 0.2 + (overDose * 2.0);
+                    }
+                } else if (dashStatus === 'ADHD') {
+                    // Under-connected. Drug increases scale.
+                    if (dashPharmaEfficacy <= 1) {
+                        const adhdScale = targetBaseScale + wave * 0.3;
+                        node.scale.setScalar(Math.max(0.2, adhdScale));
+                        node.position.lerp(node.userData.origin, 0.1);
+                        
+                        const adhdColor = new THREE.Color(0x64748b); // dull slate
+                        const pharmaColor = new THREE.Color(0xfcd34d); // gold
+                        node.material.color.lerpColors(adhdColor, pharmaColor, dashPharmaEfficacy);
+                        node.material.emissiveIntensity = 0.1 + (dashPharmaEfficacy * 0.5);
+                    } else {
+                        // Over-stimulation (>50mg)
+                        const overDose = dashPharmaEfficacy - 1;
+                        const jitter = overDose * 15;
+                        node.position.x = node.userData.origin.x + (Math.random() - 0.5) * jitter;
+                        node.position.y = node.userData.origin.y + (Math.random() - 0.5) * jitter;
+                        
+                        const overScale = targetBaseScale + wave * 0.8;
+                        node.scale.setScalar(Math.max(0.2, overScale));
+                        
+                        const pharmaColor = new THREE.Color(0xfcd34d);
+                        const toxicColor = new THREE.Color(0xef4444); // red jitter
+                        node.material.color.lerpColors(pharmaColor, toxicColor, overDose);
+                        node.material.emissiveIntensity = 0.6 + (overDose * 1.5);
+                    }
+                } else if (dashStatus === 'TOURETTES') {
+                    // Hyper-connected. Drug dampens.
+                    if (dashPharmaEfficacy <= 1) {
+                        const tickJitter = (1 - dashPharmaEfficacy) * 8 * (Math.random() > 0.8 ? 1 : 0); // Sudden tics
+                        node.position.y = node.userData.origin.y + (Math.random() - 0.5) * tickJitter;
+                        node.position.x = node.userData.origin.x + (Math.random() - 0.5) * tickJitter;
+                        
+                        const touretteScale = targetBaseScale + wave * 0.8;
+                        node.scale.setScalar(Math.max(0.2, touretteScale));
+                        
+                        const tColor = new THREE.Color(0x10b981); // green hyper
+                        const pharmaColor = new THREE.Color(0xfcd34d);
+                        node.material.color.lerpColors(tColor, pharmaColor, dashPharmaEfficacy);
+                        node.material.emissiveIntensity = 0.8 - (dashPharmaEfficacy * 0.4);
+                    } else {
+                        // Over-dampening (Parkinsonism-like rigidity)
+                        const overDose = dashPharmaEfficacy - 1;
+                        node.position.lerp(node.userData.origin, 0.2); // Very rigid
+                        
+                        const rigidScale = targetBaseScale * (1 - (overDose * 0.6));
+                        node.scale.setScalar(Math.max(0.1, rigidScale));
+                        
+                        const pharmaColor = new THREE.Color(0xfcd34d);
+                        const toxicColor = new THREE.Color(0x475569); // dull grey
+                        node.material.color.lerpColors(pharmaColor, toxicColor, overDose);
+                        node.material.emissiveIntensity = 0.4 - (overDose * 0.3);
                     }
                 } else {
                     const healthyScale = targetBaseScale + wave * 0.6;

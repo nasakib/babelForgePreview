@@ -57,13 +57,24 @@ def generate_topology_data():
             "cliques": 0
         })
 
-    def create_state(is_resistant=False):
+    def create_state(state_type="HEALTHY"):
         state_nodes = copy.deepcopy(nodes)
         
         state_edges = []
         state_cliques = []
-        num_cliques = 12 if is_resistant else 45
-        max_dim = 4 if is_resistant else 11
+        
+        if state_type == "HEALTHY":
+            num_cliques = 45
+            max_dim = 11
+        elif state_type == "PTSD":
+            num_cliques = 12
+            max_dim = 4
+        elif state_type == "ADHD":
+            num_cliques = 20
+            max_dim = 6
+        elif state_type == "TOURETTES":
+            num_cliques = 60
+            max_dim = 9
         
         for _ in range(num_cliques):
             dim = random.randint(2, max_dim)
@@ -71,6 +82,17 @@ def generate_topology_data():
             
             # Find nodes that are somewhat close to each other to form a clique
             center_node = random.choice(state_nodes)
+            
+            # Disorder specific biases
+            if state_type == "TOURETTES" and random.random() < 0.7:
+                somato_nodes = [n for n in state_nodes if n["region"] == "SomatoMotor"]
+                if somato_nodes:
+                    center_node = random.choice(somato_nodes)
+            if state_type == "ADHD" and center_node["region"] == "Control" and random.random() < 0.8:
+                non_control = [n for n in state_nodes if n["region"] != "Control"]
+                if non_control:
+                    center_node = random.choice(non_control)
+
             distances = [(j, (n["x"]-center_node["x"])**2 + (n["y"]-center_node["y"])**2 + (n["z"]-center_node["z"])**2) for j, n in enumerate(state_nodes)]
             distances.sort(key=lambda item: item[1])
             
@@ -101,8 +123,10 @@ def generate_topology_data():
         }
 
     data = {
-        "RESPONSIVE": create_state(is_resistant=False),
-        "RESISTANT": create_state(is_resistant=True)
+        "RESPONSIVE": create_state("HEALTHY"),
+        "RESISTANT": create_state("PTSD"),
+        "ADHD": create_state("ADHD"),
+        "TOURETTES": create_state("TOURETTES")
     }
     
     with open('data/topology_projection.json', 'w') as f:
