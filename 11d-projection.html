@@ -161,6 +161,7 @@
         <p>Topology Integrity: <span id="integrity-val">100%</span></p>
         <p>Active Cliques: <span id="clique-val">0</span></p>
         <p id="mod-val" style="color: #fcd34d; margin-top: 5px; font-weight: bold;"></p>
+        <p id="dosage-explanation" style="font-size: 0.7rem; color: #a78bfa; margin-top: 10px; max-width: 250px; line-height: 1.4;">Waiting for intervention...</p>
     </div>
 
     <div id="floating-label" class="node-label"></div>
@@ -335,6 +336,30 @@
                 text += `💊 ${currentDrugName}: ${(pharmaEfficacy*100).toFixed(0)}% STABILIZED`;
             }
             document.getElementById('mod-val').innerText = text;
+            
+            const explanationBox = document.getElementById('dosage-explanation');
+            if (explanationBox) {
+                let explanation = '';
+                if (currentStatus === 'RESPONSIVE') {
+                    explanation = 'Baseline optimal synchronization. High-dimensional cliques form and dissolve rhythmically. No intervention required.';
+                } else if (currentStatus === 'RESISTANT') {
+                    if (pharmaEfficacy === 0) explanation = 'Severe hyperarousal detected. High-frequency spectral noise has shattered 11D cliques into low-dimensional fragments (red nodes).';
+                    else if (pharmaEfficacy < 1) explanation = 'Sub-therapeutic dosage. ZB-01 is physically widening Arnold Tongues, but topological repair is incomplete.';
+                    else if (pharmaEfficacy === 1) explanation = 'Optimal dosage (50mg). Arnold Tongues widened, stabilizing the network and allowing 11D cliques to reassemble organically.';
+                    else explanation = 'Toxicity (Hyper-synchrony). Excessive coupling has induced pathological rigidity, destroying functional wave dynamics.';
+                } else if (currentStatus === 'ADHD') {
+                    if (pharmaEfficacy === 0) explanation = 'Hypo-connectivity detected in frontal control networks. Signal dynamics are sluggish and blunted.';
+                    else if (pharmaEfficacy < 1) explanation = 'Sub-therapeutic dosage. Dopaminergic stimulation is gradually upregulating network activity.';
+                    else if (pharmaEfficacy === 1) explanation = 'Optimal dosage (30mg). Frontal networks are perfectly upregulated, matching healthy baseline wave dynamics.';
+                    else explanation = 'Over-stimulation. Excessive dopamine is causing chaotic, hyper-aroused jittering and signal breakdown.';
+                } else if (currentStatus === 'TOURETTES') {
+                    if (pharmaEfficacy === 0) explanation = 'Pathological hyper-connectivity in somatomotor loops causing sudden, rigid synchronization spikes (tics).';
+                    else if (pharmaEfficacy < 1) explanation = 'Sub-therapeutic. Targeted D2 antagonism is beginning to soften erratic synchronization spikes.';
+                    else if (pharmaEfficacy === 1) explanation = 'Optimal dosage (5mg). DR-02 has successfully dampened hyper-connectivity back to smooth baseline dynamics.';
+                    else explanation = 'Over-dampening. Excessive D2 blockade is leading to network rigidity (Parkinsonian side-effects).';
+                }
+                explanationBox.innerText = explanation;
+            }
         }
 
         function loadTopology(status) {

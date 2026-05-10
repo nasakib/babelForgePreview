@@ -600,6 +600,9 @@
                                     </div>
                                     <input type="range" id="pharma-slider" min="0" max="100" value="0" class="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600" oninput="updatePharmaEfficacy(this.value)">
                                     <p id="drug-desc-label" class="text-[10px] text-slate-400 mt-4 leading-relaxed">Adjust precision dosage to monitor regional stabilization and topological repair rate.</p>
+                                    <div class="mt-4 p-3 bg-indigo-50 border border-indigo-100 rounded-lg text-[11px] text-indigo-800 leading-relaxed font-medium" id="dosage-explanation">
+                                        Waiting for intervention...
+                                    </div>
                                     
                                     <div class="mt-4 pt-4 border-t border-slate-100 flex flex-col items-center">
                                         <div id="molecule-svg-container" class="h-16 w-full flex items-center justify-center opacity-60">
@@ -1392,6 +1395,52 @@
             } else {
                 bar.className = 'h-1.5 bg-rose-500 transition-all duration-500';
                 txt.className = 'text-rose-400 font-mono';
+            }
+
+            // Update Dynamic Explanation
+            const explanationBox = document.getElementById('dosage-explanation');
+            if (explanationBox) {
+                let explanation = '';
+                if (dashStatus === 'HEALTHY') {
+                    explanation = 'The network is operating at baseline optimal synchronization. High-dimensional cliques are forming and dissolving rhythmically. No intervention required.';
+                } else if (dashStatus === 'PTSD') {
+                    if (dashTreatmentClass === 'NOVEL') {
+                        if (dashPharmaEfficacy === 0) explanation = 'Severe hyperarousal detected. High-frequency spectral noise has shattered 11D cliques into low-dimensional fragments (red nodes).';
+                        else if (dashPharmaEfficacy < 1) explanation = 'Sub-therapeutic dosage. ZB-01 is beginning to physically widen Arnold Tongues, but topological repair is incomplete.';
+                        else if (dashPharmaEfficacy === 1) explanation = 'Optimal dosage (50mg). Arnold Tongues are sufficiently widened, stabilizing the network and allowing 11D cliques to reassemble organically.';
+                        else explanation = 'Toxicity (Hyper-synchrony). Excessive coupling has induced pathological rigidity, locking nodes and destroying functional wave dynamics.';
+                    } else {
+                        if (dashPharmaEfficacy === 0) explanation = 'Severe hyperarousal detected. 11D cliques are fractured.';
+                        else if (dashPharmaEfficacy < 1) explanation = 'Broad serotonin reuptake inhibition is dampening network amplitude globally, but failing to restore targeted high-D clique structures.';
+                        else if (dashPharmaEfficacy === 1) explanation = 'Maximal SSRI effect. The network is suppressed (dull grey), masking arousal symptoms but leaving underlying topological damage unrepaired.';
+                        else explanation = 'SSRI toxicity/Serotonin syndrome. Severe structural blunting and over-suppression.';
+                    }
+                } else if (dashStatus === 'ADHD') {
+                    if (dashTreatmentClass === 'NOVEL') {
+                        if (dashPharmaEfficacy === 0) explanation = 'Hypo-connectivity detected in prefrontal control networks. Signal dynamics are sluggish and blunted.';
+                        else if (dashPharmaEfficacy < 1) explanation = 'Sub-therapeutic dosage. Dopaminergic stimulation is gradually upregulating network activity.';
+                        else if (dashPharmaEfficacy === 1) explanation = 'Optimal dosage (30mg). Frontal networks are perfectly upregulated, matching healthy baseline wave dynamics without over-stimulation.';
+                        else explanation = 'Over-stimulation. Excessive dopamine is causing chaotic, hyper-aroused jittering and signal breakdown.';
+                    } else {
+                        if (dashPharmaEfficacy === 0) explanation = 'Hypo-connectivity detected in prefrontal control networks.';
+                        else if (dashPharmaEfficacy < 1) explanation = 'Amphetamine salts are aggressively upregulating network activity, accelerating rapidly towards toxicity.';
+                        else if (dashPharmaEfficacy === 1) explanation = 'Peak therapeutic effect, but with a highly dangerous, narrow window before severe toxicity onset.';
+                        else explanation = 'Amphetamine toxicity. Rapid onset of severe hyper-arousal, erratic jumping, and topological fragmentation.';
+                    }
+                } else if (dashStatus === 'TOURETTES') {
+                    if (dashTreatmentClass === 'NOVEL') {
+                        if (dashPharmaEfficacy === 0) explanation = 'Pathological hyper-connectivity in somatomotor loops causing sudden, rigid synchronization spikes (tics).';
+                        else if (dashPharmaEfficacy < 1) explanation = 'Sub-therapeutic. Targeted D2 antagonism is beginning to soften erratic synchronization spikes.';
+                        else if (dashPharmaEfficacy === 1) explanation = 'Optimal dosage (5mg). DR-02 has successfully dampened hyper-connectivity back to smooth baseline dynamics.';
+                        else explanation = 'Over-dampening. Excessive D2 blockade is leading to network rigidity and loss of functional variance.';
+                    } else {
+                        if (dashPharmaEfficacy === 0) explanation = 'Pathological hyper-connectivity causing sudden, rigid synchronization spikes (tics).';
+                        else if (dashPharmaEfficacy < 1) explanation = 'Aggressive D2 antagonism is rapidly crashing network amplitude and freezing nodes.';
+                        else if (dashPharmaEfficacy === 1) explanation = 'Tics suppressed, but at the cost of significant network rigidity and structural dampening.';
+                        else explanation = 'Haloperidol toxicity. Severe Parkinsonian rigidity (Tardive Dyskinesia). The network is completely frozen.';
+                    }
+                }
+                explanationBox.innerText = explanation;
             }
         };
 
