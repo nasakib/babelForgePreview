@@ -218,6 +218,50 @@
                 <h4 id="brain-state-label" class="text-xl font-bold text-white drop-shadow-md">Baseline State</h4>
                 <p id="brain-state-desc" class="text-xs text-slate-300 mt-1 max-w-sm leading-relaxed drop-shadow">No pharmacological intervention applied. Normal oscillatory dynamics.</p>
             </div>
+
+            <!-- Explanation Toggle -->
+            <div class="absolute top-6 right-6 z-20">
+                <button onclick="toggleExplanation()" class="bg-indigo-600/80 hover:bg-indigo-500 text-white text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-md transition-all border border-indigo-400/50 backdrop-blur-md shadow-lg flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Explain Science
+                </button>
+            </div>
+
+            <!-- Science Explanation Overlay -->
+            <div id="science-explanation" class="absolute inset-0 bg-slate-950/95 backdrop-blur-xl z-30 hidden p-10 overflow-y-auto border border-indigo-500/20 rounded-xl">
+                <div class="max-w-2xl mx-auto mt-6 relative">
+                    <button onclick="toggleExplanation()" class="absolute -top-4 -right-4 text-slate-400 hover:text-white transition-colors">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                    
+                    <h3 class="text-3xl font-bold text-white mb-6">Polypharmacy Interaction Mathematics</h3>
+                    <p class="text-indigo-200 text-lg mb-8 leading-relaxed font-light">The NeuroStack Engine does not use pre-rendered animations. It dynamically computes non-linear drug-drug interactions (DDIs) using vector mathematics and renders the result via a live WebGL topological simulation.</p>
+                    
+                    <div class="space-y-8">
+                        <div class="border-l-2 border-indigo-500 pl-6">
+                            <h4 class="text-xl font-bold text-white mb-2">1. Pharmacological Vectors</h4>
+                            <p class="text-slate-400 leading-relaxed text-sm">Every molecule in the database is mapped to a 4-dimensional vector: <strong class="text-white">[Arousal, Dampening, Chaos, Repair]</strong>. For example, a classical Stimulant heavily weights the 'Arousal' axis, while a Benzodiazepine weights the 'Dampening' axis. These baseline effects are linearly scaled based on the precise milligram dose selected relative to the compound's optimal therapeutic window.</p>
+                        </div>
+                        
+                        <div class="border-l-2 border-indigo-500 pl-6">
+                            <h4 class="text-xl font-bold text-white mb-2">2. Non-Linear Synergies (DDIs)</h4>
+                            <p class="text-slate-400 leading-relaxed text-sm">When mixing specific drug classes, the engine applies exponential modifiers:<br><br>
+                            - <strong class="text-rose-400">Serotonin Toxicity:</strong> Mixing SSRIs with Stimulants/Empathogens triggers synergistic arousal and chaos.<br>
+                            - <strong class="text-amber-400">Severe CNS Depression:</strong> Stacking Depressants (like alcohol and benzos) with Antipsychotics multiplies the dampening effect exponentially, destroying network variance.<br>
+                            - <strong class="text-indigo-400">Precision Interference:</strong> SSRIs mathematically blunt the efficacy (Repair vector) of 5-HT2A agonists (classic psychedelics or ZB-01), mimicking real-world receptor downregulation.</p>
+                        </div>
+                        
+                        <div class="border-l-2 border-indigo-500 pl-6">
+                            <h4 class="text-xl font-bold text-white mb-2">3. Topological Translation</h4>
+                            <p class="text-slate-400 leading-relaxed text-sm">The 3D ellipsoid brain translates these net vectors into visual physics in real-time:<br>
+                            - <strong class="text-white">Arousal</strong> increases the speed and amplitude of the cortical wave.<br>
+                            - <strong class="text-white">Dampening</strong> shrinks the lobes, slows the wave, and renders the network a dull grey.<br>
+                            - <strong class="text-white">Chaos</strong> introduces erratic X/Y/Z jittering and red emissive spiking, simulating uncoordinated noise.<br>
+                            - <strong class="text-white">Repair</strong> expands the nodes organically and harmonizes them into a glowing golden pulse, representing the stabilization of 11D cliques.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
             
             <div class="absolute bottom-6 right-6 p-4 bg-slate-900/90 border border-slate-700 rounded-xl backdrop-blur-xl min-w-[200px] shadow-2xl z-10 flex flex-col gap-3">
                 <div>
@@ -869,6 +913,11 @@
                 }
             });
             runAssistant(); // Refresh feedback
+        }
+
+        function toggleExplanation() {
+            const overlay = document.getElementById('science-explanation');
+            overlay.classList.toggle('hidden');
         }
 
         populateMolecules();
