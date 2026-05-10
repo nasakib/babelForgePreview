@@ -39,7 +39,8 @@ def generate_topology_data():
                 "hemi": reg['hemi'],
                 "x": reg['base_x'] + random.uniform(-15, 15),
                 "y": reg['base_y'] + random.uniform(-15, 15),
-                "z": reg['base_z'] + random.uniform(-15, 15)
+                "z": reg['base_z'] + random.uniform(-15, 15),
+                "cliques": 0 # Initialize
             })
 
         edges = []
@@ -51,6 +52,11 @@ def generate_topology_data():
             dim = random.randint(2, max_dim)
             c_nodes = random.sample(range(num_nodes), min(dim + 1, num_nodes))
             cliques.append({"nodes": c_nodes, "dimension": dim})
+            
+            # Increment participation count
+            for nid in c_nodes:
+                nodes[nid]["cliques"] += 1
+
             for i in range(len(c_nodes)):
                 for j in range(i + 1, len(c_nodes)):
                     edges.append({"source": c_nodes[i], "target": c_nodes[j]})

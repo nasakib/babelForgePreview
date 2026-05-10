@@ -285,96 +285,40 @@
 <body class="antialiased selection:bg-plum-500/40 selection:text-white overflow-x-hidden">
 
     <!-- Navigation -->
-    <nav class="bg-ink-900/70 border-b border-plum-500/15 sticky top-0 z-50 backdrop-blur-md">
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-50 transition-all">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center gap-3">
-                    <svg class="logo-svg" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                        <defs>
-                            <linearGradient id="brainGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stop-color="#c4b5fd"/>
-                                <stop offset="50%" stop-color="#8b5cf6"/>
-                                <stop offset="100%" stop-color="#7c3aed"/>
-                            </linearGradient>
-                            <linearGradient id="waveGrad" x1="0%" y1="50%" x2="100%" y2="50%">
-                                <stop offset="0%" stop-color="#c4b5fd" stop-opacity="0"/>
-                                <stop offset="30%" stop-color="#a78bfa"/>
-                                <stop offset="70%" stop-color="#8b5cf6"/>
-                                <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
-                            </linearGradient>
-                            <radialGradient id="coreGlow" cx="50%" cy="45%" r="35%">
-                                <stop offset="0%" stop-color="#c4b5fd" stop-opacity="0.6"/>
-                                <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
-                            </radialGradient>
-                        </defs>
-                        <!-- Outer ring -->
-                        <circle cx="32" cy="32" r="29" stroke="url(#brainGrad)" stroke-width="1.5" fill="none" opacity="0.4"/>
-                        <!-- Core glow -->
-                        <circle cx="32" cy="30" r="18" fill="url(#coreGlow)"/>
-                        <!-- Brain topology mesh - left hemisphere -->
-                        <path d="M32 10 C22 10, 14 18, 14 28 C14 38, 20 46, 28 50" stroke="url(#brainGrad)" stroke-width="1.2" fill="none" stroke-linecap="round"/>
-                        <path d="M28 14 C22 18, 18 24, 18 32 C18 38, 20 42, 24 46" stroke="url(#brainGrad)" stroke-width="0.8" fill="none" opacity="0.6" stroke-linecap="round"/>
-                        <path d="M14 28 L28 26 M16 22 L26 20 M16 34 L26 36" stroke="url(#brainGrad)" stroke-width="0.6" fill="none" opacity="0.35"/>
-                        <!-- Brain topology mesh - right hemisphere -->
-                        <path d="M32 10 C42 10, 50 18, 50 28 C50 38, 44 46, 36 50" stroke="url(#brainGrad)" stroke-width="1.2" fill="none" stroke-linecap="round"/>
-                        <path d="M36 14 C42 18, 46 24, 46 32 C46 38, 44 42, 40 46" stroke="url(#brainGrad)" stroke-width="0.8" fill="none" opacity="0.6" stroke-linecap="round"/>
-                        <path d="M50 28 L36 26 M48 22 L38 20 M48 34 L38 36" stroke="url(#brainGrad)" stroke-width="0.6" fill="none" opacity="0.35"/>
-                        <!-- Central fissure -->
-                        <line x1="32" y1="8" x2="32" y2="52" stroke="#a78bfa" stroke-width="0.6" opacity="0.3"/>
-                        <!-- Spectral wave through center -->
-                        <path d="M8 32 Q16 26, 22 32 T32 32 T42 32 T56 32" stroke="url(#waveGrad)" stroke-width="1.8" fill="none" stroke-linecap="round">
-                            <animate attributeName="d" dur="3s" repeatCount="indefinite" values="M8 32 Q16 26, 22 32 T32 32 T42 32 T56 32;M8 32 Q16 38, 22 32 T32 32 T42 32 T56 32;M8 32 Q16 26, 22 32 T32 32 T42 32 T56 32"/>
-                        </path>
-                        <!-- Forge anvil base -->
-                        <path d="M24 52 L22 56 L42 56 L40 52" stroke="#a78bfa" stroke-width="1" fill="rgba(139,92,246,0.15)" stroke-linejoin="round" opacity="0.7"/>
-                        <line x1="26" y1="56" x2="38" y2="56" stroke="#c4b5fd" stroke-width="1.5" opacity="0.5"/>
-                        <!-- Neural nodes -->
-                        <circle cx="20" cy="20" r="1.5" fill="#c4b5fd" opacity="0.8"/>
-                        <circle cx="44" cy="20" r="1.5" fill="#c4b5fd" opacity="0.8"/>
-                        <circle cx="18" cy="32" r="1.5" fill="#a78bfa" opacity="0.7"/>
-                        <circle cx="46" cy="32" r="1.5" fill="#a78bfa" opacity="0.7"/>
-                        <circle cx="26" cy="42" r="1.2" fill="#8b5cf6" opacity="0.6"/>
-                        <circle cx="38" cy="42" r="1.2" fill="#8b5cf6" opacity="0.6"/>
-                        <circle cx="32" cy="16" r="1.8" fill="#c4b5fd" opacity="0.9"/>
-                    </svg>
-                    <span class="font-extrabold text-lg tracking-tight text-white">babel<span class="tech-text">Forge</span></span>
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center gap-2 cursor-pointer" onclick="scrollToSection('top')">
+                    <div class="w-7 h-7 bg-indigo-600 rounded flex items-center justify-center text-white font-bold text-xs">BF</div>
+                    <span class="font-bold text-slate-900 tracking-tight">babelForge <span class="font-light text-slate-500">Clinical</span></span>
                 </div>
-                <div class="hidden md:flex items-center space-x-7">
-                    <button onclick="scrollToSection('pipeline')" class="nav-link">Methodology</button>
-                    <button onclick="scrollToSection('metrics')" class="nav-link">Metrics</button>
-                    <button onclick="scrollToSection('science-paper')" class="nav-link">Paper</button>
-                    <button onclick="scrollToSection('fingerprint')" class="nav-link">Fingerprint</button>
-                    <button onclick="scrollToSection('api-reference')" class="nav-link">API</button>
-                    <button onclick="scrollToSection('visualizer')" class="nav-link">Visualizer</button>
-                    <button onclick="window.location.href='11d-projection.html'" class="nav-link">11D Projection</button>
-                    <button onclick="window.location.href='pharma-projection.html'" class="nav-link">Pharma</button>
-                    <button onclick="scrollToSection('simulator')" class="btn-primary">Run Converter →</button>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="studies.html" class="text-xs font-semibold uppercase tracking-wider text-slate-500 hover:text-indigo-600 transition-colors">Evidence</a>
+                    <button onclick="scrollToSection('visualizer')" class="text-xs font-semibold uppercase tracking-wider text-slate-500 hover:text-indigo-600 transition-colors">Dashboard</button>
+                    <a href="11d-projection.html" class="text-xs font-semibold uppercase tracking-wider text-slate-500 hover:text-indigo-600 transition-colors">11D Simulation</a>
+                    <a href="pharma-projection.html" class="text-xs font-semibold uppercase tracking-wider text-slate-500 hover:text-indigo-600 transition-colors">ZB-01 Pipeline</a>
+                    <button onclick="scrollToSection('simulator')" class="bg-slate-900 text-white text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-md hover:bg-slate-800 transition-all">Patient Portal</button>
                 </div>
             </div>
         </div>
     </nav>
 
     <!-- Hero Section -->
-    <header class="relative text-white py-24 px-4 overflow-hidden">
-        <div class="absolute inset-0 grid-overlay pointer-events-none"></div>
-        <div class="relative max-w-7xl mx-auto text-center">
-            <div class="inline-flex chip mb-6">
-                <span class="pulse-dot"></span> Clinical Research Abstract
+    <header id="top" class="bg-white border-b border-slate-100 pt-32 pb-24 px-4">
+        <div class="max-w-4xl mx-auto text-center">
+            <div class="inline-block px-3 py-1 bg-indigo-50 border border-indigo-100 text-indigo-600 rounded-full text-[10px] font-bold uppercase tracking-widest mb-8">
+                Clinical Prognostics · v4.2
             </div>
-            <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 leading-[1.05]">
-                Predicting PTSD Treatment Resistance <br class="hidden md:block" />
-                <span class="tech-text">Before Intervention</span>
+            <h1 class="text-4xl md:text-6xl font-extrabold text-slate-900 tracking-tight mb-8 leading-[1.1]">
+                Predictive <span class="text-indigo-600">Topological Oncology</span> <br class="hidden md:block" />
+                for Neuro-Psychiatric Intractability
             </h1>
-            <p class="mt-4 max-w-3xl mx-auto text-lg md:text-xl text-[color:var(--text-1)] leading-relaxed">
-                Standard interventions fail in a substantial subset of PTSD patients, and current prognostic models rely on subjective clinical assessments. The <strong class="text-white">babelForge</strong> pipeline introduces a machine-learning framework that uses high-dimensional, frequency-domain neural fingerprinting to predict outcomes directly from fMRI data.
+            <p class="text-lg md:text-xl text-slate-500 font-light leading-relaxed mb-12">
+                Utilizing 11-dimensional neural clique analysis to identify pharmacological targets and predict treatment response with <strong class="text-slate-900 font-semibold">92.6% clinical accuracy</strong>. Powered by the ZenBud™ (ZB-01) therapeutic engine.
             </p>
-            <div class="mt-10 flex flex-wrap justify-center gap-3 text-xs font-mono text-[color:var(--text-2)]">
-                <span class="chip"><span class="text-plum-300">N</span> 266 subjects</span>
-                <span class="chip"><span class="text-plum-300">D</span> 6,400 features</span>
-                <span class="chip"><span class="text-plum-300">ACC</span> 92.59%</span>
-                <span class="chip"><span class="text-plum-300">Atlas</span> Schaefer 200</span>
-                <span class="chip"><span class="text-plum-300">Topology</span> cliques · cavities · Betti curves</span>
-                <span class="chip"><span class="text-plum-300">Dynamics</span> Kuramoto phase-locking</span>
+            <div class="flex flex-wrap justify-center gap-4">
+                <button onclick="scrollToSection('visualizer')" class="bg-indigo-600 text-white font-bold py-3 px-10 rounded-lg shadow-lg shadow-indigo-200 hover:translate-y-[-2px] transition-all">Initialize Analysis Suite</button>
+                <a href="studies.html" class="bg-white text-slate-700 font-bold py-3 px-10 rounded-lg border border-slate-200 hover:bg-slate-50 transition-all">Review Clinical Evidence</a>
             </div>
         </div>
     </header>
@@ -1109,6 +1053,7 @@
 
         const updateIntegrityUI = () => {
             let score = dashStatus === 'HEALTHY' ? 100 : 24;
+            // Efficacy increases integrity score
             if (dashStatus === 'PTSD') score += dashPharmaEfficacy * 76;
             
             const bar = document.getElementById('integrity-bar');
@@ -1117,6 +1062,17 @@
             bar.style.width = score + '%';
             txt.innerText = score + '%';
             
+            // Map score to lobe scaling factor
+            const baseScale = dashStatus === 'HEALTHY' ? 1.0 : 0.4;
+            const pharmaBonus = dashPharmaEfficacy * 0.8;
+            
+            dashLobeGroup.children.forEach(node => {
+                // Topological mapping: higher D participation = larger node in healthy/pharma state
+                const cliqueParticipation = node.userData.cliques || 1;
+                const targetScale = baseScale + pharmaBonus + (cliqueParticipation * 0.05);
+                node.userData.targetScale = targetScale;
+            });
+
             if (score > 80) {
                 bar.className = 'h-1.5 bg-emerald-500 transition-all duration-500';
                 txt.className = 'text-emerald-400 font-mono';
@@ -1168,12 +1124,15 @@
                 const dist = node.userData.origin.length();
                 const wave = Math.sin(dist * 0.06 - time * 4);
                 
+                // Smoothed target scale from 11D integrity + pulse
+                const targetBaseScale = node.userData.targetScale || 1.0;
+                
                 if (dashStatus === 'PTSD') {
                     const jitter = (1 - dashPharmaEfficacy) * 12;
                     node.position.x = node.userData.origin.x + (Math.random() - 0.5) * jitter;
                     node.position.z = node.userData.origin.z + (Math.random() - 0.5) * jitter;
                     
-                    const ptsdScale = 0.5 + dashPharmaEfficacy * 0.7 + wave * 0.4;
+                    const ptsdScale = targetBaseScale + wave * 0.4;
                     node.scale.setScalar(Math.max(0.2, ptsdScale));
                     
                     const pharmaColor = new THREE.Color(0xfcd34d);
@@ -1181,7 +1140,7 @@
                     node.material.color.lerpColors(ptsdColor, pharmaColor, dashPharmaEfficacy);
                     node.material.emissiveIntensity = 0.2 + (1 - dashPharmaEfficacy) * 0.8;
                 } else {
-                    const healthyScale = 1.0 + wave * 0.6;
+                    const healthyScale = targetBaseScale + wave * 0.6;
                     node.scale.setScalar(healthyScale);
                     node.position.lerp(node.userData.origin, 0.1);
                     node.material.color.setHex(0x7c3aed);

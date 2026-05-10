@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Studies | babelForge Clinical Research</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --accent: #6366f1;
+            --border: #e2e8f0;
+            --panel-bg: #ffffff;
+        }
+
+        body { 
+            margin: 0; 
+            background-color: var(--bg); 
+            font-family: 'Inter', sans-serif; 
+            color: var(--text-main); 
+            line-height: 1.6;
+        }
+
+        nav {
+            background: var(--panel-bg);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo { font-weight: 700; font-size: 1.2rem; color: var(--accent); letter-spacing: -0.02em; }
+        .nav-links { display: flex; gap: 2rem; }
+        .nav-links a { text-decoration: none; color: var(--text-muted); font-size: 0.9rem; font-weight: 500; transition: color 0.2s; }
+        .nav-links a:hover { color: var(--accent); }
+
+        .container { max-width: 900px; margin: 4rem auto; padding: 0 2rem; }
+        
+        header { border-bottom: 2px solid var(--accent); padding-bottom: 2rem; margin-bottom: 4rem; }
+        h1 { font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem; letter-spacing: -0.03em; }
+        .subtitle { color: var(--text-muted); font-size: 1.1rem; }
+
+        .study-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2.5rem;
+            margin-bottom: 3rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .study-tag {
+            display: inline-block;
+            background: #eef2ff;
+            color: var(--accent);
+            padding: 0.25rem 0.75rem;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
+
+        .study-title { font-size: 1.5rem; font-weight: 600; margin-bottom: 1rem; color: var(--text-main); }
+        .study-meta { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1.5rem; border-left: 3px solid var(--border); padding-left: 1rem; }
+        .study-abstract { font-size: 0.95rem; color: var(--text-muted); margin-bottom: 2rem; }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-cols: repeat(3, 1fr);
+            gap: 2rem;
+            border-top: 1px solid var(--border);
+            padding-top: 2rem;
+        }
+
+        .metric { text-align: center; }
+        .metric-val { display: block; font-size: 1.5rem; font-weight: 700; color: var(--accent); }
+        .metric-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+        footer { text-align: center; padding: 4rem; color: var(--text-muted); font-size: 0.8rem; border-top: 1px solid var(--border); }
+        
+        .btn-view {
+            display: inline-block;
+            margin-top: 2rem;
+            background: var(--accent);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: opacity 0.2s;
+        }
+        .btn-view:hover { opacity: 0.9; }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="logo">babelForge Clinical</div>
+        <div class="nav-links">
+            <a href="index.html">Dashboard</a>
+            <a href="studies.html" style="color: var(--accent);">Studies</a>
+            <a href="11d-projection.html">11D Simulation</a>
+            <a href="pharma-projection.html">Pharma Pipeline</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header>
+            <div class="study-tag">Research Compendium</div>
+            <h1>Clinical Evidence & Methodology</h1>
+            <p class="subtitle">Foundational studies supporting the 11D topological prediction of PTSD treatment resistance.</p>
+        </header>
+
+        <div class="study-card">
+            <div class="study-tag">Primary Study · 2024</div>
+            <h2 class="study-title">Spatial-Spectral Neural Fingerprinting as a Prognostic Marker for Clinical Intractability</h2>
+            <div class="study-meta">
+                Lead Researcher: Najmos Sakib<br>
+                Methodology: Random Forest Ensemble + Schaefer 200 Parcellation<br>
+                Dataset: N=266 subjects, OpenNeuro ds004393
+            </div>
+            <p class="study-abstract">
+                This study demonstrates that treatment resistance in PTSD can be predicted with high accuracy before clinical intervention. By mapping 6,400 spatial-spectral markers, the framework identifies a "topological signature" of intractability that remains hidden to standard BOLD connectivity analysis.
+            </p>
+            <div class="metrics-grid">
+                <div class="metric">
+                    <span class="metric-val">92.59%</span>
+                    <span class="metric-label">Accuracy (OOS)</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-val">0.93</span>
+                    <span class="metric-label">F1-Score</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-val">6.4k</span>
+                    <span class="metric-label">Feature D</span>
+                </div>
+            </div>
+            <a href="brainScienceToCode" class="btn-view">Read Full Research →</a>
+        </div>
+
+        <div class="study-card">
+            <div class="study-tag">Topology Deep-Dive</div>
+            <h2 class="study-title">The Geometry of Synchrony: 11-Dimensional Cliques in Treatment-Resistant Neural Networks</h2>
+            <div class="study-meta">
+                Topic: Algebraic Topology & Simplicial Complexes<br>
+                Key Insight: High-D clique collapse correlates with symptom severity
+            </div>
+            <p class="study-abstract">
+                Exploration of how neurons form high-dimensional structures called cliques. The study finds that in responsive brains, signal stimulus builds complex 11D "sandcastles" which are washed away rhythmically. In resistant brains, these structures are fragmented (max 3D-4D), leading to chaotic signal cascading.
+            </p>
+            <div class="metrics-grid">
+                <div class="metric">
+                    <span class="metric-val">11D</span>
+                    <span class="metric-label">Max Clique Dim</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-val">β₁ & β₂</span>
+                    <span class="metric-label">Betti Features</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-val">96%</span>
+                    <span class="metric-label">Clique Robustness</span>
+                </div>
+            </div>
+            <a href="11d-projection.html" class="btn-view">Interactive Topology Lab →</a>
+        </div>
+
+        <div class="study-card">
+            <div class="study-tag">Pharmacology Pipeline</div>
+            <h2 class="study-title">ZenBud™ (ZB-01): Phase-Locking Optimization in Arnold Tongue Dynamics</h2>
+            <div class="study-meta">
+                Compound: ZB-01 Selective Agonist<br>
+                Target: Kuramoto Order Parameter (r) Stabilization
+            </div>
+            <p class="study-abstract">
+                Intervention study focusing on pharmacological repair of neural topology. ZB-01 acts by shifting the synchronization threshold, allowing fragmented cliques to re-assemble even under traumatic stimulus conditions.
+            </p>
+            <div class="metrics-grid">
+                <div class="metric">
+                    <span class="metric-val">0.88r</span>
+                    <span class="metric-label">Target Sync</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-val">76%</span>
+                    <span class="metric-label">Repair Rate</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-val">30ms</span>
+                    <span class="metric-label">Intervention Lag</span>
+                </div>
+            </div>
+            <a href="pharma-projection.html" class="btn-view">View Intervention Dashboard →</a>
+        </div>
+    </div>
+
+    <footer>
+        &copy; 2026 babelForge Clinical. All rights reserved. Professional portfolio of Najmos Sakib.
+    </footer>
+
+</body>
+</html>
