@@ -34,7 +34,7 @@
 <body class="antialiased selection:bg-indigo-500/40 selection:text-slate-900 min-h-screen flex flex-col">
 
     <!-- Navigation -->
-    <nav class="bg-white border-b border-slate-200 flex-none z-50">
+    <nav class="bg-white border-b border-slate-200 flex-none z-50 relative">
         <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
                 <div class="flex items-center gap-2 cursor-pointer" onclick="window.location.href='index.html'">
@@ -51,7 +51,20 @@
                     <a href="11d-projection.html" class="text-xs font-semibold uppercase tracking-wider text-slate-500 hover:text-indigo-600 transition-colors">11D Simulation</a>
                     <span class="text-xs font-bold uppercase tracking-wider text-indigo-600">Polypharmacy Stack</span>
                 </div>
+                <!-- Mobile Menu Button -->
+                <div class="md:hidden flex items-center">
+                    <button class="text-slate-500 hover:text-indigo-600 focus:outline-none" onclick="document.getElementById('mobile-menu-stack').classList.toggle('hidden')">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                    </button>
+                </div>
             </div>
+        </div>
+        <!-- Mobile Nav -->
+        <div id="mobile-menu-stack" class="hidden md:hidden bg-white border-b border-slate-200 px-4 pt-2 pb-4 space-y-2 shadow-lg absolute w-full top-16 left-0">
+            <a href="index.html" class="block px-3 py-2 rounded-md text-base font-semibold text-slate-700 hover:text-indigo-600 hover:bg-slate-50">Dashboard</a>
+            <a href="studies.html" class="block px-3 py-2 rounded-md text-base font-semibold text-slate-700 hover:text-indigo-600 hover:bg-slate-50">Evidence</a>
+            <a href="11d-projection.html" class="block px-3 py-2 rounded-md text-base font-semibold text-slate-700 hover:text-indigo-600 hover:bg-slate-50">11D Simulation</a>
+            <span class="block px-3 py-2 rounded-md text-base font-bold text-indigo-600 bg-indigo-50">Polypharmacy Stack</span>
         </div>
     </nav>
 
