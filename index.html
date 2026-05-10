@@ -687,6 +687,17 @@
                             <h4 id="active-scenario-label" class="text-2xl font-bold text-white">Healthy Baseline</h4>
                         </div>
                         
+                        <!-- Anatomical Legend -->
+                        <div class="absolute top-8 right-48 z-10 bg-slate-900/80 border border-slate-700 rounded-lg p-3 backdrop-blur-md pointer-events-none">
+                            <div class="text-[9px] uppercase font-bold text-slate-400 mb-2 tracking-widest border-b border-slate-700 pb-1">Anatomical Map (Z-Axis)</div>
+                            <ul class="text-[10px] text-slate-300 space-y-1 font-mono">
+                                <li><span class="text-indigo-400">Frontal (z > 20):</span> Control / Executive</li>
+                                <li><span class="text-emerald-400">Superior (y > 15):</span> Somatomotor</li>
+                                <li><span class="text-amber-400">Inferior (y < 0):</span> Limbic / Ventral Attn</li>
+                                <li><span class="text-rose-400">Posterior (z < -20):</span> Visual Cortex</li>
+                            </ul>
+                        </div>
+
                         <!-- Explanation Toggle -->
                         <div class="absolute top-8 right-8 z-20">
                             <button onclick="toggleExplanation()" class="bg-indigo-600/80 hover:bg-indigo-500 text-white text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-md transition-all border border-indigo-400/50 backdrop-blur-md shadow-lg flex items-center gap-2">
