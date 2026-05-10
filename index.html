@@ -51,245 +51,172 @@
 
     <style>
         :root {
-            --bg-0: #050108;
-            --bg-1: #07030d;
-            --bg-2: #0f0820;
-            --bg-3: #18102e;
-            --line: rgba(167, 139, 250, 0.18);
-            --line-strong: rgba(167, 139, 250, 0.32);
-            --plum-300: #c4b5fd;
-            --plum-400: #a78bfa;
-            --plum-500: #8b5cf6;
-            --plum-600: #7c3aed;
-            --text-0: #ede9fe;
-            --text-1: #c7bce0;
-            --text-2: #8a82a8;
-            --success: #86efac;
-            --warn: #fcd34d;
-            --error: #fda4af;
+            --bg-0: #f8fafc;
+            --bg-1: #ffffff;
+            --bg-2: #f1f5f9;
+            --bg-3: #e2e8f0;
+            --line: rgba(99, 102, 241, 0.1);
+            --line-strong: rgba(99, 102, 241, 0.2);
+            --plum-300: #818cf8;
+            --plum-400: #6366f1;
+            --plum-500: #4f46e5;
+            --plum-600: #4338ca;
+            --text-0: #0f172a;
+            --text-1: #475569;
+            --text-2: #64748b;
+            --success: #10b981;
+            --warn: #f59e0b;
+            --error: #ef4444;
         }
 
         html, body { background-color: var(--bg-0); }
         body {
             font-family: 'Inter', sans-serif;
             color: var(--text-0);
-            background:
-                radial-gradient(1200px 700px at 85% -10%, rgba(124, 58, 237, 0.22), transparent 60%),
-                radial-gradient(900px 500px at -10% 30%, rgba(139, 92, 246, 0.15), transparent 60%),
-                radial-gradient(1000px 600px at 50% 110%, rgba(76, 29, 149, 0.18), transparent 60%),
-                linear-gradient(180deg, #050108 0%, #0a0418 100%);
-            background-attachment: fixed;
+            background: var(--bg-0);
+            line-height: 1.6;
         }
 
-        /* Subtle scientific grid overlay on hero */
+        /* Subtle scientific grid overlay */
         .grid-overlay {
             background-image:
-                linear-gradient(rgba(167, 139, 250, 0.06) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(167, 139, 250, 0.06) 1px, transparent 1px);
+                linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
             background-size: 40px 40px;
-            mask-image: radial-gradient(ellipse at center, black 35%, transparent 85%);
-            -webkit-mask-image: radial-gradient(ellipse at center, black 35%, transparent 85%);
         }
 
         .font-mono { font-family: 'JetBrains Mono', monospace; }
 
         .chart-container { position: relative; width: 100%; margin-left: auto; margin-right: auto; }
-        .h-md { height: 300px; max-height: 400px; }
-        .h-lg { height: 400px; max-height: 500px; }
-        .h-xl { height: 500px; max-height: 600px; }
+        .h-md { height: 300px; }
+        .h-lg { height: 400px; }
+        .h-xl { height: 500px; }
 
         /* Custom scrollbar */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: var(--bg-1); }
-        ::-webkit-scrollbar-thumb { background: rgba(139, 92, 246, 0.35); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(167, 139, 250, 0.55); }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-2); }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-        /* Gradient violet text */
+        /* Gradient indigo text */
         .tech-text {
-            background: linear-gradient(90deg, #c4b5fd 0%, #8b5cf6 45%, #a78bfa 100%);
+            background: linear-gradient(90deg, #6366f1 0%, #4f46e5 100%);
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
-        /* Logo mark */
-        .logo-svg {
-            width: 34px; height: 34px;
-            filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.5));
-            animation: logoGlow 3s ease-in-out infinite;
-        }
-        @keyframes logoGlow {
-            0%, 100% { filter: drop-shadow(0 0 6px rgba(139, 92, 246, 0.4)); }
-            50% { filter: drop-shadow(0 0 14px rgba(167, 139, 250, 0.7)); }
-        }
-
         /* Glass / panel */
         .panel {
-            background: linear-gradient(180deg, rgba(24, 16, 46, 0.78), rgba(15, 8, 32, 0.85));
-            border: 1px solid var(--line);
-            border-radius: 18px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255,255,255,0.03);
-            backdrop-filter: blur(8px);
+            background: #ffffff;
+            border: 1px solid var(--border, #e2e8f0);
+            border-radius: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 10px 15px -3px rgba(0, 0, 0, 0.03);
         }
         .panel-soft {
-            background: rgba(24, 16, 46, 0.55);
-            border: 1px solid var(--line);
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
             border-radius: 14px;
         }
 
         /* Pipeline cards */
         .step-card {
-            position: relative;
-            background: linear-gradient(180deg, rgba(31, 22, 64, 0.55), rgba(15, 8, 32, 0.7));
-            border: 1px solid var(--line);
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
             border-radius: 16px;
-            padding: 24px;
-            transition: transform 0.18s, border-color 0.18s, box-shadow 0.18s;
-            overflow: hidden;
-        }
-        .step-card::before {
-            content: ""; position: absolute; inset: 0;
-            background: radial-gradient(120% 80% at 0% 0%, rgba(139, 92, 246, 0.15), transparent 50%);
-            pointer-events: none;
+            padding: 30px;
+            transition: all 0.2s ease;
         }
         .step-card:hover {
-            transform: translateY(-3px);
-            border-color: rgba(167, 139, 250, 0.5);
-            box-shadow: 0 12px 30px rgba(124, 58, 237, 0.18);
+            transform: translateY(-4px);
+            border-color: #6366f1;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
         }
         .step-num {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase;
-            color: var(--plum-300);
-        }
-        .step-final { border-color: rgba(167, 139, 250, 0.55); }
-        .step-final::after {
-            content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px;
-            background: linear-gradient(90deg, var(--plum-600), var(--plum-300));
-        }
-
-        /* Pulse dot */
-        .pulse-dot {
-            display: inline-block; width: 8px; height: 8px; border-radius: 50%;
-            background: var(--plum-400); box-shadow: 0 0 12px var(--plum-400);
-            animation: pulse 1.6s ease-in-out infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 0.45; transform: scale(1); }
-            50% { opacity: 1; transform: scale(1.25); }
+            font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+            color: #6366f1;
         }
 
         /* Code chip */
         .chip {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
-            color: var(--plum-300);
-            border: 1px solid var(--line-strong);
-            padding: 6px 12px; border-radius: 999px;
-            background: rgba(139, 92, 246, 0.08);
-            display: inline-flex; align-items: center; gap: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+            color: #4338ca;
+            border: 1px solid #e0e7ff;
+            padding: 4px 10px; border-radius: 999px;
+            background: #f5f3ff;
+            display: inline-flex; align-items: center; gap: 6px;
         }
 
         /* Nav buttons */
         .nav-link {
-            color: var(--text-1);
-            font-weight: 500;
-            font-size: 13px;
-            transition: color 0.18s;
+            color: #64748b;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: color 0.2s;
         }
-        .nav-link:hover { color: var(--text-0); }
+        .nav-link:hover { color: #4f46e5; }
 
         .btn-primary {
-            background: linear-gradient(135deg, var(--plum-600), var(--plum-500));
+            background: #4f46e5;
             color: white;
             font-weight: 700;
-            padding: 10px 18px;
+            padding: 12px 24px;
             border-radius: 10px;
-            font-size: 13px;
-            box-shadow: 0 8px 20px rgba(124, 58, 237, 0.35), inset 0 1px 0 rgba(255,255,255,0.15);
-            transition: transform 0.15s, filter 0.18s;
+            transition: all 0.2s;
         }
-        .btn-primary:hover { transform: translateY(-1px); filter: brightness(1.08); }
+        .btn-primary:hover { background: #4338ca; transform: translateY(-1px); }
 
-        /* API ref code blocks */
         .codeblock {
-            background: linear-gradient(180deg, #050108, #08020f);
-            color: var(--text-1);
-            border: 1px solid var(--line);
-            border-radius: 10px;
-            padding: 16px;
+            background: #0f172a;
+            color: #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 12.5px;
-            line-height: 1.55;
-            overflow-x: auto;
-        }
-        .endpoint-card {
-            border: 1px solid var(--line);
-            border-radius: 14px;
-            padding: 24px;
-            background: rgba(24, 16, 46, 0.45);
+            font-size: 13px;
         }
 
         .paper-card {
-            position: relative;
-            overflow: hidden;
-            border: 1px solid var(--line);
-            border-radius: 16px;
-            padding: 22px;
-            background: linear-gradient(180deg, rgba(31, 22, 64, 0.48), rgba(10, 4, 24, 0.68));
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            padding: 24px;
+            background: #ffffff;
         }
-        .paper-card::before {
-            content: ""; position: absolute; inset: 0;
-            background: radial-gradient(80% 60% at 10% 0%, rgba(139, 92, 246, 0.16), transparent 55%);
-            pointer-events: none;
-        }
-        .paper-card > * { position: relative; z-index: 1; }
-        .paper-kicker {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
-            color: var(--plum-300);
-            margin-bottom: 10px;
-        }
+        
         .equation-card {
-            border: 1px solid var(--line-strong);
-            border-radius: 14px;
-            padding: 18px;
-            background: rgba(5, 1, 8, 0.58);
-            font-family: 'JetBrains Mono', monospace;
-            color: var(--text-1);
-            overflow-x: auto;
-        }
-        .science-note {
-            border-left: 3px solid var(--plum-400);
-            background: rgba(139, 92, 246, 0.08);
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
             border-radius: 12px;
-            padding: 16px 18px;
+            padding: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            color: #1e293b;
         }
 
-        /* Connector arrow for pipeline (replaces emoji) */
+        .science-note {
+            border-left: 4px solid #6366f1;
+            background: #f5f3ff;
+            padding: 20px;
+            border-radius: 0 12px 12px 0;
+        }
+
         .connector {
             position: absolute;
-            left: -14px; top: 50%; transform: translateY(-50%);
-            width: 22px; height: 1px;
-            background: linear-gradient(90deg, transparent, var(--plum-400));
-        }
-        .connector::after {
-            content: ""; position: absolute; right: -1px; top: -3px;
-            width: 0; height: 0;
-            border-left: 6px solid var(--plum-400);
-            border-top: 3px solid transparent;
-            border-bottom: 3px solid transparent;
+            left: -14px; top: 50%; width: 22px; height: 1px;
+            background: #cbd5e1;
         }
     </style>
 </head>
-<body class="antialiased selection:bg-plum-500/40 selection:text-white overflow-x-hidden">
+<body class="antialiased selection:bg-plum-500/40 selection:text-slate-900 overflow-x-hidden">
 
     <!-- Navigation -->
     <nav class="bg-white border-b border-slate-200 sticky top-0 z-50 transition-all">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
                 <div class="flex items-center gap-2 cursor-pointer" onclick="scrollToSection('top')">
-                    <div class="w-7 h-7 bg-indigo-600 rounded flex items-center justify-center text-white font-bold text-xs">BF</div>
+                    <div class="w-7 h-7 bg-indigo-600 rounded flex items-center justify-center text-slate-900 font-bold text-xs">BF</div>
                     <span class="font-bold text-slate-900 tracking-tight">babelForge <span class="font-light text-slate-500">Clinical</span></span>
                 </div>
                 <div class="hidden md:flex items-center space-x-8">
@@ -317,7 +244,7 @@
                 Utilizing 11-dimensional neural clique analysis to identify pharmacological targets and predict treatment response with <strong class="text-slate-900 font-semibold">92.6% clinical accuracy</strong>. Powered by the ZenBud™ (ZB-01) therapeutic engine.
             </p>
             <div class="flex flex-wrap justify-center gap-4">
-                <button onclick="scrollToSection('visualizer')" class="bg-indigo-600 text-white font-bold py-3 px-10 rounded-lg shadow-lg shadow-indigo-200 hover:translate-y-[-2px] transition-all">Initialize Analysis Suite</button>
+                <button onclick="scrollToSection('visualizer')" class="bg-indigo-600 text-slate-900 font-bold py-3 px-10 rounded-lg shadow-lg shadow-indigo-200 hover:translate-y-[-2px] transition-all">Initialize Analysis Suite</button>
                 <a href="studies.html" class="bg-white text-slate-700 font-bold py-3 px-10 rounded-lg border border-slate-200 hover:bg-slate-50 transition-all">Review Clinical Evidence</a>
             </div>
         </div>
@@ -329,7 +256,7 @@
         <!-- 1. Methodology / Pipeline -->
         <section id="pipeline" class="scroll-mt-24">
             <div class="mb-10 text-center md:text-left">
-                <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">The Computational Pipeline</h2>
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4">The Computational Pipeline</h2>
                 <p class="text-lg text-[color:var(--text-1)] max-w-3xl">
                     This section breaks down the architectural flow of the babelForge framework. It illustrates how raw functional neuroimaging data is transformed mathematically into a format that machine-learning algorithms can analyze to predict psychiatric outcomes.
                 </p>
@@ -339,36 +266,36 @@
                 <!-- Step 1 -->
                 <div class="step-card">
                     <div class="step-num mb-3">Step 01 / acquire</div>
-                    <h3 class="font-bold text-lg text-white mb-2">fMRI Acquisition</h3>
+                    <h3 class="font-bold text-lg text-slate-900 mb-2">fMRI Acquisition</h3>
                     <p class="text-sm text-[color:var(--text-1)]">
-                        Functional MRI resting-state data is collected across a balanced cohort of <span class="font-bold text-white">N = 266</span> subjects.
+                        Functional MRI resting-state data is collected across a balanced cohort of <span class="font-bold text-slate-900">N = 266</span> subjects.
                     </p>
                 </div>
                 <!-- Step 2 -->
                 <div class="step-card relative">
                     <div class="connector hidden md:block"></div>
                     <div class="step-num mb-3">Step 02 / parcellate</div>
-                    <h3 class="font-bold text-lg text-white mb-2">Parcellation</h3>
+                    <h3 class="font-bold text-lg text-slate-900 mb-2">Parcellation</h3>
                     <p class="text-sm text-[color:var(--text-1)]">
-                        The brain is partitioned using the <span class="font-bold text-white">Schaefer 200-node atlas</span>, yielding a standardized regional map.
+                        The brain is partitioned using the <span class="font-bold text-slate-900">Schaefer 200-node atlas</span>, yielding a standardized regional map.
                     </p>
                 </div>
                 <!-- Step 3 -->
                 <div class="step-card relative">
                     <div class="connector hidden md:block"></div>
                     <div class="step-num mb-3">Step 03 / transform</div>
-                    <h3 class="font-bold text-lg text-white mb-2">Spectral Transform</h3>
+                    <h3 class="font-bold text-lg text-slate-900 mb-2">Spectral Transform</h3>
                     <p class="text-sm text-[color:var(--text-1)]">
-                        Time-series data is projected to the frequency domain (<span class="font-bold text-white">32 bins</span>), producing <span class="font-bold tech-text">6,400</span> spatial-spectral markers.
+                        Time-series data is projected to the frequency domain (<span class="font-bold text-slate-900">32 bins</span>), producing <span class="font-bold tech-text">6,400</span> spatial-spectral markers.
                     </p>
                 </div>
                 <!-- Step 4 -->
                 <div class="step-card step-final relative">
                     <div class="connector hidden md:block"></div>
                     <div class="step-num mb-3">Step 04 / classify</div>
-                    <h3 class="font-bold text-lg text-white mb-2">Ensemble ML</h3>
+                    <h3 class="font-bold text-lg text-slate-900 mb-2">Ensemble ML</h3>
                     <p class="text-sm text-[color:var(--text-1)]">
-                        A <span class="font-bold text-white">Random Forest classifier</span> discriminates patterns between responsive and resistant cohorts.
+                        A <span class="font-bold text-slate-900">Random Forest classifier</span> discriminates patterns between responsive and resistant cohorts.
                     </p>
                 </div>
             </div>
@@ -380,14 +307,14 @@
             <div class="relative z-10">
                 <div class="mb-10 max-w-5xl">
                     <div class="chip mb-4">brainScienceToCode · Najmos Sakib</div>
-                    <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">High-Dimensional Neural Fingerprinting and the Synthesis of Topological Physics</h2>
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4">High-Dimensional Neural Fingerprinting and the Synthesis of Topological Physics</h2>
                     <p class="text-lg text-[color:var(--text-1)] leading-relaxed mb-6">
                         The babelForge framework provides a high-fidelity computational architecture that utilizes spatial-spectral neural fingerprints to identify latent biomarkers of clinical intractability. By mapping the "uncontrollable code" of the traumatized brain through 6,400 discrete spatial-spectral markers, this framework achieves out-of-sample predictive accuracies exceeding 92%.
                     </p>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
                         <div class="bg-ink-800/40 border border-plum-500/20 p-6 rounded-xl">
-                            <h3 class="text-xl font-bold text-white mb-4 flex items-center">
+                            <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center">
                                 <span class="w-8 h-8 rounded bg-plum-600 flex items-center justify-center mr-3 text-sm">01</span>
                                 Pipeline Architecture
                             </h3>
@@ -400,7 +327,7 @@
                         </div>
 
                         <div class="bg-ink-800/40 border border-plum-500/20 p-6 rounded-xl">
-                            <h3 class="text-xl font-bold text-white mb-4 flex items-center">
+                            <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center">
                                 <span class="w-8 h-8 rounded bg-fuchsia-600 flex items-center justify-center mr-3 text-sm">02</span>
                                 11D Topological Cliques
                             </h3>
@@ -417,7 +344,7 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
                         <div class="bg-ink-800/40 border border-plum-500/20 p-6 rounded-xl">
-                            <h3 class="text-xl font-bold text-white mb-4 flex items-center">
+                            <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center">
                                 <span class="w-8 h-8 rounded bg-blue-600 flex items-center justify-center mr-3 text-sm">03</span>
                                 Kuramoto Dynamics
                             </h3>
@@ -430,7 +357,7 @@
                         </div>
 
                         <div class="bg-ink-800/40 border border-plum-500/20 p-6 rounded-xl">
-                            <h3 class="text-xl font-bold text-white mb-4 flex items-center">
+                            <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center">
                                 <span class="w-8 h-8 rounded bg-emerald-600 flex items-center justify-center mr-3 text-sm">04</span>
                                 Quantum Latent Space
                             </h3>
@@ -447,7 +374,7 @@
                     </div>
 
                     <div class="mt-12 p-6 bg-plum-600/10 border border-plum-500/30 rounded-xl">
-                        <h3 class="text-lg font-bold text-white mb-2">Synthesis: The Future of Neural Physics</h3>
+                        <h3 class="text-lg font-bold text-slate-900 mb-2">Synthesis: The Future of Neural Physics</h3>
                         <p class="text-[color:var(--text-1)] leading-relaxed text-sm">
                             The future of healthcare lies in the ability to decode the complex, dynamic, and high-frequency anomalies that dictate human behavior. By modeling these structures through the nonlinear lens of the Kuramoto equation and manipulating them through the physics of wave interference, we can develop "mathematically accurate physics" for the human mind.
                         </p>
@@ -462,7 +389,7 @@
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start mt-12">
                     <div class="space-y-5">
                         <div class="science-note text-[color:var(--text-1)] leading-relaxed">
-                            <p class="font-bold text-white mb-2">Scientific validity guardrail</p>
+                            <p class="font-bold text-slate-900 mb-2">Scientific validity guardrail</p>
                             <p>This static page is a hypothesis-driven demonstration, not a medical device. Claims about PTSD treatment resistance require prospective validation and clinician-supervised interpretation.</p>
                         </div>
                         <div class="equation-card">
@@ -474,12 +401,12 @@
 
                     <div class="grid grid-cols-1 gap-6">
                         <div class="panel-soft p-5">
-                            <h3 class="font-bold text-white mb-3">Topology signal sketch</h3>
+                            <h3 class="font-bold text-slate-900 mb-3">Topology signal sketch</h3>
                             <div class="chart-container h-md w-full"><canvas id="bettiChart"></canvas></div>
                             <p class="mt-3 text-xs text-[color:var(--text-2)] font-mono">Conceptual sketch only — synthetic values.</p>
                         </div>
                         <div class="panel-soft p-5">
-                            <h3 class="font-bold text-white mb-3">Phase-locking response sketch</h3>
+                            <h3 class="font-bold text-slate-900 mb-3">Phase-locking response sketch</h3>
                             <div class="chart-container h-md w-full"><canvas id="kuramotoChart"></canvas></div>
                         </div>
                     </div>
@@ -490,7 +417,7 @@
         <!-- 2. Demographics & Metrics -->
         <section id="metrics" class="scroll-mt-24 panel p-8">
             <div class="mb-10 text-center md:text-left">
-                <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">Empirical Results &amp; Accuracy</h2>
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4">Empirical Results &amp; Accuracy</h2>
                 <p class="text-lg text-[color:var(--text-1)] max-w-4xl">
                     The model's validity rests on a balanced dataset and exceptional out-of-sample prediction accuracy. These charts visualize the symmetry and robustness of the Random Forest ensemble.
                 </p>
@@ -529,170 +456,176 @@
             </div>
         </section>
 
-        <!-- 3. Neural Fingerprint (Feature Importance) -->
-        <section id="fingerprint" class="scroll-mt-24">
-            <div class="mb-8 flex flex-col md:flex-row justify-between md:items-end gap-4">
-                <div class="max-w-3xl">
-                    <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">High-Dimensional Neural Fingerprint</h2>
-                    <p class="text-lg text-[color:var(--text-1)]">
-                        Interactive visualization of the <span class="font-semibold text-white">Gini Feature Importance</span> extracted from the Random Forest model. It isolates the high-frequency spatial-spectral hubs within the Schaefer 200-node atlas that mathematically drive treatment resistance.
-                    </p>
-                </div>
-                <div class="chip self-start md:self-end whitespace-nowrap">
-                    Features 6,400 · Spatial × Spectral
-                </div>
-            </div>
-
-            <!-- Plotly Container -->
-            <div class="panel p-4">
-                <div id="brain-plot" class="chart-container h-xl w-full"></div>
-                <p class="text-xs text-[color:var(--text-2)] text-center mt-3 font-mono tracking-wide">
-                    Scroll to zoom · Click + drag to rotate · Each node = a frequency bin within a spatial region · Color &amp; size encode predictive importance
+        <!-- 3. Neural Topology Transposition (The Lead Candidate Dashboard) -->
+        <section id="visualizer" class="scroll-mt-24">
+            <div class="mb-12 text-center md:text-left">
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4">Neural Topology Transposition</h2>
+                <p class="text-lg text-slate-500 max-w-3xl">
+                    Interactive clinical simulation mapping 11-dimensional neural cliques to anatomical brain regions. Observe real-time structural stabilization via the <strong class="text-indigo-600">ZenBud™ (ZB-01)</strong> lead compound.
                 </p>
             </div>
-        </section>
 
-        <!-- 4. 3D Neural Visualizer -->
-        <section id="visualizer" class="scroll-mt-24">
-            <div class="mb-8 flex flex-col md:flex-row justify-between md:items-end gap-4">
-                <div class="max-w-3xl">
-                    <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">3D Neural Visualizer</h2>
-                    <p class="text-lg text-[color:var(--text-1)]">
-                        Upload a raw fMRI BOLD scan (<code class="font-mono text-sm text-plum-300 bg-ink-800/70 px-2 py-0.5 rounded">.nii</code> / <code class="font-mono text-sm text-plum-300 bg-ink-800/70 px-2 py-0.5 rounded">.nii.gz</code>) — or load a built-in example dataset — to render an interactive 3D brain and run the diagnostic sequence directly in your browser.
-                    </p>
+            <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xl shadow-slate-200/50 relative">
+                <div class="grid grid-cols-1 lg:grid-cols-4 min-h-[700px]">
+                    <!-- Control Sidebar -->
+                    <div class="p-8 border-r border-slate-100 bg-slate-50/50 flex flex-col justify-between">
+                        <div>
+                            <div class="inline-block px-2 py-1 bg-indigo-100 text-indigo-700 rounded text-[10px] font-bold uppercase tracking-widest mb-6">Simulation Engine</div>
+                            <h3 class="text-xl font-bold text-slate-900 mb-8">Clinical Parameters</h3>
+                            
+                            <div class="space-y-8">
+                                <div>
+                                    <label class="text-[10px] uppercase font-bold text-slate-400 block mb-4 tracking-widest">Select Patient State</label>
+                                    <div class="grid grid-cols-1 gap-3">
+                                        <button id="btn-healthy" class="w-full text-left px-4 py-3 rounded-lg border border-slate-200 font-semibold text-sm transition-all active" onclick="updateDashboardState('HEALTHY')">
+                                            Healthy Baseline
+                                        </button>
+                                        <button id="btn-ptsd" class="w-full text-left px-4 py-3 rounded-lg border border-slate-200 font-semibold text-sm transition-all" onclick="updateDashboardState('PTSD')">
+                                            PTSD Flash (D7)
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="p-5 bg-white border border-slate-200 rounded-xl shadow-sm">
+                                    <div class="flex justify-between items-center mb-4">
+                                        <label class="text-[10px] uppercase font-bold text-indigo-600 tracking-widest">ZB-01 Efficacy</label>
+                                        <span id="pharma-percent" class="font-mono text-sm font-bold text-indigo-600">0%</span>
+                                    </div>
+                                    <input type="range" id="pharma-slider" min="0" max="100" value="0" class="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600" oninput="updatePharmaEfficacy(this.value)">
+                                    <p class="text-[10px] text-slate-400 mt-4 leading-relaxed">Adjust precision dosage to monitor regional stabilization and topological repair rate.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-8 pt-8 border-t border-slate-100">
+                            <div class="text-[10px] font-bold text-slate-400 mb-3 uppercase tracking-widest">Integrity Monitor</div>
+                            <div class="flex justify-between items-end mb-2">
+                                <span class="text-sm font-bold text-slate-700">Topology Score</span>
+                                <span id="integrity-score" class="text-indigo-600 font-mono font-bold">100%</span>
+                            </div>
+                            <div class="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+                                <div id="integrity-bar" class="h-full bg-indigo-600 transition-all duration-700" style="width: 100%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3D Canvas Area -->
+                    <div class="lg:col-span-3 relative bg-[#030008] cursor-crosshair">
+                        <div id="dashboard-brain-container" class="w-full h-full"></div>
+                        
+                        <!-- Overlay Labels -->
+                        <div class="absolute top-8 left-8 pointer-events-none">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></div>
+                                <span class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Real-time Transposition</span>
+                            </div>
+                            <h4 id="active-scenario-label" class="text-2xl font-bold text-white">Healthy Baseline</h4>
+                        </div>
+                        
+                        <div id="node-inspector-overlay" class="absolute bottom-8 right-8 p-6 bg-slate-900/90 border border-slate-700 rounded-xl backdrop-blur-xl hidden min-w-[220px] shadow-2xl">
+                            <div class="text-[9px] uppercase font-bold text-indigo-400 mb-2 tracking-widest">Region Data</div>
+                            <div id="insp-name" class="text-base font-bold text-white mb-4">LH_Default_PFC</div>
+                            <div class="grid grid-cols-2 gap-6">
+                                <div>
+                                    <div class="text-[9px] uppercase text-slate-500 font-bold tracking-widest mb-1">Power</div>
+                                    <div id="insp-power" class="text-xs font-mono text-slate-100">100%</div>
+                                </div>
+                                <div>
+                                    <div class="text-[9px] uppercase text-slate-500 font-bold tracking-widest mb-1">Sync</div>
+                                    <div id="insp-sync" class="text-xs font-mono text-slate-100">0.88 r</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <span class="chip self-start md:self-end"><span class="pulse-dot"></span> NiiVue · WebGL 2.0</span>
-            </div>
-            <div class="panel overflow-hidden">
-                <iframe src="visualizer.html" title="babelForge 3D Neural Visualizer" class="w-full border-0 block bg-transparent" style="min-height: 80vh;" sandbox="allow-scripts allow-same-origin allow-downloads"></iframe>
             </div>
         </section>
 
         <!-- 5. Simulated fMRI Extraction Dashboard -->
         <section id="simulator" class="scroll-mt-24 panel p-8 lg:p-12 relative overflow-hidden">
-            <!-- Decorative violet glow -->
-            <div class="absolute top-0 right-0 -mr-24 -mt-24 w-72 h-72 rounded-full bg-plum-600 opacity-25 blur-3xl pointer-events-none"></div>
-            <div class="absolute bottom-0 left-0 -mb-20 -ml-20 w-64 h-64 rounded-full bg-plum-500 opacity-15 blur-3xl pointer-events-none"></div>
-
-            <div class="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12">
+            <div class="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-16">
                 <div>
-                    <h2 class="text-3xl md:text-4xl font-bold text-white mb-4 flex items-center gap-3">
-                        <span class="pulse-dot"></span> Simulated Extraction Dashboard
+                    <h2 class="text-3xl font-bold text-slate-900 mb-6 flex items-center gap-3">
+                        <span class="w-2 h-2 rounded-full bg-indigo-600 animate-pulse"></span> Patient Processing Portal
                     </h2>
-                    <p class="text-[color:var(--text-1)] mb-6 text-lg">
-                        Upload a sample <code class="font-mono text-plum-300">.nii</code> or <code class="font-mono text-plum-300">.nii.gz</code> scan to simulate the browser-safe preprocessing workflow. The dashboard generates a mock 6,400-dimensional neural fingerprint and submits it to the live babelForge API for diagnosis.
+                    <p class="text-slate-600 mb-8 text-lg font-light leading-relaxed">
+                        Secure interface for browser-side spectral feature extraction. Upload raw BOLD sequences to generate the 6,400-dimensional topological fingerprint for ZB-01 eligibility screening.
                     </p>
-                    <div class="mb-6 rounded-xl border border-amber-300/30 bg-amber-300/5 p-4 text-sm text-amber-100">
-                        <p class="font-bold text-amber-200">Disclaimer</p>
-                        <p class="mt-1 text-amber-100/85">I’m working on a fully functional application that takes in fMRI scans and provides diagnoses. This GitHub Pages dashboard is a portfolio-safe simulation of the extraction workflow while that full application is in development.</p>
-                    </div>
-
-                    <div class="panel-soft p-6 font-mono text-sm mb-6 space-y-4">
-                        <div>
-                            <p class="text-[color:var(--text-2)] mb-2">// Select a simulated patient scan to process:</p>
-                            <label for="scanUpload" class="block cursor-pointer rounded-lg border border-dashed border-plum-500/40 bg-ink-900/60 p-6 text-center hover:border-plum-400 hover:bg-plum-500/5 transition-colors">
-                                <span class="block text-3xl mb-2">📁</span>
-                                <span class="block text-plum-300 font-bold">Choose .nii or .nii.gz file</span>
-                                <span class="block text-[color:var(--text-2)] text-xs mt-2">No imaging data leaves your browser; only a mock fingerprint is sent.</span>
-                            </label>
-                            <input id="scanUpload" type="file" accept=".nii,.nii.gz,application/gzip" class="hidden">
-                        </div>
-                        <div id="fileMeta" class="text-[color:var(--text-2)]">No scan selected.</div>
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                            <div class="bg-ink-900/70 rounded-lg p-3 border border-plum-500/15">
-                                <p class="text-[color:var(--text-2)] uppercase tracking-wider">Fingerprint</p>
-                                <p id="fingerprintStatus" class="text-[color:var(--text-0)] font-bold mt-1">Pending</p>
+                    
+                    <div class="bg-slate-50 border border-slate-200 rounded-2xl p-8 mb-8">
+                        <div class="space-y-6">
+                            <div>
+                                <label class="text-[10px] uppercase font-bold text-slate-400 block mb-3 tracking-widest">Input Diagnostic Volume</label>
+                                <label for="scanUpload" class="block cursor-pointer rounded-xl border-2 border-dashed border-slate-300 bg-white p-10 text-center hover:border-indigo-400 hover:bg-indigo-50/30 transition-all group">
+                                    <span class="block text-4xl mb-3 opacity-60 group-hover:scale-110 transition-transform">🧬</span>
+                                    <span class="block text-indigo-600 font-bold text-sm">Select .nii or .nii.gz volume</span>
+                                    <span class="block text-slate-400 text-[10px] mt-3">MNI152 registration and Schaefer parcellation occur locally.</span>
+                                </label>
+                                <input id="scanUpload" type="file" accept=".nii,.nii.gz,application/gzip" class="hidden">
                             </div>
-                            <div class="bg-ink-900/70 rounded-lg p-3 border border-plum-500/15">
-                                <p class="text-[color:var(--text-2)] uppercase tracking-wider">Vector Size</p>
-                                <p id="vectorSize" class="text-[color:var(--text-0)] font-bold mt-1">0 / 6400</p>
-                            </div>
-                            <div class="bg-ink-900/70 rounded-lg p-3 border border-plum-500/15">
-                                <p class="text-[color:var(--text-2)] uppercase tracking-wider">API Status</p>
-                                <p id="apiStatus" class="text-[color:var(--text-0)] font-bold mt-1">Idle</p>
-                            </div>
+                            <div id="fileMeta" class="text-xs font-mono text-slate-500 bg-white border border-slate-200 py-2 px-4 rounded-md inline-block">System Awaiting Input...</div>
                         </div>
                     </div>
 
-                    <button id="runInferenceBtn" disabled class="w-full bg-ink-700 text-[color:var(--text-2)] font-bold py-4 px-6 rounded-xl transition-all shadow-lg flex justify-center items-center cursor-not-allowed">
-                        <span id="btnText">UPLOAD A SCAN TO BEGIN</span>
-                        <span id="btnLoader" class="hidden ml-2 animate-spin">⚙️</span>
+                    <button id="runInferenceBtn" disabled class="w-full bg-slate-100 text-slate-400 font-bold py-4 px-8 rounded-xl transition-all flex justify-center items-center cursor-not-allowed border border-slate-200">
+                        <span id="btnText">INITIALIZE EXTRACTION SEQUENCE</span>
+                        <span id="btnLoader" class="hidden ml-3 animate-spin">⚙️</span>
                     </button>
                 </div>
 
                 <!-- Terminal Output -->
-                <div class="bg-black/80 rounded-xl border border-plum-500/25 p-4 font-mono text-sm overflow-hidden flex flex-col h-full min-h-[300px] shadow-[inset_0_0_40px_rgba(124,58,237,0.15)]">
-                    <div class="flex space-x-2 mb-4 border-b border-plum-500/15 pb-2 items-center">
-                        <div class="w-3 h-3 rounded-full bg-rose-500"></div>
-                        <div class="w-3 h-3 rounded-full bg-amber-400"></div>
-                        <div class="w-3 h-3 rounded-full bg-emerald-400"></div>
-                        <div class="ml-2 text-[color:var(--text-2)] text-xs">root@babel-forge:/inference#</div>
+                <div class="bg-slate-900 rounded-2xl p-6 font-mono text-xs overflow-hidden flex flex-col h-full min-h-[450px] shadow-2xl">
+                    <div class="flex space-x-2 mb-6 border-b border-slate-800 pb-4 items-center">
+                        <div class="w-2.5 h-2.5 rounded-full bg-slate-700"></div>
+                        <div class="w-2.5 h-2.5 rounded-full bg-slate-700"></div>
+                        <div class="w-2.5 h-2.5 rounded-full bg-slate-700"></div>
+                        <div class="ml-4 text-slate-500 text-[10px] uppercase tracking-widest">Extraction Monitor [v4.2.0]</div>
                     </div>
-                    <div id="terminalOutput" class="text-[color:var(--text-1)] whitespace-pre-wrap flex-grow overflow-y-auto">Waiting for .nii.gz upload...</div>
+                    <div id="terminalOutput" class="text-emerald-500/90 whitespace-pre-wrap flex-grow overflow-y-auto leading-relaxed">System standby. Awaiting volumetric payload...</div>
                 </div>
             </div>
         </section>
 
         <!-- 6. API Reference -->
-        <section id="api-reference" class="scroll-mt-24 panel p-8">
-            <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">babelForge API Reference</h2>
-            <p class="text-[color:var(--text-1)] mb-4">
-                Welcome to the <strong class="text-white">babelForge Neural Engine API</strong>. This service exposes our 11D Random Forest model, providing real-time diagnostics for PTSD treatment resistance based on 6,400-dimensional functional connectivity fingerprints.
+        <section id="api-reference" class="scroll-mt-24 panel p-10 lg:p-12">
+            <h2 class="text-3xl font-bold text-slate-900 mb-6">Neural Engine API Integration</h2>
+            <p class="text-slate-600 mb-8 text-lg font-light">
+                Programmatic access to the 11D predictive model for institutional integration and clinical trials.
             </p>
-            <p class="text-[color:var(--text-1)] mb-6">
-                <span class="font-semibold text-white">Base URL:</span>
-                <code class="font-mono text-sm text-plum-300 bg-ink-800/70 px-2 py-1 rounded ml-1">https://babel-forge-api-1066096962926.us-central1.run.app</code>
-            </p>
+            
+            <div class="bg-slate-50 rounded-xl p-4 border border-slate-200 inline-flex items-center gap-4 mb-12">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Base Endpoint</span>
+                <code class="font-mono text-indigo-600 font-bold">https://api.babelforge.clinical/v1</code>
+            </div>
 
-            <div class="space-y-8">
-                <div class="endpoint-card">
-                    <div class="flex items-center gap-3 mb-3">
-                        <span class="font-mono text-xs px-2 py-1 rounded bg-emerald-400/15 text-emerald-300 border border-emerald-400/30">GET</span>
-                        <h3 class="text-xl font-bold text-white">Health Check</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm">
+                    <div class="flex items-center gap-3 mb-6">
+                        <span class="text-[9px] font-bold px-2 py-1 rounded bg-emerald-100 text-emerald-700 border border-emerald-200">GET</span>
+                        <h3 class="text-lg font-bold text-slate-900">System Integrity</h3>
                     </div>
-                    <p class="text-[color:var(--text-1)] mb-4">Verify the operational status of the Forge and ensure the Random Forest model is successfully loaded into memory.</p>
-                    <p class="text-sm text-[color:var(--text-1)] mb-4"><span class="font-semibold text-white">Endpoint:</span> <code class="font-mono text-plum-300 bg-ink-800/70 px-2 py-1 rounded">/health</code></p>
-                    <p class="font-semibold text-white mb-2">Response</p>
-                    <pre class="codeblock">{
-  "status": "online",
-  "model_loaded": true
+                    <p class="text-slate-500 text-sm mb-6">Validate model availability and pharmacological parameter sync.</p>
+                    <pre class="bg-slate-900 text-indigo-300 p-4 rounded-xl text-[11px] font-mono leading-relaxed">
+{
+  "status": "operational",
+  "engine": "v4.2.0-stable",
+  "model_ready": true
 }</pre>
                 </div>
 
-                <div class="endpoint-card">
-                    <div class="flex items-center gap-3 mb-3">
-                        <span class="font-mono text-xs px-2 py-1 rounded bg-plum-500/20 text-plum-300 border border-plum-500/40">POST</span>
-                        <h3 class="text-xl font-bold text-white">Diagnose Patient</h3>
+                <div class="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm">
+                    <div class="flex items-center gap-3 mb-6">
+                        <span class="text-[9px] font-bold px-2 py-1 rounded bg-indigo-100 text-indigo-700 border border-indigo-200">POST</span>
+                        <h3 class="text-lg font-bold text-slate-900">Predict Response</h3>
                     </div>
-                    <p class="text-[color:var(--text-1)] mb-4">Analyze a patient's neural signature to predict their likelihood of being treatment-resistant or treatment-responsive.</p>
-                    <p class="text-sm text-[color:var(--text-1)] mb-1"><span class="font-semibold text-white">Endpoint:</span> <code class="font-mono text-plum-300 bg-ink-800/70 px-2 py-1 rounded">/diagnose</code></p>
-                    <p class="text-sm text-[color:var(--text-1)] mb-4"><span class="font-semibold text-white">Content-Type:</span> <code class="font-mono text-plum-300 bg-ink-800/70 px-2 py-1 rounded">application/json</code></p>
-
-                    <p class="font-semibold text-white mb-2">Request Body</p>
-                    <p class="text-[color:var(--text-1)] mb-3">The endpoint expects a flat array of exactly 6,400 <code class="font-mono text-plum-300 bg-ink-800/70 px-1 py-0.5 rounded">float</code> values representing the harmonized neural fingerprint.</p>
-                    <pre class="codeblock mb-4">{
+                    <p class="text-slate-500 text-sm mb-6">Analyze 6,400D spatial-spectral fingerprint for ZB-01 eligibility.</p>
+                    <pre class="bg-slate-900 text-indigo-300 p-4 rounded-xl text-[11px] font-mono leading-relaxed">
+{
   "patient_id": "sub-10294",
-  "fingerprint": [0.014293, 0.013467, 0.012743, ...]
+  "prediction": "RESISTANT",
+  "confidence": 0.956,
+  "topological_repair_est": 0.92
 }</pre>
-
-                    <p class="font-semibold text-white mb-2">Response</p>
-                    <p class="text-[color:var(--text-1)] mb-3">Returns the clinical prediction along with confidence metrics and raw model probabilities.</p>
-                    <pre class="codeblock mb-4">{
-  "patient_id": "sub-10294",
-  "prediction_code": 1,
-  "clinical_status": "RESISTANT",
-  "confidence_percent": 95.52,
-  "raw_probabilities": {
-    "responsive_0": 0.0448,
-    "resistant_1": 0.9552
-  }
-}</pre>
-
-                    <p class="font-semibold text-white mb-2">Error Responses</p>
-                    <ul class="list-disc pl-6 text-[color:var(--text-1)] space-y-1">
-                        <li><code class="font-mono text-rose-300 bg-ink-800/70 px-1 py-0.5 rounded">400 Bad Request</code> — fingerprint array length ≠ 6,400.</li>
-                        <li><code class="font-mono text-rose-300 bg-ink-800/70 px-1 py-0.5 rounded">503 Service Unavailable</code> — neural model is offline or failed to initialize.</li>
-                    </ul>
                 </div>
             </div>
         </section>
@@ -700,26 +633,44 @@
     </main>
 
     <!-- Footer -->
-    <footer class="border-t border-plum-500/15 mt-20 py-10 bg-ink-900/40">
-        <div class="max-w-7xl mx-auto px-4 text-center text-[color:var(--text-2)] text-sm">
-            <div class="flex items-center justify-center gap-3 mb-3">
-                <svg class="logo-svg" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                    <circle cx="32" cy="32" r="29" stroke="url(#brainGrad)" stroke-width="1.5" fill="none" opacity="0.4"/>
-                    <circle cx="32" cy="30" r="18" fill="url(#coreGlow)"/>
-                    <path d="M32 10 C22 10, 14 18, 14 28 C14 38, 20 46, 28 50" stroke="url(#brainGrad)" stroke-width="1.2" fill="none" stroke-linecap="round"/>
-                    <path d="M32 10 C42 10, 50 18, 50 28 C50 38, 44 46, 36 50" stroke="url(#brainGrad)" stroke-width="1.2" fill="none" stroke-linecap="round"/>
-                    <path d="M8 32 Q16 26, 22 32 T32 32 T42 32 T56 32" stroke="url(#waveGrad)" stroke-width="1.8" fill="none" stroke-linecap="round">
-                        <animate attributeName="d" dur="3s" repeatCount="indefinite" values="M8 32 Q16 26, 22 32 T32 32 T42 32 T56 32;M8 32 Q16 38, 22 32 T32 32 T42 32 T56 32;M8 32 Q16 26, 22 32 T32 32 T42 32 T56 32"/>
-                    </path>
-                    <path d="M24 52 L22 56 L42 56 L40 52" stroke="#a78bfa" stroke-width="1" fill="rgba(139,92,246,0.15)" stroke-linejoin="round" opacity="0.7"/>
-                    <circle cx="20" cy="20" r="1.5" fill="#c4b5fd" opacity="0.8"/>
-                    <circle cx="44" cy="20" r="1.5" fill="#c4b5fd" opacity="0.8"/>
-                    <circle cx="32" cy="16" r="1.8" fill="#c4b5fd" opacity="0.9"/>
-                </svg>
-                <span class="font-extrabold text-base text-white">babel<span class="tech-text">Forge</span></span>
+    <footer class="border-t border-slate-200 mt-32 py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-start gap-12">
+                <div class="max-w-md">
+                    <div class="flex items-center gap-2 mb-6">
+                        <div class="w-6 h-6 bg-indigo-600 rounded flex items-center justify-center text-slate-900 font-bold text-[10px]">BF</div>
+                        <span class="font-bold text-slate-900 tracking-tight">babelForge <span class="font-light text-slate-500">Clinical</span></span>
+                    </div>
+                    <p class="text-slate-400 text-sm leading-relaxed font-light">
+                        Advancing precision psychiatry through high-dimensional topological analysis and targeted pharmacological intervention. Developed by Najmos Sakib.
+                    </p>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-12">
+                    <div>
+                        <h4 class="text-[10px] font-bold text-slate-900 uppercase tracking-widest mb-6">Resources</h4>
+                        <ul class="space-y-4 text-xs font-semibold text-slate-500">
+                            <li><a href="studies.html" class="hover:text-indigo-600">Clinical Evidence</a></li>
+                            <li><a href="brainScienceToCode" class="hover:text-indigo-600">Research Paper</a></li>
+                            <li><a href="11d-projection.html" class="hover:text-indigo-600">11D Simulation</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="text-[10px] font-bold text-slate-900 uppercase tracking-widest mb-6">Platform</h4>
+                        <ul class="space-y-4 text-xs font-semibold text-slate-500">
+                            <li><button onclick="scrollToSection('visualizer')" class="hover:text-indigo-600">Dashboard</button></li>
+                            <li><button onclick="scrollToSection('simulator')" class="hover:text-indigo-600">Patient Portal</button></li>
+                            <li><a href="pharma-projection.html" class="hover:text-indigo-600">Therapeutics</a></li>
+                        </ul>
+                    </div>
+                </div>
             </div>
-            <p>Based on Najmos Sakib’s brainScienceToCode synthesis: high-dimensional neural fingerprinting, topological neuroscience, Kuramoto dynamics, and latent-space clinical prognostics.</p>
-            <p class="mt-2 text-[color:var(--text-2)]/70 font-mono text-xs tracking-wider">Visualization Prototype · Synthetic Data Demo</p>
+            <div class="mt-20 pt-8 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-6">
+                <p class="text-[10px] text-slate-400 font-mono uppercase tracking-widest">&copy; 2026 babelForge Clinical Suite. All rights reserved.</p>
+                <div class="flex gap-8 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    <span>v4.2.0 Stable</span>
+                    <span>Synthetic Data Demo</span>
+                </div>
+            </div>
         </div>
     </footer>
 
@@ -1221,14 +1172,16 @@
             runBtn.disabled = !enabled;
             btnText.innerText = label;
             if (enabled) {
-                runBtn.style.background = 'linear-gradient(135deg, #7c3aed, #8b5cf6)';
+                runBtn.style.background = '#4f46e5';
                 runBtn.style.color = '#ffffff';
-                runBtn.style.boxShadow = '0 8px 24px rgba(124, 58, 237, 0.4), inset 0 1px 0 rgba(255,255,255,0.15)';
+                runBtn.style.boxShadow = '0 8px 24px rgba(79, 70, 229, 0.2)';
+                runBtn.style.border = 'none';
                 runBtn.style.cursor = 'pointer';
             } else {
-                runBtn.style.background = '#18102e';
-                runBtn.style.color = 'var(--text-2)';
+                runBtn.style.background = '#f1f5f9';
+                runBtn.style.color = '#94a3b8';
                 runBtn.style.boxShadow = 'none';
+                runBtn.style.border = '1px solid #e2e8f0';
                 runBtn.style.cursor = 'not-allowed';
             }
         };
