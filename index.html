@@ -295,9 +295,104 @@
                     <div class="connector hidden md:block"></div>
                     <div class="step-num mb-3">Step 04 / classify</div>
                     <h3 class="font-bold text-lg text-slate-900 mb-2">Ensemble ML</h3>
-                    <p class="text-sm text-[color:var(--text-1)]">
+                    <p class="text-sm text-slate-600">
                         A <span class="font-bold text-slate-900">Random Forest classifier</span> discriminates patterns between responsive and resistant cohorts.
                     </p>
+                </div>
+            </div>
+
+            <div class="mt-20 text-center md:text-left border-t border-slate-200 pt-12">
+                <div class="inline-block px-2 py-1 bg-indigo-100 text-indigo-700 rounded text-[10px] font-bold uppercase tracking-widest mb-4">Synthesis Pipeline</div>
+                <h3 class="text-2xl font-bold text-slate-900 mb-4">Pharmacological Synthesis & Regional Mapping</h3>
+                <p class="text-slate-500 max-w-3xl mb-10 text-lg">
+                    Following predictive classification (Step 04), the pipeline synthesizes and simulates precision molecules. These compounds are dynamically mapped to the specific neuroanatomical regions responsible for the topological collapse, enabling targeted stabilization of the neural topology.
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+                    <!-- ZB-01 -->
+                    <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm hover:border-indigo-400 transition-colors flex flex-col justify-between">
+                        <div>
+                            <div class="h-32 w-full flex items-center justify-center bg-slate-50 rounded-lg mb-6 border border-slate-100 p-4">
+                                <!-- Detailed Indole Derivative (e.g., Psilocybin analog) -->
+                                <svg viewBox="0 0 150 80" class="h-full w-auto stroke-indigo-600 fill-none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polygon points="40,40 55,30 75,30 85,40 75,55 55,55" />
+                                    <path d="M45,40 L52,34 M72,34 L80,40 L72,50" stroke-width="1" />
+                                    <polygon points="75,30 95,20 105,35 85,40" />
+                                    <text x="95" y="48" font-family="Inter" font-size="8" fill="#4f46e5" stroke="none" font-weight="bold">NH</text>
+                                    <path d="M105,35 L125,25 L125,10" />
+                                    <path d="M125,25 L140,35" />
+                                    <text x="135" y="45" font-family="Inter" font-size="8" fill="#4f46e5" stroke="none" font-weight="bold">NH₂</text>
+                                    <path d="M40,40 L25,35" />
+                                    <text x="12" y="38" font-family="Inter" font-size="8" fill="#ef4444" stroke="none" font-weight="bold">HO</text>
+                                </svg>
+                            </div>
+                            <div class="inline-block px-2 py-1 bg-indigo-50 text-indigo-600 rounded text-[9px] font-bold uppercase tracking-widest mb-3">PTSD Variant</div>
+                            <h4 class="font-bold text-lg text-slate-900 mb-2">ZenBud™ (ZB-01)</h4>
+                            <p class="text-sm text-slate-500 mb-4">Class: Indole Alkaloid Agonist</p>
+                            <div class="text-[11px] text-slate-600 space-y-2 mb-6">
+                                <div class="flex justify-between border-b border-slate-100 pb-1"><span>Brain Mapping:</span> <span class="font-mono text-slate-900 font-semibold">Dorsal Attention / DMN</span></div>
+                                <div class="flex justify-between border-b border-slate-100 pb-1"><span>Mechanism:</span> <span class="font-mono text-slate-900 font-semibold">5-HT2A Modulation</span></div>
+                                <div class="flex justify-between"><span>Efficacy (OOS):</span> <span class="font-mono text-indigo-600 font-bold">92.6%</span></div>
+                            </div>
+                        </div>
+                        <button onclick="updateDashboardState('PTSD'); scrollToSection('visualizer');" class="w-full text-center py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 text-xs font-bold uppercase tracking-widest rounded-lg transition-colors border border-indigo-100">Simulate on Brain Map</button>
+                    </div>
+
+                    <!-- SS-20 -->
+                    <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm hover:border-slate-400 transition-colors flex flex-col justify-between">
+                        <div>
+                            <div class="h-32 w-full flex items-center justify-center bg-slate-50 rounded-lg mb-6 border border-slate-100 p-4">
+                                <!-- Detailed Phenethylamine (e.g., Amphetamine analog) -->
+                                <svg viewBox="0 0 150 80" class="h-full w-auto stroke-slate-600 fill-none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polygon points="30,40 40,25 60,25 70,40 60,55 40,55" />
+                                    <path d="M35,38 L42,28 M58,28 L65,38 L58,50" stroke-width="1" />
+                                    <path d="M70,40 L90,30 L110,40 L130,30" />
+                                    <path d="M110,40 L110,60" />
+                                    <text x="135" y="32" font-family="Inter" font-size="8" fill="#4f46e5" stroke="none" font-weight="bold">NH₂</text>
+                                    <text x="105" y="70" font-family="Inter" font-size="8" fill="#64748b" stroke="none">CH₃</text>
+                                </svg>
+                            </div>
+                            <div class="inline-block px-2 py-1 bg-slate-100 text-slate-600 rounded text-[9px] font-bold uppercase tracking-widest mb-3">ADHD Variant</div>
+                            <h4 class="font-bold text-lg text-slate-900 mb-2">SynaptoStim (SS-20)</h4>
+                            <p class="text-sm text-slate-500 mb-4">Class: Substituted Phenethylamine</p>
+                            <div class="text-[11px] text-slate-600 space-y-2 mb-6">
+                                <div class="flex justify-between border-b border-slate-100 pb-1"><span>Brain Mapping:</span> <span class="font-mono text-slate-900 font-semibold">Prefrontal Cortex (PFC)</span></div>
+                                <div class="flex justify-between border-b border-slate-100 pb-1"><span>Mechanism:</span> <span class="font-mono text-slate-900 font-semibold">DAT/NET Inhibition</span></div>
+                                <div class="flex justify-between"><span>Efficacy (OOS):</span> <span class="font-mono text-slate-600 font-bold">88.4%</span></div>
+                            </div>
+                        </div>
+                        <button onclick="updateDashboardState('ADHD'); scrollToSection('visualizer');" class="w-full text-center py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 text-xs font-bold uppercase tracking-widest rounded-lg transition-colors border border-slate-200">Simulate on Brain Map</button>
+                    </div>
+
+                    <!-- DR-02 -->
+                    <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm hover:border-emerald-400 transition-colors flex flex-col justify-between">
+                        <div>
+                            <div class="h-32 w-full flex items-center justify-center bg-slate-50 rounded-lg mb-6 border border-slate-100 p-4">
+                                <!-- Detailed Butyrophenone (e.g., Haloperidol analog) -->
+                                <svg viewBox="0 0 150 80" class="h-full w-auto stroke-emerald-600 fill-none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polygon points="15,40 25,25 45,25 55,40 45,55 25,55" />
+                                    <path d="M22,38 L28,28 M42,28 L49,38 M42,50 L28,50" stroke-width="1" />
+                                    <text x="2" y="42" font-family="Inter" font-size="8" fill="#10b981" stroke="none" font-weight="bold">F</text>
+                                    <path d="M15,40 L10,40" />
+                                    <path d="M55,40 L70,40 L80,25 L100,25" />
+                                    <path d="M70,40 L70,55" />
+                                    <text x="66" y="65" font-family="Inter" font-size="8" fill="#ef4444" stroke="none" font-weight="bold">O</text>
+                                    <text x="105" y="27" font-family="Inter" font-size="8" fill="#4f46e5" stroke="none" font-weight="bold">N</text>
+                                    <polygon points="115,25 125,15 140,15 145,25 140,35 125,35" />
+                                    <text x="148" y="27" font-family="Inter" font-size="8" fill="#64748b" stroke="none" font-weight="bold">Cl</text>
+                                </svg>
+                            </div>
+                            <div class="inline-block px-2 py-1 bg-emerald-50 text-emerald-600 rounded text-[9px] font-bold uppercase tracking-widest mb-3">Tourette's Variant</div>
+                            <h4 class="font-bold text-lg text-slate-900 mb-2">DopaReg-D2 (DR-02)</h4>
+                            <p class="text-sm text-slate-500 mb-4">Class: Butyrophenone Analog</p>
+                            <div class="text-[11px] text-slate-600 space-y-2 mb-6">
+                                <div class="flex justify-between border-b border-slate-100 pb-1"><span>Brain Mapping:</span> <span class="font-mono text-slate-900 font-semibold">Somatomotor Network</span></div>
+                                <div class="flex justify-between border-b border-slate-100 pb-1"><span>Mechanism:</span> <span class="font-mono text-slate-900 font-semibold">D2 Antagonism</span></div>
+                                <div class="flex justify-between"><span>Efficacy (OOS):</span> <span class="font-mono text-emerald-600 font-bold">94.1%</span></div>
+                            </div>
+                        </div>
+                        <button onclick="updateDashboardState('TOURETTES'); scrollToSection('visualizer');" class="w-full text-center py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 text-xs font-bold uppercase tracking-widest rounded-lg transition-colors border border-emerald-100">Simulate on Brain Map</button>
+                    </div>
                 </div>
             </div>
         </section>
