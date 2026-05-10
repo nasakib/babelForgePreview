@@ -60,7 +60,7 @@
         </p>
 
         <div class="figure">
-            <div style="background: #f0f0f0; height: 100px; display: flex; align-items: center; justify-content: center; font-family: sans-serif; color: #999; border: 1px dashed #ccc;">[Fig 1. Topological Dimensionality Waterfall]</div>
+            <div id="fig-waterfall" style="min-height: 250px;"></div>
             <div class="figure-caption">Figure 1. Comparison of clique dimensionality between Responsive (Blue) and Resistant (Red) cohorts. The Resistant cohort shows a sharp drop-off after 4D.</div>
         </div>
 
@@ -79,5 +79,11 @@
         </footer>
     </div>
 
+    <script src="figures.js"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            FigureGenerator.generateTopologyWaterfall('fig-waterfall');
+        });
+    </script>
 </body>
 </html>
