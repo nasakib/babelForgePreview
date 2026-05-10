@@ -570,12 +570,17 @@
                     z = (Math.random() - 0.5) * 2 * c;
                     if ((x/a)**2 + (y/b)**2 + (z/c)**2 <= 1 && Math.abs(x) > 3) break;
                 }
-                
-                const mat = new THREE.MeshPhongMaterial({ color: 0x8b5cf6, emissive: 0x8b5cf6, emissiveIntensity: 0.3, transparent: true, opacity: 0.9, shininess: 100 });
+
+                let baseColor = 0x8b5cf6; // Default (Purple)
+                if (z < -20) baseColor = 0xf43f5e; // Visual Cortex (Rose)
+                else if (y > 15 && z >= -20 && z <= 20) baseColor = 0x10b981; // Somatomotor (Emerald)
+                else if (y < 0 && z >= -20 && z <= 20) baseColor = 0xf59e0b; // Limbic / Ventral Attn (Amber)
+                else if (z > 20) baseColor = 0x818cf8; // Frontal / Control (Indigo)
+
+                const mat = new THREE.MeshPhongMaterial({ color: baseColor, emissive: baseColor, emissiveIntensity: 0.3, transparent: true, opacity: 0.9, shininess: 100 });
                 const mesh = new THREE.Mesh(lobeGeo, mat);
                 mesh.position.set(x, y, z);
-                mesh.userData = { origin: new THREE.Vector3(x, y, z), id: i };
-                baseNodes.push(mesh);
+                mesh.userData = { origin: new THREE.Vector3(x, y, z), id: i, baseColor: baseColor };                baseNodes.push(mesh);
                 lobeGroup.add(mesh);
             }
 

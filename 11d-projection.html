@@ -394,7 +394,13 @@
             // Render Lobes (Dynamic Spheres)
             const lobeGeo = new THREE.SphereGeometry(4, 16, 16);
             data.nodes.forEach((n) => {
-                const color = isResistant ? 0xaa0033 : 0x8b5cf6;
+                let baseColor = 0x8b5cf6; // Default (Purple)
+                if (n.z < -20) baseColor = 0xf43f5e; // Visual Cortex (Rose)
+                else if (n.y > 15 && n.z >= -20 && n.z <= 20) baseColor = 0x10b981; // Somatomotor (Emerald)
+                else if (n.y < 0 && n.z >= -20 && n.z <= 20) baseColor = 0xf59e0b; // Limbic / Ventral Attn (Amber)
+                else if (n.z > 20) baseColor = 0x818cf8; // Frontal / Control (Indigo)
+
+                const color = isResistant ? 0xaa0033 : baseColor;
                 const lobeMat = new THREE.MeshPhongMaterial({ 
                     color: color, 
                     emissive: color,
@@ -406,6 +412,7 @@
                 mesh.position.set(n.x, n.y, n.z);
                 mesh.userData = n;
                 mesh.userData.origin = new THREE.Vector3(n.x, n.y, n.z);
+                mesh.userData.baseColor = baseColor;
                 lobeGroup.add(mesh);
             });
 
@@ -590,7 +597,7 @@
                         const healthyScale = 1.0 + wave * 0.8;
                         node.scale.setScalar(healthyScale);
                         node.position.y = node.userData.origin.y + wave * 10;
-                        node.material.color.setHex(0x00ffcc);
+                        node.material.color.setHex(node.userData.baseColor);
                     }
                 } else {
                     // Resting State
@@ -621,11 +628,11 @@
                     if (currentStatus === 'RESISTANT') {
                         if (pharmaEfficacy <= 1) {
                             const restPtsColor = new THREE.Color(0xaa0033);
-                            const restPharmColor = new THREE.Color(0x8b5cf6);
+                            const restPharmColor = new THREE.Color(node.userData.baseColor);
                             node.material.color.lerpColors(restPtsColor, restPharmColor, pharmaEfficacy);
                             node.material.emissiveIntensity = 0.2;
                         } else {
-                            const restPharmColor = new THREE.Color(0x8b5cf6);
+                            const restPharmColor = new THREE.Color(node.userData.baseColor);
                             const toxicColor = new THREE.Color(0xe0f2fe);
                             const overDose = pharmaEfficacy - 1;
                             node.material.color.lerpColors(restPharmColor, toxicColor, overDose);
@@ -633,16 +640,16 @@
                         }
                     } else if (currentStatus === 'ADHD') {
                         const restAdhdColor = new THREE.Color(0x64748b);
-                        const restPharmColor = new THREE.Color(0x8b5cf6);
+                        const restPharmColor = new THREE.Color(node.userData.baseColor);
                         node.material.color.lerpColors(restAdhdColor, restPharmColor, Math.min(1, pharmaEfficacy));
                         node.material.emissiveIntensity = 0.1;
                     } else if (currentStatus === 'TOURETTES') {
                         const restTColor = new THREE.Color(0x10b981);
-                        const restPharmColor = new THREE.Color(0x8b5cf6);
+                        const restPharmColor = new THREE.Color(node.userData.baseColor);
                         node.material.color.lerpColors(restTColor, restPharmColor, Math.min(1, pharmaEfficacy));
                         node.material.emissiveIntensity = 0.3;
                     } else {
-                         node.material.color.lerp(new THREE.Color(0x8b5cf6), 0.1);
+                         node.material.color.lerp(new THREE.Color(node.userData.baseColor), 0.1);
                     }
                 }
                 

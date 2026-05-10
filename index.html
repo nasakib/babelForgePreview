@@ -1161,22 +1161,27 @@
             const lobeGeo = new THREE.SphereGeometry(6, 24, 24);
             
             data.nodes.forEach(n => {
-                const color = isPTSD ? 0x991b1b : 0x7c3aed;
+                let baseColor = 0x8b5cf6; // Default (Purple)
+                if (n.z < -20) baseColor = 0xf43f5e; // Visual Cortex (Rose)
+                else if (n.y > 15 && n.z >= -20 && n.z <= 20) baseColor = 0x10b981; // Somatomotor (Emerald)
+                else if (n.y < 0 && n.z >= -20 && n.z <= 20) baseColor = 0xf59e0b; // Limbic / Ventral Attn (Amber)
+                else if (n.z > 20) baseColor = 0x818cf8; // Frontal / Control (Indigo)
+
+                const color = isPTSD ? 0x991b1b : baseColor;
                 // High-end Fresnel/Glow look
-                const mat = new THREE.MeshPhongMaterial({ 
-                    color: color, 
-                    emissive: color, 
-                    emissiveIntensity: 0.4, 
-                    transparent: true, 
+                const mat = new THREE.MeshPhongMaterial({
+                    color: color,
+                    emissive: color,
+                    emissiveIntensity: 0.4,
+                    transparent: true,
                     opacity: 0.85,
-                    shininess: 100 
+                    shininess: 100
                 });
                 const mesh = new THREE.Mesh(lobeGeo, mat);
                 mesh.position.set(n.x, n.y, n.z);
-                mesh.userData = { ...n, origin: new THREE.Vector3(n.x, n.y, n.z) };
+                mesh.userData = { ...n, origin: new THREE.Vector3(n.x, n.y, n.z), baseColor: baseColor };
                 dashLobeGroup.add(mesh);
             });
-
             const edgeMat = new THREE.LineBasicMaterial({ color: 0x4c1d95, transparent: true, opacity: 0.1 });
             data.edges.forEach(e => {
                 const s = data.nodes[e.source], t = data.nodes[e.target];
@@ -1716,7 +1721,7 @@
                     const healthyScale = targetBaseScale + wave * 0.6;
                     node.scale.setScalar(healthyScale);
                     node.position.lerp(node.userData.origin, 0.1);
-                    node.material.color.setHex(0x7c3aed);
+                    node.material.color.setHex(node.userData.baseColor);
                     node.material.emissiveIntensity = 0.4 + wave * 0.3;
                 }
                 
