@@ -571,6 +571,11 @@
                             
                             <div class="space-y-8">
                                 <div>
+                                    <label class="text-[10px] uppercase font-bold text-slate-400 block mb-4 tracking-widest">Treatment Class</label>
+                                    <div class="flex bg-slate-100 p-1 rounded-lg mb-6">
+                                        <button id="btn-novel" class="flex-1 text-xs font-bold py-2 rounded-md bg-white shadow-sm text-indigo-600 transition-all" onclick="updateTreatmentClass('NOVEL')">Novel (Precision)</button>
+                                        <button id="btn-conv" class="flex-1 text-xs font-bold py-2 rounded-md text-slate-500 hover:text-slate-700 transition-all" onclick="updateTreatmentClass('CONVENTIONAL')">Conventional</button>
+                                    </div>
                                     <label class="text-[10px] uppercase font-bold text-slate-400 block mb-4 tracking-widest">Select Patient State</label>
                                     <div class="grid grid-cols-1 gap-3">
                                         <button id="btn-healthy" class="w-full text-left px-4 py-3 rounded-lg border border-slate-200 font-semibold text-sm transition-all active" onclick="updateDashboardState('HEALTHY')">
@@ -675,8 +680,11 @@
                                     </div>
                                     
                                     <div class="border-l-2 border-indigo-500 pl-6">
-                                        <h4 class="text-xl font-bold text-white mb-2">5. Pharmacological Optimization</h4>
-                                        <p class="text-slate-400 leading-relaxed text-sm">The dosage slider modulates the <strong class="text-white">Global Coupling Constant (K)</strong> in the Kuramoto phase-locking equation. As dosage increases to the optimal 50mg threshold, it physically widens the regions of stability (Arnold Tongues). Pushing the dose beyond 50mg introduces toxic 'hyper-synchrony,' where nodes lock rigidly and lose their organic breathing rhythm.</p>
+                                        <h4 class="text-xl font-bold text-white mb-2">5. Novel vs. Conventional Pharmacology</h4>
+                                        <p class="text-slate-400 leading-relaxed text-sm">
+                                            <strong>Novel Therapeutics (Precision):</strong> Compounds like ZB-01, SS-20, and DR-02 are designed to target the topological phase-locking mechanisms directly, restoring high-dimensional synchronization without destroying the baseline wave dynamics.<br><br>
+                                            <strong>Conventional Medications (Standard of Care):</strong> Broad-spectrum agents (e.g., SSRIs, Haloperidol) mathematically act as blunt global dampeners. Instead of repairing cliques, they merely suppress overall network amplitude. In the simulation, you'll observe that conventional meds fail to restore the golden optimal state, instead leading rapidly to extreme rigidity, dulling, or severe toxicity at higher doses.
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -1153,6 +1161,22 @@
         };
 
         let currentOptimalDose = 50;
+        let dashTreatmentClass = 'NOVEL';
+
+        const updateTreatmentClass = (cls) => {
+            dashTreatmentClass = cls;
+            document.getElementById('btn-novel').classList.toggle('bg-white', cls === 'NOVEL');
+            document.getElementById('btn-novel').classList.toggle('shadow-sm', cls === 'NOVEL');
+            document.getElementById('btn-novel').classList.toggle('text-indigo-600', cls === 'NOVEL');
+            document.getElementById('btn-novel').classList.toggle('text-slate-500', cls !== 'NOVEL');
+
+            document.getElementById('btn-conv').classList.toggle('bg-white', cls === 'CONVENTIONAL');
+            document.getElementById('btn-conv').classList.toggle('shadow-sm', cls === 'CONVENTIONAL');
+            document.getElementById('btn-conv').classList.toggle('text-indigo-600', cls === 'CONVENTIONAL');
+            document.getElementById('btn-conv').classList.toggle('text-slate-500', cls !== 'CONVENTIONAL');
+            
+            updateDashboardState(dashStatus);
+        };
 
         const updateDashboardState = (state) => {
             dashStatus = state;
@@ -1177,37 +1201,75 @@
 
             if (state === 'PTSD') {
                 label = 'PTSD Flash (D7)';
-                drugName = 'ZB-01 Dosage';
-                drugDesc = 'Adjust dosage to stabilize hyperarousal and repair 11D cliques.';
                 targetState = 'RESISTANT';
-                sliderMax = 100;
-                currentOptimalDose = 50;
+                if (dashTreatmentClass === 'NOVEL') {
+                    drugName = 'ZB-01 Dosage';
+                    drugDesc = 'Adjust dosage to stabilize hyperarousal and repair 11D cliques.';
+                    sliderMax = 100;
+                    currentOptimalDose = 50;
+                    moleculeName = 'ZB-01 (Indole Derivative)';
+                } else {
+                    drugName = 'Sertraline (SSRI) Dosage';
+                    drugDesc = 'Broad serotonin reuptake inhibition. Induces global dampening without targeted topological repair.';
+                    sliderMax = 200;
+                    currentOptimalDose = 100;
+                    moleculeSVG = `<svg viewBox="0 0 100 50" class="h-full w-auto stroke-slate-500 fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polygon points="30,25 40,15 55,15 65,25 55,35 40,35 Z"/>
+                                        <circle cx="20" cy="25" r="2" fill="#64748b"/>
+                                        <path d="M30 25 L20 25 M65 25 L75 25"/>
+                                   </svg>`;
+                    moleculeName = 'Sertraline (Standard of Care)';
+                }
             } else if (state === 'ADHD') {
                 label = 'ADHD (Inattentive)';
-                drugName = 'SynaptoStim (SS-20) Dosage';
-                drugDesc = 'Adjust dopaminergic stimulant dosage to increase connectivity in frontal networks.';
                 targetState = 'ADHD';
-                sliderMax = 60;
-                currentOptimalDose = 30;
-                moleculeSVG = `<svg viewBox="0 0 100 50" class="h-full w-auto stroke-indigo-600 fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M20 25 L35 25 L45 10 L60 10 L70 25 L85 25"/>
-                                    <path d="M35 25 L45 40 L60 40 L70 25"/>
-                                    <circle cx="20" cy="25" r="2" fill="#4f46e5"/><circle cx="85" cy="25" r="2" fill="#4f46e5"/><circle cx="60" cy="10" r="2" fill="#4f46e5"/>
-                               </svg>`;
-                moleculeName = 'SS-20 (Phenethylamine Class)';
+                if (dashTreatmentClass === 'NOVEL') {
+                    drugName = 'SynaptoStim (SS-20) Dosage';
+                    drugDesc = 'Adjust dopaminergic stimulant dosage to increase connectivity in frontal networks.';
+                    sliderMax = 60;
+                    currentOptimalDose = 30;
+                    moleculeSVG = `<svg viewBox="0 0 100 50" class="h-full w-auto stroke-indigo-600 fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M20 25 L35 25 L45 10 L60 10 L70 25 L85 25"/>
+                                        <path d="M35 25 L45 40 L60 40 L70 25"/>
+                                        <circle cx="20" cy="25" r="2" fill="#4f46e5"/><circle cx="85" cy="25" r="2" fill="#4f46e5"/><circle cx="60" cy="10" r="2" fill="#4f46e5"/>
+                                   </svg>`;
+                    moleculeName = 'SS-20 (Phenethylamine Class)';
+                } else {
+                    drugName = 'Amphetamine Salts Dosage';
+                    drugDesc = 'Broad stimulant. Narrow therapeutic window with rapid onset of hyper-arousal toxicity.';
+                    sliderMax = 60;
+                    currentOptimalDose = 20; // Reaches toxicity much faster
+                    moleculeSVG = `<svg viewBox="0 0 100 50" class="h-full w-auto stroke-slate-500 fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polygon points="30,25 40,15 55,15 65,25 55,35 40,35 Z"/>
+                                        <path d="M65 25 L80 15 M65 25 L80 35"/>
+                                   </svg>`;
+                    moleculeName = 'Amphetamine (Standard of Care)';
+                }
             } else if (state === 'TOURETTES') {
                 label = 'Tourette\'s (Motor Tic)';
-                drugName = 'DopaReg-D2 (DR-02) Dosage';
-                drugDesc = 'Adjust D2 antagonist dosage to dampen hyper-connected somatomotor loops.';
                 targetState = 'TOURETTES';
-                sliderMax = 10;
-                currentOptimalDose = 5;
-                moleculeSVG = `<svg viewBox="0 0 100 50" class="h-full w-auto stroke-indigo-600 fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M25 25 L35 15 L50 15 L60 25 L50 35 L35 35 Z"/>
-                                    <path d="M60 25 L75 25 L85 15 M75 25 L85 35"/>
-                                    <circle cx="25" cy="25" r="2" fill="#4f46e5"/><circle cx="85" cy="15" r="2" fill="#4f46e5"/><circle cx="85" cy="35" r="2" fill="#4f46e5"/>
-                               </svg>`;
-                moleculeName = 'DR-02 (Butyrophenone Analog)';
+                if (dashTreatmentClass === 'NOVEL') {
+                    drugName = 'DopaReg-D2 (DR-02) Dosage';
+                    drugDesc = 'Adjust D2 antagonist dosage to dampen hyper-connected somatomotor loops.';
+                    sliderMax = 10;
+                    currentOptimalDose = 5;
+                    moleculeSVG = `<svg viewBox="0 0 100 50" class="h-full w-auto stroke-indigo-600 fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M25 25 L35 15 L50 15 L60 25 L50 35 L35 35 Z"/>
+                                        <path d="M60 25 L75 25 L85 15 M75 25 L85 35"/>
+                                        <circle cx="25" cy="25" r="2" fill="#4f46e5"/><circle cx="85" cy="15" r="2" fill="#4f46e5"/><circle cx="85" cy="35" r="2" fill="#4f46e5"/>
+                                   </svg>`;
+                    moleculeName = 'DR-02 (Butyrophenone Analog)';
+                } else {
+                    drugName = 'Haloperidol Dosage';
+                    drugDesc = 'Aggressive D2 antagonism. Rapidly induces severe Parkinsonian rigidity (Tardive Dyskinesia).';
+                    sliderMax = 10;
+                    currentOptimalDose = 2; // Rigid very fast
+                    moleculeSVG = `<svg viewBox="0 0 100 50" class="h-full w-auto stroke-slate-500 fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polygon points="25,25 35,15 50,15 60,25 50,35 35,35 Z"/>
+                                        <path d="M60 25 L80 25"/>
+                                   </svg>`;
+                    moleculeName = 'Haloperidol (Standard of Care)';
+                }
             }
 
             document.getElementById('active-scenario-label').innerText = label;
@@ -1243,34 +1305,70 @@
                 pharmaBonus = 0;
             } else if (dashStatus === 'PTSD') {
                 score = 24;
-                if (dashPharmaEfficacy <= 1) {
-                    score += dashPharmaEfficacy * 76;
-                    pharmaBonus = dashPharmaEfficacy * 0.8;
+                if (dashTreatmentClass === 'NOVEL') {
+                    if (dashPharmaEfficacy <= 1) {
+                        score += dashPharmaEfficacy * 76;
+                        pharmaBonus = dashPharmaEfficacy * 0.8;
+                    } else {
+                        score = 100 - ((dashPharmaEfficacy - 1) * 60);
+                        pharmaBonus = 0.8 - ((dashPharmaEfficacy - 1) * 0.4);
+                    }
+                    baseScale = 0.4;
                 } else {
-                    score = 100 - ((dashPharmaEfficacy - 1) * 60);
-                    pharmaBonus = 0.8 - ((dashPharmaEfficacy - 1) * 0.4);
+                    // Conventional (SSRI) - broad dampening, no real repair
+                    if (dashPharmaEfficacy <= 1) {
+                        score += dashPharmaEfficacy * 20; // Maxes at 44%
+                        pharmaBonus = -(dashPharmaEfficacy * 0.2); // Shrinks further
+                    } else {
+                        score = 44 - ((dashPharmaEfficacy - 1) * 20);
+                        pharmaBonus = -0.2 - ((dashPharmaEfficacy - 1) * 0.2);
+                    }
+                    baseScale = 0.4;
                 }
-                baseScale = 0.4;
             } else if (dashStatus === 'ADHD') {
                 score = 45;
-                if (dashPharmaEfficacy <= 1) {
-                    score += dashPharmaEfficacy * 55;
-                    pharmaBonus = dashPharmaEfficacy * 0.4;
+                if (dashTreatmentClass === 'NOVEL') {
+                    if (dashPharmaEfficacy <= 1) {
+                        score += dashPharmaEfficacy * 55;
+                        pharmaBonus = dashPharmaEfficacy * 0.4;
+                    } else {
+                        score = 100 - ((dashPharmaEfficacy - 1) * 50);
+                        pharmaBonus = 0.4 + ((dashPharmaEfficacy - 1) * 0.6); // over-stim
+                    }
+                    baseScale = 0.6;
                 } else {
-                    score = 100 - ((dashPharmaEfficacy - 1) * 50);
-                    pharmaBonus = 0.4 + ((dashPharmaEfficacy - 1) * 0.6); // over-stim
+                    // Conventional (Amphetamine)
+                    if (dashPharmaEfficacy <= 1) {
+                        score += dashPharmaEfficacy * 45; // Maxes at 90%
+                        pharmaBonus = dashPharmaEfficacy * 0.5;
+                    } else {
+                        score = 90 - ((dashPharmaEfficacy - 1) * 80); // Crashes hard
+                        pharmaBonus = 0.5 + ((dashPharmaEfficacy - 1) * 1.5); // Severe over-stim
+                    }
+                    baseScale = 0.6;
                 }
-                baseScale = 0.6;
             } else if (dashStatus === 'TOURETTES') {
                 score = 35;
-                if (dashPharmaEfficacy <= 1) {
-                    score += dashPharmaEfficacy * 65;
-                    pharmaBonus = -(dashPharmaEfficacy * 0.6); // dampens
+                if (dashTreatmentClass === 'NOVEL') {
+                    if (dashPharmaEfficacy <= 1) {
+                        score += dashPharmaEfficacy * 65;
+                        pharmaBonus = -(dashPharmaEfficacy * 0.6); // dampens
+                    } else {
+                        score = 100 - ((dashPharmaEfficacy - 1) * 40);
+                        pharmaBonus = -0.6 - ((dashPharmaEfficacy - 1) * 0.4); // over-dampens
+                    }
+                    baseScale = 1.6; // hyper-connected base
                 } else {
-                    score = 100 - ((dashPharmaEfficacy - 1) * 40);
-                    pharmaBonus = -0.6 - ((dashPharmaEfficacy - 1) * 0.4); // over-dampens
+                    // Conventional (Haloperidol)
+                    if (dashPharmaEfficacy <= 1) {
+                        score += dashPharmaEfficacy * 30; // Maxes at 65%
+                        pharmaBonus = -(dashPharmaEfficacy * 1.0); // Heavy dampening
+                    } else {
+                        score = 65 - ((dashPharmaEfficacy - 1) * 60);
+                        pharmaBonus = -1.0 - ((dashPharmaEfficacy - 1) * 0.8); // Severe rigidity
+                    }
+                    baseScale = 1.6;
                 }
-                baseScale = 1.6; // hyper-connected base
             }
             
             const bar = document.getElementById('integrity-bar');
@@ -1281,7 +1379,7 @@
             
             dashLobeGroup.children.forEach(node => {
                 const cliqueParticipation = node.userData.cliques || 1;
-                const targetScale = baseScale + pharmaBonus + (cliqueParticipation * 0.05);
+                const targetScale = Math.max(0.1, baseScale + pharmaBonus + (cliqueParticipation * 0.05));
                 node.userData.targetScale = targetScale;
             });
 
@@ -1347,86 +1445,150 @@
                 const targetBaseScale = node.userData.targetScale || 1.0;
                 
                 if (dashStatus === 'PTSD') {
-                    if (dashPharmaEfficacy <= 1) {
-                        const jitter = (1 - dashPharmaEfficacy) * 12;
-                        node.position.x = node.userData.origin.x + (Math.random() - 0.5) * jitter;
-                        node.position.z = node.userData.origin.z + (Math.random() - 0.5) * jitter;
-                        
-                        const ptsdScale = targetBaseScale + wave * 0.4;
-                        node.scale.setScalar(Math.max(0.2, ptsdScale));
-                        
-                        const pharmaColor = new THREE.Color(0xfcd34d);
-                        const ptsdColor = new THREE.Color(0x991b1b);
-                        node.material.color.lerpColors(ptsdColor, pharmaColor, dashPharmaEfficacy);
-                        node.material.emissiveIntensity = 0.2 + (1 - dashPharmaEfficacy) * 0.8;
+                    if (dashTreatmentClass === 'NOVEL') {
+                        if (dashPharmaEfficacy <= 1) {
+                            const jitter = (1 - dashPharmaEfficacy) * 12;
+                            node.position.x = node.userData.origin.x + (Math.random() - 0.5) * jitter;
+                            node.position.z = node.userData.origin.z + (Math.random() - 0.5) * jitter;
+                            
+                            const ptsdScale = targetBaseScale + wave * 0.4;
+                            node.scale.setScalar(Math.max(0.2, ptsdScale));
+                            
+                            const pharmaColor = new THREE.Color(0xfcd34d);
+                            const ptsdColor = new THREE.Color(0x991b1b);
+                            node.material.color.lerpColors(ptsdColor, pharmaColor, dashPharmaEfficacy);
+                            node.material.emissiveIntensity = 0.2 + (1 - dashPharmaEfficacy) * 0.8;
+                        } else {
+                            // Hyper-synchrony / Toxicity (> 50mg)
+                            const overDose = dashPharmaEfficacy - 1; // 0 to 1
+                            const jitter = overDose * 6; 
+                            node.position.x = node.userData.origin.x + (Math.random() - 0.5) * jitter;
+                            node.position.y = node.userData.origin.y + (Math.random() - 0.5) * jitter;
+                            node.position.z = node.userData.origin.z + (Math.random() - 0.5) * jitter;
+                            
+                            const rigidScale = targetBaseScale * (1 - (overDose * 0.5));
+                            node.scale.setScalar(Math.max(0.1, rigidScale));
+                            
+                            const pharmaColor = new THREE.Color(0xfcd34d);
+                            const toxicColor = new THREE.Color(0xe0f2fe);
+                            node.material.color.lerpColors(pharmaColor, toxicColor, overDose);
+                            node.material.emissiveIntensity = 0.2 + (overDose * 2.0);
+                        }
                     } else {
-                        // Hyper-synchrony / Toxicity (> 50mg)
-                        const overDose = dashPharmaEfficacy - 1; // 0 to 1
-                        const jitter = overDose * 6; 
+                        // Conventional (SSRI) - broad suppression
+                        const jitter = (1 - Math.min(1, dashPharmaEfficacy)) * 12;
                         node.position.x = node.userData.origin.x + (Math.random() - 0.5) * jitter;
-                        node.position.y = node.userData.origin.y + (Math.random() - 0.5) * jitter;
                         node.position.z = node.userData.origin.z + (Math.random() - 0.5) * jitter;
                         
-                        const rigidScale = targetBaseScale * (1 - (overDose * 0.5));
-                        node.scale.setScalar(Math.max(0.1, rigidScale));
+                        const ssriScale = targetBaseScale + (wave * 0.4 * (1 - Math.min(1, dashPharmaEfficacy)));
+                        node.scale.setScalar(Math.max(0.1, ssriScale));
                         
-                        const pharmaColor = new THREE.Color(0xfcd34d);
-                        const toxicColor = new THREE.Color(0xe0f2fe);
-                        node.material.color.lerpColors(pharmaColor, toxicColor, overDose);
-                        node.material.emissiveIntensity = 0.2 + (overDose * 2.0);
+                        const ptsdColor = new THREE.Color(0x991b1b);
+                        const dullColor = new THREE.Color(0x64748b);
+                        node.material.color.lerpColors(ptsdColor, dullColor, Math.min(1, dashPharmaEfficacy));
+                        node.material.emissiveIntensity = 0.2 + (1 - Math.min(1, dashPharmaEfficacy)) * 0.8;
                     }
                 } else if (dashStatus === 'ADHD') {
-                    // Under-connected. Drug increases scale.
-                    if (dashPharmaEfficacy <= 1) {
-                        const adhdScale = targetBaseScale + wave * 0.3;
-                        node.scale.setScalar(Math.max(0.2, adhdScale));
-                        node.position.lerp(node.userData.origin, 0.1);
-                        
-                        const adhdColor = new THREE.Color(0x64748b); // dull slate
-                        const pharmaColor = new THREE.Color(0xfcd34d); // gold
-                        node.material.color.lerpColors(adhdColor, pharmaColor, dashPharmaEfficacy);
-                        node.material.emissiveIntensity = 0.1 + (dashPharmaEfficacy * 0.5);
+                    if (dashTreatmentClass === 'NOVEL') {
+                        if (dashPharmaEfficacy <= 1) {
+                            const adhdScale = targetBaseScale + wave * 0.3;
+                            node.scale.setScalar(Math.max(0.2, adhdScale));
+                            node.position.lerp(node.userData.origin, 0.1);
+                            
+                            const adhdColor = new THREE.Color(0x64748b); // dull slate
+                            const pharmaColor = new THREE.Color(0xfcd34d); // gold
+                            node.material.color.lerpColors(adhdColor, pharmaColor, dashPharmaEfficacy);
+                            node.material.emissiveIntensity = 0.1 + (dashPharmaEfficacy * 0.5);
+                        } else {
+                            const overDose = dashPharmaEfficacy - 1;
+                            const jitter = overDose * 15;
+                            node.position.x = node.userData.origin.x + (Math.random() - 0.5) * jitter;
+                            node.position.y = node.userData.origin.y + (Math.random() - 0.5) * jitter;
+                            
+                            const overScale = targetBaseScale + wave * 0.8;
+                            node.scale.setScalar(Math.max(0.2, overScale));
+                            
+                            const pharmaColor = new THREE.Color(0xfcd34d);
+                            const toxicColor = new THREE.Color(0xef4444); // red jitter
+                            node.material.color.lerpColors(pharmaColor, toxicColor, overDose);
+                            node.material.emissiveIntensity = 0.6 + (overDose * 1.5);
+                        }
                     } else {
-                        // Over-stimulation (>50mg)
-                        const overDose = dashPharmaEfficacy - 1;
-                        const jitter = overDose * 15;
-                        node.position.x = node.userData.origin.x + (Math.random() - 0.5) * jitter;
-                        node.position.y = node.userData.origin.y + (Math.random() - 0.5) * jitter;
-                        
-                        const overScale = targetBaseScale + wave * 0.8;
-                        node.scale.setScalar(Math.max(0.2, overScale));
-                        
-                        const pharmaColor = new THREE.Color(0xfcd34d);
-                        const toxicColor = new THREE.Color(0xef4444); // red jitter
-                        node.material.color.lerpColors(pharmaColor, toxicColor, overDose);
-                        node.material.emissiveIntensity = 0.6 + (overDose * 1.5);
+                        // Conventional (Amphetamine)
+                        if (dashPharmaEfficacy <= 1) {
+                            const adhdScale = targetBaseScale + wave * 0.3;
+                            node.scale.setScalar(Math.max(0.2, adhdScale));
+                            node.position.lerp(node.userData.origin, 0.1);
+                            
+                            const adhdColor = new THREE.Color(0x64748b);
+                            const activeColor = new THREE.Color(0x38bdf8); // bright blue
+                            node.material.color.lerpColors(adhdColor, activeColor, dashPharmaEfficacy);
+                            node.material.emissiveIntensity = 0.1 + (dashPharmaEfficacy * 0.8);
+                        } else {
+                            const overDose = dashPharmaEfficacy - 1;
+                            const jitter = overDose * 25; // More severe jitter
+                            node.position.x = node.userData.origin.x + (Math.random() - 0.5) * jitter;
+                            node.position.y = node.userData.origin.y + (Math.random() - 0.5) * jitter;
+                            
+                            const overScale = targetBaseScale + wave * 1.2;
+                            node.scale.setScalar(Math.max(0.2, overScale));
+                            
+                            const activeColor = new THREE.Color(0x38bdf8);
+                            const toxicColor = new THREE.Color(0xef4444);
+                            node.material.color.lerpColors(activeColor, toxicColor, Math.min(1, overDose));
+                            node.material.emissiveIntensity = 0.9 + (overDose * 2.0);
+                        }
                     }
                 } else if (dashStatus === 'TOURETTES') {
-                    // Hyper-connected. Drug dampens.
-                    if (dashPharmaEfficacy <= 1) {
-                        const tickJitter = (1 - dashPharmaEfficacy) * 8 * (Math.random() > 0.8 ? 1 : 0); // Sudden tics
-                        node.position.y = node.userData.origin.y + (Math.random() - 0.5) * tickJitter;
-                        node.position.x = node.userData.origin.x + (Math.random() - 0.5) * tickJitter;
-                        
-                        const touretteScale = targetBaseScale + wave * 0.8;
-                        node.scale.setScalar(Math.max(0.2, touretteScale));
-                        
-                        const tColor = new THREE.Color(0x10b981); // green hyper
-                        const pharmaColor = new THREE.Color(0xfcd34d);
-                        node.material.color.lerpColors(tColor, pharmaColor, dashPharmaEfficacy);
-                        node.material.emissiveIntensity = 0.8 - (dashPharmaEfficacy * 0.4);
+                    if (dashTreatmentClass === 'NOVEL') {
+                        if (dashPharmaEfficacy <= 1) {
+                            const tickJitter = (1 - dashPharmaEfficacy) * 8 * (Math.random() > 0.8 ? 1 : 0); // Sudden tics
+                            node.position.y = node.userData.origin.y + (Math.random() - 0.5) * tickJitter;
+                            node.position.x = node.userData.origin.x + (Math.random() - 0.5) * tickJitter;
+                            
+                            const touretteScale = targetBaseScale + wave * 0.8;
+                            node.scale.setScalar(Math.max(0.2, touretteScale));
+                            
+                            const tColor = new THREE.Color(0x10b981); // green hyper
+                            const pharmaColor = new THREE.Color(0xfcd34d);
+                            node.material.color.lerpColors(tColor, pharmaColor, dashPharmaEfficacy);
+                            node.material.emissiveIntensity = 0.8 - (dashPharmaEfficacy * 0.4);
+                        } else {
+                            const overDose = dashPharmaEfficacy - 1;
+                            node.position.lerp(node.userData.origin, 0.2); // Very rigid
+                            
+                            const rigidScale = targetBaseScale * (1 - (overDose * 0.6));
+                            node.scale.setScalar(Math.max(0.1, rigidScale));
+                            
+                            const pharmaColor = new THREE.Color(0xfcd34d);
+                            const toxicColor = new THREE.Color(0x475569); // dull grey
+                            node.material.color.lerpColors(pharmaColor, toxicColor, overDose);
+                            node.material.emissiveIntensity = 0.4 - (overDose * 0.3);
+                        }
                     } else {
-                        // Over-dampening (Parkinsonism-like rigidity)
-                        const overDose = dashPharmaEfficacy - 1;
-                        node.position.lerp(node.userData.origin, 0.2); // Very rigid
-                        
-                        const rigidScale = targetBaseScale * (1 - (overDose * 0.6));
-                        node.scale.setScalar(Math.max(0.1, rigidScale));
-                        
-                        const pharmaColor = new THREE.Color(0xfcd34d);
-                        const toxicColor = new THREE.Color(0x475569); // dull grey
-                        node.material.color.lerpColors(pharmaColor, toxicColor, overDose);
-                        node.material.emissiveIntensity = 0.4 - (overDose * 0.3);
+                        // Conventional (Haloperidol)
+                        if (dashPharmaEfficacy <= 1) {
+                            const tickJitter = (1 - dashPharmaEfficacy) * 8 * (Math.random() > 0.8 ? 1 : 0);
+                            node.position.y = node.userData.origin.y + (Math.random() - 0.5) * tickJitter;
+                            node.position.x = node.userData.origin.x + (Math.random() - 0.5) * tickJitter;
+                            
+                            const rigidScale = targetBaseScale * (1 - (dashPharmaEfficacy * 0.8)); // severely dampens scale quickly
+                            node.scale.setScalar(Math.max(0.1, rigidScale));
+                            
+                            const tColor = new THREE.Color(0x10b981);
+                            const dullColor = new THREE.Color(0x475569);
+                            node.material.color.lerpColors(tColor, dullColor, dashPharmaEfficacy);
+                            node.material.emissiveIntensity = 0.8 - (dashPharmaEfficacy * 0.7);
+                        } else {
+                            const overDose = dashPharmaEfficacy - 1;
+                            node.position.lerp(node.userData.origin, 0.8); // Total rigidity
+                            
+                            const rigidScale = targetBaseScale * (1 - (overDose * 0.9));
+                            node.scale.setScalar(Math.max(0.05, rigidScale));
+                            
+                            node.material.color.setHex(0x334155);
+                            node.material.emissiveIntensity = 0.1;
+                        }
                     }
                 } else {
                     const healthyScale = targetBaseScale + wave * 0.6;
