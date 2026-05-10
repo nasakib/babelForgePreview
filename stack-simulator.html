@@ -69,10 +69,10 @@
     </nav>
 
     <!-- Main Content -->
-    <div class="flex-grow flex flex-col md:flex-row max-w-[1600px] w-full mx-auto p-4 gap-4 min-h-[calc(100vh-4rem)]">
+    <div class="flex-grow flex flex-col lg:flex-row w-full mx-auto p-4 gap-4 min-h-[calc(100vh-4rem)]">
         
         <!-- Left Panel: Stack Builder -->
-        <div class="w-full md:w-[400px] flex flex-col gap-4 flex-none h-full">
+        <div class="w-full lg:w-[350px] flex flex-col gap-4 flex-none h-full">
             <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex-none">
                 <div class="inline-block px-2 py-1 bg-indigo-50 text-indigo-700 rounded text-[9px] font-bold uppercase tracking-widest mb-3">Database Query</div>
                 <h2 class="text-xl font-bold text-slate-900 mb-1">Polypharmacy Builder</h2>
@@ -136,6 +136,56 @@
             </div>
         </div>
 
+        <!-- Middle Panel: Smart Assistant -->
+        <div class="w-full lg:w-[350px] flex flex-col gap-4 flex-none h-full">
+            <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex-none">
+                <div class="inline-block px-2 py-1 bg-emerald-50 text-emerald-700 rounded text-[9px] font-bold uppercase tracking-widest mb-3">AI Clinical Assistant</div>
+                <h2 class="text-xl font-bold text-slate-900 mb-1">Dosage Calculator</h2>
+                <p class="text-xs text-slate-500 mb-5">Optimize stack based on patient profile and goals.</p>
+
+                <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-[10px] uppercase font-bold text-slate-400 block mb-2 tracking-widest">Weight (kg)</label>
+                            <input type="number" id="patient-weight" value="70" class="w-full bg-slate-50 border border-slate-200 text-sm font-semibold text-slate-700 rounded-lg p-2.5 focus:outline-none focus:border-emerald-500" onchange="runAssistant()">
+                        </div>
+                        <div>
+                            <label class="text-[10px] uppercase font-bold text-slate-400 block mb-2 tracking-widest">Tolerance</label>
+                            <select id="patient-tolerance" class="w-full bg-slate-50 border border-slate-200 text-sm font-semibold text-slate-700 rounded-lg p-2.5 focus:outline-none focus:border-emerald-500" onchange="runAssistant()">
+                                <option value="0.8">Low (Naïve)</option>
+                                <option value="1.0" selected>Medium (Standard)</option>
+                                <option value="1.5">High (Adapted)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-[10px] uppercase font-bold text-slate-400 block mb-2 tracking-widest">Target Optimal State</label>
+                        <select id="target-state" class="w-full bg-slate-50 border border-slate-200 text-sm font-semibold text-slate-700 rounded-lg p-2.5 focus:outline-none focus:border-emerald-500" onchange="runAssistant()">
+                            <option value="baseline">Healthy Baseline (Balanced)</option>
+                            <option value="focus">Deep Focus (High Arousal, Low Chaos)</option>
+                            <option value="relaxation">Relaxation (Low Arousal, High Dampening)</option>
+                            <option value="sleep">Sleep/Sedation (Max Dampening)</option>
+                            <option value="creative">Creative Flow (High Repair, Mild Chaos)</option>
+                        </select>
+                    </div>
+
+                    <button onclick="applyOptimalDoses()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold uppercase tracking-widest py-3 rounded-lg transition-colors shadow-md shadow-emerald-200">
+                        ⚡ Auto-Adjust Dosages
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex-grow flex flex-col overflow-hidden">
+                <div class="flex justify-between items-center mb-4 flex-none">
+                    <h3 class="text-sm font-bold text-slate-900 uppercase tracking-widest">Clinical Recommendations</h3>
+                </div>
+                <div id="assistant-feedback" class="flex-grow overflow-y-auto text-sm text-slate-600 space-y-4">
+                    <p class="italic text-slate-400 text-center mt-10">Add molecules to your stack to receive clinical recommendations.</p>
+                </div>
+            </div>
+        </div>
+
         <!-- Right Panel: 3D Visualization -->
         <div class="flex-grow bg-white border border-slate-200 rounded-2xl p-1 shadow-sm flex flex-col relative min-h-[500px] lg:min-h-full">
             <div id="canvas-container" class="w-full h-full min-h-[500px] lg:min-h-[auto] cursor-crosshair rounded-xl overflow-hidden bg-[#030008]"></div>
@@ -175,9 +225,37 @@
     <script>
         // --- Molecular Database (Simulating 150+ indexing) ---
         // Base SVGs
-        const svgIndole = `<svg viewBox="0 0 100 50" class="h-full w-auto stroke-current fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="30,25 45,15 65,15 75,25 65,35 45,35" /><polygon points="65,15 85,10 90,25 75,25" /><circle cx="85" cy="10" r="2" fill="currentColor" /><circle cx="30" cy="25" r="2" fill="currentColor" /><path d="M45,35 L40,50 M65,35 L70,50" stroke-dasharray="2,2" /></svg>`;
-        const svgPhen = `<svg viewBox="0 0 100 50" class="h-full w-auto stroke-current fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="20,25 30,10 50,10 60,25 50,40 30,40" /><path d="M60,25 L80,15 L95,25 L95,45" /><circle cx="95" cy="25" r="2" fill="currentColor" /></svg>`;
-        const svgTricyclic = `<svg viewBox="0 0 100 50" class="h-full w-auto stroke-current fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="20,25 30,15 45,15 55,25 45,35 30,35" /><polygon points="55,25 65,15 80,15 90,25 80,35 65,35" /><path d="M45,15 L65,15 M45,35 L65,35" /><circle cx="55" cy="25" r="2" fill="currentColor" /></svg>`;
+        const svgIndole = `<svg viewBox="0 0 160 100" class="h-full w-auto stroke-current fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="50,40 70,30 90,40 90,60 70,70 50,60" />
+    <path d="M55,45 L55,55 M70,35 L85,45 M70,65 L85,55" stroke-width="1.5" />
+    <polygon points="90,40 110,30 120,45 105,60 90,60" />
+    <text x="96" y="74" font-family="Inter" font-size="12" fill="currentColor" stroke="none" font-weight="bold">NH</text>
+    <path d="M120,45 L135,35 L135,20" />
+    <text x="126" y="15" font-family="Inter" font-size="12" fill="currentColor" stroke="none" font-weight="bold">N(CH₃)₂</text>
+    <path d="M70,30 L70,15" />
+    <text x="63" y="10" font-family="Inter" font-size="12" fill="#ef4444" stroke="none" font-weight="bold">OH</text>
+</svg>`;
+        const svgPhen = `<svg viewBox="0 0 160 100" class="h-full w-auto stroke-current fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="40,50 60,38 80,50 80,70 60,82 40,70" />
+    <path d="M45,53 L45,67 M60,43 L75,53 M60,77 L75,67" stroke-width="1.5" />
+    <path d="M80,50 L105,35 L130,50" />
+    <path d="M105,35 L105,15" />
+    <text x="135" y="55" font-family="Inter" font-size="12" fill="currentColor" stroke="none" font-weight="bold">NH₂</text>
+    <text x="98" y="10" font-family="Inter" font-size="12" fill="currentColor" stroke="none" font-weight="bold">CH₃</text>
+</svg>`;
+        const svgTricyclic = `<svg viewBox="0 0 200 100" class="h-full w-auto stroke-current fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <text x="5" y="55" font-family="Inter" font-size="12" fill="#10b981" stroke="none" font-weight="bold">F</text>
+    <path d="M15,50 L35,50" />
+    <polygon points="35,50 45,35 65,35 75,50 65,65 45,65" />
+    <path d="M42,48 L48,40 M60,40 L68,48 M60,60 L48,60" stroke-width="1.5" />
+    <path d="M75,50 L90,50 L100,35 L120,35" />
+    <path d="M90,50 L90,65 M86,50 L86,65" />
+    <text x="84" y="78" font-family="Inter" font-size="12" fill="#ef4444" stroke="none" font-weight="bold">O</text>
+    <text x="125" y="40" font-family="Inter" font-size="12" fill="currentColor" stroke="none" font-weight="bold">N</text>
+    <polygon points="135,35 145,20 165,20 175,35 165,50 145,50" />
+    <path d="M175,35 L190,35" />
+    <text x="195" y="40" font-family="Inter" font-size="12" fill="#64748b" stroke="none" font-weight="bold">Cl</text>
+</svg>`;
         const svgCannabinoid = `<svg viewBox="0 0 100 50" class="h-full w-auto stroke-current fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="30,25 40,10 55,10 65,25 55,40 40,40" /><polygon points="65,25 75,10 90,10 100,25 90,40 75,40" /><path d="M55,10 L75,10" /><path d="M20,15 L30,25 L20,35" /><circle cx="65" cy="25" r="2" fill="currentColor" /></svg>`;
 
         const molecules = [
@@ -565,6 +643,103 @@
             });
 
             renderer.render(scene, camera);
+        }
+
+        let assistantRecommendations = [];
+
+        function runAssistant() {
+            const weight = parseFloat(document.getElementById('patient-weight').value) || 70;
+            const tolerance = parseFloat(document.getElementById('patient-tolerance').value) || 1.0;
+            const targetState = document.getElementById('target-state').value;
+            
+            const feedbackBox = document.getElementById('assistant-feedback');
+            assistantRecommendations = [];
+            
+            if (currentStack.length === 0) {
+                feedbackBox.innerHTML = '<p class="italic text-slate-400 text-center mt-10">Add molecules to your stack to receive clinical recommendations.</p>';
+                return;
+            }
+
+            let html = '<ul class="space-y-4">';
+            
+            // 1. Calculate Patient-Specific Dosage
+            const patientMultiplier = (weight / 70) * tolerance;
+            
+            currentStack.forEach(mol => {
+                const calculatedOptimal = Math.round(mol.optimalDose * patientMultiplier);
+                assistantRecommendations.push({ id: mol.id, recommendedDose: calculatedOptimal });
+                
+                let doseStatus = '';
+                if (mol.currentDose < calculatedOptimal * 0.8) {
+                    doseStatus = '<span class="text-amber-500 font-bold">Sub-therapeutic</span>';
+                } else if (mol.currentDose > calculatedOptimal * 1.2) {
+                    doseStatus = '<span class="text-rose-500 font-bold">Toxic (Overdose risk)</span>';
+                } else {
+                    doseStatus = '<span class="text-emerald-500 font-bold">Optimal</span>';
+                }
+                
+                html += `
+                    <li class="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                        <div class="flex justify-between items-center mb-1">
+                            <strong class="text-slate-900">${mol.name}</strong>
+                            ${doseStatus}
+                        </div>
+                        <div class="text-[10px]">
+                            Patient Adjusted Optimal: <span class="font-mono font-bold">${calculatedOptimal} mg</span>
+                        </div>
+                    </li>
+                `;
+            });
+            
+            // 2. Target State Alignment
+            html += '<div class="border-t border-slate-200 pt-3 mt-4">';
+            html += '<strong class="text-slate-900 block mb-2">Stack Alignment: ' + targetState.toUpperCase() + '</strong>';
+            
+            let currentArousal = 0, currentDampening = 0;
+            currentStack.forEach(m => {
+                const ratio = m.currentDose / (m.optimalDose * patientMultiplier);
+                currentArousal += m.effects.arousal * Math.min(1, ratio);
+                currentDampening += m.effects.dampening * Math.min(1, ratio);
+            });
+
+            if (targetState === 'focus') {
+                if (currentArousal < 1.0) html += '<p class="text-amber-600 text-xs mt-1 flex gap-2"><span>⚠️</span> Add a dopaminergic stimulant (e.g., SS-20, Methylphenidate) to achieve focus.</p>';
+                if (currentDampening > 0.5) html += '<p class="text-rose-600 text-xs mt-1 flex gap-2"><span>❌</span> Remove depressants/antipsychotics; they block focus pathways.</p>';
+            } else if (targetState === 'sleep') {
+                if (currentDampening < 1.0) html += '<p class="text-amber-600 text-xs mt-1 flex gap-2"><span>⚠️</span> Add a depressant (e.g., Zolpidem, Lorazepam) to induce sleep.</p>';
+                if (currentArousal > 0.2) html += '<p class="text-rose-600 text-xs mt-1 flex gap-2"><span>❌</span> Remove stimulants; they will prevent sleep architecture.</p>';
+            } else if (targetState === 'creative') {
+                const hasPsychedelic = currentStack.some(m => m.id === 'psilo' || m.id === 'mdma');
+                if (!hasPsychedelic) html += '<p class="text-amber-600 text-xs mt-1 flex gap-2"><span>💡</span> Consider adding a classic psychedelic (e.g., Psilocybin) for creative topology expansion.</p>';
+            } else if (targetState === 'relaxation') {
+                if (currentDampening < 0.5) html += '<p class="text-amber-600 text-xs mt-1 flex gap-2"><span>⚠️</span> Add a mild cannabinoid (e.g., CBD) or low-dose depressant for relaxation.</p>';
+                if (currentArousal > 0.5) html += '<p class="text-rose-600 text-xs mt-1 flex gap-2"><span>❌</span> Stimulant dosage is too high for relaxation.</p>';
+            } else if (targetState === 'baseline') {
+                if (currentArousal > 1.0 || currentDampening > 1.0) {
+                    html += '<p class="text-amber-600 text-xs mt-1 flex gap-2"><span>⚠️</span> Stack is too heavy. Remove conflicting molecules to restore baseline.</p>';
+                } else {
+                    html += '<p class="text-emerald-600 text-xs mt-1 flex gap-2"><span>✅</span> Stack is well-balanced for healthy baseline operations.</p>';
+                }
+            }
+
+            html += '</div></ul>';
+            feedbackBox.innerHTML = html;
+        }
+
+        function applyOptimalDoses() {
+            if (currentStack.length === 0 || assistantRecommendations.length === 0) return;
+            
+            assistantRecommendations.forEach((rec, idx) => {
+                // Find input in UI and update it
+                const input = document.querySelector(`input[oninput="updateStackDose(${idx}, this.value)"]`);
+                if (input) {
+                    // clamp to max
+                    let safeVal = Math.min(rec.recommendedDose, input.max);
+                    input.value = safeVal;
+                    updateStackDose(idx, safeVal);
+                }
+            });
+            runAssistant(); // Refresh feedback
         }
 
         populateMolecules();

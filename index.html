@@ -1239,11 +1239,16 @@
             let targetState = 'RESPONSIVE';
             let sliderMax = 100;
             currentOptimalDose = 50;
-            let moleculeSVG = `<svg viewBox="0 0 100 50" class="h-full w-auto stroke-indigo-600 fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M30 25 L40 15 L55 15 L65 25 L55 35 L40 35 Z"/>
-                                    <path d="M40 15 L35 5 M65 25 L75 25 L80 15 M55 35 L60 45"/>
-                                    <circle cx="35" cy="5" r="2" fill="#4f46e5"/><circle cx="80" cy="15" r="2" fill="#4f46e5"/><circle cx="60" cy="45" r="2" fill="#4f46e5"/>
-                               </svg>`;
+            let moleculeSVG = `<svg viewBox="0 0 160 100" class="h-full w-auto stroke-indigo-600 fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="50,40 70,30 90,40 90,60 70,70 50,60" />
+    <path d="M55,45 L55,55 M70,35 L85,45 M70,65 L85,55" stroke-width="1.5" />
+    <polygon points="90,40 110,30 120,45 105,60 90,60" />
+    <text x="96" y="74" font-family="Inter" font-size="12" fill="currentColor" stroke="none" font-weight="bold">NH</text>
+    <path d="M120,45 L135,35 L135,20" />
+    <text x="126" y="15" font-family="Inter" font-size="12" fill="currentColor" stroke="none" font-weight="bold">N(CH₃)₂</text>
+    <path d="M70,30 L70,15" />
+    <text x="63" y="10" font-family="Inter" font-size="12" fill="#ef4444" stroke="none" font-weight="bold">OH</text>
+</svg>`;
             let moleculeName = 'ZB-01 (Indole Derivative)';
 
             if (state === 'PTSD') {
@@ -1275,11 +1280,14 @@
                     drugDesc = 'Adjust dopaminergic stimulant dosage to increase connectivity in frontal networks.';
                     sliderMax = 60;
                     currentOptimalDose = 30;
-                    moleculeSVG = `<svg viewBox="0 0 100 50" class="h-full w-auto stroke-indigo-600 fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M20 25 L35 25 L45 10 L60 10 L70 25 L85 25"/>
-                                        <path d="M35 25 L45 40 L60 40 L70 25"/>
-                                        <circle cx="20" cy="25" r="2" fill="#4f46e5"/><circle cx="85" cy="25" r="2" fill="#4f46e5"/><circle cx="60" cy="10" r="2" fill="#4f46e5"/>
-                                   </svg>`;
+                    moleculeSVG = `<svg viewBox="0 0 160 100" class="h-full w-auto stroke-indigo-600 fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="40,50 60,38 80,50 80,70 60,82 40,70" />
+    <path d="M45,53 L45,67 M60,43 L75,53 M60,77 L75,67" stroke-width="1.5" />
+    <path d="M80,50 L105,35 L130,50" />
+    <path d="M105,35 L105,15" />
+    <text x="135" y="55" font-family="Inter" font-size="12" fill="currentColor" stroke="none" font-weight="bold">NH₂</text>
+    <text x="98" y="10" font-family="Inter" font-size="12" fill="currentColor" stroke="none" font-weight="bold">CH₃</text>
+</svg>`;
                     moleculeName = 'SS-20 (Phenethylamine Class)';
                 } else {
                     drugName = 'Amphetamine Salts Dosage';
@@ -1300,11 +1308,19 @@
                     drugDesc = 'Adjust D2 antagonist dosage to dampen hyper-connected somatomotor loops.';
                     sliderMax = 10;
                     currentOptimalDose = 5;
-                    moleculeSVG = `<svg viewBox="0 0 100 50" class="h-full w-auto stroke-indigo-600 fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M25 25 L35 15 L50 15 L60 25 L50 35 L35 35 Z"/>
-                                        <path d="M60 25 L75 25 L85 15 M75 25 L85 35"/>
-                                        <circle cx="25" cy="25" r="2" fill="#4f46e5"/><circle cx="85" cy="15" r="2" fill="#4f46e5"/><circle cx="85" cy="35" r="2" fill="#4f46e5"/>
-                                   </svg>`;
+                    moleculeSVG = `<svg viewBox="0 0 200 100" class="h-full w-auto stroke-indigo-600 fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <text x="5" y="55" font-family="Inter" font-size="12" fill="#10b981" stroke="none" font-weight="bold">F</text>
+    <path d="M15,50 L35,50" />
+    <polygon points="35,50 45,35 65,35 75,50 65,65 45,65" />
+    <path d="M42,48 L48,40 M60,40 L68,48 M60,60 L48,60" stroke-width="1.5" />
+    <path d="M75,50 L90,50 L100,35 L120,35" />
+    <path d="M90,50 L90,65 M86,50 L86,65" />
+    <text x="84" y="78" font-family="Inter" font-size="12" fill="#ef4444" stroke="none" font-weight="bold">O</text>
+    <text x="125" y="40" font-family="Inter" font-size="12" fill="currentColor" stroke="none" font-weight="bold">N</text>
+    <polygon points="135,35 145,20 165,20 175,35 165,50 145,50" />
+    <path d="M175,35 L190,35" />
+    <text x="195" y="40" font-family="Inter" font-size="12" fill="#64748b" stroke="none" font-weight="bold">Cl</text>
+</svg>`;
                     moleculeName = 'DR-02 (Butyrophenone Analog)';
                 } else {
                     drugName = 'Haloperidol Dosage';
@@ -1449,36 +1465,36 @@
                     explanation = 'The network is operating at baseline optimal synchronization. High-dimensional cliques are forming and dissolving rhythmically. No intervention required.';
                 } else if (dashStatus === 'PTSD') {
                     if (dashTreatmentClass === 'NOVEL') {
-                        if (dashPharmaEfficacy === 0) explanation = 'Severe hyperarousal detected. High-frequency spectral noise has shattered 11D cliques into low-dimensional fragments (red nodes).';
+                        if (dashPharmaEfficacy === 0) explanation = 'Negative State (PTSD Flash). Severe hyperarousal detected. Suggest dosing 50mg ZB-01 for rapid stabilization, or waiting 12-24 hours to return to baseline naturally.';
                         else if (dashPharmaEfficacy < 1) explanation = 'Sub-therapeutic dosage. ZB-01 is beginning to physically widen Arnold Tongues, but topological repair is incomplete.';
                         else if (dashPharmaEfficacy === 1) explanation = 'Optimal dosage (50mg). Arnold Tongues are sufficiently widened, stabilizing the network and allowing 11D cliques to reassemble organically.';
                         else explanation = 'Toxicity (Hyper-synchrony). Excessive coupling has induced pathological rigidity, locking nodes and destroying functional wave dynamics.';
                     } else {
-                        if (dashPharmaEfficacy === 0) explanation = 'Severe hyperarousal detected. 11D cliques are fractured.';
+                        if (dashPharmaEfficacy === 0) explanation = 'Negative State (PTSD Flash). Severe hyperarousal detected. Suggest intervention or waiting 12-24 hours to return to baseline.';
                         else if (dashPharmaEfficacy < 1) explanation = 'Broad serotonin reuptake inhibition is dampening network amplitude globally, but failing to restore targeted high-D clique structures.';
                         else if (dashPharmaEfficacy === 1) explanation = 'Maximal SSRI effect. The network is suppressed (dull grey), masking arousal symptoms but leaving underlying topological damage unrepaired.';
                         else explanation = 'SSRI toxicity/Serotonin syndrome. Severe structural blunting and over-suppression.';
                     }
                 } else if (dashStatus === 'ADHD') {
                     if (dashTreatmentClass === 'NOVEL') {
-                        if (dashPharmaEfficacy === 0) explanation = 'Hypo-connectivity detected in prefrontal control networks. Signal dynamics are sluggish and blunted.';
+                        if (dashPharmaEfficacy === 0) explanation = 'Negative State (ADHD). Hypo-connectivity detected in prefrontal control networks. Suggest dosing 30mg SS-20 to upregulate dynamics.';
                         else if (dashPharmaEfficacy < 1) explanation = 'Sub-therapeutic dosage. Dopaminergic stimulation is gradually upregulating network activity.';
                         else if (dashPharmaEfficacy === 1) explanation = 'Optimal dosage (30mg). Frontal networks are perfectly upregulated, matching healthy baseline wave dynamics without over-stimulation.';
                         else explanation = 'Over-stimulation. Excessive dopamine is causing chaotic, hyper-aroused jittering and signal breakdown.';
                     } else {
-                        if (dashPharmaEfficacy === 0) explanation = 'Hypo-connectivity detected in prefrontal control networks.';
+                        if (dashPharmaEfficacy === 0) explanation = 'Negative State (ADHD). Hypo-connectivity detected in prefrontal control networks.';
                         else if (dashPharmaEfficacy < 1) explanation = 'Amphetamine salts are aggressively upregulating network activity, accelerating rapidly towards toxicity.';
                         else if (dashPharmaEfficacy === 1) explanation = 'Peak therapeutic effect, but with a highly dangerous, narrow window before severe toxicity onset.';
                         else explanation = 'Amphetamine toxicity. Rapid onset of severe hyper-arousal, erratic jumping, and topological fragmentation.';
                     }
                 } else if (dashStatus === 'TOURETTES') {
                     if (dashTreatmentClass === 'NOVEL') {
-                        if (dashPharmaEfficacy === 0) explanation = 'Pathological hyper-connectivity in somatomotor loops causing sudden, rigid synchronization spikes (tics).';
+                        if (dashPharmaEfficacy === 0) explanation = 'Negative State (Tourette\'s). Pathological hyper-connectivity causing tics. Suggest dosing 5mg DR-02 to dampen loops, or waiting out the tic cluster.';
                         else if (dashPharmaEfficacy < 1) explanation = 'Sub-therapeutic. Targeted D2 antagonism is beginning to soften erratic synchronization spikes.';
                         else if (dashPharmaEfficacy === 1) explanation = 'Optimal dosage (5mg). DR-02 has successfully dampened hyper-connectivity back to smooth baseline dynamics.';
-                        else explanation = 'Over-dampening. Excessive D2 blockade is leading to network rigidity and loss of functional variance.';
+                        else explanation = 'Over-dampening. Excessive D2 blockade is leading to network rigidity (Parkinsonian side-effects).';
                     } else {
-                        if (dashPharmaEfficacy === 0) explanation = 'Pathological hyper-connectivity causing sudden, rigid synchronization spikes (tics).';
+                        if (dashPharmaEfficacy === 0) explanation = 'Negative State (Tourette\'s). Pathological hyper-connectivity causing sudden, rigid synchronization spikes (tics).';
                         else if (dashPharmaEfficacy < 1) explanation = 'Aggressive D2 antagonism is rapidly crashing network amplitude and freezing nodes.';
                         else if (dashPharmaEfficacy === 1) explanation = 'Tics suppressed, but at the cost of significant network rigidity and structural dampening.';
                         else explanation = 'Haloperidol toxicity. Severe Parkinsonian rigidity (Tardive Dyskinesia). The network is completely frozen.';

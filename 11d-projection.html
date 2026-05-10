@@ -349,24 +349,24 @@
                 text += `💊 ${currentDrugName}: ${(pharmaEfficacy*100).toFixed(0)}% STABILIZED`;
             }
             document.getElementById('mod-val').innerText = text;
-            
+
             const explanationBox = document.getElementById('dosage-explanation');
             if (explanationBox) {
                 let explanation = '';
                 if (currentStatus === 'RESPONSIVE') {
                     explanation = 'Baseline optimal synchronization. High-dimensional cliques form and dissolve rhythmically. No intervention required.';
                 } else if (currentStatus === 'RESISTANT') {
-                    if (pharmaEfficacy === 0) explanation = 'Severe hyperarousal detected. High-frequency spectral noise has shattered 11D cliques into low-dimensional fragments (red nodes).';
+                    if (pharmaEfficacy === 0) explanation = 'Negative State (PTSD Flash). Severe hyperarousal detected. Suggest dosing 50mg ZB-01 for rapid stabilization, or waiting 12-24 hours to return to baseline naturally.';
                     else if (pharmaEfficacy < 1) explanation = 'Sub-therapeutic dosage. ZB-01 is physically widening Arnold Tongues, but topological repair is incomplete.';
                     else if (pharmaEfficacy === 1) explanation = 'Optimal dosage (50mg). Arnold Tongues widened, stabilizing the network and allowing 11D cliques to reassemble organically.';
                     else explanation = 'Toxicity (Hyper-synchrony). Excessive coupling has induced pathological rigidity, destroying functional wave dynamics.';
                 } else if (currentStatus === 'ADHD') {
-                    if (pharmaEfficacy === 0) explanation = 'Hypo-connectivity detected in frontal control networks. Signal dynamics are sluggish and blunted.';
+                    if (pharmaEfficacy === 0) explanation = 'Negative State (ADHD). Hypo-connectivity detected in frontal control networks. Suggest dosing 30mg SS-20 to upregulate dynamics.';
                     else if (pharmaEfficacy < 1) explanation = 'Sub-therapeutic dosage. Dopaminergic stimulation is gradually upregulating network activity.';
                     else if (pharmaEfficacy === 1) explanation = 'Optimal dosage (30mg). Frontal networks are perfectly upregulated, matching healthy baseline wave dynamics.';
                     else explanation = 'Over-stimulation. Excessive dopamine is causing chaotic, hyper-aroused jittering and signal breakdown.';
                 } else if (currentStatus === 'TOURETTES') {
-                    if (pharmaEfficacy === 0) explanation = 'Pathological hyper-connectivity in somatomotor loops causing sudden, rigid synchronization spikes (tics).';
+                    if (pharmaEfficacy === 0) explanation = 'Negative State (Tourette\'s). Pathological hyper-connectivity causing tics. Suggest dosing 5mg DR-02 to dampen loops, or waiting out the tic cluster.';
                     else if (pharmaEfficacy < 1) explanation = 'Sub-therapeutic. Targeted D2 antagonism is beginning to soften erratic synchronization spikes.';
                     else if (pharmaEfficacy === 1) explanation = 'Optimal dosage (5mg). DR-02 has successfully dampened hyper-connectivity back to smooth baseline dynamics.';
                     else explanation = 'Over-dampening. Excessive D2 blockade is leading to network rigidity (Parkinsonian side-effects).';
@@ -374,7 +374,6 @@
                 explanationBox.innerText = explanation;
             }
         }
-
         function loadTopology(status) {
             if (!topologyData) return;
             currentStatus = status;
