@@ -132,7 +132,11 @@
                 <button id="btn-responsive" onclick="resetToHealthy()">Healthy Brain</button>
                 <button class="btn-flash" id="btn-resistant" onclick="triggerPTSDFlash()">Trigger PTSD Flash</button>
                 <button class="btn-stim" id="btn-stim" onclick="toggleStimulus()">Neural Stimulus</button>
-                <button class="btn-pharma" id="btn-pharma" onclick="togglePharma()">ZenBud Agonist</button>
+                <div style="display: flex; align-items: center; gap: 8px; background: rgba(252, 211, 77, 0.1); padding: 4px 10px; border: 1px solid #fcd34d; border-radius: 4px;">
+                    <span style="color: #fcd34d; font-size: 10px; font-weight: bold; text-transform: uppercase;">ZB-01</span>
+                    <input type="range" min="0" max="50" value="0" style="width: 80px; accent-color: #fcd34d;" oninput="updatePharma(this.value)">
+                    <span id="pharma-val" style="color: #fcd34d; font-size: 10px; font-weight: bold; width: 35px; text-align: right;">0 mg</span>
+                </div>
             </div>
             <div style="display: flex; gap: 10px;">
                 <button class="btn-back" onclick="window.location.href='studies.html'">Studies</button>
@@ -169,10 +173,16 @@
         
         let currentStatus = 'RESPONSIVE';
         let isStimulating = false;
-        let isPharmaActive = false;
+        let pharmaEfficacy = 0;
         let stimTime = 0;
         let selectedNode = null;
         let hoveredNode = null;
+        
+        function updatePharma(val) {
+            pharmaEfficacy = val / 50;
+            document.getElementById('pharma-val').innerText = val + ' mg';
+            updateModText();
+        }
 
         function init() {
             scene = new THREE.Scene();
@@ -252,9 +262,9 @@
 
         function resetToHealthy() {
             loadTopology('RESPONSIVE');
-            isPharmaActive = false;
+            document.querySelector('input[type="range"]').value = 0;
+            updatePharma(0);
             isStimulating = false;
-            document.getElementById('btn-pharma').classList.remove('active');
             document.getElementById('btn-stim').classList.remove('active');
             updateModText();
         }
@@ -265,20 +275,10 @@
             updateModText();
         }
 
-        function togglePharma() {
-            isPharmaActive = !isPharmaActive;
-            document.getElementById('btn-pharma').classList.toggle('active', isPharmaActive);
-            updateModText();
-            if (isPharmaActive && currentStatus === 'RESISTANT' && isStimulating) {
-                // Restoration effect
-                setTimeout(() => loadTopology('RESPONSIVE'), 800);
-            }
-        }
-
         function updateModText() {
             let text = "";
             if (isStimulating) text += "⚡ STIMULUS: ACTIVE ";
-            if (isPharmaActive) text += "💊 ZENBUD: STABILIZING";
+            if (pharmaEfficacy > 0) text += `💊 ZENBUD: ${(pharmaEfficacy*100).toFixed(0)}% STABILIZED`;
             document.getElementById('mod-val').innerText = text;
         }
 
@@ -408,23 +408,23 @@
                 const wave = Math.sin(dist * 0.05 - time * 4);
                 
                 if (isStimulating) {
-                    if (currentStatus === 'RESISTANT' && !isPharmaActive) {
-                        // PTSD Response: Chaotic Scaling & Fragmentation
-                        const chaoticScale = 1.0 + wave * 2.0 + (Math.random() - 0.5) * 1.5;
-                        node.scale.setScalar(Math.max(0.1, chaoticScale));
-                        node.position.x = node.userData.origin.x + (Math.random() - 0.5) * 40;
-                        node.position.y = node.userData.origin.y + (Math.random() - 0.5) * 40;
-                        node.material.emissiveIntensity = 2.0;
-                        node.material.color.setHex(0xff0055);
-                    } else if (isPharmaActive) {
-                        // Pharma Stabilized Response: Rhythmic Scaling
+                    if (currentStatus === 'RESISTANT') {
+                        // PTSD Response modulated by Pharma
+                        const jitter = (1 - pharmaEfficacy) * 40;
+                        const chaoticScale = 1.0 + wave * 2.0 + (Math.random() - 0.5) * (1 - pharmaEfficacy) * 1.5;
                         const pharmaScale = 1.2 + wave * 0.4;
-                        node.scale.setScalar(pharmaScale);
-                        node.position.lerp(node.userData.origin, 0.1);
-                        node.material.emissiveIntensity = 0.5;
-                        node.material.color.setHex(0xfcd34d);
+                        const finalScale = chaoticScale * (1 - pharmaEfficacy) + pharmaScale * pharmaEfficacy;
+                        
+                        node.scale.setScalar(Math.max(0.1, finalScale));
+                        node.position.x = node.userData.origin.x + (Math.random() - 0.5) * jitter;
+                        node.position.y = node.userData.origin.y + (Math.random() - 0.5) * jitter;
+                        
+                        const ptsdColor = new THREE.Color(0xff0055);
+                        const pharmaColor = new THREE.Color(0xfcd34d);
+                        node.material.color.lerpColors(ptsdColor, pharmaColor, pharmaEfficacy);
+                        node.material.emissiveIntensity = 2.0 - (1.5 * pharmaEfficacy);
                     } else {
-                        // Healthy Response: Synchronized Largening/Minimizing
+                        // Healthy Response
                         const healthyScale = 1.0 + wave * 0.8;
                         node.scale.setScalar(healthyScale);
                         node.position.y = node.userData.origin.y + wave * 10;
@@ -432,10 +432,17 @@
                     }
                 } else {
                     // Resting State
-                    const baseScale = currentStatus === 'RESISTANT' ? 0.4 : 1.0;
+                    const baseScale = currentStatus === 'RESISTANT' ? 0.4 + (0.6 * pharmaEfficacy) : 1.0;
                     node.scale.lerp(new THREE.Vector3(baseScale, baseScale, baseScale), 0.1);
                     node.position.lerp(node.userData.origin, 0.1);
-                    node.material.color.lerp(new THREE.Color(currentStatus === 'RESISTANT' ? 0xaa0033 : 0x8b5cf6), 0.1);
+                    
+                    if (currentStatus === 'RESISTANT') {
+                         const restPtsColor = new THREE.Color(0xaa0033);
+                         const restPharmColor = new THREE.Color(0x8b5cf6);
+                         node.material.color.lerpColors(restPtsColor, restPharmColor, pharmaEfficacy);
+                    } else {
+                         node.material.color.lerp(new THREE.Color(0x8b5cf6), 0.1);
+                    }
                     node.material.emissiveIntensity = 0.2;
                 }
                 
@@ -448,8 +455,9 @@
 
             cliqueGroup.children.forEach((c, i) => {
                 c.material.opacity = (Math.sin(time * 2 + i) * 0.1) + 0.2;
-                if (isStimulating && currentStatus === 'RESISTANT' && !isPharmaActive) {
-                    c.visible = Math.random() > 0.5; // Flicker
+                if (isStimulating && currentStatus === 'RESISTANT') {
+                    // Flicker decreases as pharma increases
+                    c.visible = Math.random() > (0.5 * (1 - pharmaEfficacy));
                 } else {
                     c.visible = true;
                 }

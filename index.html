@@ -488,10 +488,10 @@
                                 
                                 <div class="p-5 bg-white border border-slate-200 rounded-xl shadow-sm">
                                     <div class="flex justify-between items-center mb-4">
-                                        <label class="text-[10px] uppercase font-bold text-indigo-600 tracking-widest">ZB-01 Efficacy</label>
-                                        <span id="pharma-percent" class="font-mono text-sm font-bold text-indigo-600">0%</span>
+                                        <label class="text-[10px] uppercase font-bold text-indigo-600 tracking-widest">ZB-01 Dosage</label>
+                                        <span id="pharma-percent" class="font-mono text-sm font-bold text-indigo-600">0 mg</span>
                                     </div>
-                                    <input type="range" id="pharma-slider" min="0" max="100" value="0" class="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600" oninput="updatePharmaEfficacy(this.value)">
+                                    <input type="range" id="pharma-slider" min="0" max="50" value="0" class="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600" oninput="updatePharmaEfficacy(this.value)">
                                     <p class="text-[10px] text-slate-400 mt-4 leading-relaxed">Adjust precision dosage to monitor regional stabilization and topological repair rate.</p>
                                 </div>
                             </div>
@@ -997,8 +997,8 @@
         };
 
         const updatePharmaEfficacy = (val) => {
-            dashPharmaEfficacy = val / 100;
-            document.getElementById('pharma-percent').innerText = val + '%';
+            dashPharmaEfficacy = val / 50;
+            document.getElementById('pharma-percent').innerText = val + ' mg';
             updateIntegrityUI();
         };
 
