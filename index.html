@@ -761,6 +761,10 @@
                                     <div id="insp-sync" class="text-xs font-mono text-slate-100">0.88 r</div>
                                 </div>
                             </div>
+                            <div class="mt-4">
+                                <div class="text-[9px] uppercase text-slate-500 font-bold tracking-widest mb-1">Clinical State</div>
+                                <div id="insp-state" class="text-xs font-bold text-emerald-400">Optimized</div>
+                            </div>
                             <div class="mt-4 pt-3 border-t border-slate-700/50">
                                 <div class="text-[9px] uppercase text-slate-500 font-bold tracking-widest mb-2">Top Signal Pathways</div>
                                 <ul id="insp-conns" class="text-[10px] text-indigo-200 font-mono space-y-1"></ul>
@@ -1090,14 +1094,54 @@
             document.getElementById('node-inspector-overlay').style.display = 'block';
             document.getElementById('insp-name').innerText = node.userData.name;
             document.getElementById('insp-power').innerText = (node.scale.x * 100).toFixed(0) + '%';
-            
+
             let syncVal = 0.5 + Math.random() * 0.4;
-            if (dashStatus === 'PTSD' && dashPharmaEfficacy > 1) syncVal = 1.0;
-            else if (dashStatus === 'PTSD' && dashPharmaEfficacy === 1) syncVal = 0.88;
+            let nodeState = 'Active';
+            let stateColor = 'text-emerald-400';
+
+            if (dashStatus === 'PTSD') {
+                if (dashTreatmentClass === 'NOVEL') {
+                    if (dashPharmaEfficacy === 1) { syncVal = 0.88; nodeState = 'Optimized'; stateColor = 'text-amber-400'; } // Gold
+                    else if (dashPharmaEfficacy > 1) { syncVal = 1.0; nodeState = 'Hyper-Sync (Toxic)'; stateColor = 'text-cyan-300'; }
+                    else { nodeState = 'Fragmented'; stateColor = 'text-rose-500'; }
+                } else {
+                    if (dashPharmaEfficacy >= 1) { syncVal = 0.4; nodeState = 'Suppressed'; stateColor = 'text-slate-500'; }
+                    else { nodeState = 'Fragmented'; stateColor = 'text-rose-500'; }
+                }
+            } else if (dashStatus === 'ADHD') {
+                 if (dashTreatmentClass === 'NOVEL') {
+                    if (dashPharmaEfficacy === 1) { syncVal = 0.88; nodeState = 'Upregulated'; stateColor = 'text-amber-400'; }
+                    else if (dashPharmaEfficacy > 1) { syncVal = 0.2; nodeState = 'Chaotic Over-stim'; stateColor = 'text-rose-500'; }
+                    else { nodeState = 'Hypo-active'; stateColor = 'text-slate-400'; }
+                 } else {
+                    if (dashPharmaEfficacy === 1) { syncVal = 0.88; nodeState = 'Peak Stimulation'; stateColor = 'text-sky-400'; }
+                    else if (dashPharmaEfficacy > 1) { syncVal = 0.1; nodeState = 'Toxic Hyper-arousal'; stateColor = 'text-rose-600'; }
+                    else { nodeState = 'Hypo-active'; stateColor = 'text-slate-400'; }
+                 }
+            } else if (dashStatus === 'TOURETTES') {
+                 if (dashTreatmentClass === 'NOVEL') {
+                    if (dashPharmaEfficacy === 1) { syncVal = 0.88; nodeState = 'Dampened (Stable)'; stateColor = 'text-amber-400'; }
+                    else if (dashPharmaEfficacy > 1) { syncVal = 0.9; nodeState = 'Over-dampened'; stateColor = 'text-slate-500'; }
+                    else { syncVal = 0.95; nodeState = 'Hyper-connected (Tic)'; stateColor = 'text-emerald-500'; }
+                 } else {
+                    if (dashPharmaEfficacy === 1) { syncVal = 0.9; nodeState = 'Rigid Suppression'; stateColor = 'text-slate-500'; }
+                    else if (dashPharmaEfficacy > 1) { syncVal = 1.0; nodeState = 'Parkinsonian Frozen'; stateColor = 'text-slate-700'; }
+                    else { syncVal = 0.95; nodeState = 'Hyper-connected (Tic)'; stateColor = 'text-emerald-500'; }
+                 }
+            } else {
+                 syncVal = 0.88;
+                 nodeState = 'Baseline Alignment';
+                 stateColor = 'text-indigo-400';
+            }
+
             document.getElementById('insp-sync').innerText = syncVal.toFixed(2) + ' r';
-            
-            const stateData = dashData[dashStatus === 'ADHD' ? 'ADHD' : (dashStatus === 'TOURETTES' ? 'TOURETTES' : (dashStatus === 'PTSD' ? 'RESISTANT' : 'RESPONSIVE'))];
-            const connections = stateData.edges.filter(e => e.source === node.userData.id || e.target === node.userData.id);
+            const stateEl = document.getElementById('insp-state');
+            if (stateEl) {
+                stateEl.innerText = nodeState;
+                stateEl.className = `text-xs font-bold ${stateColor}`;
+            }
+
+            const stateData = dashData[dashStatus === 'ADHD' ? 'ADHD' : (dashStatus === 'TOURETTES' ? 'TOURETTES' : (dashStatus === 'PTSD' ? 'RESISTANT' : 'RESPONSIVE'))];            const connections = stateData.edges.filter(e => e.source === node.userData.id || e.target === node.userData.id);
             const top5 = connections.slice(0, 5).map(e => {
                 const otherId = e.source === node.userData.id ? e.target : e.source;
                 return stateData.nodes[otherId].name;

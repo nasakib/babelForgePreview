@@ -166,6 +166,7 @@
         <div class="stat-row"><span class="stat-label">Activity:</span> <span id="ins-act">-</span></div>
         <div class="stat-row"><span class="stat-label">Connections:</span> <span id="ins-conn">-</span></div>
         <div class="stat-row"><span class="stat-label">Topological D:</span> <span id="ins-dim">-</span></div>
+        <div class="stat-row"><span class="stat-label">Clinical State:</span> <span id="ins-state" style="font-weight: bold; color: #00ffcc;">-</span></div>
         <div id="top-conns" style="margin-top: 10px; font-size: 0.7rem; border-top: 1px solid #8b5cf6; padding-top: 10px;">
             <div style="color: #a78bfa; margin-bottom: 5px;">TOP CONNECTIONS:</div>
             <ul id="ins-conn-list" style="margin: 0; padding-left: 15px; color: #fff;"></ul>
@@ -480,12 +481,37 @@
             const nodeCliques = stateData.cliques.filter(c => c.nodes.includes(d.id));
             const maxDim = nodeCliques.length > 0 ? Math.max(...nodeCliques.map(c => c.dimension)) : 0;
             document.getElementById('ins-dim').innerText = maxDim + "D";
-            
+
+            let nodeState = 'Active';
+            let stateColor = '#00ffcc';
+
+            if (currentStatus === 'RESISTANT') {
+                if (pharmaEfficacy === 1) { nodeState = 'Optimized'; stateColor = '#fcd34d'; }
+                else if (pharmaEfficacy > 1) { nodeState = 'Hyper-Sync (Toxic)'; stateColor = '#e0f2fe'; }
+                else { nodeState = 'Fragmented'; stateColor = '#ff0033'; }
+            } else if (currentStatus === 'ADHD') {
+                if (pharmaEfficacy === 1) { nodeState = 'Upregulated'; stateColor = '#fcd34d'; }
+                else if (pharmaEfficacy > 1) { nodeState = 'Chaotic Over-stim'; stateColor = '#ff0033'; }
+                else { nodeState = 'Hypo-active'; stateColor = '#64748b'; }
+            } else if (currentStatus === 'TOURETTES') {
+                if (pharmaEfficacy === 1) { nodeState = 'Dampened (Stable)'; stateColor = '#fcd34d'; }
+                else if (pharmaEfficacy > 1) { nodeState = 'Over-dampened'; stateColor = '#334155'; }
+                else { nodeState = 'Hyper-connected (Tic)'; stateColor = '#10b981'; }
+            } else {
+                 nodeState = 'Baseline Alignment';
+                 stateColor = '#818cf8';
+            }
+
+            const stateEl = document.getElementById('ins-state');
+            if (stateEl) {
+                stateEl.innerText = nodeState;
+                stateEl.style.color = stateColor;
+            }
+
             const connsList = stateData.edges.filter(e => e.source === d.id || e.target === d.id);
             const top5 = connsList.slice(0, 5).map(e => stateData.nodes[e.source === d.id ? e.target : e.source].name);
             document.getElementById('ins-conn-list').innerHTML = top5.length ? top5.map(n => `<li>→ ${n}</li>`).join('') : '<li style="color:#666;">No pathways</li>';
         }
-
         function onWindowResize() {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();

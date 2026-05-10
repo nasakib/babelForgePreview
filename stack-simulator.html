@@ -279,6 +279,7 @@
                 <h4 id="insp-name" class="font-bold text-white text-sm mb-2">Node</h4>
                 <div class="text-[10px] text-slate-300 space-y-1 font-mono">
                     <div class="flex justify-between"><span>Power:</span><span id="insp-power" class="text-emerald-400">100%</span></div>
+                    <div class="flex justify-between mt-1 border-t border-slate-700/50 pt-1"><span>State:</span><span id="insp-state" class="font-bold text-indigo-400">Baseline</span></div>
                 </div>
                 <div class="mt-2 pt-2 border-t border-slate-700">
                     <div class="text-[9px] uppercase font-bold text-slate-400 mb-1 tracking-widest">Top Connections</div>
@@ -837,6 +838,22 @@
             
             if (selectedNode) {
                 document.getElementById('insp-power').innerText = (selectedNode.scale.x * 100).toFixed(0) + '%';
+                
+                const stateEl = document.getElementById('insp-state');
+                let nodeState = 'Baseline Alignment';
+                let stateColor = 'text-indigo-400';
+                
+                if (currentStack.length > 0) {
+                    if (v.repair > 1.0 && v.chaos <= 0) { nodeState = 'Optimized'; stateColor = 'text-amber-400'; }
+                    else if (v.dampening > 2.0 && v.arousal <= 0) { nodeState = 'Frozen / Suppressed'; stateColor = 'text-slate-500'; }
+                    else if (v.arousal > 2.0 || v.chaos > 1.5) { nodeState = 'Hyper-Aroused (Toxic)'; stateColor = 'text-rose-500'; }
+                    else if (v.arousal > 0.5 && v.dampening > 0.5 && v.chaos > 0.5) { nodeState = 'Conflicted Signal'; stateColor = 'text-amber-500'; }
+                    else if (v.dampening > 0.5) { nodeState = 'Dampened'; stateColor = 'text-slate-400'; }
+                    else if (v.arousal > 0.5) { nodeState = 'Upregulated'; stateColor = 'text-sky-400'; }
+                }
+                
+                stateEl.innerText = nodeState;
+                stateEl.className = `font-bold ${stateColor}`;
             }
 
             // Edge flickering based on chaos/dampening + selection highlight
