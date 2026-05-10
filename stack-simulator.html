@@ -274,6 +274,18 @@
                 </div>
             </div>
             
+            <div id="node-inspector-overlay" class="absolute bottom-6 right-[240px] p-4 bg-slate-900/90 border border-slate-700 rounded-xl backdrop-blur-xl min-w-[200px] shadow-2xl z-10 hidden">
+                <div class="text-[9px] uppercase font-bold text-indigo-400 mb-2 tracking-widest border-b border-slate-700 pb-1">Node Inspector</div>
+                <h4 id="insp-name" class="font-bold text-white text-sm mb-2">Node</h4>
+                <div class="text-[10px] text-slate-300 space-y-1 font-mono">
+                    <div class="flex justify-between"><span>Power:</span><span id="insp-power" class="text-emerald-400">100%</span></div>
+                </div>
+                <div class="mt-2 pt-2 border-t border-slate-700">
+                    <div class="text-[9px] uppercase font-bold text-slate-400 mb-1 tracking-widest">Top Connections</div>
+                    <ul id="insp-conns" class="text-[9px] text-indigo-300 font-mono space-y-1"></ul>
+                </div>
+            </div>
+
             <div class="absolute bottom-6 right-6 p-4 bg-slate-900/90 border border-slate-700 rounded-xl backdrop-blur-xl min-w-[200px] shadow-2xl z-10 flex flex-col gap-3">
                 <div>
                     <div class="text-[9px] uppercase font-bold text-indigo-400 mb-2 tracking-widest">Global Synchronization</div>
@@ -529,6 +541,10 @@
         let baseNodes = [];
         let edges = [];
         let signalPackets = [];
+        let raycaster = new THREE.Raycaster();
+        let mouse = new THREE.Vector2();
+        let hoveredNode = null;
+        let selectedNode = null;
         
         let currentVectors = { arousal: 0, dampening: 0, chaos: 0, repair: 0 };
 
@@ -809,16 +825,38 @@
                 node.material.emissiveIntensity = emissiveInt + wave*0.2;
             });
 
-            // Edge flickering based on chaos/dampening
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(lobeGroup.children);
+            if (intersects.length > 0) {
+                hoveredNode = intersects[0].object;
+                document.body.style.cursor = 'pointer';
+            } else {
+                hoveredNode = null;
+                document.body.style.cursor = 'default';
+            }
+            
+            if (selectedNode) {
+                document.getElementById('insp-power').innerText = (selectedNode.scale.x * 100).toFixed(0) + '%';
+            }
+
+            // Edge flickering based on chaos/dampening + selection highlight
             edges.forEach(edge => {
-                if (v.dampening > 1.5) {
+                const isSelected = selectedNode && (edge.userData.source === selectedNode.userData.id || edge.userData.target === selectedNode.userData.id);
+                
+                if (isSelected) {
+                    edge.visible = true;
+                    edge.material.color.setHex(0x38bdf8);
+                    edge.material.opacity = 0.8;
+                } else if (v.dampening > 1.5) {
                     edge.visible = false;
                 } else if (v.chaos > 0.5) {
                     edge.visible = Math.random() > 0.5;
                     edge.material.color.setHex(0xef4444);
+                    edge.material.opacity = selectedNode ? 0.05 : 0.15;
                 } else {
                     edge.visible = true;
                     edge.material.color.lerp(new THREE.Color(v.repair > 0.5 ? 0xf59e0b : 0x6366f1), 0.1);
+                    edge.material.opacity = selectedNode ? 0.05 : 0.15;
                 }
             });
 

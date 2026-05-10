@@ -166,6 +166,10 @@
         <div class="stat-row"><span class="stat-label">Activity:</span> <span id="ins-act">-</span></div>
         <div class="stat-row"><span class="stat-label">Connections:</span> <span id="ins-conn">-</span></div>
         <div class="stat-row"><span class="stat-label">Topological D:</span> <span id="ins-dim">-</span></div>
+        <div id="top-conns" style="margin-top: 10px; font-size: 0.7rem; border-top: 1px solid #8b5cf6; padding-top: 10px;">
+            <div style="color: #a78bfa; margin-bottom: 5px;">TOP CONNECTIONS:</div>
+            <ul id="ins-conn-list" style="margin: 0; padding-left: 15px; color: #fff;"></ul>
+        </div>
         <p style="font-size: 0.7rem; color: #8a82a8; margin-top: 15px;">Dynamic scaling reflects regional BOLD power & synchronization.</p>
     </div>
 
@@ -422,7 +426,9 @@
                 const s = data.nodes[e.source], t = data.nodes[e.target];
                 const points = [new THREE.Vector3(s.x, s.y, s.z), new THREE.Vector3(t.x, t.y, t.z)];
                 const geo = new THREE.BufferGeometry().setFromPoints(points);
-                edgeGroup.add(new THREE.Line(geo, edgeMat));
+                const line = new THREE.Line(geo, edgeMat);
+                line.userData = { source: e.source, target: e.target };
+                edgeGroup.add(line);
             });
 
             // Cliques
@@ -470,9 +476,14 @@
             document.getElementById('ins-act').innerText = (node.scale.x * 100).toFixed(0) + "% POWER";
             const conns = topologyData[currentStatus].edges.filter(e => e.source === d.id || e.target === d.id).length;
             document.getElementById('ins-conn').innerText = conns;
-            const nodeCliques = topologyData[currentStatus].cliques.filter(c => c.nodes.includes(d.id));
+            const stateData = topologyData[currentStatus === 'ADHD' ? 'ADHD' : (currentStatus === 'TOURETTES' ? 'TOURETTES' : (currentStatus === 'RESISTANT' ? 'RESISTANT' : 'RESPONSIVE'))];
+            const nodeCliques = stateData.cliques.filter(c => c.nodes.includes(d.id));
             const maxDim = nodeCliques.length > 0 ? Math.max(...nodeCliques.map(c => c.dimension)) : 0;
             document.getElementById('ins-dim').innerText = maxDim + "D";
+            
+            const connsList = stateData.edges.filter(e => e.source === d.id || e.target === d.id);
+            const top5 = connsList.slice(0, 5).map(e => stateData.nodes[e.source === d.id ? e.target : e.source].name);
+            document.getElementById('ins-conn-list').innerHTML = top5.length ? top5.map(n => `<li>→ ${n}</li>`).join('') : '<li style="color:#666;">No pathways</li>';
         }
 
         function onWindowResize() {
@@ -663,11 +674,23 @@
             cliqueGroup.children.forEach((c, i) => {
                 c.material.opacity = (Math.sin(time * 2 + i) * 0.1) + 0.2;
                 if (isStimulating && currentStatus === 'RESISTANT') {
-                    // Flicker decreases as pharma increases, but returns with toxicity
                     const stability = pharmaEfficacy <= 1 ? pharmaEfficacy : Math.max(0, 1 - (pharmaEfficacy - 1));
                     c.visible = Math.random() > (0.5 * (1 - stability));
                 } else {
                     c.visible = true;
+                }
+            });
+            
+            edgeGroup.children.forEach(edge => {
+                if (selectedNode) {
+                    const isConnected = edge.userData.source === selectedNode.userData.id || edge.userData.target === selectedNode.userData.id;
+                    edge.material.opacity = isConnected ? 0.8 : 0.05;
+                    if (isConnected) edge.material.color.setHex(0x00ffcc);
+                    else edge.material.color.setHex(0x4c1d95);
+                } else {
+                    edge.material.opacity = 0.1;
+                    const colorEdge = currentStatus === 'RESISTANT' ? 0xaa0033 : 0x0088aa;
+                    edge.material.color.setHex(colorEdge);
                 }
             });
 

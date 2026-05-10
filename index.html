@@ -750,6 +750,10 @@
                                     <div id="insp-sync" class="text-xs font-mono text-slate-100">0.88 r</div>
                                 </div>
                             </div>
+                            <div class="mt-4 pt-3 border-t border-slate-700/50">
+                                <div class="text-[9px] uppercase text-slate-500 font-bold tracking-widest mb-2">Top Signal Pathways</div>
+                                <ul id="insp-conns" class="text-[10px] text-indigo-200 font-mono space-y-1"></ul>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1068,7 +1072,29 @@
         let dashStatus = 'HEALTHY';
         let dashPharmaEfficacy = 0;
         let dashHoveredNode = null;
+        let dashSelectedNode = null;
         let signalPackets = [];
+
+        const updateNodeInspector = (node) => {
+            document.getElementById('node-inspector-overlay').style.display = 'block';
+            document.getElementById('insp-name').innerText = node.userData.name;
+            document.getElementById('insp-power').innerText = (node.scale.x * 100).toFixed(0) + '%';
+            
+            let syncVal = 0.5 + Math.random() * 0.4;
+            if (dashStatus === 'PTSD' && dashPharmaEfficacy > 1) syncVal = 1.0;
+            else if (dashStatus === 'PTSD' && dashPharmaEfficacy === 1) syncVal = 0.88;
+            document.getElementById('insp-sync').innerText = syncVal.toFixed(2) + ' r';
+            
+            const stateData = dashData[dashStatus === 'ADHD' ? 'ADHD' : (dashStatus === 'TOURETTES' ? 'TOURETTES' : (dashStatus === 'PTSD' ? 'RESISTANT' : 'RESPONSIVE'))];
+            const connections = stateData.edges.filter(e => e.source === node.userData.id || e.target === node.userData.id);
+            const top5 = connections.slice(0, 5).map(e => {
+                const otherId = e.source === node.userData.id ? e.target : e.source;
+                return stateData.nodes[otherId].name;
+            });
+            
+            const ul = document.getElementById('insp-conns');
+            ul.innerHTML = top5.length ? top5.map(name => `<li>→ ${name}</li>`).join('') : '<li class="text-slate-500">No active pathways</li>';
+        };
 
         const initDashboardBrain = () => {
             const container = document.getElementById('dashboard-brain-container');
@@ -1138,6 +1164,16 @@
                 dashMouse.y = -((e.clientY - rect.top) / container.clientHeight) * 2 + 1;
             });
 
+            container.addEventListener('click', () => {
+                if (dashHoveredNode) {
+                    dashSelectedNode = dashHoveredNode;
+                    updateNodeInspector(dashSelectedNode);
+                } else {
+                    dashSelectedNode = null;
+                    document.getElementById('node-inspector-overlay').style.display = 'none';
+                }
+            });
+
             fetch('data/topology_projection.json')
                 .then(r => r.json())
                 .then(data => {
@@ -1188,7 +1224,9 @@
                 const start = new THREE.Vector3(s.x, s.y, s.z);
                 const end = new THREE.Vector3(t.x, t.y, t.z);
                 const geo = new THREE.BufferGeometry().setFromPoints([start, end]);
-                dashEdgeGroup.add(new THREE.Line(geo, edgeMat));
+                const line = new THREE.Line(geo, edgeMat);
+                line.userData = { source: e.source, target: e.target };
+                dashEdgeGroup.add(line);
 
                 // Create signal packets for healthy state
                 if (!isPTSD || dashPharmaEfficacy > 0.5) {
@@ -1539,20 +1577,27 @@
             
             if (intersects.length > 0) {
                 dashHoveredNode = intersects[0].object;
-                inspector.style.display = 'block';
-                document.getElementById('insp-name').innerText = dashHoveredNode.userData.name;
-                document.getElementById('insp-power').innerText = (dashHoveredNode.scale.x * 100).toFixed(0) + '%';
-                // Sync becomes unstable if overdose
-                let syncVal = 0.5 + Math.random() * 0.4;
-                if (dashStatus === 'PTSD' && dashPharmaEfficacy > 1) {
-                     syncVal = 1.0; // Hyper-sync
-                } else if (dashStatus === 'PTSD' && dashPharmaEfficacy === 1) {
-                     syncVal = 0.88; // Optimal sync
-                }
-                document.getElementById('insp-sync').innerText = syncVal.toFixed(2) + ' r';
+                document.body.style.cursor = 'pointer';
             } else {
                 dashHoveredNode = null;
+                document.body.style.cursor = 'default';
             }
+            
+            if (dashSelectedNode) {
+                updateNodeInspector(dashSelectedNode);
+            }
+            
+            dashEdgeGroup.children.forEach(edge => {
+                if (dashSelectedNode) {
+                    const isConnected = edge.userData.source === dashSelectedNode.userData.id || edge.userData.target === dashSelectedNode.userData.id;
+                    edge.material.opacity = isConnected ? 0.8 : 0.05;
+                    if (isConnected) edge.material.color.setHex(0x38bdf8);
+                    else edge.material.color.setHex(0x4c1d95);
+                } else {
+                    edge.material.opacity = 0.1;
+                    edge.material.color.setHex(0x4c1d95);
+                }
+            });
 
             // Animate Signal Packets
             signalPackets.forEach(p => {
