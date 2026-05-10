@@ -124,8 +124,8 @@
         </div>
 
         <!-- Right Panel: 3D Visualization -->
-        <div class="flex-grow bg-white border border-slate-200 rounded-2xl p-1 shadow-sm flex flex-col relative h-full">
-            <div id="canvas-container" class="w-full h-full cursor-crosshair"></div>
+        <div class="flex-grow bg-white border border-slate-200 rounded-2xl p-1 shadow-sm flex flex-col relative min-h-[500px] lg:min-h-full">
+            <div id="canvas-container" class="w-full h-full min-h-[500px] lg:min-h-[auto] cursor-crosshair rounded-xl overflow-hidden bg-[#030008]"></div>
             
             <!-- Overlay Info -->
             <div class="absolute top-6 left-6 pointer-events-none z-10">
@@ -137,14 +137,22 @@
                 <p id="brain-state-desc" class="text-xs text-slate-300 mt-1 max-w-sm leading-relaxed drop-shadow">No pharmacological intervention applied. Normal oscillatory dynamics.</p>
             </div>
             
-            <div class="absolute bottom-6 right-6 p-4 bg-slate-900/90 border border-slate-700 rounded-xl backdrop-blur-xl min-w-[200px] shadow-2xl z-10">
-                <div class="text-[9px] uppercase font-bold text-indigo-400 mb-2 tracking-widest">Global Synchronization</div>
-                <div class="flex justify-between items-end mb-1">
-                    <span class="text-xs font-bold text-slate-400">Order (r)</span>
-                    <span id="sync-score" class="text-lg text-emerald-400 font-mono font-bold">0.88</span>
+            <div class="absolute bottom-6 right-6 p-4 bg-slate-900/90 border border-slate-700 rounded-xl backdrop-blur-xl min-w-[200px] shadow-2xl z-10 flex flex-col gap-3">
+                <div>
+                    <div class="text-[9px] uppercase font-bold text-indigo-400 mb-2 tracking-widest">Global Synchronization</div>
+                    <div class="flex justify-between items-end mb-1">
+                        <span class="text-xs font-bold text-slate-400">Order (r)</span>
+                        <span id="sync-score" class="text-lg text-emerald-400 font-mono font-bold">0.88</span>
+                    </div>
+                    <div class="w-full bg-slate-800 rounded-full h-1 mt-2 overflow-hidden">
+                        <div id="sync-bar" class="h-full bg-emerald-500 transition-all duration-300" style="width: 88%"></div>
+                    </div>
                 </div>
-                <div class="w-full bg-slate-800 rounded-full h-1 mt-2 overflow-hidden">
-                    <div id="sync-bar" class="h-full bg-emerald-500 transition-all duration-300" style="width: 88%"></div>
+                
+                <div class="border-t border-slate-700 pt-3">
+                    <p id="dosage-explanation" class="text-[10px] text-slate-300 leading-relaxed font-mono">
+                        Awaiting compound selection...
+                    </p>
                 </div>
             </div>
         </div>
@@ -328,11 +336,14 @@
             scene = new THREE.Scene();
             scene.fog = new THREE.FogExp2(0x030008, 0.001);
 
-            camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 1500);
+            let cw = container.clientWidth || 800;
+            let ch = container.clientHeight || 500;
+
+            camera = new THREE.PerspectiveCamera(50, cw / ch, 0.1, 1500);
             camera.position.set(0, 80, 200);
 
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setSize(cw, ch);
             renderer.setPixelRatio(window.devicePixelRatio);
             container.appendChild(renderer.domElement);
 
@@ -389,9 +400,11 @@
             scene.add(mainLight);
 
             window.addEventListener('resize', () => {
-                camera.aspect = container.clientWidth / container.clientHeight;
+                let cw = container.clientWidth || 800;
+                let ch = container.clientHeight || 500;
+                camera.aspect = cw / ch;
                 camera.updateProjectionMatrix();
-                renderer.setSize(container.clientWidth, container.clientHeight);
+                renderer.setSize(cw, ch);
             });
 
             animate();
