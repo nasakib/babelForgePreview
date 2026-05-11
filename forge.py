@@ -44,6 +44,16 @@ def generate_topology_data():
     baseline_edges = []
     baseline_cliques = []
     
+    # 1. Guarantee global connectivity via K-Nearest Neighbors (KNN)
+    k_neighbors = 3
+    for i in range(num_nodes):
+        distances = [(j, (nodes[j]["x"]-nodes[i]["x"])**2 + (nodes[j]["y"]-nodes[i]["y"])**2 + (nodes[j]["z"]-nodes[i]["z"])**2) for j in range(num_nodes) if i != j]
+        distances.sort(key=lambda item: item[1])
+        for j, dist in distances[:k_neighbors]:
+            pair = tuple(sorted((i, j)))
+            baseline_edges.append(pair)
+            
+    # 2. Add high-dimensional functional cliques
     # Healthy: 60 cliques, max dim 11
     for _ in range(60):
         dim = random.randint(2, 11)

@@ -96,6 +96,42 @@
             </div>
 
             <div id="canvas-container" class="w-full h-full cursor-crosshair"></div>
+
+            <!-- Node Inspector Overlay -->
+            <div id="node-inspector" class="absolute bottom-6 left-6 z-20 bg-slate-900/90 backdrop-blur-md border border-slate-700 p-4 rounded-xl shadow-2xl text-white w-72 hidden transition-opacity duration-300">
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <h4 class="font-mono text-sm font-bold text-indigo-400" id="insp-name">Node_ID</h4>
+                        <span class="text-[10px] uppercase tracking-widest text-slate-400" id="insp-region">Region</span>
+                    </div>
+                    <button onclick="closeInspector()" class="text-slate-500 hover:text-white transition-colors">
+                        <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <div class="bg-slate-800 rounded p-2 text-center">
+                        <span class="block text-[9px] uppercase tracking-widest text-slate-400 mb-1">State</span>
+                        <span class="text-xs font-bold" id="insp-state">Active</span>
+                    </div>
+                    <div class="bg-slate-800 rounded p-2 text-center">
+                        <span class="block text-[9px] uppercase tracking-widest text-slate-400 mb-1">Hubness</span>
+                        <span class="text-xs font-mono font-bold text-emerald-400" id="insp-hub">0.0</span>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <span class="block text-[9px] uppercase tracking-widest text-slate-400 mb-1 border-b border-slate-700 pb-1">Topological Impact</span>
+                    <p class="text-[10px] text-slate-300 leading-relaxed mt-1" id="insp-desc">Impact description...</p>
+                </div>
+
+                <div>
+                    <span class="block text-[9px] uppercase tracking-widest text-slate-400 mb-1 border-b border-slate-700 pb-1">Active Edges (Top 3)</span>
+                    <ul class="text-[10px] text-slate-300 space-y-1 mt-1 font-mono" id="insp-conns">
+                        <li>None</li>
+                    </ul>
+                </div>
+            </div>
         </section>
 
         <!-- Right Panel: Pharmacy & AI Recommendations -->
@@ -253,6 +289,8 @@
         let scene, camera, renderer, controls;
         let lobeGroup, edgeGroup, cliqueGroup, ghostGroup;
         let renderNodes = [], renderEdges = [], renderCliques = [];
+        let raycaster, mouse;
+        let hoveredNode = null, selectedNode = null;
 
         function init3D() {
             const container = document.getElementById('canvas-container');
@@ -281,13 +319,108 @@
             mainLight.position.set(50, 100, 100);
             scene.add(mainLight);
 
+            raycaster = new THREE.Raycaster();
+            mouse = new THREE.Vector2();
+
             window.addEventListener('resize', () => {
                 camera.aspect = container.clientWidth / container.clientHeight;
                 camera.updateProjectionMatrix();
                 renderer.setSize(container.clientWidth, container.clientHeight);
             });
 
+            container.addEventListener('mousemove', (e) => {
+                const rect = container.getBoundingClientRect();
+                mouse.x = ((e.clientX - rect.left) / container.clientWidth) * 2 - 1;
+                mouse.y = -((e.clientY - rect.top) / container.clientHeight) * 2 + 1;
+            });
+
+            container.addEventListener('click', () => {
+                if (hoveredNode) {
+                    selectedNode = hoveredNode;
+                    updateNodeInspector(selectedNode);
+                } else {
+                    selectedNode = null;
+                    closeInspector();
+                }
+            });
+
             animate();
+        }
+
+        function closeInspector() {
+            document.getElementById('node-inspector').classList.add('opacity-0', 'pointer-events-none');
+            setTimeout(() => {
+                document.getElementById('node-inspector').classList.add('hidden');
+            }, 300);
+        }
+
+        function updateNodeInspector(nodeMesh) {
+            const insp = document.getElementById('node-inspector');
+            insp.classList.remove('hidden');
+            // Force reflow
+            void insp.offsetWidth;
+            insp.classList.remove('opacity-0', 'pointer-events-none');
+
+            const data = nodeMesh.userData.nodeData;
+            document.getElementById('insp-name').innerText = data.name;
+            document.getElementById('insp-region').innerText = data.region;
+            
+            // Calculate state metrics
+            const isInterference = currentDrug !== 'NONE' && currentDose > 0;
+            const isPathological = activeStates.size > 0;
+            
+            let stateText = 'Healthy Baseline';
+            let stateColor = 'text-indigo-400';
+            let impactDesc = 'Node is operating within optimal critical thresholds. High-D clique participation is stable.';
+
+            if (isInterference) {
+                if (currentDose > 2.0) {
+                    stateText = 'Toxic/Hyper-Sync';
+                    stateColor = 'text-amber-400';
+                    impactDesc = `Excessive ${currentDrug} is forcing rigid synchronization. Natural entropy is lost.`;
+                } else {
+                    stateText = 'Modulated (Active)';
+                    stateColor = 'text-cyan-400';
+                    impactDesc = `${currentDrug} is actively driving node behavior towards therapeutic targets.`;
+                }
+            } else if (isPathological) {
+                if (activeStates.has('PTSD') && data.region === 'Limbic') {
+                    stateText = 'Hyperaroused (PTSD)';
+                    stateColor = 'text-rose-500';
+                    impactDesc = 'Severe low-D edge density. Node is locked in a high-frequency trauma-recall loop.';
+                } else if (activeStates.has('ADHD') && data.region === 'Control') {
+                    stateText = 'Hypo-active (ADHD)';
+                    stateColor = 'text-slate-400';
+                    impactDesc = 'Insufficient gain. Node is dropping out of required high-D working memory cliques.';
+                } else if (activeStates.has('DEPRESSION') && data.region === 'Default') {
+                    stateText = 'Hyper-stable (MDD)';
+                    stateColor = 'text-indigo-300';
+                    impactDesc = 'Node is trapped in a rigid, repeating topological structure (rumination loop).';
+                } else if (activeStates.has('TOURETTES') && data.region === 'SomatoMotor') {
+                    stateText = 'Rigid Loop (Tic)';
+                    stateColor = 'text-emerald-500';
+                    impactDesc = 'Node is accumulating topological tension that discharges as involuntary motor tics.';
+                } else {
+                    stateText = 'Compensatory Strain';
+                    stateColor = 'text-amber-500';
+                    impactDesc = 'Node is attempting to compensate for structural failures in connected pathological regions.';
+                }
+            }
+
+            document.getElementById('insp-state').innerText = stateText;
+            document.getElementById('insp-state').className = `text-xs font-bold ${stateColor}`;
+            document.getElementById('insp-desc').innerText = impactDesc;
+            document.getElementById('insp-hub').innerText = data.hubness.toFixed(2);
+
+            // Find top connections in CURRENT renderEdges
+            const conns = renderEdges.filter(e => e.source === data.id || e.target === data.id);
+            const topConns = conns.slice(0, 3).map(e => {
+                const otherId = e.source === data.id ? e.target : e.source;
+                return renderNodes[otherId].name;
+            });
+            
+            const ul = document.getElementById('insp-conns');
+            ul.innerHTML = topConns.length ? topConns.map(name => `<li>→ ${name}</li>`).join('') : '<li class="text-slate-500">No active pathways</li>';
         }
 
         function composeTopology() {
@@ -356,9 +489,10 @@
                 
                 // Simulate hubness roughly by connections
                 const conns = renderEdges.filter(e => e.source === n.id || e.target === n.id).length;
-                mesh.scale.setScalar(3 + (conns * 0.1));
+                n.hubness = conns * 0.1;
+                mesh.scale.setScalar(3 + n.hubness);
                 
-                mesh.userData = { origin: new THREE.Vector3(n.x, n.y, n.z) };
+                mesh.userData = { origin: new THREE.Vector3(n.x, n.y, n.z), nodeData: n };
                 lobeGroup.add(mesh);
             });
 
@@ -499,6 +633,19 @@
             controls.update();
             const time = Date.now() * 0.001;
 
+            // Raycaster
+            if (raycaster && mouse) {
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObjects(lobeGroup.children);
+                if (intersects.length > 0) {
+                    hoveredNode = intersects[0].object;
+                    document.body.style.cursor = 'pointer';
+                } else {
+                    hoveredNode = null;
+                    document.body.style.cursor = 'default';
+                }
+            }
+
             lobeGroup.children.forEach(node => {
                 const dist = node.userData.origin.length();
                 const wave = Math.sin(dist * 0.05 - time * 3);
@@ -516,7 +663,13 @@
                      node.position.lerp(node.userData.origin, 0.1);
                 }
 
-                node.material.emissiveIntensity = 0.4 + wave * 0.3 + (currentDose * 0.2);
+                if (node === hoveredNode || node === selectedNode) {
+                    node.scale.setScalar(4 + node.userData.nodeData.hubness * 1.5);
+                    node.material.emissiveIntensity = 1.0;
+                } else {
+                    node.scale.setScalar(3 + node.userData.nodeData.hubness);
+                    node.material.emissiveIntensity = 0.4 + wave * 0.3 + (currentDose * 0.2);
+                }
             });
             renderer.render(scene, camera);
         }
