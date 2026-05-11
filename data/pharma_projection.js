@@ -1,4 +1,4 @@
-{
+window.precalculatedPharmaData = {
   "nodes": [
     {
       "id": "node_0",
@@ -1595,4 +1595,4 @@
     "efficacy": "92.6%",
     "mechanism": "Arnold Tongue phase-locking optimization"
   }
-}
+};

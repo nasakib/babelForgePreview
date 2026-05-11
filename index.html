@@ -15,6 +15,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 
+    <!-- Precalculated Data -->
+    <script src="data/topology_projection.js"></script>
+
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 
@@ -1236,12 +1239,20 @@
                 }
             });
 
-            fetch('data/topology_projection.json')
-                .then(r => r.json())
-                .then(data => {
-                    dashData = data;
-                    renderDashboardTopology('RESPONSIVE');
-                });
+            if (window.precalculatedTopologyData) {
+                dashData = window.precalculatedTopologyData;
+                renderDashboardTopology('RESPONSIVE');
+            } else {
+                fetch('data/topology_projection.json')
+                    .then(r => r.json())
+                    .then(data => {
+                        dashData = data;
+                        renderDashboardTopology('RESPONSIVE');
+                    })
+                    .catch(err => {
+                        console.warn("Could not load topology data via fetch or script tag.", err);
+                    });
+            }
 
             animateDashboard();
         };

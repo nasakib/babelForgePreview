@@ -1,4 +1,4 @@
-{
+window.precalculatedTopologyData = {
   "RESPONSIVE": {
     "nodes": [
       {
@@ -14467,4 +14467,4 @@
       "total_cliques_2D_plus": 60
     }
   }
-}
+};

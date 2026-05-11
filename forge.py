@@ -132,6 +132,10 @@ def generate_topology_data():
     with open('data/topology_projection.json', 'w') as f:
         json.dump(data, f, indent=2)
     print("Generated data/topology_projection.json")
+    
+    with open('data/topology_projection.js', 'w') as f:
+        f.write("window.precalculatedTopologyData = " + json.dumps(data, indent=2) + ";")
+    print("Generated data/topology_projection.js")
 
 def generate_pharma_data():
     """Generates data for pharma-projection.html and marketing materials"""
@@ -182,6 +186,10 @@ def generate_pharma_data():
     with open('data/pharma_projection.json', 'w') as f:
         json.dump(data, f, indent=2)
     print("Generated data/pharma_projection.json")
+
+    with open('data/pharma_projection.js', 'w') as f:
+        f.write("window.precalculatedPharmaData = " + json.dumps(data, indent=2) + ";")
+    print("Generated data/pharma_projection.js")
 
 if __name__ == "__main__":
     if not os.path.exists('data'):

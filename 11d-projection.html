@@ -195,6 +195,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="data/topology_projection.js"></script>
 
     <script>
         let scene, camera, renderer, controls, raycaster, mouse;
@@ -207,12 +208,6 @@
         let stimTime = 0;
         let selectedNode = null;
         let hoveredNode = null;
-        
-        function updatePharma(val) {
-            pharmaEfficacy = val / 50;
-            document.getElementById('pharma-val').innerText = val + ' mg';
-            updateModText();
-        }
 
         function init() {
             scene = new THREE.Scene();
@@ -259,12 +254,18 @@
             window.addEventListener('mousemove', onMouseMove, false);
             window.addEventListener('click', onClick, false);
             
-            fetch('data/topology_projection.json')
-                .then(response => response.json())
-                .then(data => {
-                    topologyData = data;
-                    loadTopology('RESPONSIVE');
-                });
+            if (window.precalculatedTopologyData) {
+                topologyData = window.precalculatedTopologyData;
+                loadTopology('RESPONSIVE');
+            } else {
+                fetch('data/topology_projection.json')
+                    .then(response => response.json())
+                    .then(data => {
+                        topologyData = data;
+                        loadTopology('RESPONSIVE');
+                    })
+                    .catch(err => console.warn("Could not load topology data via fetch or script tag.", err));
+            }
 
             animate();
         }
@@ -283,18 +284,12 @@
         function triggerState(state) {
             const slider = document.getElementById('pharma-slider');
             const label = document.getElementById('drug-label-name');
-            
+
             if (state === 'ADHD') {
-                slider.max = 60;
-                
-                
                 currentDrugName = "SYNAPTOSTIM";
                 label.innerText = "SS-20";
                 loadTopology('ADHD');
             } else if (state === 'TOURETTES') {
-                slider.max = 10;
-                
-                
                 currentDrugName = "DOPAREG";
                 label.innerText = "DR-02";
                 loadTopology('TOURETTES');
@@ -307,22 +302,22 @@
         function triggerPTSDFlash() {
             const overlay = document.getElementById('flash-overlay');
             overlay.style.opacity = '1';
-            
+
             const slider = document.getElementById('pharma-slider');
             const label = document.getElementById('drug-label-name');
-            slider.max = 100;
-            
-            
+            slider.max = 3;
+
+
             currentDrugName = "ZENBUD";
             label.innerText = "ZB-01";
             slider.value = 0;
             updatePharma(0);
-            
+
             setTimeout(() => {
                 overlay.style.opacity = '0';
                 loadTopology('RESISTANT');
             }, 100);
-            
+
             // Dramatic camera shake
             const startPos = camera.position.clone();
             let shake = 0;
@@ -340,13 +335,13 @@
         function resetToHealthy() {
             const slider = document.getElementById('pharma-slider');
             const label = document.getElementById('drug-label-name');
-            slider.max = 100;
-            
-            
+            slider.max = 3;
+
+
             currentDrugName = "ZENBUD";
             label.innerText = "ZB-01";
             slider.value = 0;
-            
+
             loadTopology('RESPONSIVE');
             updatePharma(0);
             isStimulating = false;
@@ -355,11 +350,10 @@
         }
 
         function updatePharma(val) {
-            pharmaEfficacy = val / currentOptimalDose;
-            document.getElementById('pharma-val').innerText = val + ' mg';
+            pharmaEfficacy = val / 2.0;
+            document.getElementById('pharma-val').innerText = ['None', 'Low', 'Mild', 'High'][val];
             updateModText();
         }
-
         function toggleStimulus() {
             isStimulating = !isStimulating;
             document.getElementById('btn-stim').classList.toggle('active', isStimulating);
