@@ -1,0 +1,909 @@
+diff --git a/11d-projection.html b/11d-projection.html
+index a1addb0..8ff2978 100644
+--- a/11d-projection.html
++++ b/11d-projection.html
+@@ -157,8 +157,8 @@
+                         </div>
+                     </div>
+                     <div style="display: flex; align-items: center; gap: 8px;">
+-                        <input type="range" id="pharma-slider" min="0" max="100" value="0" style="width: 120px; accent-color: #fcd34d;" oninput="updatePharma(this.value)">
+-                        <span id="pharma-val" style="color: #fcd34d; font-size: 10px; font-weight: bold; width: 35px; text-align: right;">0 mg</span>
++                        <input type="range" id="pharma-slider" min="0" max="3" step="1" value="0" style="width: 120px; accent-color: #fcd34d;" oninput="updatePharma(this.value)">
++                        <span id="pharma-val" style="color: #fcd34d; font-size: 10px; font-weight: bold; width: 40px; text-align: right;">None</span>
+                     </div>
+                 </div>
+             </div>
+@@ -269,12 +269,12 @@
+             animate();
+         }
+ 
+-        let currentOptimalDose = 50;
+-        let currentDosePresets = { low: 20, mild: 50, high: 80 };
++        
++        
+         let currentDrugName = "ZENBUD";
+ 
+                 const setSimDose = (level) => {
+-            const val = currentDosePresets[level];
++            const val = {low: 1, mild: 2, high: 3}[level];
+             const slider = document.getElementById('pharma-slider');
+             if (slider) slider.value = val;
+             updatePharma(val);
+@@ -286,15 +286,15 @@
+             
+             if (state === 'ADHD') {
+                 slider.max = 60;
+-                currentOptimalDose = 30;
+-                currentDosePresets = { low: 10, mild: 30, high: 50 };
++                
++                
+                 currentDrugName = "SYNAPTOSTIM";
+                 label.innerText = "SS-20";
+                 loadTopology('ADHD');
+             } else if (state === 'TOURETTES') {
+                 slider.max = 10;
+-                currentOptimalDose = 5;
+-                currentDosePresets = { low: 2, mild: 5, high: 8 };
++                
++                
+                 currentDrugName = "DOPAREG";
+                 label.innerText = "DR-02";
+                 loadTopology('TOURETTES');
+@@ -311,8 +311,8 @@
+             const slider = document.getElementById('pharma-slider');
+             const label = document.getElementById('drug-label-name');
+             slider.max = 100;
+-            currentOptimalDose = 50;
+-            currentDosePresets = { low: 20, mild: 50, high: 80 };
++            
++            
+             currentDrugName = "ZENBUD";
+             label.innerText = "ZB-01";
+             slider.value = 0;
+@@ -341,8 +341,8 @@
+             const slider = document.getElementById('pharma-slider');
+             const label = document.getElementById('drug-label-name');
+             slider.max = 100;
+-            currentOptimalDose = 50;
+-            currentDosePresets = { low: 20, mild: 50, high: 80 };
++            
++            
+             currentDrugName = "ZENBUD";
+             label.innerText = "ZB-01";
+             slider.value = 0;
+@@ -382,19 +382,19 @@
+                 if (currentStatus === 'RESPONSIVE') {
+                     explanation = 'Baseline optimal synchronization. High-dimensional cliques form and dissolve rhythmically. No intervention required.';
+                 } else if (currentStatus === 'RESISTANT') {
+-                    if (pharmaEfficacy === 0) explanation = 'Negative State (PTSD Flash). Severe hyperarousal detected. Suggest dosing 50mg ZB-01 for rapid stabilization, or waiting 12-24 hours to return to baseline naturally.';
++                    if (pharmaEfficacy === 0) explanation = 'Negative State (PTSD Flash). Severe hyperarousal detected. Suggest dosing mild intensity ZB-01 for rapid stabilization, or waiting 12-24 hours to return to baseline naturally.';
+                     else if (pharmaEfficacy < 1) explanation = 'Sub-therapeutic dosage. ZB-01 is physically widening Arnold Tongues, but topological repair is incomplete.';
+-                    else if (pharmaEfficacy === 1) explanation = 'Optimal dosage (50mg). Arnold Tongues widened, stabilizing the network and allowing 11D cliques to reassemble organically.';
++                    else if (pharmaEfficacy === 1) explanation = 'Optimal dosage (mild intensity). Arnold Tongues widened, stabilizing the network and allowing 11D cliques to reassemble organically.';
+                     else explanation = 'Toxicity (Hyper-synchrony). Excessive coupling has induced pathological rigidity, destroying functional wave dynamics.';
+                 } else if (currentStatus === 'ADHD') {
+-                    if (pharmaEfficacy === 0) explanation = 'Negative State (ADHD). Hypo-connectivity detected in frontal control networks. Suggest dosing 30mg SS-20 to upregulate dynamics.';
++                    if (pharmaEfficacy === 0) explanation = 'Negative State (ADHD). Hypo-connectivity detected in frontal control networks. Suggest dosing mild intensity SS-20 to upregulate dynamics.';
+                     else if (pharmaEfficacy < 1) explanation = 'Sub-therapeutic dosage. Dopaminergic stimulation is gradually upregulating network activity.';
+-                    else if (pharmaEfficacy === 1) explanation = 'Optimal dosage (30mg). Frontal networks are perfectly upregulated, matching healthy baseline wave dynamics.';
++                    else if (pharmaEfficacy === 1) explanation = 'Optimal dosage (mild intensity). Frontal networks are perfectly upregulated, matching healthy baseline wave dynamics.';
+                     else explanation = 'Over-stimulation. Excessive dopamine is causing chaotic, hyper-aroused jittering and signal breakdown.';
+                 } else if (currentStatus === 'TOURETTES') {
+-                    if (pharmaEfficacy === 0) explanation = 'Negative State (Tourette\'s). Pathological hyper-connectivity causing tics. Suggest dosing 5mg DR-02 to dampen loops, or waiting out the tic cluster.';
++                    if (pharmaEfficacy === 0) explanation = 'Negative State (Tourette\'s). Pathological hyper-connectivity causing tics. Suggest dosing mild intensity DR-02 to dampen loops, or waiting out the tic cluster.';
+                     else if (pharmaEfficacy < 1) explanation = 'Sub-therapeutic. Targeted D2 antagonism is beginning to soften erratic synchronization spikes.';
+-                    else if (pharmaEfficacy === 1) explanation = 'Optimal dosage (5mg). DR-02 has successfully dampened hyper-connectivity back to smooth baseline dynamics.';
++                    else if (pharmaEfficacy === 1) explanation = 'Optimal dosage (mild intensity). DR-02 has successfully dampened hyper-connectivity back to smooth baseline dynamics.';
+                     else explanation = 'Over-dampening. Excessive D2 blockade is leading to network rigidity (Parkinsonian side-effects).';
+                 }
+                 explanationBox.innerText = explanation;
+diff --git a/index.html b/index.html
+index eefa0fe..ec4db66 100644
+--- a/index.html
++++ b/index.html
+@@ -647,8 +647,8 @@
+                                         </div>
+                                     </div>
+                                     <div class="flex items-center gap-3 w-full">
+-                                        <input type="range" id="pharma-slider" min="0" max="100" value="0" class="flex-grow h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600" oninput="updatePharmaEfficacy(this.value)">
+-                                        <span id="pharma-percent" class="font-mono text-sm font-bold text-indigo-600 w-12 text-right">0 mg</span>
++                                        <input type="range" id="pharma-slider" min="0" max="3" step="1" value="0" class="flex-grow h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600" oninput="updatePharmaEfficacy(this.value)">
++                                        <span id="pharma-percent" class="font-mono text-sm font-bold text-indigo-600 w-16 text-right">None</span>
+                                     </div>
+                                     <p id="drug-desc-label" class="text-[10px] text-slate-400 mt-4 leading-relaxed">Adjust precision dosage to monitor regional stabilization and topological repair rate.</p>
+                                     <div class="mt-4 p-3 bg-indigo-50 border border-indigo-100 rounded-lg text-[11px] text-indigo-800 leading-relaxed font-medium" id="dosage-explanation">
+@@ -1325,8 +1325,8 @@
+             });
+         };
+ 
+-        let currentOptimalDose = 50;
+-        let currentDosePresets = { low: 20, mild: 50, high: 80 };
++        
++        
+         let dashTreatmentClass = 'NOVEL';
+ 
+         const updateTreatmentClass = (cls) => {
+@@ -1345,7 +1345,7 @@
+         };
+ 
+                 const setDashboardDose = (level) => {
+-            const val = currentDosePresets[level];
++            const val = {low: 1, mild: 2, high: 3}[level];
+             const slider = document.getElementById('pharma-slider');
+             if (slider) slider.value = val;
+             updatePharmaEfficacy(val);
+@@ -1363,8 +1363,8 @@
+             let drugName = 'ZB-01 Dosage';
+             let drugDesc = 'Adjust precision dosage to monitor regional stabilization and topological repair rate.';
+             let targetState = 'RESPONSIVE';
+-            let sliderMax = 100;
+-            currentOptimalDose = 50;
++            let 
++            
+             let moleculeSVG = `<svg viewBox="0 0 160 100" class="h-full w-auto stroke-indigo-600 fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+     <polygon points="50,40 70,30 90,40 90,60 70,70 50,60" />
+     <path d="M55,45 L55,55 M70,35 L85,45 M70,65 L85,55" stroke-width="1.5" />
+@@ -1383,16 +1383,16 @@
+                 if (dashTreatmentClass === 'NOVEL') {
+                     drugName = 'ZB-01 Dosage';
+                     drugDesc = 'Adjust dosage to stabilize hyperarousal and repair 11D cliques.';
+-                    sliderMax = 100;
+-                    currentOptimalDose = 50;
+-                    currentDosePresets = { low: 20, mild: 50, high: 80 };
++                    
++                    
++                    
+                     moleculeName = 'ZB-01 (Indole Derivative)';
+                 } else {
+                     drugName = 'Sertraline (SSRI) Dosage';
+                     drugDesc = 'Broad serotonin reuptake inhibition. Induces global dampening without targeted topological repair.';
+-                    sliderMax = 200;
+-                    currentOptimalDose = 100;
+-                    currentDosePresets = { low: 50, mild: 100, high: 150 };
++                    
++                    
++                    
+                     moleculeSVG = `<svg viewBox="0 0 100 50" class="h-full w-auto stroke-slate-500 fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                         <polygon points="30,25 40,15 55,15 65,25 55,35 40,35 Z"/>
+                                         <circle cx="20" cy="25" r="2" fill="#64748b"/>
+@@ -1406,9 +1406,9 @@
+                 if (dashTreatmentClass === 'NOVEL') {
+                     drugName = 'SynaptoStim (SS-20) Dosage';
+                     drugDesc = 'Adjust dopaminergic stimulant dosage to increase connectivity in frontal networks.';
+-                    sliderMax = 60;
+-                    currentOptimalDose = 30;
+-                    currentDosePresets = { low: 10, mild: 30, high: 50 };
++                    
++                    
++                    
+                     moleculeSVG = `<svg viewBox="0 0 160 100" class="h-full w-auto stroke-indigo-600 fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+     <polygon points="40,50 60,38 80,50 80,70 60,82 40,70" />
+     <path d="M45,53 L45,67 M60,43 L75,53 M60,77 L75,67" stroke-width="1.5" />
+@@ -1421,9 +1421,9 @@
+                 } else {
+                     drugName = 'Amphetamine Salts Dosage';
+                     drugDesc = 'Broad stimulant. Narrow therapeutic window with rapid onset of hyper-arousal toxicity.';
+-                    sliderMax = 60;
+-                    currentOptimalDose = 20;
+-                    currentDosePresets = { low: 10, mild: 20, high: 40 };
++                    
++                    
++                    
+                     moleculeSVG = `<svg viewBox="0 0 100 50" class="h-full w-auto stroke-slate-500 fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                         <polygon points="30,25 40,15 55,15 65,25 55,35 40,35 Z"/>
+                                         <path d="M65 25 L80 15 M65 25 L80 35"/>
+@@ -1436,9 +1436,9 @@
+                 if (dashTreatmentClass === 'NOVEL') {
+                     drugName = 'DopaReg-D2 (DR-02) Dosage';
+                     drugDesc = 'Adjust D2 antagonist dosage to dampen hyper-connected somatomotor loops.';
+-                    sliderMax = 10;
+-                    currentOptimalDose = 5;
+-                    currentDosePresets = { low: 2, mild: 5, high: 8 };
++                    
++                    
++                    
+                     moleculeSVG = `<svg viewBox="0 0 200 100" class="h-full w-auto stroke-indigo-600 fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+     <text x="5" y="55" font-family="Inter" font-size="12" fill="#10b981" stroke="none" font-weight="bold">F</text>
+     <path d="M15,50 L35,50" />
+@@ -1456,9 +1456,9 @@
+                 } else {
+                     drugName = 'Haloperidol Dosage';
+                     drugDesc = 'Aggressive D2 antagonism. Rapidly induces severe Parkinsonian rigidity (Tardive Dyskinesia).';
+-                    sliderMax = 10;
+-                    currentOptimalDose = 2;
+-                    currentDosePresets = { low: 1, mild: 2, high: 5 };
++                    
++                    
++                    
+                     moleculeSVG = `<svg viewBox="0 0 100 50" class="h-full w-auto stroke-slate-500 fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                         <polygon points="25,25 35,15 50,15 60,25 50,35 35,35 Z"/>
+                                         <path d="M60 25 L80 25"/>
+@@ -1472,7 +1472,8 @@
+             document.getElementById('drug-desc-label').innerText = drugDesc;
+             
+             const slider = document.getElementById('pharma-slider');
+-            slider.max = sliderMax;
++            slider.max = 3;
++            slider.step = 1;
+             slider.value = 0;
+             
+             document.getElementById('molecule-svg-container').innerHTML = moleculeSVG;
+@@ -1484,8 +1485,8 @@
+         };
+ 
+         const updatePharmaEfficacy = (val) => {
+-            dashPharmaEfficacy = val / currentOptimalDose;
+-            document.getElementById('pharma-percent').innerText = val + ' mg';
++            dashPharmaEfficacy = val / 2.0; // 0=0, 1=0.5, 2=1.0, 3=1.5
++            document.getElementById('pharma-percent').innerText = ['None', 'Low', 'Mild', 'High'][val];
+             updateIntegrityUI();
+         };
+ 
+@@ -1597,9 +1598,9 @@
+                     explanation = 'The network is operating at baseline optimal synchronization. High-dimensional cliques are forming and dissolving rhythmically. No intervention required.';
+                 } else if (dashStatus === 'PTSD') {
+                     if (dashTreatmentClass === 'NOVEL') {
+-                        if (dashPharmaEfficacy === 0) explanation = 'Negative State (PTSD Flash). Severe hyperarousal detected. Suggest dosing 50mg ZB-01 for rapid stabilization, or waiting 12-24 hours to return to baseline naturally.';
++                        if (dashPharmaEfficacy === 0) explanation = 'Negative State (PTSD Flash). Severe hyperarousal detected. Suggest dosing mild intensity ZB-01 for rapid stabilization, or waiting 12-24 hours to return to baseline naturally.';
+                         else if (dashPharmaEfficacy < 1) explanation = 'Sub-therapeutic dosage. ZB-01 is beginning to physically widen Arnold Tongues, but topological repair is incomplete.';
+-                        else if (dashPharmaEfficacy === 1) explanation = 'Optimal dosage (50mg). Arnold Tongues are sufficiently widened, stabilizing the network and allowing 11D cliques to reassemble organically.';
++                        else if (dashPharmaEfficacy === 1) explanation = 'Optimal dosage (mild intensity). Arnold Tongues are sufficiently widened, stabilizing the network and allowing 11D cliques to reassemble organically.';
+                         else explanation = 'Toxicity (Hyper-synchrony). Excessive coupling has induced pathological rigidity, locking nodes and destroying functional wave dynamics.';
+                     } else {
+                         if (dashPharmaEfficacy === 0) explanation = 'Negative State (PTSD Flash). Severe hyperarousal detected. Suggest intervention or waiting 12-24 hours to return to baseline.';
+@@ -1609,9 +1610,9 @@
+                     }
+                 } else if (dashStatus === 'ADHD') {
+                     if (dashTreatmentClass === 'NOVEL') {
+-                        if (dashPharmaEfficacy === 0) explanation = 'Negative State (ADHD). Hypo-connectivity detected in prefrontal control networks. Suggest dosing 30mg SS-20 to upregulate dynamics.';
++                        if (dashPharmaEfficacy === 0) explanation = 'Negative State (ADHD). Hypo-connectivity detected in prefrontal control networks. Suggest dosing mild intensity SS-20 to upregulate dynamics.';
+                         else if (dashPharmaEfficacy < 1) explanation = 'Sub-therapeutic dosage. Dopaminergic stimulation is gradually upregulating network activity.';
+-                        else if (dashPharmaEfficacy === 1) explanation = 'Optimal dosage (30mg). Frontal networks are perfectly upregulated, matching healthy baseline wave dynamics without over-stimulation.';
++                        else if (dashPharmaEfficacy === 1) explanation = 'Optimal dosage (mild intensity). Frontal networks are perfectly upregulated, matching healthy baseline wave dynamics without over-stimulation.';
+                         else explanation = 'Over-stimulation. Excessive dopamine is causing chaotic, hyper-aroused jittering and signal breakdown.';
+                     } else {
+                         if (dashPharmaEfficacy === 0) explanation = 'Negative State (ADHD). Hypo-connectivity detected in prefrontal control networks.';
+@@ -1621,9 +1622,9 @@
+                     }
+                 } else if (dashStatus === 'TOURETTES') {
+                     if (dashTreatmentClass === 'NOVEL') {
+-                        if (dashPharmaEfficacy === 0) explanation = 'Negative State (Tourette\'s). Pathological hyper-connectivity causing tics. Suggest dosing 5mg DR-02 to dampen loops, or waiting out the tic cluster.';
++                        if (dashPharmaEfficacy === 0) explanation = 'Negative State (Tourette\'s). Pathological hyper-connectivity causing tics. Suggest dosing mild intensity DR-02 to dampen loops, or waiting out the tic cluster.';
+                         else if (dashPharmaEfficacy < 1) explanation = 'Sub-therapeutic. Targeted D2 antagonism is beginning to soften erratic synchronization spikes.';
+-                        else if (dashPharmaEfficacy === 1) explanation = 'Optimal dosage (5mg). DR-02 has successfully dampened hyper-connectivity back to smooth baseline dynamics.';
++                        else if (dashPharmaEfficacy === 1) explanation = 'Optimal dosage (mild intensity). DR-02 has successfully dampened hyper-connectivity back to smooth baseline dynamics.';
+                         else explanation = 'Over-dampening. Excessive D2 blockade is leading to network rigidity (Parkinsonian side-effects).';
+                     } else {
+                         if (dashPharmaEfficacy === 0) explanation = 'Negative State (Tourette\'s). Pathological hyper-connectivity causing sudden, rigid synchronization spikes (tics).';
+diff --git a/pharma-projection.html b/pharma-projection.html
+index d1b551a..1345f7e 100644
+--- a/pharma-projection.html
++++ b/pharma-projection.html
+@@ -357,79 +357,79 @@
+ 
+         const molecules = [
+             // Novel Therapeutics
+-            { id: 'zb01', name: 'ZenBud™ (ZB-01)', class: 'novel', classLabel: 'Precision Agonist', svg: svgIndole, minDose: 0, maxDose: 100, optimalDose: 50, doses: { low: 20, mild: 50, high: 80 }, effects: { arousal: 0.1, dampening: 0.0, chaos: -0.8, repair: 1.5 } },
+-            { id: 'ss20', name: 'SynaptoStim (SS-20)', class: 'novel', classLabel: 'Precision Stimulant', svg: svgPhen, minDose: 0, maxDose: 60, optimalDose: 30, doses: { low: 10, mild: 30, high: 50 }, effects: { arousal: 0.8, dampening: -0.2, chaos: -0.2, repair: 0.8 } },
+-            { id: 'dr02', name: 'DopaReg-D2 (DR-02)', class: 'novel', classLabel: 'Precision Antagonist', svg: svgTricyclic, minDose: 0, maxDose: 10, optimalDose: 5, doses: { low: 2, mild: 5, high: 8 }, effects: { arousal: -0.5, dampening: 0.6, chaos: -0.5, repair: 0.6 } },
+-            { id: 'psilo', name: 'Psilocybin', class: 'novel', classLabel: 'Classic Psychedelic', svg: svgIndole, minDose: 0, maxDose: 30, optimalDose: 15, doses: { low: 5, mild: 15, high: 25 }, effects: { arousal: 0.8, dampening: -0.2, chaos: 1.2, repair: 0.5 } },
+-            { id: 'mdma', name: 'MDMA', class: 'novel', classLabel: 'Empathogen', svg: svgPhen, minDose: 0, maxDose: 150, optimalDose: 80, doses: { low: 50, mild: 80, high: 120 }, effects: { arousal: 1.2, dampening: -0.3, chaos: 0.4, repair: 0.7 } },
+-            { id: 'ketamine', name: 'Ketamine', class: 'novel', classLabel: 'Dissociative', svg: svgTricyclic, minDose: 0, maxDose: 100, optimalDose: 50, doses: { low: 20, mild: 50, high: 80 }, effects: { arousal: -0.2, dampening: 0.5, chaos: 1.0, repair: 0.9 } },
+-            { id: 'lsd', name: 'LSD', class: 'novel', classLabel: 'Classic Psychedelic', svg: svgIndole, minDose: 0, maxDose: 400, optimalDose: 100, doses: { low: 50, mild: 100, high: 250 }, effects: { arousal: 0.7, dampening: -0.1, chaos: 1.4, repair: 0.4 } },
++            { id: 'zb01', name: 'ZenBud™ (ZB-01)', class: 'novel', classLabel: 'Precision Agonist', svg: svgIndole, halfLife: 'medium', effects: { arousal: 0.1, dampening: 0.0, chaos: -0.8, repair: 1.5 } },
++            { id: 'ss20', name: 'SynaptoStim (SS-20)', class: 'novel', classLabel: 'Precision Stimulant', svg: svgPhen, halfLife: 'medium', effects: { arousal: 0.8, dampening: -0.2, chaos: -0.2, repair: 0.8 } },
++            { id: 'dr02', name: 'DopaReg-D2 (DR-02)', class: 'novel', classLabel: 'Precision Antagonist', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.5, dampening: 0.6, chaos: -0.5, repair: 0.6 } },
++            { id: 'psilo', name: 'Psilocybin', class: 'novel', classLabel: 'Classic Psychedelic', svg: svgIndole, halfLife: 'medium', effects: { arousal: 0.8, dampening: -0.2, chaos: 1.2, repair: 0.5 } },
++            { id: 'mdma', name: 'MDMA', class: 'novel', classLabel: 'Empathogen', svg: svgPhen, halfLife: 'medium', effects: { arousal: 1.2, dampening: -0.3, chaos: 0.4, repair: 0.7 } },
++            { id: 'ketamine', name: 'Ketamine', class: 'novel', classLabel: 'Dissociative', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.2, dampening: 0.5, chaos: 1.0, repair: 0.9 } },
++            { id: 'lsd', name: 'LSD', class: 'novel', classLabel: 'Classic Psychedelic', svg: svgIndole, halfLife: 'medium', effects: { arousal: 0.7, dampening: -0.1, chaos: 1.4, repair: 0.4 } },
+             
+             // SSRIs, SNRIs & Antidepressants
+-            { id: 'sert', name: 'Sertraline', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, minDose: 0, maxDose: 200, optimalDose: 100, doses: { low: 50, mild: 100, high: 150 }, effects: { arousal: -0.2, dampening: 0.8, chaos: -0.1, repair: 0.0 } },
+-            { id: 'fluox', name: 'Fluoxetine', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, minDose: 0, maxDose: 80, optimalDose: 40, doses: { low: 20, mild: 40, high: 60 }, effects: { arousal: -0.1, dampening: 0.7, chaos: 0.0, repair: 0.0 } },
+-            { id: 'escit', name: 'Escitalopram', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, minDose: 0, maxDose: 40, optimalDose: 20, doses: { low: 10, mild: 20, high: 30 }, effects: { arousal: -0.3, dampening: 0.9, chaos: -0.2, repair: 0.0 } },
+-            { id: 'venla', name: 'Venlafaxine', class: 'ssri', classLabel: 'SNRI', svg: svgTricyclic, minDose: 0, maxDose: 225, optimalDose: 75, doses: { low: 37.5, mild: 75, high: 150 }, effects: { arousal: 0.1, dampening: 0.6, chaos: 0.0, repair: 0.0 } },
+-            { id: 'dulox', name: 'Duloxetine', class: 'ssri', classLabel: 'SNRI', svg: svgTricyclic, minDose: 0, maxDose: 120, optimalDose: 60, doses: { low: 30, mild: 60, high: 90 }, effects: { arousal: 0.2, dampening: 0.5, chaos: 0.1, repair: 0.0 } },
+-            { id: 'citalo', name: 'Citalopram', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, minDose: 0, maxDose: 40, optimalDose: 20, doses: { low: 10, mild: 20, high: 30 }, effects: { arousal: -0.2, dampening: 0.8, chaos: -0.1, repair: 0.0 } },
+-            { id: 'parox', name: 'Paroxetine', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, minDose: 0, maxDose: 60, optimalDose: 20, doses: { low: 10, mild: 20, high: 40 }, effects: { arousal: -0.4, dampening: 1.0, chaos: -0.2, repair: 0.0 } },
+-            { id: 'fluvox', name: 'Fluvoxamine', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, minDose: 0, maxDose: 300, optimalDose: 100, doses: { low: 50, mild: 100, high: 200 }, effects: { arousal: -0.5, dampening: 1.1, chaos: -0.1, repair: 0.0 } },
+-            { id: 'bupropion', name: 'Bupropion', class: 'stimulant', classLabel: 'NDRI', svg: svgPhen, minDose: 0, maxDose: 450, optimalDose: 300, doses: { low: 150, mild: 300, high: 450 }, effects: { arousal: 0.9, dampening: -0.1, chaos: 0.2, repair: 0.1 } },
+-            { id: 'mirtaz', name: 'Mirtazapine', class: 'ssri', classLabel: 'TeCA / NaSSA', svg: svgTricyclic, minDose: 0, maxDose: 45, optimalDose: 15, doses: { low: 7.5, mild: 15, high: 30 }, effects: { arousal: -0.8, dampening: 1.2, chaos: -0.1, repair: 0.1 } },
+-            { id: 'traz', name: 'Trazodone', class: 'ssri', classLabel: 'SARI', svg: svgTricyclic, minDose: 0, maxDose: 400, optimalDose: 100, doses: { low: 50, mild: 100, high: 200 }, effects: { arousal: -1.0, dampening: 1.4, chaos: 0.1, repair: 0.0 } },
++            { id: 'sert', name: 'Sertraline', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.2, dampening: 0.8, chaos: -0.1, repair: 0.0 } },
++            { id: 'fluox', name: 'Fluoxetine', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.1, dampening: 0.7, chaos: 0.0, repair: 0.0 } },
++            { id: 'escit', name: 'Escitalopram', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.3, dampening: 0.9, chaos: -0.2, repair: 0.0 } },
++            { id: 'venla', name: 'Venlafaxine', class: 'ssri', classLabel: 'SNRI', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: 0.1, dampening: 0.6, chaos: 0.0, repair: 0.0 } },
++            { id: 'dulox', name: 'Duloxetine', class: 'ssri', classLabel: 'SNRI', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: 0.2, dampening: 0.5, chaos: 0.1, repair: 0.0 } },
++            { id: 'citalo', name: 'Citalopram', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.2, dampening: 0.8, chaos: -0.1, repair: 0.0 } },
++            { id: 'parox', name: 'Paroxetine', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.4, dampening: 1.0, chaos: -0.2, repair: 0.0 } },
++            { id: 'fluvox', name: 'Fluvoxamine', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.5, dampening: 1.1, chaos: -0.1, repair: 0.0 } },
++            { id: 'bupropion', name: 'Bupropion', class: 'stimulant', classLabel: 'NDRI', svg: svgPhen, halfLife: 'medium', effects: { arousal: 0.9, dampening: -0.1, chaos: 0.2, repair: 0.1 } },
++            { id: 'mirtaz', name: 'Mirtazapine', class: 'ssri', classLabel: 'TeCA / NaSSA', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.8, dampening: 1.2, chaos: -0.1, repair: 0.1 } },
++            { id: 'traz', name: 'Trazodone', class: 'ssri', classLabel: 'SARI', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -1.0, dampening: 1.4, chaos: 0.1, repair: 0.0 } },
+             
+             // Stimulants & Wakefulness
+-            { id: 'amph', name: 'Amphetamine Salts', class: 'stimulant', classLabel: 'Stimulant', svg: svgPhen, minDose: 0, maxDose: 60, optimalDose: 20, doses: { low: 10, mild: 20, high: 40 }, effects: { arousal: 1.5, dampening: -0.5, chaos: 0.8, repair: -0.2 } },
+-            { id: 'mph', name: 'Methylphenidate', class: 'stimulant', classLabel: 'Stimulant', svg: svgPhen, minDose: 0, maxDose: 72, optimalDose: 36, doses: { low: 18, mild: 36, high: 54 }, effects: { arousal: 1.2, dampening: -0.3, chaos: 0.5, repair: -0.1 } },
+-            { id: 'lisdexamph', name: 'Lisdexamfetamine', class: 'stimulant', classLabel: 'Stimulant', svg: svgPhen, minDose: 0, maxDose: 70, optimalDose: 30, doses: { low: 20, mild: 40, high: 60 }, effects: { arousal: 1.3, dampening: -0.4, chaos: 0.6, repair: -0.1 } },
+-            { id: 'dexmph', name: 'Dexmethylphenidate', class: 'stimulant', classLabel: 'Stimulant', svg: svgPhen, minDose: 0, maxDose: 40, optimalDose: 15, doses: { low: 5, mild: 15, high: 30 }, effects: { arousal: 1.1, dampening: -0.2, chaos: 0.4, repair: 0.0 } },
+-            { id: 'modaf', name: 'Modafinil', class: 'stimulant', classLabel: 'Eugeroic', svg: svgPhen, minDose: 0, maxDose: 400, optimalDose: 200, doses: { low: 100, mild: 200, high: 300 }, effects: { arousal: 0.8, dampening: 0.0, chaos: 0.1, repair: 0.1 } },
+-            { id: 'armodaf', name: 'Armodafinil', class: 'stimulant', classLabel: 'Eugeroic', svg: svgPhen, minDose: 0, maxDose: 250, optimalDose: 150, doses: { low: 50, mild: 150, high: 250 }, effects: { arousal: 0.9, dampening: 0.0, chaos: 0.1, repair: 0.1 } },
+-            { id: 'caffeine', name: 'Caffeine', class: 'stimulant', classLabel: 'Xanthine', svg: svgPhen, minDose: 0, maxDose: 800, optimalDose: 200, doses: { low: 100, mild: 200, high: 400 }, effects: { arousal: 0.6, dampening: 0.0, chaos: 0.3, repair: 0.0 } },
+-            { id: 'nicotine', name: 'Nicotine', class: 'stimulant', classLabel: 'Alkaloid Stimulant', svg: svgPhen, minDose: 0, maxDose: 20, optimalDose: 2, doses: { low: 1, mild: 2, high: 6 }, effects: { arousal: 0.5, dampening: 0.1, chaos: 0.2, repair: 0.0 } },
++            { id: 'amph', name: 'Amphetamine Salts', class: 'stimulant', classLabel: 'Stimulant', svg: svgPhen, halfLife: 'medium', effects: { arousal: 1.5, dampening: -0.5, chaos: 0.8, repair: -0.2 } },
++            { id: 'mph', name: 'Methylphenidate', class: 'stimulant', classLabel: 'Stimulant', svg: svgPhen, halfLife: 'medium', effects: { arousal: 1.2, dampening: -0.3, chaos: 0.5, repair: -0.1 } },
++            { id: 'lisdexamph', name: 'Lisdexamfetamine', class: 'stimulant', classLabel: 'Stimulant', svg: svgPhen, halfLife: 'medium', effects: { arousal: 1.3, dampening: -0.4, chaos: 0.6, repair: -0.1 } },
++            { id: 'dexmph', name: 'Dexmethylphenidate', class: 'stimulant', classLabel: 'Stimulant', svg: svgPhen, halfLife: 'medium', effects: { arousal: 1.1, dampening: -0.2, chaos: 0.4, repair: 0.0 } },
++            { id: 'modaf', name: 'Modafinil', class: 'stimulant', classLabel: 'Eugeroic', svg: svgPhen, halfLife: 'medium', effects: { arousal: 0.8, dampening: 0.0, chaos: 0.1, repair: 0.1 } },
++            { id: 'armodaf', name: 'Armodafinil', class: 'stimulant', classLabel: 'Eugeroic', svg: svgPhen, halfLife: 'medium', effects: { arousal: 0.9, dampening: 0.0, chaos: 0.1, repair: 0.1 } },
++            { id: 'caffeine', name: 'Caffeine', class: 'stimulant', classLabel: 'Xanthine', svg: svgPhen, halfLife: 'medium', effects: { arousal: 0.6, dampening: 0.0, chaos: 0.3, repair: 0.0 } },
++            { id: 'nicotine', name: 'Nicotine', class: 'stimulant', classLabel: 'Alkaloid Stimulant', svg: svgPhen, halfLife: 'medium', effects: { arousal: 0.5, dampening: 0.1, chaos: 0.2, repair: 0.0 } },
+             
+             // Antipsychotics & Mood Stabilizers
+-            { id: 'halo', name: 'Haloperidol', class: 'antipsychotic', classLabel: 'Typical Antipsychotic', svg: svgTricyclic, minDose: 0, maxDose: 10, optimalDose: 2, doses: { low: 1, mild: 2, high: 5 }, effects: { arousal: -1.0, dampening: 1.8, chaos: -0.5, repair: -0.5 } },
+-            { id: 'queti', name: 'Quetiapine', class: 'antipsychotic', classLabel: 'Atypical Antipsychotic', svg: svgTricyclic, minDose: 0, maxDose: 800, optimalDose: 300, doses: { low: 100, mild: 300, high: 600 }, effects: { arousal: -0.8, dampening: 1.5, chaos: -0.3, repair: -0.2 } },
+-            { id: 'arip', name: 'Aripiprazole', class: 'antipsychotic', classLabel: 'Atypical Antipsychotic', svg: svgTricyclic, minDose: 0, maxDose: 30, optimalDose: 10, doses: { low: 5, mild: 10, high: 20 }, effects: { arousal: -0.4, dampening: 1.2, chaos: -0.2, repair: 0.0 } },
+-            { id: 'risper', name: 'Risperidone', class: 'antipsychotic', classLabel: 'Atypical Antipsychotic', svg: svgTricyclic, minDose: 0, maxDose: 8, optimalDose: 2, doses: { low: 1, mild: 2, high: 4 }, effects: { arousal: -0.6, dampening: 1.4, chaos: -0.3, repair: -0.1 } },
+-            { id: 'olan', name: 'Olanzapine', class: 'antipsychotic', classLabel: 'Atypical Antipsychotic', svg: svgTricyclic, minDose: 0, maxDose: 20, optimalDose: 10, doses: { low: 5, mild: 10, high: 15 }, effects: { arousal: -0.7, dampening: 1.6, chaos: -0.4, repair: -0.1 } },
+-            { id: 'cloz', name: 'Clozapine', class: 'antipsychotic', classLabel: 'Atypical Antipsychotic', svg: svgTricyclic, minDose: 0, maxDose: 900, optimalDose: 300, doses: { low: 100, mild: 300, high: 500 }, effects: { arousal: -0.9, dampening: 1.7, chaos: -0.6, repair: -0.3 } },
+-            { id: 'lithium', name: 'Lithium', class: 'antipsychotic', classLabel: 'Mood Stabilizer', svg: svgTricyclic, minDose: 0, maxDose: 1200, optimalDose: 600, doses: { low: 300, mild: 600, high: 900 }, effects: { arousal: -0.2, dampening: 0.8, chaos: -0.7, repair: 0.4 } },
+-            { id: 'lamo', name: 'Lamotrigine', class: 'antipsychotic', classLabel: 'Mood Stabilizer', svg: svgTricyclic, minDose: 0, maxDose: 400, optimalDose: 200, doses: { low: 100, mild: 200, high: 300 }, effects: { arousal: 0.0, dampening: 0.5, chaos: -0.5, repair: 0.2 } },
++            { id: 'halo', name: 'Haloperidol', class: 'antipsychotic', classLabel: 'Typical Antipsychotic', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -1.0, dampening: 1.8, chaos: -0.5, repair: -0.5 } },
++            { id: 'queti', name: 'Quetiapine', class: 'antipsychotic', classLabel: 'Atypical Antipsychotic', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.8, dampening: 1.5, chaos: -0.3, repair: -0.2 } },
++            { id: 'arip', name: 'Aripiprazole', class: 'antipsychotic', classLabel: 'Atypical Antipsychotic', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.4, dampening: 1.2, chaos: -0.2, repair: 0.0 } },
++            { id: 'risper', name: 'Risperidone', class: 'antipsychotic', classLabel: 'Atypical Antipsychotic', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.6, dampening: 1.4, chaos: -0.3, repair: -0.1 } },
++            { id: 'olan', name: 'Olanzapine', class: 'antipsychotic', classLabel: 'Atypical Antipsychotic', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.7, dampening: 1.6, chaos: -0.4, repair: -0.1 } },
++            { id: 'cloz', name: 'Clozapine', class: 'antipsychotic', classLabel: 'Atypical Antipsychotic', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.9, dampening: 1.7, chaos: -0.6, repair: -0.3 } },
++            { id: 'lithium', name: 'Lithium', class: 'antipsychotic', classLabel: 'Mood Stabilizer', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.2, dampening: 0.8, chaos: -0.7, repair: 0.4 } },
++            { id: 'lamo', name: 'Lamotrigine', class: 'antipsychotic', classLabel: 'Mood Stabilizer', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: 0.0, dampening: 0.5, chaos: -0.5, repair: 0.2 } },
+             
+             // Cannabinoids & Endocannabinoid Modulators
+-            { id: 'thc', name: 'Delta-9-THC', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 100, optimalDose: 10, doses: { low: 5, mild: 10, high: 25 }, effects: { arousal: 0.2, dampening: 0.5, chaos: 0.6, repair: -0.1 } },
+-            { id: 'cbd', name: 'Cannabidiol (CBD)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 1500, optimalDose: 300, doses: { low: 50, mild: 300, high: 800 }, effects: { arousal: -0.2, dampening: 0.6, chaos: -0.4, repair: 0.1 } },
+-            { id: 'delta8', name: 'Delta-8-THC', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 100, optimalDose: 25, doses: { low: 10, mild: 25, high: 50 }, effects: { arousal: 0.1, dampening: 0.7, chaos: 0.3, repair: 0.0 } },
+-            { id: 'hhc', name: 'HHC (Hexahydrocannabinol)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 100, optimalDose: 20, doses: { low: 10, mild: 20, high: 40 }, effects: { arousal: 0.15, dampening: 0.6, chaos: 0.4, repair: -0.05 } },
+-            { id: 'cbga', name: 'CBGA (Cannabigerolic acid)', class: 'cannabinoid', classLabel: 'Cannabinoid Precursor', svg: svgCannabinoid, minDose: 0, maxDose: 1000, optimalDose: 150, doses: { low: 50, mild: 150, high: 300 }, effects: { arousal: 0.0, dampening: 0.3, chaos: -0.1, repair: 0.2 } },
+-            { id: 'cbn', name: 'Cannabinol (CBN)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 50, optimalDose: 10, doses: { low: 5, mild: 10, high: 20 }, effects: { arousal: -0.4, dampening: 0.9, chaos: -0.1, repair: 0.0 } },
+-            { id: 'cbg', name: 'Cannabigerol (CBG)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 150, optimalDose: 25, doses: { low: 10, mild: 25, high: 50 }, effects: { arousal: 0.1, dampening: 0.4, chaos: -0.2, repair: 0.3 } },
+-            { id: 'thcv', name: 'Tetrahydrocannabivarin (THCV)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 50, optimalDose: 10, doses: { low: 5, mild: 10, high: 20 }, effects: { arousal: 0.5, dampening: 0.1, chaos: 0.1, repair: 0.0 } },
+-            { id: 'cbdv', name: 'Cannabidivarin (CBDV)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 800, optimalDose: 100, doses: { low: 25, mild: 100, high: 200 }, effects: { arousal: -0.1, dampening: 0.4, chaos: -0.3, repair: 0.2 } },
+-            { id: 'thcp', name: 'THC-P (Tetrahydrocannabiphorol)', class: 'cannabinoid', classLabel: 'Potent Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 10, optimalDose: 2, doses: { low: 1, mild: 2, high: 4 }, effects: { arousal: 0.3, dampening: 0.7, chaos: 0.8, repair: -0.2 } },
+-            { id: 'thco', name: 'THC-O-Acetate', class: 'cannabinoid', classLabel: 'Synthetic Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 50, optimalDose: 15, doses: { low: 5, mild: 15, high: 25 }, effects: { arousal: 0.4, dampening: 0.8, chaos: 1.0, repair: -0.3 } },
+-            { id: 'delta10', name: 'Delta-10-THC', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 100, optimalDose: 30, doses: { low: 15, mild: 30, high: 60 }, effects: { arousal: 0.25, dampening: 0.4, chaos: 0.35, repair: -0.05 } },
+-            { id: 'cbc', name: 'Cannabichromene (CBC)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 100, optimalDose: 20, doses: { low: 10, mild: 20, high: 50 }, effects: { arousal: 0.0, dampening: 0.4, chaos: -0.1, repair: 0.2 } },
+-            { id: 'cbl', name: 'Cannabicyclol (CBL)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 50, optimalDose: 10, doses: { low: 5, mild: 10, high: 25 }, effects: { arousal: -0.1, dampening: 0.5, chaos: 0.0, repair: 0.1 } },
+-            { id: 'cbdp', name: 'Cannabidiphorol (CBDP)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 50, optimalDose: 10, doses: { low: 5, mild: 10, high: 20 }, effects: { arousal: -0.3, dampening: 0.8, chaos: -0.2, repair: 0.2 } },
++            { id: 'thc', name: 'Delta-9-THC', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, halfLife: 'medium', effects: { arousal: 0.2, dampening: 0.5, chaos: 0.6, repair: -0.1 } },
++            { id: 'cbd', name: 'Cannabidiol (CBD)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, halfLife: 'medium', effects: { arousal: -0.2, dampening: 0.6, chaos: -0.4, repair: 0.1 } },
++            { id: 'delta8', name: 'Delta-8-THC', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, halfLife: 'medium', effects: { arousal: 0.1, dampening: 0.7, chaos: 0.3, repair: 0.0 } },
++            { id: 'hhc', name: 'HHC (Hexahydrocannabinol)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, halfLife: 'medium', effects: { arousal: 0.15, dampening: 0.6, chaos: 0.4, repair: -0.05 } },
++            { id: 'cbga', name: 'CBGA (Cannabigerolic acid)', class: 'cannabinoid', classLabel: 'Cannabinoid Precursor', svg: svgCannabinoid, halfLife: 'medium', effects: { arousal: 0.0, dampening: 0.3, chaos: -0.1, repair: 0.2 } },
++            { id: 'cbn', name: 'Cannabinol (CBN)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, halfLife: 'medium', effects: { arousal: -0.4, dampening: 0.9, chaos: -0.1, repair: 0.0 } },
++            { id: 'cbg', name: 'Cannabigerol (CBG)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, halfLife: 'medium', effects: { arousal: 0.1, dampening: 0.4, chaos: -0.2, repair: 0.3 } },
++            { id: 'thcv', name: 'Tetrahydrocannabivarin (THCV)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, halfLife: 'medium', effects: { arousal: 0.5, dampening: 0.1, chaos: 0.1, repair: 0.0 } },
++            { id: 'cbdv', name: 'Cannabidivarin (CBDV)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, halfLife: 'medium', effects: { arousal: -0.1, dampening: 0.4, chaos: -0.3, repair: 0.2 } },
++            { id: 'thcp', name: 'THC-P (Tetrahydrocannabiphorol)', class: 'cannabinoid', classLabel: 'Potent Cannabinoid', svg: svgCannabinoid, halfLife: 'medium', effects: { arousal: 0.3, dampening: 0.7, chaos: 0.8, repair: -0.2 } },
++            { id: 'thco', name: 'THC-O-Acetate', class: 'cannabinoid', classLabel: 'Synthetic Cannabinoid', svg: svgCannabinoid, halfLife: 'medium', effects: { arousal: 0.4, dampening: 0.8, chaos: 1.0, repair: -0.3 } },
++            { id: 'delta10', name: 'Delta-10-THC', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, halfLife: 'medium', effects: { arousal: 0.25, dampening: 0.4, chaos: 0.35, repair: -0.05 } },
++            { id: 'cbc', name: 'Cannabichromene (CBC)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, halfLife: 'medium', effects: { arousal: 0.0, dampening: 0.4, chaos: -0.1, repair: 0.2 } },
++            { id: 'cbl', name: 'Cannabicyclol (CBL)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, halfLife: 'medium', effects: { arousal: -0.1, dampening: 0.5, chaos: 0.0, repair: 0.1 } },
++            { id: 'cbdp', name: 'Cannabidiphorol (CBDP)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, halfLife: 'medium', effects: { arousal: -0.3, dampening: 0.8, chaos: -0.2, repair: 0.2 } },
+             
+             // Depressants / Benzos / Gabapentinoids / Z-Drugs
+-            { id: 'alpraz', name: 'Alprazolam', class: 'depressant', classLabel: 'Benzodiazepine', svg: svgTricyclic, minDose: 0, maxDose: 4, optimalDose: 1, doses: { low: 0.25, mild: 1, high: 2 }, effects: { arousal: -1.2, dampening: 1.4, chaos: -0.6, repair: -0.3 } },
+-            { id: 'clonaz', name: 'Clonazepam', class: 'depressant', classLabel: 'Benzodiazepine', svg: svgTricyclic, minDose: 0, maxDose: 4, optimalDose: 1, doses: { low: 0.5, mild: 1, high: 2 }, effects: { arousal: -1.0, dampening: 1.3, chaos: -0.5, repair: -0.2 } },
+-            { id: 'diaz', name: 'Diazepam', class: 'depressant', classLabel: 'Benzodiazepine', svg: svgTricyclic, minDose: 0, maxDose: 40, optimalDose: 10, doses: { low: 2, mild: 10, high: 20 }, effects: { arousal: -0.9, dampening: 1.2, chaos: -0.4, repair: -0.1 } },
+-            { id: 'loraz', name: 'Lorazepam', class: 'depressant', classLabel: 'Benzodiazepine', svg: svgTricyclic, minDose: 0, maxDose: 6, optimalDose: 2, doses: { low: 0.5, mild: 2, high: 4 }, effects: { arousal: -1.1, dampening: 1.3, chaos: -0.5, repair: -0.2 } },
+-            { id: 'pregab', name: 'Pregabalin', class: 'depressant', classLabel: 'Gabapentinoid', svg: svgPhen, minDose: 0, maxDose: 600, optimalDose: 150, doses: { low: 50, mild: 150, high: 300 }, effects: { arousal: -0.6, dampening: 0.9, chaos: -0.3, repair: 0.1 } },
+-            { id: 'gaba', name: 'Gabapentin', class: 'depressant', classLabel: 'Gabapentinoid', svg: svgPhen, minDose: 0, maxDose: 3600, optimalDose: 900, doses: { low: 300, mild: 900, high: 1800 }, effects: { arousal: -0.5, dampening: 0.8, chaos: -0.2, repair: 0.0 } },
+-            { id: 'zolp', name: 'Zolpidem', class: 'depressant', classLabel: 'Z-Drug', svg: svgTricyclic, minDose: 0, maxDose: 20, optimalDose: 10, doses: { low: 5, mild: 10, high: 15 }, effects: { arousal: -1.5, dampening: 1.6, chaos: 0.2, repair: -0.4 } },
+-            { id: 'zopic', name: 'Zopiclone', class: 'depressant', classLabel: 'Z-Drug', svg: svgTricyclic, minDose: 0, maxDose: 15, optimalDose: 7.5, doses: { low: 3.75, mild: 7.5, high: 10 }, effects: { arousal: -1.4, dampening: 1.5, chaos: 0.1, repair: -0.3 } },
+-            { id: 'alc', name: 'Ethanol (Alcohol)', class: 'depressant', classLabel: 'GABAergic', svg: svgPhen, minDose: 0, maxDose: 100, optimalDose: 30, doses: { low: 15, mild: 30, high: 60 }, effects: { arousal: -0.5, dampening: 1.0, chaos: 1.2, repair: -0.8 } }, // grams
++            { id: 'alpraz', name: 'Alprazolam', class: 'depressant', classLabel: 'Benzodiazepine', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -1.2, dampening: 1.4, chaos: -0.6, repair: -0.3 } },
++            { id: 'clonaz', name: 'Clonazepam', class: 'depressant', classLabel: 'Benzodiazepine', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -1.0, dampening: 1.3, chaos: -0.5, repair: -0.2 } },
++            { id: 'diaz', name: 'Diazepam', class: 'depressant', classLabel: 'Benzodiazepine', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.9, dampening: 1.2, chaos: -0.4, repair: -0.1 } },
++            { id: 'loraz', name: 'Lorazepam', class: 'depressant', classLabel: 'Benzodiazepine', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -1.1, dampening: 1.3, chaos: -0.5, repair: -0.2 } },
++            { id: 'pregab', name: 'Pregabalin', class: 'depressant', classLabel: 'Gabapentinoid', svg: svgPhen, halfLife: 'medium', effects: { arousal: -0.6, dampening: 0.9, chaos: -0.3, repair: 0.1 } },
++            { id: 'gaba', name: 'Gabapentin', class: 'depressant', classLabel: 'Gabapentinoid', svg: svgPhen, halfLife: 'medium', effects: { arousal: -0.5, dampening: 0.8, chaos: -0.2, repair: 0.0 } },
++            { id: 'zolp', name: 'Zolpidem', class: 'depressant', classLabel: 'Z-Drug', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -1.5, dampening: 1.6, chaos: 0.2, repair: -0.4 } },
++            { id: 'zopic', name: 'Zopiclone', class: 'depressant', classLabel: 'Z-Drug', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -1.4, dampening: 1.5, chaos: 0.1, repair: -0.3 } },
++            { id: 'alc', name: 'Ethanol (Alcohol)', class: 'depressant', classLabel: 'GABAergic', svg: svgPhen, halfLife: 'medium', effects: { arousal: -0.5, dampening: 1.0, chaos: 1.2, repair: -0.8 } }, // grams
+             
+             // Acetylcholine, NMDA & Other
+-            { id: 'donepezil', name: 'Donepezil', class: 'stimulant', classLabel: 'AChEI', svg: svgTricyclic, minDose: 0, maxDose: 23, optimalDose: 10, doses: { low: 5, mild: 10, high: 15 }, effects: { arousal: 0.4, dampening: 0.0, chaos: -0.1, repair: 0.2 } },
+-            { id: 'memantine', name: 'Memantine', class: 'depressant', classLabel: 'NMDA Antagonist', svg: svgTricyclic, minDose: 0, maxDose: 28, optimalDose: 10, doses: { low: 5, mild: 10, high: 20 }, effects: { arousal: -0.1, dampening: 0.3, chaos: -0.2, repair: 0.3 } },
+-            { id: 'dextro', name: 'Dextromethorphan (DXM)', class: 'depressant', classLabel: 'NMDA Antagonist', svg: svgTricyclic, minDose: 0, maxDose: 600, optimalDose: 150, doses: { low: 30, mild: 150, high: 300 }, effects: { arousal: 0.1, dampening: 0.6, chaos: 0.9, repair: 0.1 } }
++            { id: 'donepezil', name: 'Donepezil', class: 'stimulant', classLabel: 'AChEI', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: 0.4, dampening: 0.0, chaos: -0.1, repair: 0.2 } },
++            { id: 'memantine', name: 'Memantine', class: 'depressant', classLabel: 'NMDA Antagonist', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.1, dampening: 0.3, chaos: -0.2, repair: 0.3 } },
++            { id: 'dextro', name: 'Dextromethorphan (DXM)', class: 'depressant', classLabel: 'NMDA Antagonist', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: 0.1, dampening: 0.6, chaos: 0.9, repair: 0.1 } }
+         ];
+ 
+         let currentStack = [];
+@@ -542,8 +542,8 @@
+             updateStackDose(index, val);
+         }
+         function updateStackDose(index, val) {
+-            currentStack[index].currentDose = parseFloat(val);
+-            document.getElementById(`dose-val-${index}`).innerText = val + ' mg';
++            currentStack[index].currentIntensity = parseInt(val);
++            document.getElementById(`dose-val-${index}`).innerText = ['None', 'Low', 'Mild', 'High'][val];
+             updateSimulation();
+         }
+ 
+@@ -924,10 +924,7 @@
+         let assistantRecommendations = [];
+ 
+         function runAssistant() {
+-            const weight = parseFloat(document.getElementById('patient-weight').value) || 70;
+-            const tolerance = parseFloat(document.getElementById('patient-tolerance').value) || 1.0;
+             const targetState = document.getElementById('target-state').value;
+-
+             const feedbackBox = document.getElementById('assistant-feedback');
+             assistantRecommendations = [];
+ 
+@@ -938,7 +935,6 @@
+ 
+             let html = '<ul class="space-y-4">';
+ 
+-            const patientMultiplier = (weight / 70) * tolerance;
+             const targets = {
+                 baseline: { arousal: [0, 0.4], dampening: [0, 0.4], chaos: [0, 0.5], repair: [0, 2] },
+                 focus: { arousal: [0.8, 1.4], dampening: [0, 0.3], chaos: [0, 0.5], repair: [0, 2] },
+@@ -948,56 +944,55 @@
+             };
+             const t = targets[targetState];
+             
+-            // 1. Analyze and Recalculate based on Target State
+             let aligned = true;
+             let prescriptions = [];
+             
+             currentStack.forEach(mol => {
+-                let recommendedDose = Math.round(mol.optimalDose * patientMultiplier);
++                let recommendedIntensity = 2; // Default Mild
+                 let molStatus = 'Neutral';
+                 let molColor = 'text-slate-500';
+                 
+-                // Determine if molecule is inhibiting or synergizing with the target state
+                 const isStimulant = mol.effects.arousal > 0.5;
+                 const isDepressant = mol.effects.dampening > 0.5;
+                 const isPsychedelic = mol.effects.chaos > 0.5;
+                 
+                 if (targetState === 'sleep' || targetState === 'relaxation') {
+                     if (isStimulant || isPsychedelic) {
+-                        recommendedDose = 0; // Inhibit
++                        recommendedIntensity = 0; 
+                         molStatus = 'Inhibiting State';
+                         molColor = 'text-rose-500';
+-                        prescriptions.push(`Wait 6-8 hours for <strong>${mol.name}</strong> to clear pharmacokinetically before attempting ${targetState}.`);
++                        prescriptions.push(`Wait for <strong>${mol.name}</strong> to clear before attempting ${targetState} (Half-life: ${mol.halfLife || 'medium'}).`);
+                     } else if (isDepressant) {
+                         molStatus = 'Synergistic';
+                         molColor = 'text-emerald-500';
+                     }
+                 } else if (targetState === 'focus' || targetState === 'creative') {
+                     if (isDepressant) {
+-                        recommendedDose = 0;
++                        recommendedIntensity = 0;
+                         molStatus = 'Inhibiting State';
+                         molColor = 'text-rose-500';
+-                        prescriptions.push(`<strong>${mol.name}</strong> is causing excessive CNS depression. Wait for clearance to achieve ${targetState}.`);
++                        prescriptions.push(`<strong>${mol.name}</strong> is causing excessive CNS depression. Consider tapering to achieve ${targetState}.`);
+                     } else if (isStimulant || (isPsychedelic && targetState === 'creative')) {
+                         molStatus = 'Synergistic';
+                         molColor = 'text-emerald-500';
+                     }
+                 } else if (targetState === 'baseline') {
+                     if (isStimulant || isDepressant || isPsychedelic) {
+-                        recommendedDose = 0;
++                        recommendedIntensity = 0;
+                         molStatus = 'Disruptive';
+                         molColor = 'text-amber-500';
+                         prescriptions.push(`Taper <strong>${mol.name}</strong> to return to healthy baseline dynamics.`);
+                     }
+                 }
+                 
+-                assistantRecommendations.push({ id: mol.id, recommendedDose: recommendedDose });
++                assistantRecommendations.push({ id: mol.id, recommendedIntensity: recommendedIntensity });
+ 
+                 let doseDisplay = '';
+-                if (mol.currentDose < recommendedDose * 0.8 && recommendedDose > 0) {
++                let currentI = mol.currentIntensity || 0;
++                if (currentI < recommendedIntensity && recommendedIntensity > 0) {
+                     doseDisplay = '<span class="text-amber-500 font-bold">Sub-therapeutic</span>';
+-                } else if (mol.currentDose > recommendedDose * 1.2 || (recommendedDose === 0 && mol.currentDose > 0)) {
+-                    doseDisplay = '<span class="text-rose-500 font-bold">Inhibitive / Toxic</span>';
++                } else if (currentI > recommendedIntensity || (recommendedIntensity === 0 && currentI > 0)) {
++                    doseDisplay = '<span class="text-rose-500 font-bold">Inhibitive / Over-intense</span>';
+                 } else {
+                     doseDisplay = '<span class="text-emerald-500 font-bold">Optimal Alignment</span>';
+                 }
+@@ -1010,7 +1005,7 @@
+                         </div>
+                         <div class="text-[10px] text-slate-500 mb-1 flex justify-between">
+                             <span>Effect: <span class="${molColor} font-bold uppercase">${molStatus}</span></span>
+-                            <span>Target Dose: <span class="font-mono font-bold text-indigo-600">${recommendedDose} mg</span></span>
++                            <span>Target Intensity: <span class="font-mono font-bold text-indigo-600">${['None', 'Low', 'Mild', 'High'][recommendedIntensity]}</span></span>
+                         </div>
+                     </li>
+                 `;
+@@ -1022,30 +1017,24 @@
+ 
+             const cv = currentVectors;
+ 
+-            // Arousal
+             if (cv.arousal < t.arousal[0]) {
+-                const deficit = (t.arousal[0] - cv.arousal).toFixed(2);
+-                prescriptions.push(`<strong>Arousal Deficit (-${deficit}):</strong> Add ~${Math.round(deficit * 20 * patientMultiplier)}mg of a precision stimulant to reach threshold.`);
++                prescriptions.push(`<strong>Arousal Deficit:</strong> Add a precision stimulant to reach required threshold.`);
+                 aligned = false;
+             } else if (cv.arousal > t.arousal[1]) {
+-                const excess = (cv.arousal - t.arousal[1]).toFixed(2);
+-                prescriptions.push(`<strong>Arousal Excess (+${excess}):</strong> Severe risk of network shattering. Reduce stimulants immediately.`);
++                prescriptions.push(`<strong>Arousal Excess:</strong> Severe risk of network shattering. Reduce stimulants immediately.`);
+                 aligned = false;
+             }
+ 
+-            // Dampening
+             if (cv.dampening < t.dampening[0]) {
+-                const deficit = (t.dampening[0] - cv.dampening).toFixed(2);
+-                prescriptions.push(`<strong>Dampening Deficit (-${deficit}):</strong> Consider adding a GABAergic agent to enforce required topological suppression.`);
++                prescriptions.push(`<strong>Dampening Deficit:</strong> Consider adding a GABAergic agent to enforce required topological suppression.`);
+                 aligned = false;
+             } else if (cv.dampening > t.dampening[1]) {
+-                const excess = (cv.dampening - t.dampening[1]).toFixed(2);
+-                prescriptions.push(`<strong>Dampening Excess (+${excess}):</strong> Network is rigidly frozen. Taper down depressant dosage.`);
++                prescriptions.push(`<strong>Dampening Excess:</strong> Network is rigidly frozen. Taper down depressant dosage.`);
+                 aligned = false;
+             }
+ 
+             if (cv.chaos > t.chaos[1]) {
+-                prescriptions.push(`<strong>Severe Chaos Detected:</strong> Add precision agonist ZB-01 to immediately stabilize 11D cliques.`);
++                prescriptions.push(`<strong>Severe Chaos Detected:</strong> Add precision agonist ZB-01 to stabilize cliques.`);
+                 aligned = false;
+             }
+ 
+@@ -1058,9 +1047,9 @@
+             }
+ 
+             if (aligned && prescriptions.length === 0) {
+-                html += `<div class="mt-3 p-3 bg-emerald-50 rounded-lg border border-emerald-100 flex gap-2 items-start"><span class="text-emerald-500">✅</span> <p class="text-emerald-700 text-xs leading-relaxed"><strong>Mathematically Aligned:</strong> Current dosages and pharmacokinetics are perfectly optimized for the <strong>${targetState.toUpperCase()}</strong> state.</p></div>`;
++                html += `<div class="mt-3 p-3 bg-emerald-50 rounded-lg border border-emerald-100 flex gap-2 items-start"><span class="text-emerald-500">✅</span> <p class="text-emerald-700 text-xs leading-relaxed"><strong>Mathematically Aligned:</strong> Current intensities and pharmacokinetics are perfectly optimized for the <strong>${targetState.toUpperCase()}</strong> state.</p></div>`;
+             } else {
+-                html += `<p class="text-slate-400 text-[10px] mt-4 italic text-center">Press Auto-Adjust to recalculate dosages based on reported intake and current pharmacological conflicts.</p>`;
++                html += `<p class="text-slate-400 text-[10px] mt-4 italic text-center">Press Auto-Adjust to recalculate intensities based on reported intake and current pharmacological conflicts.</p>`;
+             }
+ 
+             html += '</div></ul>';
+@@ -1073,13 +1062,11 @@
+             assistantRecommendations.forEach((rec, idx) => {
+                 const input = document.querySelector(`input[oninput="updateStackDose(${idx}, this.value)"]`);
+                 if (input) {
+-                    let safeVal = Math.min(rec.recommendedDose, input.max);
+-                    input.value = safeVal;
+-                    updateStackDose(idx, safeVal);
++                    input.value = rec.recommendedIntensity;
++                    updateStackDose(idx, rec.recommendedIntensity);
+                 }
+             });
+             
+-            // The sliders trigger state updates, but we need to ensure the Assistant recalculates post-adjustment
+             setTimeout(() => { runAssistant(); }, 50);
+         }
+ 
+diff --git a/stack-simulator.html b/stack-simulator.html
+index 0e651e8..d86216f 100644
+--- a/stack-simulator.html
++++ b/stack-simulator.html
+@@ -347,79 +347,79 @@
+ 
+         const molecules = [
+             // Novel Therapeutics
+-            { id: 'zb01', name: 'ZenBud™ (ZB-01)', class: 'novel', classLabel: 'Precision Agonist', svg: svgIndole, minDose: 0, maxDose: 100, optimalDose: 50, doses: { low: 20, mild: 50, high: 80 }, effects: { arousal: 0.1, dampening: 0.0, chaos: -0.8, repair: 1.5 } },
+-            { id: 'ss20', name: 'SynaptoStim (SS-20)', class: 'novel', classLabel: 'Precision Stimulant', svg: svgPhen, minDose: 0, maxDose: 60, optimalDose: 30, doses: { low: 10, mild: 30, high: 50 }, effects: { arousal: 0.8, dampening: -0.2, chaos: -0.2, repair: 0.8 } },
+-            { id: 'dr02', name: 'DopaReg-D2 (DR-02)', class: 'novel', classLabel: 'Precision Antagonist', svg: svgTricyclic, minDose: 0, maxDose: 10, optimalDose: 5, doses: { low: 2, mild: 5, high: 8 }, effects: { arousal: -0.5, dampening: 0.6, chaos: -0.5, repair: 0.6 } },
+-            { id: 'psilo', name: 'Psilocybin', class: 'novel', classLabel: 'Classic Psychedelic', svg: svgIndole, minDose: 0, maxDose: 30, optimalDose: 15, doses: { low: 5, mild: 15, high: 25 }, effects: { arousal: 0.8, dampening: -0.2, chaos: 1.2, repair: 0.5 } },
+-            { id: 'mdma', name: 'MDMA', class: 'novel', classLabel: 'Empathogen', svg: svgPhen, minDose: 0, maxDose: 150, optimalDose: 80, doses: { low: 50, mild: 80, high: 120 }, effects: { arousal: 1.2, dampening: -0.3, chaos: 0.4, repair: 0.7 } },
+-            { id: 'ketamine', name: 'Ketamine', class: 'novel', classLabel: 'Dissociative', svg: svgTricyclic, minDose: 0, maxDose: 100, optimalDose: 50, doses: { low: 20, mild: 50, high: 80 }, effects: { arousal: -0.2, dampening: 0.5, chaos: 1.0, repair: 0.9 } },
+-            { id: 'lsd', name: 'LSD', class: 'novel', classLabel: 'Classic Psychedelic', svg: svgIndole, minDose: 0, maxDose: 400, optimalDose: 100, doses: { low: 50, mild: 100, high: 250 }, effects: { arousal: 0.7, dampening: -0.1, chaos: 1.4, repair: 0.4 } },
++            { id: 'zb01', name: 'ZenBud™ (ZB-01)', class: 'novel', classLabel: 'Precision Agonist', svg: svgIndole, halfLife: 'medium', effects: { arousal: 0.1, dampening: 0.0, chaos: -0.8, repair: 1.5 } },
++            { id: 'ss20', name: 'SynaptoStim (SS-20)', class: 'novel', classLabel: 'Precision Stimulant', svg: svgPhen, halfLife: 'medium', effects: { arousal: 0.8, dampening: -0.2, chaos: -0.2, repair: 0.8 } },
++            { id: 'dr02', name: 'DopaReg-D2 (DR-02)', class: 'novel', classLabel: 'Precision Antagonist', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.5, dampening: 0.6, chaos: -0.5, repair: 0.6 } },
++            { id: 'psilo', name: 'Psilocybin', class: 'novel', classLabel: 'Classic Psychedelic', svg: svgIndole, halfLife: 'medium', effects: { arousal: 0.8, dampening: -0.2, chaos: 1.2, repair: 0.5 } },
++            { id: 'mdma', name: 'MDMA', class: 'novel', classLabel: 'Empathogen', svg: svgPhen, halfLife: 'medium', effects: { arousal: 1.2, dampening: -0.3, chaos: 0.4, repair: 0.7 } },
++            { id: 'ketamine', name: 'Ketamine', class: 'novel', classLabel: 'Dissociative', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.2, dampening: 0.5, chaos: 1.0, repair: 0.9 } },
++            { id: 'lsd', name: 'LSD', class: 'novel', classLabel: 'Classic Psychedelic', svg: svgIndole, halfLife: 'medium', effects: { arousal: 0.7, dampening: -0.1, chaos: 1.4, repair: 0.4 } },
+             
+             // SSRIs, SNRIs & Antidepressants
+-            { id: 'sert', name: 'Sertraline', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, minDose: 0, maxDose: 200, optimalDose: 100, doses: { low: 50, mild: 100, high: 150 }, effects: { arousal: -0.2, dampening: 0.8, chaos: -0.1, repair: 0.0 } },
+-            { id: 'fluox', name: 'Fluoxetine', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, minDose: 0, maxDose: 80, optimalDose: 40, doses: { low: 20, mild: 40, high: 60 }, effects: { arousal: -0.1, dampening: 0.7, chaos: 0.0, repair: 0.0 } },
+-            { id: 'escit', name: 'Escitalopram', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, minDose: 0, maxDose: 40, optimalDose: 20, doses: { low: 10, mild: 20, high: 30 }, effects: { arousal: -0.3, dampening: 0.9, chaos: -0.2, repair: 0.0 } },
+-            { id: 'venla', name: 'Venlafaxine', class: 'ssri', classLabel: 'SNRI', svg: svgTricyclic, minDose: 0, maxDose: 225, optimalDose: 75, doses: { low: 37.5, mild: 75, high: 150 }, effects: { arousal: 0.1, dampening: 0.6, chaos: 0.0, repair: 0.0 } },
+-            { id: 'dulox', name: 'Duloxetine', class: 'ssri', classLabel: 'SNRI', svg: svgTricyclic, minDose: 0, maxDose: 120, optimalDose: 60, doses: { low: 30, mild: 60, high: 90 }, effects: { arousal: 0.2, dampening: 0.5, chaos: 0.1, repair: 0.0 } },
+-            { id: 'citalo', name: 'Citalopram', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, minDose: 0, maxDose: 40, optimalDose: 20, doses: { low: 10, mild: 20, high: 30 }, effects: { arousal: -0.2, dampening: 0.8, chaos: -0.1, repair: 0.0 } },
+-            { id: 'parox', name: 'Paroxetine', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, minDose: 0, maxDose: 60, optimalDose: 20, doses: { low: 10, mild: 20, high: 40 }, effects: { arousal: -0.4, dampening: 1.0, chaos: -0.2, repair: 0.0 } },
+-            { id: 'fluvox', name: 'Fluvoxamine', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, minDose: 0, maxDose: 300, optimalDose: 100, doses: { low: 50, mild: 100, high: 200 }, effects: { arousal: -0.5, dampening: 1.1, chaos: -0.1, repair: 0.0 } },
+-            { id: 'bupropion', name: 'Bupropion', class: 'stimulant', classLabel: 'NDRI', svg: svgPhen, minDose: 0, maxDose: 450, optimalDose: 300, doses: { low: 150, mild: 300, high: 450 }, effects: { arousal: 0.9, dampening: -0.1, chaos: 0.2, repair: 0.1 } },
+-            { id: 'mirtaz', name: 'Mirtazapine', class: 'ssri', classLabel: 'TeCA / NaSSA', svg: svgTricyclic, minDose: 0, maxDose: 45, optimalDose: 15, doses: { low: 7.5, mild: 15, high: 30 }, effects: { arousal: -0.8, dampening: 1.2, chaos: -0.1, repair: 0.1 } },
+-            { id: 'traz', name: 'Trazodone', class: 'ssri', classLabel: 'SARI', svg: svgTricyclic, minDose: 0, maxDose: 400, optimalDose: 100, doses: { low: 50, mild: 100, high: 200 }, effects: { arousal: -1.0, dampening: 1.4, chaos: 0.1, repair: 0.0 } },
++            { id: 'sert', name: 'Sertraline', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.2, dampening: 0.8, chaos: -0.1, repair: 0.0 } },
++            { id: 'fluox', name: 'Fluoxetine', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.1, dampening: 0.7, chaos: 0.0, repair: 0.0 } },
++            { id: 'escit', name: 'Escitalopram', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.3, dampening: 0.9, chaos: -0.2, repair: 0.0 } },
++            { id: 'venla', name: 'Venlafaxine', class: 'ssri', classLabel: 'SNRI', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: 0.1, dampening: 0.6, chaos: 0.0, repair: 0.0 } },
++            { id: 'dulox', name: 'Duloxetine', class: 'ssri', classLabel: 'SNRI', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: 0.2, dampening: 0.5, chaos: 0.1, repair: 0.0 } },
++            { id: 'citalo', name: 'Citalopram', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.2, dampening: 0.8, chaos: -0.1, repair: 0.0 } },
++            { id: 'parox', name: 'Paroxetine', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.4, dampening: 1.0, chaos: -0.2, repair: 0.0 } },
++            { id: 'fluvox', name: 'Fluvoxamine', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.5, dampening: 1.1, chaos: -0.1, repair: 0.0 } },
++            { id: 'bupropion', name: 'Bupropion', class: 'stimulant', classLabel: 'NDRI', svg: svgPhen, halfLife: 'medium', effects: { arousal: 0.9, dampening: -0.1, chaos: 0.2, repair: 0.1 } },
++            { id: 'mirtaz', name: 'Mirtazapine', class: 'ssri', classLabel: 'TeCA / NaSSA', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.8, dampening: 1.2, chaos: -0.1, repair: 0.1 } },
++            { id: 'traz', name: 'Trazodone', class: 'ssri', classLabel: 'SARI', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -1.0, dampening: 1.4, chaos: 0.1, repair: 0.0 } },
+             
+             // Stimulants & Wakefulness
+-            { id: 'amph', name: 'Amphetamine Salts', class: 'stimulant', classLabel: 'Stimulant', svg: svgPhen, minDose: 0, maxDose: 60, optimalDose: 20, doses: { low: 10, mild: 20, high: 40 }, effects: { arousal: 1.5, dampening: -0.5, chaos: 0.8, repair: -0.2 } },
+-            { id: 'mph', name: 'Methylphenidate', class: 'stimulant', classLabel: 'Stimulant', svg: svgPhen, minDose: 0, maxDose: 72, optimalDose: 36, doses: { low: 18, mild: 36, high: 54 }, effects: { arousal: 1.2, dampening: -0.3, chaos: 0.5, repair: -0.1 } },
+-            { id: 'lisdexamph', name: 'Lisdexamfetamine', class: 'stimulant', classLabel: 'Stimulant', svg: svgPhen, minDose: 0, maxDose: 70, optimalDose: 30, doses: { low: 20, mild: 40, high: 60 }, effects: { arousal: 1.3, dampening: -0.4, chaos: 0.6, repair: -0.1 } },
+-            { id: 'dexmph', name: 'Dexmethylphenidate', class: 'stimulant', classLabel: 'Stimulant', svg: svgPhen, minDose: 0, maxDose: 40, optimalDose: 15, doses: { low: 5, mild: 15, high: 30 }, effects: { arousal: 1.1, dampening: -0.2, chaos: 0.4, repair: 0.0 } },
+-            { id: 'modaf', name: 'Modafinil', class: 'stimulant', classLabel: 'Eugeroic', svg: svgPhen, minDose: 0, maxDose: 400, optimalDose: 200, doses: { low: 100, mild: 200, high: 300 }, effects: { arousal: 0.8, dampening: 0.0, chaos: 0.1, repair: 0.1 } },
+-            { id: 'armodaf', name: 'Armodafinil', class: 'stimulant', classLabel: 'Eugeroic', svg: svgPhen, minDose: 0, maxDose: 250, optimalDose: 150, doses: { low: 50, mild: 150, high: 250 }, effects: { arousal: 0.9, dampening: 0.0, chaos: 0.1, repair: 0.1 } },
+-            { id: 'caffeine', name: 'Caffeine', class: 'stimulant', classLabel: 'Xanthine', svg: svgPhen, minDose: 0, maxDose: 800, optimalDose: 200, doses: { low: 100, mild: 200, high: 400 }, effects: { arousal: 0.6, dampening: 0.0, chaos: 0.3, repair: 0.0 } },
+-            { id: 'nicotine', name: 'Nicotine', class: 'stimulant', classLabel: 'Alkaloid Stimulant', svg: svgPhen, minDose: 0, maxDose: 20, optimalDose: 2, doses: { low: 1, mild: 2, high: 6 }, effects: { arousal: 0.5, dampening: 0.1, chaos: 0.2, repair: 0.0 } },
++            { id: 'amph', name: 'Amphetamine Salts', class: 'stimulant', classLabel: 'Stimulant', svg: svgPhen, halfLife: 'medium', effects: { arousal: 1.5, dampening: -0.5, chaos: 0.8, repair: -0.2 } },
++            { id: 'mph', name: 'Methylphenidate', class: 'stimulant', classLabel: 'Stimulant', svg: svgPhen, halfLife: 'medium', effects: { arousal: 1.2, dampening: -0.3, chaos: 0.5, repair: -0.1 } },
++            { id: 'lisdexamph', name: 'Lisdexamfetamine', class: 'stimulant', classLabel: 'Stimulant', svg: svgPhen, halfLife: 'medium', effects: { arousal: 1.3, dampening: -0.4, chaos: 0.6, repair: -0.1 } },
++            { id: 'dexmph', name: 'Dexmethylphenidate', class: 'stimulant', classLabel: 'Stimulant', svg: svgPhen, halfLife: 'medium', effects: { arousal: 1.1, dampening: -0.2, chaos: 0.4, repair: 0.0 } },
++            { id: 'modaf', name: 'Modafinil', class: 'stimulant', classLabel: 'Eugeroic', svg: svgPhen, halfLife: 'medium', effects: { arousal: 0.8, dampening: 0.0, chaos: 0.1, repair: 0.1 } },
++            { id: 'armodaf', name: 'Armodafinil', class: 'stimulant', classLabel: 'Eugeroic', svg: svgPhen, halfLife: 'medium', effects: { arousal: 0.9, dampening: 0.0, chaos: 0.1, repair: 0.1 } },
++            { id: 'caffeine', name: 'Caffeine', class: 'stimulant', classLabel: 'Xanthine', svg: svgPhen, halfLife: 'medium', effects: { arousal: 0.6, dampening: 0.0, chaos: 0.3, repair: 0.0 } },
++            { id: 'nicotine', name: 'Nicotine', class: 'stimulant', classLabel: 'Alkaloid Stimulant', svg: svgPhen, halfLife: 'medium', effects: { arousal: 0.5, dampening: 0.1, chaos: 0.2, repair: 0.0 } },
+             
+             // Antipsychotics & Mood Stabilizers
+-            { id: 'halo', name: 'Haloperidol', class: 'antipsychotic', classLabel: 'Typical Antipsychotic', svg: svgTricyclic, minDose: 0, maxDose: 10, optimalDose: 2, doses: { low: 1, mild: 2, high: 5 }, effects: { arousal: -1.0, dampening: 1.8, chaos: -0.5, repair: -0.5 } },
+-            { id: 'queti', name: 'Quetiapine', class: 'antipsychotic', classLabel: 'Atypical Antipsychotic', svg: svgTricyclic, minDose: 0, maxDose: 800, optimalDose: 300, doses: { low: 100, mild: 300, high: 600 }, effects: { arousal: -0.8, dampening: 1.5, chaos: -0.3, repair: -0.2 } },
+-            { id: 'arip', name: 'Aripiprazole', class: 'antipsychotic', classLabel: 'Atypical Antipsychotic', svg: svgTricyclic, minDose: 0, maxDose: 30, optimalDose: 10, doses: { low: 5, mild: 10, high: 20 }, effects: { arousal: -0.4, dampening: 1.2, chaos: -0.2, repair: 0.0 } },
+-            { id: 'risper', name: 'Risperidone', class: 'antipsychotic', classLabel: 'Atypical Antipsychotic', svg: svgTricyclic, minDose: 0, maxDose: 8, optimalDose: 2, doses: { low: 1, mild: 2, high: 4 }, effects: { arousal: -0.6, dampening: 1.4, chaos: -0.3, repair: -0.1 } },
+-            { id: 'olan', name: 'Olanzapine', class: 'antipsychotic', classLabel: 'Atypical Antipsychotic', svg: svgTricyclic, minDose: 0, maxDose: 20, optimalDose: 10, doses: { low: 5, mild: 10, high: 15 }, effects: { arousal: -0.7, dampening: 1.6, chaos: -0.4, repair: -0.1 } },
+-            { id: 'cloz', name: 'Clozapine', class: 'antipsychotic', classLabel: 'Atypical Antipsychotic', svg: svgTricyclic, minDose: 0, maxDose: 900, optimalDose: 300, doses: { low: 100, mild: 300, high: 500 }, effects: { arousal: -0.9, dampening: 1.7, chaos: -0.6, repair: -0.3 } },
+-            { id: 'lithium', name: 'Lithium', class: 'antipsychotic', classLabel: 'Mood Stabilizer', svg: svgTricyclic, minDose: 0, maxDose: 1200, optimalDose: 600, doses: { low: 300, mild: 600, high: 900 }, effects: { arousal: -0.2, dampening: 0.8, chaos: -0.7, repair: 0.4 } },
+-            { id: 'lamo', name: 'Lamotrigine', class: 'antipsychotic', classLabel: 'Mood Stabilizer', svg: svgTricyclic, minDose: 0, maxDose: 400, optimalDose: 200, doses: { low: 100, mild: 200, high: 300 }, effects: { arousal: 0.0, dampening: 0.5, chaos: -0.5, repair: 0.2 } },
++            { id: 'halo', name: 'Haloperidol', class: 'antipsychotic', classLabel: 'Typical Antipsychotic', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -1.0, dampening: 1.8, chaos: -0.5, repair: -0.5 } },
++            { id: 'queti', name: 'Quetiapine', class: 'antipsychotic', classLabel: 'Atypical Antipsychotic', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.8, dampening: 1.5, chaos: -0.3, repair: -0.2 } },
++            { id: 'arip', name: 'Aripiprazole', class: 'antipsychotic', classLabel: 'Atypical Antipsychotic', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.4, dampening: 1.2, chaos: -0.2, repair: 0.0 } },
++            { id: 'risper', name: 'Risperidone', class: 'antipsychotic', classLabel: 'Atypical Antipsychotic', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.6, dampening: 1.4, chaos: -0.3, repair: -0.1 } },
++            { id: 'olan', name: 'Olanzapine', class: 'antipsychotic', classLabel: 'Atypical Antipsychotic', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.7, dampening: 1.6, chaos: -0.4, repair: -0.1 } },
++            { id: 'cloz', name: 'Clozapine', class: 'antipsychotic', classLabel: 'Atypical Antipsychotic', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.9, dampening: 1.7, chaos: -0.6, repair: -0.3 } },
++            { id: 'lithium', name: 'Lithium', class: 'antipsychotic', classLabel: 'Mood Stabilizer', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.2, dampening: 0.8, chaos: -0.7, repair: 0.4 } },
++            { id: 'lamo', name: 'Lamotrigine', class: 'antipsychotic', classLabel: 'Mood Stabilizer', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: 0.0, dampening: 0.5, chaos: -0.5, repair: 0.2 } },
+             
+             // Cannabinoids & Endocannabinoid Modulators
+-            { id: 'thc', name: 'Delta-9-THC', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 100, optimalDose: 10, doses: { low: 5, mild: 10, high: 25 }, effects: { arousal: 0.2, dampening: 0.5, chaos: 0.6, repair: -0.1 } },
+-            { id: 'cbd', name: 'Cannabidiol (CBD)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 1500, optimalDose: 300, doses: { low: 50, mild: 300, high: 800 }, effects: { arousal: -0.2, dampening: 0.6, chaos: -0.4, repair: 0.1 } },
+-            { id: 'delta8', name: 'Delta-8-THC', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 100, optimalDose: 25, doses: { low: 10, mild: 25, high: 50 }, effects: { arousal: 0.1, dampening: 0.7, chaos: 0.3, repair: 0.0 } },
+-            { id: 'hhc', name: 'HHC (Hexahydrocannabinol)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 100, optimalDose: 20, doses: { low: 10, mild: 20, high: 40 }, effects: { arousal: 0.15, dampening: 0.6, chaos: 0.4, repair: -0.05 } },
+-            { id: 'cbga', name: 'CBGA (Cannabigerolic acid)', class: 'cannabinoid', classLabel: 'Cannabinoid Precursor', svg: svgCannabinoid, minDose: 0, maxDose: 1000, optimalDose: 150, doses: { low: 50, mild: 150, high: 300 }, effects: { arousal: 0.0, dampening: 0.3, chaos: -0.1, repair: 0.2 } },
+-            { id: 'cbn', name: 'Cannabinol (CBN)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 50, optimalDose: 10, doses: { low: 5, mild: 10, high: 20 }, effects: { arousal: -0.4, dampening: 0.9, chaos: -0.1, repair: 0.0 } },
+-            { id: 'cbg', name: 'Cannabigerol (CBG)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 150, optimalDose: 25, doses: { low: 10, mild: 25, high: 50 }, effects: { arousal: 0.1, dampening: 0.4, chaos: -0.2, repair: 0.3 } },
+-            { id: 'thcv', name: 'Tetrahydrocannabivarin (THCV)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 50, optimalDose: 10, doses: { low: 5, mild: 10, high: 20 }, effects: { arousal: 0.5, dampening: 0.1, chaos: 0.1, repair: 0.0 } },
+-            { id: 'cbdv', name: 'Cannabidivarin (CBDV)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 800, optimalDose: 100, doses: { low: 25, mild: 100, high: 200 }, effects: { arousal: -0.1, dampening: 0.4, chaos: -0.3, repair: 0.2 } },
+-            { id: 'thcp', name: 'THC-P (Tetrahydrocannabiphorol)', class: 'cannabinoid', classLabel: 'Potent Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 10, optimalDose: 2, doses: { low: 1, mild: 2, high: 4 }, effects: { arousal: 0.3, dampening: 0.7, chaos: 0.8, repair: -0.2 } },
+-            { id: 'thco', name: 'THC-O-Acetate', class: 'cannabinoid', classLabel: 'Synthetic Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 50, optimalDose: 15, doses: { low: 5, mild: 15, high: 25 }, effects: { arousal: 0.4, dampening: 0.8, chaos: 1.0, repair: -0.3 } },
+-            { id: 'delta10', name: 'Delta-10-THC', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 100, optimalDose: 30, doses: { low: 15, mild: 30, high: 60 }, effects: { arousal: 0.25, dampening: 0.4, chaos: 0.35, repair: -0.05 } },
+-            { id: 'cbc', name: 'Cannabichromene (CBC)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 100, optimalDose: 20, doses: { low: 10, mild: 20, high: 50 }, effects: { arousal: 0.0, dampening: 0.4, chaos: -0.1, repair: 0.2 } },
+-            { id: 'cbl', name: 'Cannabicyclol (CBL)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 50, optimalDose: 10, doses: { low: 5, mild: 10, high: 25 }, effects: { arousal: -0.1, dampening: 0.5, chaos: 0.0, repair: 0.1 } },
+-            { id: 'cbdp', name: 'Cannabidiphorol (CBDP)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 50, optimalDose: 10, doses: { low: 5, mild: 10, high: 20 }, effects: { arousal: -0.3, dampening: 0.8, chaos: -0.2, repair: 0.2 } },
++            { id: 'thc', name: 'Delta-9-THC', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, halfLife: 'medium', effects: { arousal: 0.2, dampening: 0.5, chaos: 0.6, repair: -0.1 } },
++            { id: 'cbd', name: 'Cannabidiol (CBD)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, halfLife: 'medium', effects: { arousal: -0.2, dampening: 0.6, chaos: -0.4, repair: 0.1 } },
++            { id: 'delta8', name: 'Delta-8-THC', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, halfLife: 'medium', effects: { arousal: 0.1, dampening: 0.7, chaos: 0.3, repair: 0.0 } },
++            { id: 'hhc', name: 'HHC (Hexahydrocannabinol)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, halfLife: 'medium', effects: { arousal: 0.15, dampening: 0.6, chaos: 0.4, repair: -0.05 } },
++            { id: 'cbga', name: 'CBGA (Cannabigerolic acid)', class: 'cannabinoid', classLabel: 'Cannabinoid Precursor', svg: svgCannabinoid, halfLife: 'medium', effects: { arousal: 0.0, dampening: 0.3, chaos: -0.1, repair: 0.2 } },
++            { id: 'cbn', name: 'Cannabinol (CBN)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, halfLife: 'medium', effects: { arousal: -0.4, dampening: 0.9, chaos: -0.1, repair: 0.0 } },
++            { id: 'cbg', name: 'Cannabigerol (CBG)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, halfLife: 'medium', effects: { arousal: 0.1, dampening: 0.4, chaos: -0.2, repair: 0.3 } },
++            { id: 'thcv', name: 'Tetrahydrocannabivarin (THCV)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, halfLife: 'medium', effects: { arousal: 0.5, dampening: 0.1, chaos: 0.1, repair: 0.0 } },
++            { id: 'cbdv', name: 'Cannabidivarin (CBDV)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, halfLife: 'medium', effects: { arousal: -0.1, dampening: 0.4, chaos: -0.3, repair: 0.2 } },
++            { id: 'thcp', name: 'THC-P (Tetrahydrocannabiphorol)', class: 'cannabinoid', classLabel: 'Potent Cannabinoid', svg: svgCannabinoid, halfLife: 'medium', effects: { arousal: 0.3, dampening: 0.7, chaos: 0.8, repair: -0.2 } },
++            { id: 'thco', name: 'THC-O-Acetate', class: 'cannabinoid', classLabel: 'Synthetic Cannabinoid', svg: svgCannabinoid, halfLife: 'medium', effects: { arousal: 0.4, dampening: 0.8, chaos: 1.0, repair: -0.3 } },
++            { id: 'delta10', name: 'Delta-10-THC', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, halfLife: 'medium', effects: { arousal: 0.25, dampening: 0.4, chaos: 0.35, repair: -0.05 } },
++            { id: 'cbc', name: 'Cannabichromene (CBC)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, halfLife: 'medium', effects: { arousal: 0.0, dampening: 0.4, chaos: -0.1, repair: 0.2 } },
++            { id: 'cbl', name: 'Cannabicyclol (CBL)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, halfLife: 'medium', effects: { arousal: -0.1, dampening: 0.5, chaos: 0.0, repair: 0.1 } },
++            { id: 'cbdp', name: 'Cannabidiphorol (CBDP)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, halfLife: 'medium', effects: { arousal: -0.3, dampening: 0.8, chaos: -0.2, repair: 0.2 } },
+             
+             // Depressants / Benzos / Gabapentinoids / Z-Drugs
+-            { id: 'alpraz', name: 'Alprazolam', class: 'depressant', classLabel: 'Benzodiazepine', svg: svgTricyclic, minDose: 0, maxDose: 4, optimalDose: 1, doses: { low: 0.25, mild: 1, high: 2 }, effects: { arousal: -1.2, dampening: 1.4, chaos: -0.6, repair: -0.3 } },
+-            { id: 'clonaz', name: 'Clonazepam', class: 'depressant', classLabel: 'Benzodiazepine', svg: svgTricyclic, minDose: 0, maxDose: 4, optimalDose: 1, doses: { low: 0.5, mild: 1, high: 2 }, effects: { arousal: -1.0, dampening: 1.3, chaos: -0.5, repair: -0.2 } },
+-            { id: 'diaz', name: 'Diazepam', class: 'depressant', classLabel: 'Benzodiazepine', svg: svgTricyclic, minDose: 0, maxDose: 40, optimalDose: 10, doses: { low: 2, mild: 10, high: 20 }, effects: { arousal: -0.9, dampening: 1.2, chaos: -0.4, repair: -0.1 } },
+-            { id: 'loraz', name: 'Lorazepam', class: 'depressant', classLabel: 'Benzodiazepine', svg: svgTricyclic, minDose: 0, maxDose: 6, optimalDose: 2, doses: { low: 0.5, mild: 2, high: 4 }, effects: { arousal: -1.1, dampening: 1.3, chaos: -0.5, repair: -0.2 } },
+-            { id: 'pregab', name: 'Pregabalin', class: 'depressant', classLabel: 'Gabapentinoid', svg: svgPhen, minDose: 0, maxDose: 600, optimalDose: 150, doses: { low: 50, mild: 150, high: 300 }, effects: { arousal: -0.6, dampening: 0.9, chaos: -0.3, repair: 0.1 } },
+-            { id: 'gaba', name: 'Gabapentin', class: 'depressant', classLabel: 'Gabapentinoid', svg: svgPhen, minDose: 0, maxDose: 3600, optimalDose: 900, doses: { low: 300, mild: 900, high: 1800 }, effects: { arousal: -0.5, dampening: 0.8, chaos: -0.2, repair: 0.0 } },
+-            { id: 'zolp', name: 'Zolpidem', class: 'depressant', classLabel: 'Z-Drug', svg: svgTricyclic, minDose: 0, maxDose: 20, optimalDose: 10, doses: { low: 5, mild: 10, high: 15 }, effects: { arousal: -1.5, dampening: 1.6, chaos: 0.2, repair: -0.4 } },
+-            { id: 'zopic', name: 'Zopiclone', class: 'depressant', classLabel: 'Z-Drug', svg: svgTricyclic, minDose: 0, maxDose: 15, optimalDose: 7.5, doses: { low: 3.75, mild: 7.5, high: 10 }, effects: { arousal: -1.4, dampening: 1.5, chaos: 0.1, repair: -0.3 } },
+-            { id: 'alc', name: 'Ethanol (Alcohol)', class: 'depressant', classLabel: 'GABAergic', svg: svgPhen, minDose: 0, maxDose: 100, optimalDose: 30, doses: { low: 15, mild: 30, high: 60 }, effects: { arousal: -0.5, dampening: 1.0, chaos: 1.2, repair: -0.8 } }, // grams
++            { id: 'alpraz', name: 'Alprazolam', class: 'depressant', classLabel: 'Benzodiazepine', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -1.2, dampening: 1.4, chaos: -0.6, repair: -0.3 } },
++            { id: 'clonaz', name: 'Clonazepam', class: 'depressant', classLabel: 'Benzodiazepine', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -1.0, dampening: 1.3, chaos: -0.5, repair: -0.2 } },
++            { id: 'diaz', name: 'Diazepam', class: 'depressant', classLabel: 'Benzodiazepine', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.9, dampening: 1.2, chaos: -0.4, repair: -0.1 } },
++            { id: 'loraz', name: 'Lorazepam', class: 'depressant', classLabel: 'Benzodiazepine', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -1.1, dampening: 1.3, chaos: -0.5, repair: -0.2 } },
++            { id: 'pregab', name: 'Pregabalin', class: 'depressant', classLabel: 'Gabapentinoid', svg: svgPhen, halfLife: 'medium', effects: { arousal: -0.6, dampening: 0.9, chaos: -0.3, repair: 0.1 } },
++            { id: 'gaba', name: 'Gabapentin', class: 'depressant', classLabel: 'Gabapentinoid', svg: svgPhen, halfLife: 'medium', effects: { arousal: -0.5, dampening: 0.8, chaos: -0.2, repair: 0.0 } },
++            { id: 'zolp', name: 'Zolpidem', class: 'depressant', classLabel: 'Z-Drug', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -1.5, dampening: 1.6, chaos: 0.2, repair: -0.4 } },
++            { id: 'zopic', name: 'Zopiclone', class: 'depressant', classLabel: 'Z-Drug', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -1.4, dampening: 1.5, chaos: 0.1, repair: -0.3 } },
++            { id: 'alc', name: 'Ethanol (Alcohol)', class: 'depressant', classLabel: 'GABAergic', svg: svgPhen, halfLife: 'medium', effects: { arousal: -0.5, dampening: 1.0, chaos: 1.2, repair: -0.8 } }, // grams
+             
+             // Acetylcholine, NMDA & Other
+-            { id: 'donepezil', name: 'Donepezil', class: 'stimulant', classLabel: 'AChEI', svg: svgTricyclic, minDose: 0, maxDose: 23, optimalDose: 10, doses: { low: 5, mild: 10, high: 15 }, effects: { arousal: 0.4, dampening: 0.0, chaos: -0.1, repair: 0.2 } },
+-            { id: 'memantine', name: 'Memantine', class: 'depressant', classLabel: 'NMDA Antagonist', svg: svgTricyclic, minDose: 0, maxDose: 28, optimalDose: 10, doses: { low: 5, mild: 10, high: 20 }, effects: { arousal: -0.1, dampening: 0.3, chaos: -0.2, repair: 0.3 } },
+-            { id: 'dextro', name: 'Dextromethorphan (DXM)', class: 'depressant', classLabel: 'NMDA Antagonist', svg: svgTricyclic, minDose: 0, maxDose: 600, optimalDose: 150, doses: { low: 30, mild: 150, high: 300 }, effects: { arousal: 0.1, dampening: 0.6, chaos: 0.9, repair: 0.1 } }
++            { id: 'donepezil', name: 'Donepezil', class: 'stimulant', classLabel: 'AChEI', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: 0.4, dampening: 0.0, chaos: -0.1, repair: 0.2 } },
++            { id: 'memantine', name: 'Memantine', class: 'depressant', classLabel: 'NMDA Antagonist', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.1, dampening: 0.3, chaos: -0.2, repair: 0.3 } },
++            { id: 'dextro', name: 'Dextromethorphan (DXM)', class: 'depressant', classLabel: 'NMDA Antagonist', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: 0.1, dampening: 0.6, chaos: 0.9, repair: 0.1 } }
+         ];
+ 
+         let currentStack = [];
+@@ -532,8 +532,8 @@
+             updateStackDose(index, val);
+         }
+         function updateStackDose(index, val) {
+-            currentStack[index].currentDose = parseFloat(val);
+-            document.getElementById(`dose-val-${index}`).innerText = val + ' mg';
++            currentStack[index].currentIntensity = parseInt(val);
++            document.getElementById(`dose-val-${index}`).innerText = ['None', 'Low', 'Mild', 'High'][val];
+             updateSimulation();
+         }
+ 
+@@ -906,10 +906,7 @@
+         let assistantRecommendations = [];
+ 
+         function runAssistant() {
+-            const weight = parseFloat(document.getElementById('patient-weight').value) || 70;
+-            const tolerance = parseFloat(document.getElementById('patient-tolerance').value) || 1.0;
+             const targetState = document.getElementById('target-state').value;
+-
+             const feedbackBox = document.getElementById('assistant-feedback');
+             assistantRecommendations = [];
+ 
+@@ -920,7 +917,6 @@
+ 
+             let html = '<ul class="space-y-4">';
+ 
+-            const patientMultiplier = (weight / 70) * tolerance;
+             const targets = {
+                 baseline: { arousal: [0, 0.4], dampening: [0, 0.4], chaos: [0, 0.5], repair: [0, 2] },
+                 focus: { arousal: [0.8, 1.4], dampening: [0, 0.3], chaos: [0, 0.5], repair: [0, 2] },
+@@ -930,56 +926,55 @@
+             };
+             const t = targets[targetState];
+             
+-            // 1. Analyze and Recalculate based on Target State
+             let aligned = true;
+             let prescriptions = [];
+             
+             currentStack.forEach(mol => {
+-                let recommendedDose = Math.round(mol.optimalDose * patientMultiplier);
++                let recommendedIntensity = 2; // Default Mild
+                 let molStatus = 'Neutral';
+                 let molColor = 'text-slate-500';
+                 
+-                // Determine if molecule is inhibiting or synergizing with the target state
+                 const isStimulant = mol.effects.arousal > 0.5;
+                 const isDepressant = mol.effects.dampening > 0.5;
+                 const isPsychedelic = mol.effects.chaos > 0.5;
+                 
+                 if (targetState === 'sleep' || targetState === 'relaxation') {
+                     if (isStimulant || isPsychedelic) {
+-                        recommendedDose = 0; // Inhibit
++                        recommendedIntensity = 0; 
+                         molStatus = 'Inhibiting State';
+                         molColor = 'text-rose-500';
+-                        prescriptions.push(`Wait 6-8 hours for <strong>${mol.name}</strong> to clear pharmacokinetically before attempting ${targetState}.`);
++                        prescriptions.push(`Wait for <strong>${mol.name}</strong> to clear before attempting ${targetState} (Half-life: ${mol.halfLife || 'medium'}).`);
+                     } else if (isDepressant) {
+                         molStatus = 'Synergistic';
+                         molColor = 'text-emerald-500';
+                     }
+                 } else if (targetState === 'focus' || targetState === 'creative') {
+                     if (isDepressant) {
+-                        recommendedDose = 0;
++                        recommendedIntensity = 0;
+                         molStatus = 'Inhibiting State';
+                         molColor = 'text-rose-500';
+-                        prescriptions.push(`<strong>${mol.name}</strong> is causing excessive CNS depression. Wait for clearance to achieve ${targetState}.`);
++                        prescriptions.push(`<strong>${mol.name}</strong> is causing excessive CNS depression. Consider tapering to achieve ${targetState}.`);
+                     } else if (isStimulant || (isPsychedelic && targetState === 'creative')) {
+                         molStatus = 'Synergistic';
+                         molColor = 'text-emerald-500';
+                     }
+                 } else if (targetState === 'baseline') {
+                     if (isStimulant || isDepressant || isPsychedelic) {
+-                        recommendedDose = 0;
++                        recommendedIntensity = 0;
+                         molStatus = 'Disruptive';
+                         molColor = 'text-amber-500';
+                         prescriptions.push(`Taper <strong>${mol.name}</strong> to return to healthy baseline dynamics.`);
+                     }
+                 }
+                 
+-                assistantRecommendations.push({ id: mol.id, recommendedDose: recommendedDose });
++                assistantRecommendations.push({ id: mol.id, recommendedIntensity: recommendedIntensity });
+ 
+                 let doseDisplay = '';
+-                if (mol.currentDose < recommendedDose * 0.8 && recommendedDose > 0) {
++                let currentI = mol.currentIntensity || 0;
++                if (currentI < recommendedIntensity && recommendedIntensity > 0) {
+                     doseDisplay = '<span class="text-amber-500 font-bold">Sub-therapeutic</span>';
+-                } else if (mol.currentDose > recommendedDose * 1.2 || (recommendedDose === 0 && mol.currentDose > 0)) {
+-                    doseDisplay = '<span class="text-rose-500 font-bold">Inhibitive / Toxic</span>';
++                } else if (currentI > recommendedIntensity || (recommendedIntensity === 0 && currentI > 0)) {
++                    doseDisplay = '<span class="text-rose-500 font-bold">Inhibitive / Over-intense</span>';
+                 } else {
+                     doseDisplay = '<span class="text-emerald-500 font-bold">Optimal Alignment</span>';
+                 }
+@@ -992,7 +987,7 @@
+                         </div>
+                         <div class="text-[10px] text-slate-500 mb-1 flex justify-between">
+                             <span>Effect: <span class="${molColor} font-bold uppercase">${molStatus}</span></span>
+-                            <span>Target Dose: <span class="font-mono font-bold text-indigo-600">${recommendedDose} mg</span></span>
++                            <span>Target Intensity: <span class="font-mono font-bold text-indigo-600">${['None', 'Low', 'Mild', 'High'][recommendedIntensity]}</span></span>
+                         </div>
+                     </li>
+                 `;
+@@ -1004,30 +999,24 @@
+ 
+             const cv = currentVectors;
+ 
+-            // Arousal
+             if (cv.arousal < t.arousal[0]) {
+-                const deficit = (t.arousal[0] - cv.arousal).toFixed(2);
+-                prescriptions.push(`<strong>Arousal Deficit (-${deficit}):</strong> Add ~${Math.round(deficit * 20 * patientMultiplier)}mg of a precision stimulant to reach threshold.`);
++                prescriptions.push(`<strong>Arousal Deficit:</strong> Add a precision stimulant to reach required threshold.`);
+                 aligned = false;
+             } else if (cv.arousal > t.arousal[1]) {
+-                const excess = (cv.arousal - t.arousal[1]).toFixed(2);
+-                prescriptions.push(`<strong>Arousal Excess (+${excess}):</strong> Severe risk of network shattering. Reduce stimulants immediately.`);
++                prescriptions.push(`<strong>Arousal Excess:</strong> Severe risk of network shattering. Reduce stimulants immediately.`);
+                 aligned = false;
+             }
+ 
+-            // Dampening
+             if (cv.dampening < t.dampening[0]) {
+-                const deficit = (t.dampening[0] - cv.dampening).toFixed(2);
+-                prescriptions.push(`<strong>Dampening Deficit (-${deficit}):</strong> Consider adding a GABAergic agent to enforce required topological suppression.`);
++                prescriptions.push(`<strong>Dampening Deficit:</strong> Consider adding a GABAergic agent to enforce required topological suppression.`);
+                 aligned = false;
+             } else if (cv.dampening > t.dampening[1]) {
+-                const excess = (cv.dampening - t.dampening[1]).toFixed(2);
+-                prescriptions.push(`<strong>Dampening Excess (+${excess}):</strong> Network is rigidly frozen. Taper down depressant dosage.`);
++                prescriptions.push(`<strong>Dampening Excess:</strong> Network is rigidly frozen. Taper down depressant dosage.`);
+                 aligned = false;
+             }
+ 
+             if (cv.chaos > t.chaos[1]) {
+-                prescriptions.push(`<strong>Severe Chaos Detected:</strong> Add precision agonist ZB-01 to immediately stabilize 11D cliques.`);
++                prescriptions.push(`<strong>Severe Chaos Detected:</strong> Add precision agonist ZB-01 to stabilize cliques.`);
+                 aligned = false;
+             }
+ 
+@@ -1040,9 +1029,9 @@
+             }
+ 
+             if (aligned && prescriptions.length === 0) {
+-                html += `<div class="mt-3 p-3 bg-emerald-50 rounded-lg border border-emerald-100 flex gap-2 items-start"><span class="text-emerald-500">✅</span> <p class="text-emerald-700 text-xs leading-relaxed"><strong>Mathematically Aligned:</strong> Current dosages and pharmacokinetics are perfectly optimized for the <strong>${targetState.toUpperCase()}</strong> state.</p></div>`;
++                html += `<div class="mt-3 p-3 bg-emerald-50 rounded-lg border border-emerald-100 flex gap-2 items-start"><span class="text-emerald-500">✅</span> <p class="text-emerald-700 text-xs leading-relaxed"><strong>Mathematically Aligned:</strong> Current intensities and pharmacokinetics are perfectly optimized for the <strong>${targetState.toUpperCase()}</strong> state.</p></div>`;
+             } else {
+-                html += `<p class="text-slate-400 text-[10px] mt-4 italic text-center">Press Auto-Adjust to recalculate dosages based on reported intake and current pharmacological conflicts.</p>`;
++                html += `<p class="text-slate-400 text-[10px] mt-4 italic text-center">Press Auto-Adjust to recalculate intensities based on reported intake and current pharmacological conflicts.</p>`;
+             }
+ 
+             html += '</div></ul>';
+@@ -1055,13 +1044,11 @@
+             assistantRecommendations.forEach((rec, idx) => {
+                 const input = document.querySelector(`input[oninput="updateStackDose(${idx}, this.value)"]`);
+                 if (input) {
+-                    let safeVal = Math.min(rec.recommendedDose, input.max);
+-                    input.value = safeVal;
+-                    updateStackDose(idx, safeVal);
++                    input.value = rec.recommendedIntensity;
++                    updateStackDose(idx, rec.recommendedIntensity);
+                 }
+             });
+             
+-            // The sliders trigger state updates, but we need to ensure the Assistant recalculates post-adjustment
+             setTimeout(() => { runAssistant(); }, 50);
+         }
+ 

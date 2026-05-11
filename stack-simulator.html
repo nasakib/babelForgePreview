@@ -507,17 +507,16 @@
                         </div>
                         <div class="flex flex-col gap-2 w-full px-1 mt-1 border-t border-slate-100 pt-2">
                             <div class="flex items-center justify-between">
-                                <span class="text-[9px] font-bold text-slate-400 uppercase">Presets</span>
+                                <span class="text-[9px] font-bold text-slate-400 uppercase">Intensity</span>
                                 <div class="flex gap-1">
-                                    <button onclick="updateStackDoseUI(${idx}, ${mol.doses.low})" class="px-2 py-0.5 text-[9px] font-bold rounded bg-slate-100 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">Low</button>
-                                    <button onclick="updateStackDoseUI(${idx}, ${mol.doses.mild})" class="px-2 py-0.5 text-[9px] font-bold rounded bg-slate-100 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">Mild</button>
-                                    <button onclick="updateStackDoseUI(${idx}, ${mol.doses.high})" class="px-2 py-0.5 text-[9px] font-bold rounded bg-slate-100 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">High</button>
+                                    <button onclick="updateStackDoseUI(${idx}, 1)" class="px-2 py-0.5 text-[9px] font-bold rounded bg-slate-100 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">Low</button>
+                                    <button onclick="updateStackDoseUI(${idx}, 2)" class="px-2 py-0.5 text-[9px] font-bold rounded bg-slate-100 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">Mild</button>
+                                    <button onclick="updateStackDoseUI(${idx}, 3)" class="px-2 py-0.5 text-[9px] font-bold rounded bg-slate-100 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">High</button>
                                 </div>
                             </div>
                             <div class="flex items-center gap-3 w-full">
-                                <span class="text-[9px] font-bold text-slate-400 uppercase w-8">Dose</span>
-                                <input type="range" id="slider-${idx}" min="${mol.minDose}" max="${mol.maxDose}" value="${mol.currentDose}" class="flex-grow h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-500" oninput="updateStackDose(${idx}, this.value)">
-                                <span class="text-[10px] font-mono font-bold text-slate-600 w-12 text-right" id="dose-val-${idx}">${mol.currentDose} mg</span>
+                                <input type="range" id="slider-${idx}" min="0" max="3" step="1" value="${mol.currentIntensity || 0}" class="flex-grow h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-500" oninput="updateStackDose(${idx}, this.value)">
+                                <span class="text-[10px] font-mono font-bold text-slate-600 w-16 text-right" id="dose-val-${idx}">${['None', 'Low', 'Mild', 'High'][mol.currentIntensity || 0]}</span>
                             </div>
                         </div>
                     </div>
@@ -659,7 +658,7 @@
             let classCounts = { ssri: 0, stimulant: 0, depressant: 0, antipsychotic: 0, cannabinoid: 0, novel: 0 };
             
             currentStack.forEach(mol => {
-                const ratio = mol.currentDose / mol.optimalDose;
+                const ratio = (mol.currentIntensity || 0) / 2.0; // Mild (2) = optimal (1.0 ratio)
                 const overDose = Math.max(0, ratio - 1);
                 
                 classCounts[mol.class] = (classCounts[mol.class] || 0) + ratio;
