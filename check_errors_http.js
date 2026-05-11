@@ -18,9 +18,9 @@ async function checkPage(url) {
 }
 
 (async () => {
-    await checkPage('http://localhost:8080/index.html');
-    await checkPage('http://localhost:8080/11d-projection.html');
-    await checkPage('http://localhost:8080/pharma-projection.html');
-    await checkPage('http://localhost:8080/stack-simulator.html');
+    await checkPage('http://localhost:8081/index.html');
+    await checkPage('http://localhost:8081/11d-projection.html');
+    await checkPage('http://localhost:8081/pharma-projection.html');
+    await checkPage('http://localhost:8081/stack-simulator.html');
     process.exit(0);
 })();
