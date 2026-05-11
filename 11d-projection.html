@@ -146,6 +146,7 @@
                 <button class="btn-flash" id="btn-resistant" onclick="triggerPTSDFlash()">PTSD Flash</button>
                 <button id="btn-adhd" style="border-color: #64748b; color: #64748b;" onclick="triggerState('ADHD')">ADHD</button>
                 <button id="btn-tourettes" style="border-color: #10b981; color: #10b981;" onclick="triggerState('TOURETTES')">Tourette's</button>
+                <button id="btn-depression" style="border-color: #38bdf8; color: #38bdf8;" onclick="triggerState('DEPRESSION')">Depression</button>
                 <button class="btn-stim" id="btn-stim" onclick="toggleStimulus()">Neural Stimulus</button>
                 <div style="display: flex; flex-direction: column; gap: 4px; background: rgba(252, 211, 77, 0.05); padding: 6px 10px; border: 1px solid rgba(252, 211, 77, 0.5); border-radius: 4px;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -293,6 +294,10 @@
                 currentDrugName = "DOPAREG";
                 label.innerText = "DR-02";
                 loadTopology('TOURETTES');
+            } else if (state === 'DEPRESSION') {
+                currentDrugName = "KETAMINE";
+                label.innerText = "KT-01";
+                loadTopology('DEPRESSION');
             }
             slider.value = 0;
             updatePharma(0);
@@ -390,6 +395,11 @@
                     else if (pharmaEfficacy < 1) explanation = 'Sub-therapeutic. Targeted D2 antagonism is beginning to soften erratic synchronization spikes.';
                     else if (pharmaEfficacy === 1) explanation = 'Optimal dosage (mild intensity). DR-02 has successfully dampened hyper-connectivity back to smooth baseline dynamics.';
                     else explanation = 'Over-dampening. Excessive D2 blockade is leading to network rigidity (Parkinsonian side-effects).';
+                } else if (currentStatus === 'DEPRESSION') {
+                    if (pharmaEfficacy === 0) explanation = 'Negative State (Depression). Hypo-connectivity in executive circuits; hyper-stability in the DMN. Suggest Ketamine modulation.';
+                    else if (pharmaEfficacy < 1) explanation = 'Glutamatergic modulation is beginning to disrupt rigid DMN patterns and trigger plasticity.';
+                    else if (pharmaEfficacy === 1) explanation = 'Optimal sub-anesthetic effect. Topological reorganization and enhanced synaptic plasticity achieved.';
+                    else explanation = 'Dissociative threshold. The network is entering a state of high-entropy fragmentation.';
                 }
                 explanationBox.innerText = explanation;
             }
@@ -405,10 +415,10 @@
             const data = topologyData[status];
             const isResistant = status === 'RESISTANT';
             
-            document.getElementById('state-val').innerText = isResistant ? "PTSD_FLASH_DYSFUNCTION" : "HEALTHY_COGNITION";
-            document.getElementById('state-val').style.color = isResistant ? "#ff0055" : "#00ffcc";
-            document.getElementById('integrity-val').innerText = isResistant ? "24%" : "100%";
-            document.getElementById('integrity-val').style.color = isResistant ? "#ff0055" : "#00ffcc";
+            document.getElementById('state-val').innerText = isResistant ? "PTSD_FLASH_DYSFUNCTION" : (status === 'DEPRESSION' ? "MAJOR_DEPRESSIVE_DYSREGULATION" : "HEALTHY_COGNITION");
+            document.getElementById('state-val').style.color = isResistant ? "#ff0055" : (status === 'DEPRESSION' ? "#38bdf8" : "#00ffcc");
+            document.getElementById('integrity-val').innerText = isResistant ? "24%" : (status === 'DEPRESSION' ? "42%" : "100%");
+            document.getElementById('integrity-val').style.color = isResistant ? "#ff0055" : (status === 'DEPRESSION' ? "#38bdf8" : "#00ffcc");
             document.getElementById('clique-val').innerText = data.stats.total_cliques_2D_plus;
 
             // Render Lobes (Dynamic Spheres)

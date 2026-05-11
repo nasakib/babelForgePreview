@@ -75,6 +75,9 @@ def generate_topology_data():
         elif state_type == "TOURETTES":
             num_cliques = 60
             max_dim = 9
+        elif state_type == "DEPRESSION":
+            num_cliques = 25
+            max_dim = 5
         
         for _ in range(num_cliques):
             dim = random.randint(2, max_dim)
@@ -88,10 +91,15 @@ def generate_topology_data():
                 somato_nodes = [n for n in state_nodes if n["region"] == "SomatoMotor"]
                 if somato_nodes:
                     center_node = random.choice(somato_nodes)
-            if state_type == "ADHD" and center_node["region"] == "Control" and random.random() < 0.8:
+            if (state_type == "ADHD" and center_node["region"] == "Control" and random.random() < 0.8):
                 non_control = [n for n in state_nodes if n["region"] != "Control"]
                 if non_control:
                     center_node = random.choice(non_control)
+            if state_type == "DEPRESSION":
+                # Bias towards Limbic and Default Mode Network (DMN)
+                dmn_limbic_nodes = [n for n in state_nodes if n["region"] in ["Limbic", "Default"]]
+                if dmn_limbic_nodes and random.random() < 0.7:
+                    center_node = random.choice(dmn_limbic_nodes)
 
             distances = [(j, (n["x"]-center_node["x"])**2 + (n["y"]-center_node["y"])**2 + (n["z"]-center_node["z"])**2) for j, n in enumerate(state_nodes)]
             distances.sort(key=lambda item: item[1])
@@ -126,7 +134,8 @@ def generate_topology_data():
         "RESPONSIVE": create_state("HEALTHY"),
         "RESISTANT": create_state("PTSD"),
         "ADHD": create_state("ADHD"),
-        "TOURETTES": create_state("TOURETTES")
+        "TOURETTES": create_state("TOURETTES"),
+        "DEPRESSION": create_state("DEPRESSION")
     }
     
     with open('data/topology_projection.json', 'w') as f:

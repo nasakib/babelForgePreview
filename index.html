@@ -637,7 +637,9 @@
                                         <button id="btn-tourettes" class="w-full text-left px-4 py-3 rounded-lg border border-slate-200 font-semibold text-sm transition-all" onclick="updateDashboardState('TOURETTES')">
                                             Tourette's (Motor Tic)
                                         </button>
-                                    </div>
+                                        <button id="btn-depression" class="w-full text-left px-4 py-3 rounded-lg border border-slate-200 font-semibold text-sm transition-all" onclick="updateDashboardState('DEPRESSION')">
+                                            Depression (MDD)
+                                        </button>                                    </div>
                                 </div>
                                 
                                 <div class="p-5 bg-white border border-slate-200 rounded-xl shadow-sm">
@@ -1475,6 +1477,25 @@
                                    </svg>`;
                     moleculeName = 'Haloperidol (Standard of Care)';
                 }
+            } else if (state === 'DEPRESSION') {
+                label = 'Depression (MDD)';
+                targetState = 'DEPRESSION';
+                if (dashTreatmentClass === 'NOVEL') {
+                    drugName = 'Ketamine Infusion';
+                    drugDesc = 'Rapid NMDA modulation. Inducing synaptogenesis to repair Default Mode Network (DMN) topology.';
+                    moleculeSVG = `<svg viewBox="0 0 100 50" class="h-full w-auto stroke-indigo-600 fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polygon points="40,10 60,10 70,30 50,45 30,30 Z"/>
+                                        <path d="M50 45 L50 10"/>
+                                   </svg>`;
+                    moleculeName = 'Ketamine (NMDA Modulator)';
+                } else {
+                    drugName = 'Fluoxetine Dosage';
+                    drugDesc = 'Conventional SSRI. Aiming for global serotonin increase; topological repair is typically slow and non-specific.';
+                    moleculeSVG = `<svg viewBox="0 0 100 50" class="h-full w-auto stroke-slate-500 fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="30" cy="25" r="8"/><circle cx="70" cy="25" r="8"/><path d="M38 25 L62 25"/>
+                                   </svg>`;
+                    moleculeName = 'Fluoxetine (Prozac)';
+                }
             }
 
             document.getElementById('active-scenario-label').innerText = label;
@@ -1575,6 +1596,28 @@
                     }
                     baseScale = 1.6;
                 }
+            } else if (dashStatus === 'DEPRESSION') {
+                score = 42;
+                if (dashTreatmentClass === 'NOVEL') {
+                    if (dashPharmaEfficacy <= 1) {
+                        score += dashPharmaEfficacy * 58;
+                        pharmaBonus = dashPharmaEfficacy * 0.4;
+                    } else {
+                        score = 100 - ((dashPharmaEfficacy - 1) * 30);
+                        pharmaBonus = 0.4 + ((dashPharmaEfficacy - 1) * 0.5); // Dissociative/Chaotic
+                    }
+                    baseScale = 0.7; // Hypo-connected baseline
+                } else {
+                    // Conventional (SSRI)
+                    if (dashPharmaEfficacy <= 1) {
+                        score += dashPharmaEfficacy * 25; // Maxes at 67%
+                        pharmaBonus = -(dashPharmaEfficacy * 0.2); // Further dampening
+                    } else {
+                        score = 67 - ((dashPharmaEfficacy - 1) * 20);
+                        pharmaBonus = -0.2 - ((dashPharmaEfficacy - 1) * 0.2);
+                    }
+                    baseScale = 0.7;
+                }
             }
             
             const bar = document.getElementById('integrity-bar');
@@ -1641,6 +1684,18 @@
                         else if (dashPharmaEfficacy < 1) explanation = 'Aggressive D2 antagonism is rapidly crashing network amplitude and freezing nodes.';
                         else if (dashPharmaEfficacy === 1) explanation = 'Tics suppressed, but at the cost of significant network rigidity and structural dampening.';
                         else explanation = 'Haloperidol toxicity. Severe Parkinsonian rigidity (Tardive Dyskinesia). The network is completely frozen.';
+                    }
+                } else if (dashStatus === 'DEPRESSION') {
+                    if (dashTreatmentClass === 'NOVEL') {
+                        if (dashPharmaEfficacy === 0) explanation = 'Negative State (Depression). Hypo-connectivity detected in reward and executive circuits. DMN hyper-stability noted.';
+                        else if (dashPharmaEfficacy < 1) explanation = 'Ketamine is inducing rapid glutamate release, beginning to disrupt pathological DMN stability and promote synaptogenesis.';
+                        else if (dashPharmaEfficacy === 1) explanation = 'Optimal sub-anesthetic dosage. Topology indicates a significant shift towards healthy connectivity baselines and enhanced plasticity.';
+                        else explanation = 'Dissociative threshold exceeded. Network is fragmenting into high-entropy, chaotic states.';
+                    } else {
+                        if (dashPharmaEfficacy === 0) explanation = 'Negative State (Depression). Hypo-connectivity detected in reward and executive circuits.';
+                        else if (dashPharmaEfficacy < 1) explanation = 'SSRI titration is increasing serotonin availability, but network-level topological repair remains negligible in the acute phase.';
+                        else if (dashPharmaEfficacy === 1) explanation = 'Conventional therapeutic level. Modest symptom relief via global dampening, but underlying structural hypo-connectivity persists.';
+                        else explanation = 'Serotonin toxicity risk. Structural blunting and emotional numbing effects are dominant.';
                     }
                 }
                 explanationBox.innerText = explanation;
@@ -1801,6 +1856,39 @@
                             const rigidScale = targetBaseScale * (1 - (overDose * 0.9));
                             node.scale.setScalar(Math.max(0.05, rigidScale));
                             emissiveInt = 0.1;
+                        }
+                    }
+                } else if (dashStatus === 'DEPRESSION') {
+                    if (dashTreatmentClass === 'NOVEL') {
+                        if (dashPharmaEfficacy <= 1) {
+                            // Ketamine: Pulsing expansion and restoration
+                            const expansion = dashPharmaEfficacy * 0.4 * Math.sin(time * 2);
+                            const depScale = targetBaseScale + wave * 0.2 + expansion;
+                            node.scale.setScalar(Math.max(0.2, depScale));
+                            node.position.lerp(node.userData.origin, 0.1);
+                            emissiveInt = 0.2 + (dashPharmaEfficacy * 0.6);
+                        } else {
+                            // High-dose/Dissociative: Chaotic jitter and fragmentation
+                            const overDose = dashPharmaEfficacy - 1;
+                            const jitter = overDose * 20;
+                            node.position.x = node.userData.origin.x + (Math.random() - 0.5) * jitter;
+                            node.position.y = node.userData.origin.y + (Math.random() - 0.5) * jitter;
+                            node.position.z = node.userData.origin.z + (Math.random() - 0.5) * jitter;
+                            const chaoticScale = targetBaseScale + wave * 1.5;
+                            node.scale.setScalar(Math.max(0.2, chaoticScale));
+                            emissiveInt = 0.8 + (overDose * 1.2);
+                        }
+                    } else {
+                        // SSRI: Dulling/Shrinkage
+                        if (dashPharmaEfficacy <= 1) {
+                            const dullScale = targetBaseScale - (dashPharmaEfficacy * 0.2);
+                            node.scale.setScalar(Math.max(0.1, dullScale));
+                            node.position.lerp(node.userData.origin, 0.05);
+                            emissiveInt = 0.2 * (1 - dashPharmaEfficacy * 0.5);
+                        } else {
+                            const toxicScale = targetBaseScale * 0.5;
+                            node.scale.setScalar(Math.max(0.05, toxicScale));
+                            emissiveInt = 0.05;
                         }
                     }
                 } else {
