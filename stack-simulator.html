@@ -909,51 +909,18 @@
             const weight = parseFloat(document.getElementById('patient-weight').value) || 70;
             const tolerance = parseFloat(document.getElementById('patient-tolerance').value) || 1.0;
             const targetState = document.getElementById('target-state').value;
-            
+
             const feedbackBox = document.getElementById('assistant-feedback');
             assistantRecommendations = [];
-            
+
             if (currentStack.length === 0) {
                 feedbackBox.innerHTML = '<p class="italic text-slate-400 text-center mt-10">Add molecules to your stack to generate theoretical interaction insights.</p>';
                 return;
             }
 
             let html = '<ul class="space-y-4">';
-            
-            // 1. Calculate Patient-Specific Dosage
-            const patientMultiplier = (weight / 70) * tolerance;
-            
-            currentStack.forEach(mol => {
-                const calculatedOptimal = Math.round(mol.optimalDose * patientMultiplier);
-                assistantRecommendations.push({ id: mol.id, recommendedDose: calculatedOptimal });
-                
-                let doseStatus = '';
-                if (mol.currentDose < calculatedOptimal * 0.8) {
-                    doseStatus = '<span class="text-amber-500 font-bold">Sub-therapeutic</span>';
-                } else if (mol.currentDose > calculatedOptimal * 1.2) {
-                    doseStatus = '<span class="text-rose-500 font-bold">Toxic (Overdose risk)</span>';
-                } else {
-                    doseStatus = '<span class="text-emerald-500 font-bold">Optimal</span>';
-                }
-                
-                html += `
-                    <li class="bg-slate-50 p-3 rounded-lg border border-slate-100">
-                        <div class="flex justify-between items-center mb-1">
-                            <strong class="text-slate-900">${mol.name}</strong>
-                            ${doseStatus}
-                        </div>
-                        <div class="text-[10px]">
-                            Patient Adjusted Optimal: <span class="font-mono font-bold">${calculatedOptimal} mg</span>
-                        </div>
-                    </li>
-                `;
-            });
-            
-            // 2. Target State Alignment
-            html += '<div class="border-t border-slate-200 pt-3 mt-4">';
-            html += '<strong class="text-slate-900 block mb-2">Stack Alignment: ' + targetState.toUpperCase() + '</strong>';
 
-            // Define mathematically valid target vector ranges for each state
+            const patientMultiplier = (weight / 70) * tolerance;
             const targets = {
                 baseline: { arousal: [0, 0.4], dampening: [0, 0.4], chaos: [0, 0.5], repair: [0, 2] },
                 focus: { arousal: [0.8, 1.4], dampening: [0, 0.3], chaos: [0, 0.5], repair: [0, 2] },
@@ -961,72 +928,141 @@
                 sleep: { arousal: [0, 0.2], dampening: [1.2, 2.0], chaos: [0, 0.5], repair: [0, 2] },
                 creative: { arousal: [0.3, 0.8], dampening: [0, 0.3], chaos: [0.5, 1.2], repair: [0.5, 2] }
             };
-
             const t = targets[targetState];
-            const cv = currentVectors;
+            
+            // 1. Analyze and Recalculate based on Target State
             let aligned = true;
+            let prescriptions = [];
+            
+            currentStack.forEach(mol => {
+                let recommendedDose = Math.round(mol.optimalDose * patientMultiplier);
+                let molStatus = 'Neutral';
+                let molColor = 'text-slate-500';
+                
+                // Determine if molecule is inhibiting or synergizing with the target state
+                const isStimulant = mol.effects.arousal > 0.5;
+                const isDepressant = mol.effects.dampening > 0.5;
+                const isPsychedelic = mol.effects.chaos > 0.5;
+                
+                if (targetState === 'sleep' || targetState === 'relaxation') {
+                    if (isStimulant || isPsychedelic) {
+                        recommendedDose = 0; // Inhibit
+                        molStatus = 'Inhibiting State';
+                        molColor = 'text-rose-500';
+                        prescriptions.push(`Wait 6-8 hours for <strong>${mol.name}</strong> to clear pharmacokinetically before attempting ${targetState}.`);
+                    } else if (isDepressant) {
+                        molStatus = 'Synergistic';
+                        molColor = 'text-emerald-500';
+                    }
+                } else if (targetState === 'focus' || targetState === 'creative') {
+                    if (isDepressant) {
+                        recommendedDose = 0;
+                        molStatus = 'Inhibiting State';
+                        molColor = 'text-rose-500';
+                        prescriptions.push(`<strong>${mol.name}</strong> is causing excessive CNS depression. Wait for clearance to achieve ${targetState}.`);
+                    } else if (isStimulant || (isPsychedelic && targetState === 'creative')) {
+                        molStatus = 'Synergistic';
+                        molColor = 'text-emerald-500';
+                    }
+                } else if (targetState === 'baseline') {
+                    if (isStimulant || isDepressant || isPsychedelic) {
+                        recommendedDose = 0;
+                        molStatus = 'Disruptive';
+                        molColor = 'text-amber-500';
+                        prescriptions.push(`Taper <strong>${mol.name}</strong> to return to healthy baseline dynamics.`);
+                    }
+                }
+                
+                assistantRecommendations.push({ id: mol.id, recommendedDose: recommendedDose });
 
-            // Arousal Pharmacokinetics
+                let doseDisplay = '';
+                if (mol.currentDose < recommendedDose * 0.8 && recommendedDose > 0) {
+                    doseDisplay = '<span class="text-amber-500 font-bold">Sub-therapeutic</span>';
+                } else if (mol.currentDose > recommendedDose * 1.2 || (recommendedDose === 0 && mol.currentDose > 0)) {
+                    doseDisplay = '<span class="text-rose-500 font-bold">Inhibitive / Toxic</span>';
+                } else {
+                    doseDisplay = '<span class="text-emerald-500 font-bold">Optimal Alignment</span>';
+                }
+
+                html += `
+                    <li class="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                        <div class="flex justify-between items-center mb-1">
+                            <strong class="text-slate-900">${mol.name}</strong>
+                            ${doseDisplay}
+                        </div>
+                        <div class="text-[10px] text-slate-500 mb-1 flex justify-between">
+                            <span>Effect: <span class="${molColor} font-bold uppercase">${molStatus}</span></span>
+                            <span>Target Dose: <span class="font-mono font-bold text-indigo-600">${recommendedDose} mg</span></span>
+                        </div>
+                    </li>
+                `;
+            });
+
+            // 2. Global Vector Alignment
+            html += '<div class="border-t border-slate-200 pt-3 mt-4">';
+            html += '<strong class="text-slate-900 block mb-2">Network Diagnostics: ' + targetState.toUpperCase() + '</strong>';
+
+            const cv = currentVectors;
+
+            // Arousal
             if (cv.arousal < t.arousal[0]) {
                 const deficit = (t.arousal[0] - cv.arousal).toFixed(2);
-                html += `<p class="text-amber-600 text-xs mt-2 flex gap-2 leading-relaxed"><span>⚠️</span> <span><strong>Arousal Deficit (-${deficit}):</strong> Add ~${Math.round(deficit * 20 * patientMultiplier)}mg of a Dopaminergic Stimulant (e.g., SS-20) to reach target synchronization threshold.</span></p>`;
+                prescriptions.push(`<strong>Arousal Deficit (-${deficit}):</strong> Add ~${Math.round(deficit * 20 * patientMultiplier)}mg of a precision stimulant to reach threshold.`);
                 aligned = false;
             } else if (cv.arousal > t.arousal[1]) {
                 const excess = (cv.arousal - t.arousal[1]).toFixed(2);
-                html += `<p class="text-rose-600 text-xs mt-2 flex gap-2 leading-relaxed"><span>❌</span> <span><strong>Arousal Excess (+${excess}):</strong> Reduce stimulant dosage or add ~${Math.round(excess * 10 * patientMultiplier)}mg of a Depressant to counteract hyper-arousal and prevent topological shattering.</span></p>`;
+                prescriptions.push(`<strong>Arousal Excess (+${excess}):</strong> Severe risk of network shattering. Reduce stimulants immediately.`);
                 aligned = false;
             }
 
-            // Dampening Pharmacokinetics
+            // Dampening
             if (cv.dampening < t.dampening[0]) {
                 const deficit = (t.dampening[0] - cv.dampening).toFixed(2);
-                html += `<p class="text-amber-600 text-xs mt-2 flex gap-2 leading-relaxed"><span>⚠️</span> <span><strong>Dampening Deficit (-${deficit}):</strong> Add ~${Math.round(deficit * 5 * patientMultiplier)}mg of a GABAergic/Depressant (e.g., Alprazolam, CBD) to achieve required neural sedation.</span></p>`;
+                prescriptions.push(`<strong>Dampening Deficit (-${deficit}):</strong> Consider adding a GABAergic agent to enforce required topological suppression.`);
                 aligned = false;
             } else if (cv.dampening > t.dampening[1]) {
                 const excess = (cv.dampening - t.dampening[1]).toFixed(2);
-                html += `<p class="text-rose-600 text-xs mt-2 flex gap-2 leading-relaxed"><span>❌</span> <span><strong>Dampening Excess (+${excess}):</strong> Reduce depressant dosage to prevent pathological rigidity and cognitive blunting.</span></p>`;
+                prescriptions.push(`<strong>Dampening Excess (+${excess}):</strong> Network is rigidly frozen. Taper down depressant dosage.`);
                 aligned = false;
             }
 
-            // Chaos/Entropy Pharmacodynamics
             if (cv.chaos > t.chaos[1]) {
-                const excess = (cv.chaos - t.chaos[1]).toFixed(2);
-                html += `<p class="text-rose-600 text-xs mt-2 flex gap-2 leading-relaxed"><span>❌</span> <span><strong>Topological Chaos (+${excess}):</strong> High spectral noise detected. Reduce overdose quantities or add a Precision Agonist (ZB-01) to repair topological fragmentation.</span></p>`;
-                aligned = false;
-            } else if (cv.chaos < t.chaos[0] && targetState === 'creative') {
-                html += `<p class="text-amber-600 text-xs mt-2 flex gap-2 leading-relaxed"><span>💡</span> <span><strong>Rigid Topology:</strong> Add a 5-HT2A Agonist (e.g., Psilocybin) to introduce beneficial topological variance (entropy) for creative flow.</span></p>`;
+                prescriptions.push(`<strong>Severe Chaos Detected:</strong> Add precision agonist ZB-01 to immediately stabilize 11D cliques.`);
                 aligned = false;
             }
 
-            // Repair/Stabilization Check
-            if (cv.repair < t.repair[0] && targetState === 'creative') {
-                html += `<p class="text-amber-600 text-xs mt-2 flex gap-2 leading-relaxed"><span>⚠️</span> <span><strong>Repair Deficit:</strong> Add ZB-01 to stabilize the high-dimensional cliques during creative divergence.</span></p>`;
-                aligned = false;
+            if (prescriptions.length > 0) {
+                html += '<div class="space-y-2 mt-2">';
+                prescriptions.forEach(p => {
+                    html += `<p class="text-slate-600 text-xs bg-amber-50 p-2 rounded border border-amber-100 flex gap-2"><span>⚠️</span> <span>${p}</span></p>`;
+                });
+                html += '</div>';
             }
 
-            if (aligned) {
-                html += `<div class="mt-3 p-3 bg-emerald-50 rounded-lg border border-emerald-100 flex gap-2 items-start"><span class="text-emerald-500">✅</span> <p class="text-emerald-700 text-xs leading-relaxed"><strong>Mathematically Aligned:</strong> The current polypharmacy stack is mathematically optimized for the <strong>${targetState.toUpperCase()}</strong> state based on the patient's pharmacokinetic profile.</p></div>`;
+            if (aligned && prescriptions.length === 0) {
+                html += `<div class="mt-3 p-3 bg-emerald-50 rounded-lg border border-emerald-100 flex gap-2 items-start"><span class="text-emerald-500">✅</span> <p class="text-emerald-700 text-xs leading-relaxed"><strong>Mathematically Aligned:</strong> Current dosages and pharmacokinetics are perfectly optimized for the <strong>${targetState.toUpperCase()}</strong> state.</p></div>`;
             } else {
-                html += `<p class="text-slate-400 text-[10px] mt-4 italic text-center">Use the Auto-Adjust button above to automatically clamp existing stack dosages to safe therapeutic thresholds.</p>`;
+                html += `<p class="text-slate-400 text-[10px] mt-4 italic text-center">Press Auto-Adjust to recalculate dosages based on reported intake and current pharmacological conflicts.</p>`;
             }
 
             html += '</div></ul>';
             feedbackBox.innerHTML = html;
-            }
+        }
+
         function applyOptimalDoses() {
             if (currentStack.length === 0 || assistantRecommendations.length === 0) return;
             
             assistantRecommendations.forEach((rec, idx) => {
-                // Find input in UI and update it
                 const input = document.querySelector(`input[oninput="updateStackDose(${idx}, this.value)"]`);
                 if (input) {
-                    // clamp to max
                     let safeVal = Math.min(rec.recommendedDose, input.max);
                     input.value = safeVal;
                     updateStackDose(idx, safeVal);
                 }
             });
-            runAssistant(); // Refresh feedback
+            
+            // The sliders trigger state updates, but we need to ensure the Assistant recalculates post-adjustment
+            setTimeout(() => { runAssistant(); }, 50);
         }
 
         function toggleExplanation() {
