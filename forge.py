@@ -1,141 +1,167 @@
 import json
 import random
-import math
 import os
 import copy
 
 def generate_topology_data():
-    """Generates data for 11d-projection.html and index.html dashboard"""
-    num_nodes = 150
+    """Generates composable topology data for babelForge."""
+    num_nodes = 200
     nodes = []
     
     # Brain dimensions (Ellipsoid)
-    a, b, c = 45, 35, 55 # X (Left/Right), Y (Bottom/Top), Z (Back/Front)
+    a, b, c = 48, 38, 58
     
     for i in range(num_nodes):
-        # Rejection sampling for an ellipsoid
         while True:
             x = random.uniform(-a, a)
             y = random.uniform(-b, b)
             z = random.uniform(-c, c)
-            # Check if point is inside ellipsoid
             if (x/a)**2 + (y/b)**2 + (z/c)**2 <= 1:
-                # Carve out the interhemispheric fissure (make it slightly split)
-                if abs(x) < 4:
-                    continue
+                if abs(x) < 4: continue
                 break
                 
-        # Assign region based on coordinates
         hemi = "RH" if x > 0 else "LH"
-        if z < -20:
-            cluster = "Visual"
-            name = f"{hemi}_Vis_{i}"
-        elif y > 15 and -20 <= z <= 20:
-            cluster = "SomatoMotor"
-            name = f"{hemi}_SomMot_{i}"
-        elif z > 20 and y > 0:
-            cluster = "Control"
-            name = f"{hemi}_Cont_{i}"
-        elif z > 20 and y <= 0:
-            cluster = "Limbic"
-            name = f"{hemi}_Limbic_{i}"
-        elif y < 0 and -20 <= z <= 20:
-            cluster = "VentAttn"
-            name = f"{hemi}_VentAttn_{i}"
-        else:
-            cluster = "Default"
-            name = f"{hemi}_Default_{i}"
+        if z < -25: cluster = "Visual"
+        elif y > 18 and -25 <= z <= 20: cluster = "SomatoMotor"
+        elif z > 25 and y > 5: cluster = "Control"
+        elif z > 25 and y <= 5: cluster = "Limbic"
+        elif y < -5 and -25 <= z <= 20: cluster = "VentAttn"
+        else: cluster = "Default"
             
         nodes.append({
             "id": i,
-            "name": name,
+            "name": f"{hemi}_{cluster}_{i}",
             "region": cluster,
             "hemi": hemi,
-            "x": x,
-            "y": y,
-            "z": z,
-            "cliques": 0
+            "x": round(x, 2),
+            "y": round(y, 2),
+            "z": round(z, 2),
+            "cliques": 0,
+            "hubness": 0
         })
 
-    def create_state(state_type="HEALTHY"):
-        state_nodes = copy.deepcopy(nodes)
+    # Generate Baseline Healthy State
+    baseline_edges = []
+    baseline_cliques = []
+    
+    # Healthy: 60 cliques, max dim 11
+    for _ in range(60):
+        dim = random.randint(2, 11)
+        clique_size = dim + 1
+        center_node = random.choice(nodes)
         
-        state_edges = []
-        state_cliques = []
+        distances = [(j, (n["x"]-center_node["x"])**2 + (n["y"]-center_node["y"])**2 + (n["z"]-center_node["z"])**2) for j, n in enumerate(nodes)]
+        distances.sort(key=lambda item: item[1])
+        c_nodes = [idx for idx, d in distances[:clique_size]]
         
-        if state_type == "HEALTHY":
-            num_cliques = 45
-            max_dim = 11
-        elif state_type == "PTSD":
-            num_cliques = 12
+        baseline_cliques.append({"nodes": sorted(c_nodes), "dimension": dim})
+        for nid in c_nodes:
+            nodes[nid]["cliques"] += 1
+            nodes[nid]["hubness"] += round(clique_size / 10.0, 2)
+            
+        for i in range(len(c_nodes)):
+            for j in range(i + 1, len(c_nodes)):
+                pair = tuple(sorted((c_nodes[i], c_nodes[j])))
+                baseline_edges.append(pair)
+
+    baseline_edges = list(set(baseline_edges))
+    baseline_edges_formatted = [{"source": u, "target": v} for u, v in baseline_edges]
+
+    baseline = {
+        "nodes": nodes,
+        "edges": baseline_edges_formatted,
+        "cliques": baseline_cliques,
+        "stats": {"clique_count": len(baseline_cliques)}
+    }
+
+    def create_modifier(state_type):
+        edges_added = set()
+        edges_removed = set()
+        cliques_added = []
+        cliques_removed = [] # We'll just remove a percentage of baseline cliques
+        
+        num_remove = 0
+        num_add = 0
+        max_dim = 5
+        bias_region = None
+        
+        if state_type == "PTSD":
+            num_remove = 45 # Massive collapse
+            num_add = 10
             max_dim = 4
+            bias_region = "Limbic"
         elif state_type == "ADHD":
-            num_cliques = 20
-            max_dim = 6
-        elif state_type == "TOURETTES":
-            num_cliques = 60
-            max_dim = 9
-        elif state_type == "DEPRESSION":
-            num_cliques = 25
+            num_remove = 25
+            num_add = 5
             max_dim = 5
-        
-        for _ in range(num_cliques):
+            bias_region = "Control" # Removes from control, doesn't add much
+        elif state_type == "TOURETTES":
+            num_remove = 10
+            num_add = 30
+            max_dim = 9
+            bias_region = "SomatoMotor"
+        elif state_type == "DEPRESSION":
+            num_remove = 30
+            num_add = 20
+            max_dim = 6
+            bias_region = "Default"
+            
+        # Remove cliques (simulate collapse)
+        indices_to_remove = random.sample(range(len(baseline_cliques)), min(num_remove, len(baseline_cliques)))
+        if state_type == "ADHD":
+             # Try to preferentially remove Control cliques
+             control_cliques = [i for i, c in enumerate(baseline_cliques) if any(nodes[nid]["region"] == "Control" for nid in c["nodes"])]
+             indices_to_remove = random.sample(control_cliques, min(num_remove, len(control_cliques)))
+             
+        for idx in indices_to_remove:
+            cliques_removed.append(baseline_cliques[idx]["nodes"])
+            c_nodes = baseline_cliques[idx]["nodes"]
+            for i in range(len(c_nodes)):
+                for j in range(i + 1, len(c_nodes)):
+                    pair = tuple(sorted((c_nodes[i], c_nodes[j])))
+                    edges_removed.add(pair)
+                    
+        # Add cliques (simulate pathological hyper-connectivity)
+        for _ in range(num_add):
             dim = random.randint(2, max_dim)
             clique_size = dim + 1
             
-            # Find nodes that are somewhat close to each other to form a clique
-            center_node = random.choice(state_nodes)
+            valid_centers = [n for n in nodes if n["region"] == bias_region] if bias_region and random.random() < 0.8 else nodes
+            if not valid_centers: valid_centers = nodes
+            center_node = random.choice(valid_centers)
             
-            # Disorder specific biases
-            if state_type == "TOURETTES" and random.random() < 0.7:
-                somato_nodes = [n for n in state_nodes if n["region"] == "SomatoMotor"]
-                if somato_nodes:
-                    center_node = random.choice(somato_nodes)
-            if (state_type == "ADHD" and center_node["region"] == "Control" and random.random() < 0.8):
-                non_control = [n for n in state_nodes if n["region"] != "Control"]
-                if non_control:
-                    center_node = random.choice(non_control)
-            if state_type == "DEPRESSION":
-                # Bias towards Limbic and Default Mode Network (DMN)
-                dmn_limbic_nodes = [n for n in state_nodes if n["region"] in ["Limbic", "Default"]]
-                if dmn_limbic_nodes and random.random() < 0.7:
-                    center_node = random.choice(dmn_limbic_nodes)
-
-            distances = [(j, (n["x"]-center_node["x"])**2 + (n["y"]-center_node["y"])**2 + (n["z"]-center_node["z"])**2) for j, n in enumerate(state_nodes)]
+            distances = [(j, (n["x"]-center_node["x"])**2 + (n["y"]-center_node["y"])**2 + (n["z"]-center_node["z"])**2) for j, n in enumerate(nodes)]
             distances.sort(key=lambda item: item[1])
+            c_nodes = sorted([idx for idx, d in distances[:clique_size]])
+            cliques_added.append({"nodes": c_nodes, "dimension": dim})
             
-            # Select the closest nodes for the clique to make spatial sense
-            c_nodes = [idx for idx, d in distances[:clique_size]]
-            state_cliques.append({"nodes": c_nodes, "dimension": dim})
-            
-            for nid in c_nodes:
-                state_nodes[nid]["cliques"] += 1
-
             for i in range(len(c_nodes)):
                 for j in range(i + 1, len(c_nodes)):
-                    state_edges.append({"source": c_nodes[i], "target": c_nodes[j]})
+                    pair = tuple(sorted((c_nodes[i], c_nodes[j])))
+                    edges_added.add(pair)
 
-        seen = set()
-        unique_edges = []
-        for e in state_edges:
-            pair = tuple(sorted((e["source"], e["target"])))
-            if pair not in seen:
-                unique_edges.append(e)
-                seen.add(pair)
+        # Cleanup: Don't remove an edge if it was just added, etc.
+        actual_edges_removed = edges_removed - edges_added
+        # We only add edges that aren't already in the baseline
+        actual_edges_added = edges_added - set(baseline_edges)
 
         return {
-            "nodes": state_nodes,
-            "edges": unique_edges,
-            "cliques": state_cliques,
-            "stats": {"max_dimension_found": max_dim, "total_cliques_2D_plus": len(state_cliques)}
+            "edges_added": [{"source": u, "target": v} for u, v in actual_edges_added],
+            "edges_removed": [{"source": u, "target": v} for u, v in actual_edges_removed],
+            "cliques_added": cliques_added,
+            "cliques_removed": cliques_removed
         }
 
+    modifiers = {
+        "PTSD": create_modifier("PTSD"),
+        "ADHD": create_modifier("ADHD"),
+        "TOURETTES": create_modifier("TOURETTES"),
+        "DEPRESSION": create_modifier("DEPRESSION")
+    }
+
     data = {
-        "RESPONSIVE": create_state("HEALTHY"),
-        "RESISTANT": create_state("PTSD"),
-        "ADHD": create_state("ADHD"),
-        "TOURETTES": create_state("TOURETTES"),
-        "DEPRESSION": create_state("DEPRESSION")
+        "baseline": baseline,
+        "modifiers": modifiers
     }
     
     with open('data/topology_projection.json', 'w') as f:
@@ -147,13 +173,13 @@ def generate_topology_data():
     print("Generated data/topology_projection.js")
 
 def generate_pharma_data():
-    """Generates data for pharma-projection.html and marketing materials"""
+    """Generates expanded pharmacopeia data for babelForge."""
     num_nodes = 50
     nodes = []
-    # Clinical colors
     colors = ["#9333EA", "#7c3aed", "#6366f1", "#4f46e5", "#3730a3"]
     
     for i in range(num_nodes):
+        import math
         angle = (i / num_nodes) * 2 * math.pi
         r = 80 + random.uniform(-10, 10)
         nodes.append({
@@ -175,6 +201,20 @@ def generate_pharma_data():
                 seen.add(pair)
         return edges
 
+    drugs = [
+        {"id": "ZB-01", "name": "ZB-01", "class": "Precision", "target": "Global Phase-Locking"},
+        {"id": "SS-20", "name": "SS-20", "class": "Precision", "target": "Frontoparietal Upregulation"},
+        {"id": "LL-07", "name": "LimbicLink (LL-07)", "class": "Precision", "target": "DMN Fluidity Restoration"},
+        {"id": "DR-02", "name": "DR-02", "class": "Precision", "target": "Somatomotor Dampening"},
+        {"id": "NX-44", "name": "NX-44", "class": "Precision", "target": "Global Synaptogenesis"},
+        {"id": "FLX", "name": "Fluoxetine", "class": "Conventional", "target": "Broad Serotonin Reuptake"},
+        {"id": "KET", "name": "Ketamine", "class": "Conventional", "target": "NMDA Antagonism"},
+        {"id": "AMP", "name": "Amphetamine", "class": "Conventional", "target": "Global Monoamine Release"},
+        {"id": "THC", "name": "Delta-9-THC", "class": "Recreational", "target": "CB1 Agonism (Entropy Inc.)"},
+        {"id": "CBD", "name": "Cannabidiol", "class": "Functional", "target": "CB Modulation / 5-HT1A"},
+        {"id": "NIC", "name": "Nicotine", "class": "Recreational", "target": "nAChR Agonism (Transient FP)"}
+    ]
+
     data = {
         "nodes": nodes,
         "states": {
@@ -184,12 +224,7 @@ def generate_pharma_data():
                 "cliques": [[f"node_{i}" for i in random.sample(range(num_nodes), random.randint(3, 8))] for _ in range(15)]
             }
         },
-        "drug_profile": {
-            "name": "Babel-Forge Precision Library (ZB-01 / LL-07)",
-            "target": "Topological Stabilization & DMN Fluidity",
-            "efficacy": "94.2%",
-            "mechanism": "Arnold Tongue phase-locking & Macrocyclic DMN-clique targeting"
-        }
+        "drugs": drugs
     }
 
     with open('data/pharma_projection.json', 'w') as f:
