@@ -171,10 +171,15 @@
                 <button id="btn-tourettes" style="border-color: #10b981; color: #10b981;" onclick="triggerState('TOURETTES')">Tourette's</button>
                 <button id="btn-depression" style="border-color: #38bdf8; color: #38bdf8;" onclick="triggerState('DEPRESSION')">Depression</button>
                 <button class="btn-stim" id="btn-stim" onclick="toggleStimulus()">Neural Stimulus</button>
+                <div style="display: flex; gap: 4px; margin-bottom: 8px;">
+                    <button id="btn-treat-novel" class="btn-mode active" onclick="updateSimTreatClass('NOVEL')" style="flex: 1; font-size: 10px; padding: 5px;">NOVEL</button>
+                    <button id="btn-treat-conv" class="btn-mode" onclick="updateSimTreatClass('CONVENTIONAL')" style="flex: 1; font-size: 10px; padding: 5px;">CONVENTIONAL</button>
+                </div>
                 <div style="display: flex; flex-direction: column; gap: 4px; background: rgba(252, 211, 77, 0.05); padding: 6px 10px; border: 1px solid rgba(252, 211, 77, 0.5); border-radius: 4px;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <span id="drug-label-name" style="color: #fcd34d; font-size: 10px; font-weight: bold; text-transform: uppercase;">ZB-01</span>
-                        <div style="display: flex; gap: 2px;">
+                        <div style="display: flex; gap: 2px; align-items: center;">
+                            <button id="btn-sim-switch" onclick="toggleSimConvChoice()" style="display: none; padding: 2px 6px; font-size: 8px; border: 1px solid #fcd34d; color: #fcd34d; background: transparent; border-radius: 3px; margin-right: 4px;">SWITCH PATH</button>
                             <button onclick="setSimDose('low')" style="padding: 2px 6px; font-size: 8px; border: 1px solid #fcd34d; color: #fcd34d; background: transparent; border-radius: 3px;">LOW</button>
                             <button onclick="setSimDose('mild')" style="padding: 2px 6px; font-size: 8px; border: 1px solid #fcd34d; color: #fcd34d; background: transparent; border-radius: 3px;">MILD</button>
                             <button onclick="setSimDose('high')" style="padding: 2px 6px; font-size: 8px; border: 1px solid #fcd34d; color: #fcd34d; background: transparent; border-radius: 3px;">HIGH</button>
@@ -241,6 +246,20 @@
         let simViewMode = 'PROJECTION';
         let simComparisonMode = false;
         let simGhostGroup = null;
+        let simTreatClass = 'NOVEL';
+        let simConvChoice = 'KETAMINE';
+
+        function updateSimTreatClass(cls) {
+            simTreatClass = cls;
+            document.getElementById('btn-treat-novel').classList.toggle('active', cls === 'NOVEL');
+            document.getElementById('btn-treat-conv').classList.toggle('active', cls === 'CONVENTIONAL');
+            triggerState(currentStatus);
+        }
+
+        function toggleSimConvChoice() {
+            simConvChoice = simConvChoice === 'KETAMINE' ? 'FLUOXETINE' : 'KETAMINE';
+            triggerState(currentStatus);
+        }
 
         function updateSimViewMode(mode) {
             simViewMode = mode;
@@ -363,19 +382,50 @@
         function triggerState(state) {
             const slider = document.getElementById('pharma-slider');
             const label = document.getElementById('drug-label-name');
+            const switchBtn = document.getElementById('btn-sim-switch');
+            
+            if (state === 'DEPRESSION' && simTreatClass === 'CONVENTIONAL') {
+                switchBtn.style.display = 'block';
+            } else {
+                switchBtn.style.display = 'none';
+            }
 
             if (state === 'ADHD') {
-                currentDrugName = "SYNAPTOSTIM";
-                label.innerText = "SS-20";
+                if (simTreatClass === 'NOVEL') {
+                    currentDrugName = "SYNAPTOSTIM";
+                    label.innerText = "SS-20";
+                } else {
+                    currentDrugName = "AMPHETAMINE";
+                    label.innerText = "AM-01";
+                }
                 loadTopology('ADHD');
             } else if (state === 'TOURETTES') {
-                currentDrugName = "DOPAREG";
-                label.innerText = "DR-02";
+                if (simTreatClass === 'NOVEL') {
+                    currentDrugName = "DOPAREG";
+                    label.innerText = "DR-02";
+                } else {
+                    currentDrugName = "HALOPERIDOL";
+                    label.innerText = "HL-01";
+                }
                 loadTopology('TOURETTES');
             } else if (state === 'DEPRESSION') {
-                currentDrugName = "LL-07";
-                label.innerText = "LL-07";
+                if (simTreatClass === 'NOVEL') {
+                    currentDrugName = "LL-07";
+                    label.innerText = "LL-07";
+                } else {
+                    currentDrugName = simConvChoice;
+                    label.innerText = simConvChoice === 'KETAMINE' ? 'KT-01' : 'FX-01';
+                }
                 loadTopology('DEPRESSION');
+            } else if (state === 'RESISTANT' || state === 'PTSD') {
+                 if (simTreatClass === 'NOVEL') {
+                    currentDrugName = "ZENBUD";
+                    label.innerText = "ZB-01";
+                } else {
+                    currentDrugName = "SERTRALINE";
+                    label.innerText = "SR-01";
+                }
+                loadTopology('RESISTANT');
             }
             slider.value = 0;
             updatePharma(0);
