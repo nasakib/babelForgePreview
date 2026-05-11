@@ -647,8 +647,8 @@
                                         </div>
                                     </div>
                                     <div class="flex items-center gap-3 w-full">
-                                        <input type="range" id="pharma-slider" min="0" max="100" value="0" class="flex-grow h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600" oninput="updatePharmaEfficacy(this.value)">
-                                        <span id="pharma-percent" class="font-mono text-sm font-bold text-indigo-600 w-12 text-right">0 mg</span>
+                                        <input type="range" id="pharma-slider" min="0" max="3" step="1" value="0" class="flex-grow h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600" oninput="updatePharmaEfficacy(this.value)">
+                                        <span id="pharma-percent" class="font-mono text-sm font-bold text-indigo-600 w-16 text-right">None</span>
                                     </div>
                                     <p id="drug-desc-label" class="text-[10px] text-slate-400 mt-4 leading-relaxed">Adjust precision dosage to monitor regional stabilization and topological repair rate.</p>
                                     <div class="mt-4 p-3 bg-indigo-50 border border-indigo-100 rounded-lg text-[11px] text-indigo-800 leading-relaxed font-medium" id="dosage-explanation">
@@ -1325,8 +1325,8 @@
             });
         };
 
-        let currentOptimalDose = 50;
-        let currentDosePresets = { low: 20, mild: 50, high: 80 };
+        
+        
         let dashTreatmentClass = 'NOVEL';
 
         const updateTreatmentClass = (cls) => {
@@ -1345,7 +1345,7 @@
         };
 
                 const setDashboardDose = (level) => {
-            const val = currentDosePresets[level];
+            const val = {low: 1, mild: 2, high: 3}[level];
             const slider = document.getElementById('pharma-slider');
             if (slider) slider.value = val;
             updatePharmaEfficacy(val);
@@ -1363,8 +1363,8 @@
             let drugName = 'ZB-01 Dosage';
             let drugDesc = 'Adjust precision dosage to monitor regional stabilization and topological repair rate.';
             let targetState = 'RESPONSIVE';
-            let sliderMax = 100;
-            currentOptimalDose = 50;
+            let 
+            
             let moleculeSVG = `<svg viewBox="0 0 160 100" class="h-full w-auto stroke-indigo-600 fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
     <polygon points="50,40 70,30 90,40 90,60 70,70 50,60" />
     <path d="M55,45 L55,55 M70,35 L85,45 M70,65 L85,55" stroke-width="1.5" />
@@ -1383,16 +1383,16 @@
                 if (dashTreatmentClass === 'NOVEL') {
                     drugName = 'ZB-01 Dosage';
                     drugDesc = 'Adjust dosage to stabilize hyperarousal and repair 11D cliques.';
-                    sliderMax = 100;
-                    currentOptimalDose = 50;
-                    currentDosePresets = { low: 20, mild: 50, high: 80 };
+                    
+                    
+                    
                     moleculeName = 'ZB-01 (Indole Derivative)';
                 } else {
                     drugName = 'Sertraline (SSRI) Dosage';
                     drugDesc = 'Broad serotonin reuptake inhibition. Induces global dampening without targeted topological repair.';
-                    sliderMax = 200;
-                    currentOptimalDose = 100;
-                    currentDosePresets = { low: 50, mild: 100, high: 150 };
+                    
+                    
+                    
                     moleculeSVG = `<svg viewBox="0 0 100 50" class="h-full w-auto stroke-slate-500 fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <polygon points="30,25 40,15 55,15 65,25 55,35 40,35 Z"/>
                                         <circle cx="20" cy="25" r="2" fill="#64748b"/>
@@ -1406,9 +1406,9 @@
                 if (dashTreatmentClass === 'NOVEL') {
                     drugName = 'SynaptoStim (SS-20) Dosage';
                     drugDesc = 'Adjust dopaminergic stimulant dosage to increase connectivity in frontal networks.';
-                    sliderMax = 60;
-                    currentOptimalDose = 30;
-                    currentDosePresets = { low: 10, mild: 30, high: 50 };
+                    
+                    
+                    
                     moleculeSVG = `<svg viewBox="0 0 160 100" class="h-full w-auto stroke-indigo-600 fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
     <polygon points="40,50 60,38 80,50 80,70 60,82 40,70" />
     <path d="M45,53 L45,67 M60,43 L75,53 M60,77 L75,67" stroke-width="1.5" />
@@ -1421,9 +1421,9 @@
                 } else {
                     drugName = 'Amphetamine Salts Dosage';
                     drugDesc = 'Broad stimulant. Narrow therapeutic window with rapid onset of hyper-arousal toxicity.';
-                    sliderMax = 60;
-                    currentOptimalDose = 20;
-                    currentDosePresets = { low: 10, mild: 20, high: 40 };
+                    
+                    
+                    
                     moleculeSVG = `<svg viewBox="0 0 100 50" class="h-full w-auto stroke-slate-500 fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <polygon points="30,25 40,15 55,15 65,25 55,35 40,35 Z"/>
                                         <path d="M65 25 L80 15 M65 25 L80 35"/>
@@ -1436,9 +1436,9 @@
                 if (dashTreatmentClass === 'NOVEL') {
                     drugName = 'DopaReg-D2 (DR-02) Dosage';
                     drugDesc = 'Adjust D2 antagonist dosage to dampen hyper-connected somatomotor loops.';
-                    sliderMax = 10;
-                    currentOptimalDose = 5;
-                    currentDosePresets = { low: 2, mild: 5, high: 8 };
+                    
+                    
+                    
                     moleculeSVG = `<svg viewBox="0 0 200 100" class="h-full w-auto stroke-indigo-600 fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
     <text x="5" y="55" font-family="Inter" font-size="12" fill="#10b981" stroke="none" font-weight="bold">F</text>
     <path d="M15,50 L35,50" />
@@ -1456,9 +1456,9 @@
                 } else {
                     drugName = 'Haloperidol Dosage';
                     drugDesc = 'Aggressive D2 antagonism. Rapidly induces severe Parkinsonian rigidity (Tardive Dyskinesia).';
-                    sliderMax = 10;
-                    currentOptimalDose = 2;
-                    currentDosePresets = { low: 1, mild: 2, high: 5 };
+                    
+                    
+                    
                     moleculeSVG = `<svg viewBox="0 0 100 50" class="h-full w-auto stroke-slate-500 fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <polygon points="25,25 35,15 50,15 60,25 50,35 35,35 Z"/>
                                         <path d="M60 25 L80 25"/>
@@ -1472,7 +1472,8 @@
             document.getElementById('drug-desc-label').innerText = drugDesc;
             
             const slider = document.getElementById('pharma-slider');
-            slider.max = sliderMax;
+            slider.max = 3;
+            slider.step = 1;
             slider.value = 0;
             
             document.getElementById('molecule-svg-container').innerHTML = moleculeSVG;
@@ -1484,8 +1485,8 @@
         };
 
         const updatePharmaEfficacy = (val) => {
-            dashPharmaEfficacy = val / currentOptimalDose;
-            document.getElementById('pharma-percent').innerText = val + ' mg';
+            dashPharmaEfficacy = val / 2.0; // 0=0, 1=0.5, 2=1.0, 3=1.5
+            document.getElementById('pharma-percent').innerText = ['None', 'Low', 'Mild', 'High'][val];
             updateIntegrityUI();
         };
 
@@ -1597,9 +1598,9 @@
                     explanation = 'The network is operating at baseline optimal synchronization. High-dimensional cliques are forming and dissolving rhythmically. No intervention required.';
                 } else if (dashStatus === 'PTSD') {
                     if (dashTreatmentClass === 'NOVEL') {
-                        if (dashPharmaEfficacy === 0) explanation = 'Negative State (PTSD Flash). Severe hyperarousal detected. Suggest dosing 50mg ZB-01 for rapid stabilization, or waiting 12-24 hours to return to baseline naturally.';
+                        if (dashPharmaEfficacy === 0) explanation = 'Negative State (PTSD Flash). Severe hyperarousal detected. Suggest dosing mild intensity ZB-01 for rapid stabilization, or waiting 12-24 hours to return to baseline naturally.';
                         else if (dashPharmaEfficacy < 1) explanation = 'Sub-therapeutic dosage. ZB-01 is beginning to physically widen Arnold Tongues, but topological repair is incomplete.';
-                        else if (dashPharmaEfficacy === 1) explanation = 'Optimal dosage (50mg). Arnold Tongues are sufficiently widened, stabilizing the network and allowing 11D cliques to reassemble organically.';
+                        else if (dashPharmaEfficacy === 1) explanation = 'Optimal dosage (mild intensity). Arnold Tongues are sufficiently widened, stabilizing the network and allowing 11D cliques to reassemble organically.';
                         else explanation = 'Toxicity (Hyper-synchrony). Excessive coupling has induced pathological rigidity, locking nodes and destroying functional wave dynamics.';
                     } else {
                         if (dashPharmaEfficacy === 0) explanation = 'Negative State (PTSD Flash). Severe hyperarousal detected. Suggest intervention or waiting 12-24 hours to return to baseline.';
@@ -1609,9 +1610,9 @@
                     }
                 } else if (dashStatus === 'ADHD') {
                     if (dashTreatmentClass === 'NOVEL') {
-                        if (dashPharmaEfficacy === 0) explanation = 'Negative State (ADHD). Hypo-connectivity detected in prefrontal control networks. Suggest dosing 30mg SS-20 to upregulate dynamics.';
+                        if (dashPharmaEfficacy === 0) explanation = 'Negative State (ADHD). Hypo-connectivity detected in prefrontal control networks. Suggest dosing mild intensity SS-20 to upregulate dynamics.';
                         else if (dashPharmaEfficacy < 1) explanation = 'Sub-therapeutic dosage. Dopaminergic stimulation is gradually upregulating network activity.';
-                        else if (dashPharmaEfficacy === 1) explanation = 'Optimal dosage (30mg). Frontal networks are perfectly upregulated, matching healthy baseline wave dynamics without over-stimulation.';
+                        else if (dashPharmaEfficacy === 1) explanation = 'Optimal dosage (mild intensity). Frontal networks are perfectly upregulated, matching healthy baseline wave dynamics without over-stimulation.';
                         else explanation = 'Over-stimulation. Excessive dopamine is causing chaotic, hyper-aroused jittering and signal breakdown.';
                     } else {
                         if (dashPharmaEfficacy === 0) explanation = 'Negative State (ADHD). Hypo-connectivity detected in prefrontal control networks.';
@@ -1621,9 +1622,9 @@
                     }
                 } else if (dashStatus === 'TOURETTES') {
                     if (dashTreatmentClass === 'NOVEL') {
-                        if (dashPharmaEfficacy === 0) explanation = 'Negative State (Tourette\'s). Pathological hyper-connectivity causing tics. Suggest dosing 5mg DR-02 to dampen loops, or waiting out the tic cluster.';
+                        if (dashPharmaEfficacy === 0) explanation = 'Negative State (Tourette\'s). Pathological hyper-connectivity causing tics. Suggest dosing mild intensity DR-02 to dampen loops, or waiting out the tic cluster.';
                         else if (dashPharmaEfficacy < 1) explanation = 'Sub-therapeutic. Targeted D2 antagonism is beginning to soften erratic synchronization spikes.';
-                        else if (dashPharmaEfficacy === 1) explanation = 'Optimal dosage (5mg). DR-02 has successfully dampened hyper-connectivity back to smooth baseline dynamics.';
+                        else if (dashPharmaEfficacy === 1) explanation = 'Optimal dosage (mild intensity). DR-02 has successfully dampened hyper-connectivity back to smooth baseline dynamics.';
                         else explanation = 'Over-dampening. Excessive D2 blockade is leading to network rigidity (Parkinsonian side-effects).';
                     } else {
                         if (dashPharmaEfficacy === 0) explanation = 'Negative State (Tourette\'s). Pathological hyper-connectivity causing sudden, rigid synchronization spikes (tics).';

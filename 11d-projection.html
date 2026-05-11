@@ -157,8 +157,8 @@
                         </div>
                     </div>
                     <div style="display: flex; align-items: center; gap: 8px;">
-                        <input type="range" id="pharma-slider" min="0" max="100" value="0" style="width: 120px; accent-color: #fcd34d;" oninput="updatePharma(this.value)">
-                        <span id="pharma-val" style="color: #fcd34d; font-size: 10px; font-weight: bold; width: 35px; text-align: right;">0 mg</span>
+                        <input type="range" id="pharma-slider" min="0" max="3" step="1" value="0" style="width: 120px; accent-color: #fcd34d;" oninput="updatePharma(this.value)">
+                        <span id="pharma-val" style="color: #fcd34d; font-size: 10px; font-weight: bold; width: 40px; text-align: right;">None</span>
                     </div>
                 </div>
             </div>
@@ -269,12 +269,12 @@
             animate();
         }
 
-        let currentOptimalDose = 50;
-        let currentDosePresets = { low: 20, mild: 50, high: 80 };
+        
+        
         let currentDrugName = "ZENBUD";
 
                 const setSimDose = (level) => {
-            const val = currentDosePresets[level];
+            const val = {low: 1, mild: 2, high: 3}[level];
             const slider = document.getElementById('pharma-slider');
             if (slider) slider.value = val;
             updatePharma(val);
@@ -286,15 +286,15 @@
             
             if (state === 'ADHD') {
                 slider.max = 60;
-                currentOptimalDose = 30;
-                currentDosePresets = { low: 10, mild: 30, high: 50 };
+                
+                
                 currentDrugName = "SYNAPTOSTIM";
                 label.innerText = "SS-20";
                 loadTopology('ADHD');
             } else if (state === 'TOURETTES') {
                 slider.max = 10;
-                currentOptimalDose = 5;
-                currentDosePresets = { low: 2, mild: 5, high: 8 };
+                
+                
                 currentDrugName = "DOPAREG";
                 label.innerText = "DR-02";
                 loadTopology('TOURETTES');
@@ -311,8 +311,8 @@
             const slider = document.getElementById('pharma-slider');
             const label = document.getElementById('drug-label-name');
             slider.max = 100;
-            currentOptimalDose = 50;
-            currentDosePresets = { low: 20, mild: 50, high: 80 };
+            
+            
             currentDrugName = "ZENBUD";
             label.innerText = "ZB-01";
             slider.value = 0;
@@ -341,8 +341,8 @@
             const slider = document.getElementById('pharma-slider');
             const label = document.getElementById('drug-label-name');
             slider.max = 100;
-            currentOptimalDose = 50;
-            currentDosePresets = { low: 20, mild: 50, high: 80 };
+            
+            
             currentDrugName = "ZENBUD";
             label.innerText = "ZB-01";
             slider.value = 0;
@@ -382,19 +382,19 @@
                 if (currentStatus === 'RESPONSIVE') {
                     explanation = 'Baseline optimal synchronization. High-dimensional cliques form and dissolve rhythmically. No intervention required.';
                 } else if (currentStatus === 'RESISTANT') {
-                    if (pharmaEfficacy === 0) explanation = 'Negative State (PTSD Flash). Severe hyperarousal detected. Suggest dosing 50mg ZB-01 for rapid stabilization, or waiting 12-24 hours to return to baseline naturally.';
+                    if (pharmaEfficacy === 0) explanation = 'Negative State (PTSD Flash). Severe hyperarousal detected. Suggest dosing mild intensity ZB-01 for rapid stabilization, or waiting 12-24 hours to return to baseline naturally.';
                     else if (pharmaEfficacy < 1) explanation = 'Sub-therapeutic dosage. ZB-01 is physically widening Arnold Tongues, but topological repair is incomplete.';
-                    else if (pharmaEfficacy === 1) explanation = 'Optimal dosage (50mg). Arnold Tongues widened, stabilizing the network and allowing 11D cliques to reassemble organically.';
+                    else if (pharmaEfficacy === 1) explanation = 'Optimal dosage (mild intensity). Arnold Tongues widened, stabilizing the network and allowing 11D cliques to reassemble organically.';
                     else explanation = 'Toxicity (Hyper-synchrony). Excessive coupling has induced pathological rigidity, destroying functional wave dynamics.';
                 } else if (currentStatus === 'ADHD') {
-                    if (pharmaEfficacy === 0) explanation = 'Negative State (ADHD). Hypo-connectivity detected in frontal control networks. Suggest dosing 30mg SS-20 to upregulate dynamics.';
+                    if (pharmaEfficacy === 0) explanation = 'Negative State (ADHD). Hypo-connectivity detected in frontal control networks. Suggest dosing mild intensity SS-20 to upregulate dynamics.';
                     else if (pharmaEfficacy < 1) explanation = 'Sub-therapeutic dosage. Dopaminergic stimulation is gradually upregulating network activity.';
-                    else if (pharmaEfficacy === 1) explanation = 'Optimal dosage (30mg). Frontal networks are perfectly upregulated, matching healthy baseline wave dynamics.';
+                    else if (pharmaEfficacy === 1) explanation = 'Optimal dosage (mild intensity). Frontal networks are perfectly upregulated, matching healthy baseline wave dynamics.';
                     else explanation = 'Over-stimulation. Excessive dopamine is causing chaotic, hyper-aroused jittering and signal breakdown.';
                 } else if (currentStatus === 'TOURETTES') {
-                    if (pharmaEfficacy === 0) explanation = 'Negative State (Tourette\'s). Pathological hyper-connectivity causing tics. Suggest dosing 5mg DR-02 to dampen loops, or waiting out the tic cluster.';
+                    if (pharmaEfficacy === 0) explanation = 'Negative State (Tourette\'s). Pathological hyper-connectivity causing tics. Suggest dosing mild intensity DR-02 to dampen loops, or waiting out the tic cluster.';
                     else if (pharmaEfficacy < 1) explanation = 'Sub-therapeutic. Targeted D2 antagonism is beginning to soften erratic synchronization spikes.';
-                    else if (pharmaEfficacy === 1) explanation = 'Optimal dosage (5mg). DR-02 has successfully dampened hyper-connectivity back to smooth baseline dynamics.';
+                    else if (pharmaEfficacy === 1) explanation = 'Optimal dosage (mild intensity). DR-02 has successfully dampened hyper-connectivity back to smooth baseline dynamics.';
                     else explanation = 'Over-dampening. Excessive D2 blockade is leading to network rigidity (Parkinsonian side-effects).';
                 }
                 explanationBox.innerText = explanation;
