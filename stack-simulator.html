@@ -175,11 +175,7 @@
                         </div>
                         <div>
                             <label class="text-[10px] uppercase font-bold text-slate-400 block mb-2 tracking-widest">Tolerance</label>
-                            <select id="patient-tolerance" class="w-full bg-slate-50 border border-slate-200 text-sm font-semibold text-slate-700 rounded-lg p-2.5 focus:outline-none focus:border-emerald-500" onchange="runAssistant()">
-                                <option value="0.8">Low (Naïve)</option>
-                                <option value="1.0" selected>Medium (Standard)</option>
-                                <option value="1.5">High (Adapted)</option>
-                            </select>
+                            <p class="text-[9px] text-slate-500 mt-2">Set prior exposure (months) on individual molecules in the Active Stack.</p>
                         </div>
                     </div>
 
@@ -204,7 +200,7 @@
                 <div class="flex justify-between items-center mb-4 flex-none">
                     <h3 class="text-sm font-bold text-slate-900 uppercase tracking-widest">Theoretical Observations</h3>
                 </div>
-                <div id="assistant-feedback" class="flex-grow overflow-y-auto text-sm text-slate-600 space-y-4">
+                <div id="assistant-feedback" class="flex-grow overflow-y-auto text-sm text-slate-600 space-y-4 pr-2">
                     <p class="italic text-slate-400 text-center mt-10">Add molecules to your stack to generate theoretical interaction insights.</p>
                 </div>
             </div>
@@ -225,7 +221,7 @@
             </div>
 
             <!-- Anatomical Legend -->
-            <div class="absolute top-6 right-32 z-10 bg-slate-900/80 border border-slate-700 rounded-lg p-3 backdrop-blur-md pointer-events-none">
+            <div class="absolute top-6 right-32 z-10 bg-slate-900/80 border border-slate-700 rounded-lg p-3 backdrop-blur-md pointer-events-none hidden lg:block">
                 <div class="text-[9px] uppercase font-bold text-slate-400 mb-2 tracking-widest border-b border-slate-700 pb-1">Anatomical Map (Z-Axis)</div>
                 <ul class="text-[10px] text-slate-300 space-y-1 font-mono">
                     <li><span class="text-indigo-400">Frontal (z > 20):</span> Control / Executive</li>
@@ -523,10 +519,21 @@
                                 <input type="range" id="slider-${idx}" min="0" max="3" step="1" value="${mol.currentIntensity || 0}" class="flex-grow h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-500" oninput="updateStackDose(${idx}, this.value)">
                                 <span class="text-[10px] font-mono font-bold text-slate-600 w-16 text-right" id="dose-val-${idx}">${['None', 'Low', 'Mild', 'High'][mol.currentIntensity || 0]}</span>
                             </div>
+                            <div class="flex items-center justify-between mt-1">
+                                <span class="text-[9px] font-bold text-slate-400 uppercase">Tolerance (Mo)</span>
+                                <span class="text-[10px] font-mono font-bold text-slate-600" id="tol-val-${idx}">${mol.toleranceMonths || 0} mo</span>
+                            </div>
+                            <input type="range" id="tol-${idx}" min="0" max="120" step="1" value="${mol.toleranceMonths || 0}" class="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-400" oninput="updateStackTolerance(${idx}, this.value)">
                         </div>
                     </div>
                 `;
             });
+        }
+
+        function updateStackTolerance(index, val) {
+            currentStack[index].toleranceMonths = parseFloat(val);
+            document.getElementById(`tol-val-${index}`).innerText = `${val} mo`;
+            updateSimulation();
         }
 
         
@@ -694,8 +701,23 @@
             
             let classCounts = { ssri: 0, stimulant: 0, depressant: 0, antipsychotic: 0, cannabinoid: 0, novel: 0 };
             
+            const weight = parseFloat(document.getElementById('patient-weight').value) || 70;
+            const weightFactor = 70 / weight;
+            
             currentStack.forEach(mol => {
-                const ratio = (mol.currentIntensity || 0) / 2.0; // Mild (2) = optimal (1.0 ratio)
+                const tolMonths = mol.toleranceMonths || 0;
+                // Assign a rough tolerance rate based on class if not defined
+                let tolRate = 0.1; 
+                if (mol.class === 'stimulant' || mol.class === 'recreational') tolRate = 0.5;
+                if (mol.class === 'novel') tolRate = 0.05;
+                if (mol.class === 'cannabinoid') tolRate = 0.3;
+                
+                const tolFactor = 1 / (1 + Math.log1p(tolMonths * tolRate));
+                
+                // Calculate Effective Intensity
+                let rawRatio = (mol.currentIntensity || 0) / 2.0; // Mild (2) = optimal (1.0 ratio)
+                let ratio = rawRatio * weightFactor * tolFactor;
+
                 const overDose = Math.max(0, ratio - 1);
                 
                 classCounts[mol.class] = (classCounts[mol.class] || 0) + ratio;
@@ -951,19 +973,33 @@
                 return;
             }
 
+            const weight = parseFloat(document.getElementById('patient-weight').value) || 70;
+            const weightFactor = 70 / weight;
+
             let html = '<ul class="space-y-4">';
 
             const targets = {
-                baseline: { arousal: [0, 0.4], dampening: [0, 0.4], chaos: [0, 0.5], repair: [0, 2] },
-                focus: { arousal: [0.8, 1.4], dampening: [0, 0.3], chaos: [0, 0.5], repair: [0, 2] },
-                relaxation: { arousal: [0, 0.3], dampening: [0.5, 1.0], chaos: [0, 0.5], repair: [0, 2] },
-                sleep: { arousal: [0, 0.2], dampening: [1.2, 2.0], chaos: [0, 0.5], repair: [0, 2] },
-                creative: { arousal: [0.3, 0.8], dampening: [0, 0.3], chaos: [0.5, 1.2], repair: [0.5, 2] }
+                baseline: { arousal: [0, 0.4], dampening: [0, 0.4], chaos: [0, 0.5], repair: [0, 2], subjective: "A balanced, clear mind. Normal emotional reactivity." },
+                focus: { arousal: [0.8, 1.4], dampening: [0, 0.3], chaos: [0, 0.5], repair: [0, 2], subjective: "Sharp, directed attention. Thoughts are rapid but cohesive." },
+                relaxation: { arousal: [0, 0.3], dampening: [0.5, 1.0], chaos: [0, 0.5], repair: [0, 2], subjective: "Physical and mental tension release. A slowing of the internal monologue." },
+                sleep: { arousal: [0, 0.2], dampening: [1.2, 2.0], chaos: [0, 0.5], repair: [0, 2], subjective: "Heavy sedation. Approaching unconsciousness." },
+                creative: { arousal: [0.3, 0.8], dampening: [0, 0.3], chaos: [0.5, 1.2], repair: [0.5, 2], subjective: "Lateral thinking. Associations form easily; mild sensory enhancement." }
             };
             const t = targets[targetState];
             
             let aligned = true;
             let prescriptions = [];
+            
+            html += `
+                <div class="bg-indigo-50/50 p-3 rounded-lg border border-indigo-100 mb-4">
+                    <span class="text-[9px] uppercase font-bold text-indigo-500 block mb-1">Target Subjective Experience</span>
+                    <p class="text-xs text-indigo-900 italic">"${t.subjective}"</p>
+                </div>
+            `;
+            
+            if (weight !== 70) {
+                 html += `<p class="text-[10px] text-slate-500 mb-4">Note: Calculations dynamically scaled for ${weight}kg patient weight.</p>`;
+            }
             
             currentStack.forEach(mol => {
                 let recommendedIntensity = 2; // Default Mild
@@ -1003,6 +1039,23 @@
                     }
                 }
                 
+                // Adjust recommended intensity based on tolerance
+                const tolMonths = mol.toleranceMonths || 0;
+                let tolRate = 0.1;
+                if (mol.class === 'stimulant' || mol.class === 'recreational') tolRate = 0.5;
+                if (mol.class === 'novel') tolRate = 0.05;
+                if (mol.class === 'cannabinoid') tolRate = 0.3;
+                
+                const tolFactor = 1 / (1 + Math.log1p(tolMonths * tolRate));
+                
+                // If the user has high tolerance, they need a higher intensity to reach the target effect
+                // Conversely, if weight is low, they need lower intensity.
+                if (recommendedIntensity > 0) {
+                     let adjustedNeeded = recommendedIntensity / (weightFactor * tolFactor);
+                     // Cap at max safe intensity logic
+                     recommendedIntensity = Math.min(3, Math.max(1, Math.round(adjustedNeeded)));
+                }
+
                 assistantRecommendations.push({ id: mol.id, recommendedIntensity: recommendedIntensity });
 
                 let doseDisplay = '';
@@ -1015,15 +1068,20 @@
                     doseDisplay = '<span class="text-emerald-500 font-bold">Optimal Alignment</span>';
                 }
 
+                let tolText = tolMonths > 0 ? `<br><span class="text-[9px] text-slate-400">Auto-adjusted for ${tolMonths}mo tolerance.</span>` : '';
+
                 html += `
                     <li class="bg-slate-50 p-3 rounded-lg border border-slate-100">
                         <div class="flex justify-between items-center mb-1">
                             <strong class="text-slate-900">${mol.name}</strong>
                             ${doseDisplay}
                         </div>
-                        <div class="text-[10px] text-slate-500 mb-1 flex justify-between">
+                        <div class="text-[10px] text-slate-500 mb-1 flex justify-between items-center">
                             <span>Effect: <span class="${molColor} font-bold uppercase">${molStatus}</span></span>
-                            <span>Target Intensity: <span class="font-mono font-bold text-indigo-600">${['None', 'Low', 'Mild', 'High'][recommendedIntensity]}</span></span>
+                            <div class="text-right">
+                                <span>Target Intensity: <span class="font-mono font-bold text-indigo-600">${['None', 'Low', 'Mild', 'High'][recommendedIntensity]}</span></span>
+                                ${tolText}
+                            </div>
                         </div>
                     </li>
                 `;
@@ -1065,9 +1123,9 @@
             }
 
             if (aligned && prescriptions.length === 0) {
-                html += `<div class="mt-3 p-3 bg-emerald-50 rounded-lg border border-emerald-100 flex gap-2 items-start"><span class="text-emerald-500">✅</span> <p class="text-emerald-700 text-xs leading-relaxed"><strong>Mathematically Aligned:</strong> Current intensities and pharmacokinetics are perfectly optimized for the <strong>${targetState.toUpperCase()}</strong> state.</p></div>`;
+                html += `<div class="mt-3 p-3 bg-emerald-50 rounded-lg border border-emerald-100 flex gap-2 items-start"><span class="text-emerald-500">✅</span> <p class="text-emerald-700 text-xs leading-relaxed"><strong>Mathematically Aligned:</strong> Current intensities and pharmacokinetics are perfectly optimized for the <strong>${targetState.toUpperCase()}</strong> state, accounting for patient weight and established tolerances.</p></div>`;
             } else {
-                html += `<p class="text-slate-400 text-[10px] mt-4 italic text-center">Press Auto-Adjust to recalculate intensities based on reported intake and current pharmacological conflicts.</p>`;
+                html += `<p class="text-slate-400 text-[10px] mt-4 italic text-center">Press Auto-Adjust to recalculate and apply these algorithmically derived intensities to your stack.</p>`;
             }
 
             html += '</div></ul>';
