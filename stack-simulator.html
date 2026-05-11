@@ -218,6 +218,10 @@
                 </div>
                 <h4 id="brain-state-label" class="text-xl font-bold text-white drop-shadow-md">Baseline State</h4>
                 <p id="brain-state-desc" class="text-xs text-slate-300 mt-1 max-w-sm leading-relaxed drop-shadow">No pharmacological intervention applied. Normal oscillatory dynamics.</p>
+                <div class="mt-2 pt-2 border-t border-indigo-500/30 max-w-sm">
+                    <span class="text-[9px] uppercase font-bold text-rose-400 block mb-1">Projected Subjective Experience</span>
+                    <p id="brain-state-subjective" class="text-xs text-slate-300 italic leading-relaxed drop-shadow">A sense of "Flow." Clear, baseline cognition.</p>
+                </div>
             </div>
 
             <!-- Anatomical Legend -->
@@ -788,46 +792,58 @@
             // Determine State
             let label = "Baseline State";
             let desc = "Normal oscillatory dynamics.";
+            let subj = "A sense of 'Flow.' Clear, baseline cognition.";
             let sync = 0.88;
             
             if (currentStack.length > 0) {
                 if ((classCounts.ssri > 0 && classCounts.stimulant > 0) || classCounts.stimulant > 2.0 || classCounts.ssri > 2.0) {
                     label = "Toxicity (Serotonin/Stimulant)";
                     desc = "Dangerous overlapping toxicity. Severe chaotic structural fragmentation detected.";
+                    subj = "Overwhelming panic, racing heart, and severely fragmented, uncontrollable racing thoughts.";
                     sync = 0.10;
                 } else if (classCounts.depressant > 0 && classCounts.antipsychotic > 0) {
                     label = "Severe CNS Depression";
                     desc = "Overlapping dampening effects have dangerously suppressed global network amplitude.";
+                    subj = "Profound lethargy. Cognitive functions are shutting down, approaching unconsciousness or blackout.";
                     sync = 0.20;
                 } else if (net.repair > 1.0 && net.chaos <= 0) {
                     label = "Topological Optimization";
                     desc = "Precision compounds are expanding Arnold Tongues, locking high-dimensional cliques safely.";
+                    subj = "Lucid clarity. Effortless focus, emotional balance, and enhanced lateral problem solving.";
                     sync = 0.95;
                 } else if (net.dampening > 2.0 && net.arousal <= 0) {
                     label = "Severe Rigidity / Sedation";
                     desc = "Excessive dampening has frozen the network, destroying functional variance.";
+                    subj = "Heavy physical sedation. Thoughts are sluggish, emotional responses are entirely blunted.";
                     sync = 0.30;
                 } else if (net.arousal > 2.0 || net.chaos > 1.5) {
                     label = "Hyper-Arousal Toxicity";
                     desc = "Dangerous over-stimulation. Cliques are shattering into chaotic low-dimensional fragments.";
+                    subj = "Intense anxiety, jitteriness, and an inability to maintain a coherent train of thought.";
                     sync = 0.15;
                 } else if (net.arousal > 0.5 && net.dampening > 0.5 && net.chaos > 0.5) {
                     label = "Polypharmacy Conflict";
                     desc = "Competing mechanisms are creating uncoordinated signal propagation and localized noise.";
+                    subj = "A confusing mix of physical lethargy paired with mental racing or anxiety ('tired but wired').";
                     sync = 0.55;
                 } else if (net.dampening > 0.5) {
                     label = "Global Suppression";
                     desc = "Network amplitude is blunted globally. Topologies are preserved but sluggish.";
+                    subj = "Calm and relaxed, but with noticeable cognitive slowing and emotional flattening.";
                     sync = 0.70;
                 } else if (net.arousal > 0.5) {
                     label = "Upregulated State";
                     desc = "Network firing rates increased. Potential narrowing of therapeutic window.";
+                    subj = "Heightened alertness and energy, though potentially verging on tense or overly fixated.";
                     sync = 0.80;
                 }
             }
 
             document.getElementById('brain-state-label').innerText = label;
             document.getElementById('brain-state-desc').innerText = desc;
+            
+            const subjEl = document.getElementById('brain-state-subjective');
+            if(subjEl) subjEl.innerText = subj;
             
             const syncScore = Math.max(0.05, Math.min(1.0, sync + (Math.random()*0.02 - 0.01)));
             document.getElementById('sync-score').innerText = syncScore.toFixed(2) + ' r';
