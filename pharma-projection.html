@@ -3,276 +3,1094 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pharmacological Topology Forge - 11D Projection</title>
-    <style>
-        body { margin: 0; background-color: #050816; color: white; font-family: 'Inter', sans-serif; }
-        #canvas-container { width: 100vw; height: 100vh; display: block; }
-        
-        #banner { 
-            position: absolute; 
-            top: 0; 
-            left: 0; 
-            right: 0; 
-            background: rgba(5, 8, 22, 0.85); 
-            padding: 15px 25px; 
-            border-bottom: 1px solid #9333EA; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            z-index: 100;
-            backdrop-filter: blur(5px);
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .header-left { display: flex; flex-direction: column; }
-        .header-right { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
-
-        h1 { margin: 0; font-size: 1.1rem; color: #9b59b6; text-transform: uppercase; letter-spacing: 1px; }
-        p { margin: 2px 0; font-size: 0.8rem; color: #ccc; }
-        
-        .btn { 
-            background: #9333EA; 
-            color: white; 
-            border: none; 
-            padding: 8px 16px; 
-            border-radius: 4px; 
-            cursor: pointer; 
-            font-weight: bold; 
-            font-size: 0.75rem;
-            transition: background 0.3s; 
-        }
-        .btn:hover { background: #7e22ce; }
-        
-        .btn-back { background: transparent; border: 1px solid #444; color: #aaa; }
-        .btn-back:hover { background: #333; color: #fff; }
-
-        @media (max-width: 768px) {
-            #banner { flex-direction: column; align-items: flex-start; padding: 10px 15px; }
-            .header-right { width: 100%; justify-content: space-between; }
-            .btn, .btn-back { flex: 1 1 auto; text-align: center; font-size: 0.65rem; padding: 6px 8px; }
-            #status-overlay { bottom: 10px; left: 10px; right: 10px; padding: 10px; font-size: 0.7rem; }
-        }
-
-        #status-overlay {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            background: rgba(0, 0, 0, 0.6);
-            padding: 15px;
-            border-left: 3px solid #9333EA;
-            font-size: 0.8rem;
-            pointer-events: none;
-        }
-
-        .status-resistant { color: #e74c3c; font-weight: bold; }
-        .status-responsive { color: #2ecc71; font-weight: bold; }
-    </style>
+    <title>NeuroStack Interaction Simulator | babelForge</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><defs><linearGradient id='g' x1='0%25' y1='100%25' x2='100%25' y2='0%25'><stop offset='0%25' stop-color='%234f46e5'/><stop offset='100%25' stop-color='%2306b6d4'/></linearGradient></defs><path d='M12 2L20 6.5V17.5L12 22L4 17.5V6.5L12 2Z' stroke='url(%23g)' stroke-width='1.5' stroke-linejoin='round' fill='none'/><path d='M12 2V22M4 6.5L20 17.5M20 6.5L4 17.5' stroke='url(%23g)' stroke-width='1' stroke-opacity='0.5' fill='none'/><circle cx='12' cy='12' r='3' fill='%23fff'/><path d='M12 7L13 11L17 12L13 13L12 17L11 13L7 12L11 11Z' fill='%2306b6d4'/></svg>" type="image/svg+xml">
-</head>
-<body>
-    <div id="banner">
-        <div class="header-left">
-            <h1>Babel Forge v39</h1>
-            <p><strong>Experiment:</strong> Pharmacological Topology Repair | <strong>Target:</strong> DorsAttn @ 0.030 Hz</p>
-        </div>
-        
-        <div class="header-right">
-            <button id="inject-btn" class="btn">Inject Simulated Agonist</button>
-            <button class="btn-back" onclick="window.location.href='index.html'">Back to Dashboard</button>
-        </div>
-    </div>
-
-    <div id="status-overlay">
-        <p id="state-text"><strong>Current State:</strong> Treatment-Resistant (1D Collapse)</p>
-        <div id="status" class="status-resistant">TOPOLOGY COLLAPSED</div>
-    </div>
-    <div id="canvas-container"></div>
-
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-
-    <script>
-        let scene, camera, renderer, controls;
-        let nodesData = [];
-        let preEdges = [], postEdges = [], postCliques = [];
-        let currentEdgesGroup = new THREE.Group();
-        let currentCliquesGroup = new THREE.Group();
-        let nodeObjects = {};
-        let isTreated = false;
-
-        init();
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
         
-        function init() {
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        #canvas-container { background: #030008; border-radius: 1rem; overflow: hidden; position: relative; }
+        
+        .mol-svg { filter: drop-shadow(0 2px 4px rgba(0,0,0,0.05)); }
+        
+        .stack-item {
+            animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .stack-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        /* Focus styles for forms */
+        input[type="text"]:focus, input[type="number"]:focus, select:focus {
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2) !important;
+            border-color: #818cf8 !important;
+            transition: all 0.2s ease;
+        }
+
+        button { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        button:active { transform: translateY(1px) !important; }
+    </style>
+</head>
+<body class="antialiased selection:bg-indigo-500/40 selection:text-slate-900 min-h-screen flex flex-col">
+
+    <!-- Navigation -->
+    <nav class="bg-white border-b border-slate-200 flex-none z-50 relative">
+        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center gap-2 cursor-pointer" onclick="window.location.href='index.html'">
+                    <svg viewBox="0 0 24 24" class="w-7 h-7 drop-shadow-md" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <defs><linearGradient id="gradLogo" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#4f46e5" /><stop offset="100%" stop-color="#06b6d4" /></linearGradient></defs>
+                        <path d="M12 2L20 6.5V17.5L12 22L4 17.5V6.5L12 2Z" stroke="url(#gradLogo)" stroke-width="1.5" stroke-linejoin="round"/>
+                        <circle cx="12" cy="12" r="3" fill="#06b6d4"/>
+                    </svg>
+                    <span class="font-bold text-slate-900 tracking-tight">babelForge <span class="font-light text-slate-500">Clinical</span></span>
+                </div>
+                <div class="hidden md:flex items-center space-x-6">
+                    <a href="index.html" class="text-xs font-semibold uppercase tracking-wider text-slate-500 hover:text-indigo-600 transition-colors">Dashboard</a>
+                    <a href="studies.html" class="text-xs font-semibold uppercase tracking-wider text-slate-500 hover:text-indigo-600 transition-colors">Evidence</a>
+                    <a href="11d-projection.html" class="text-xs font-semibold uppercase tracking-wider text-slate-500 hover:text-indigo-600 transition-colors">11D Simulation</a>
+                    <span class="text-xs font-bold uppercase tracking-wider text-indigo-600">Dynamic Stimulus & Polypharmacy Projection</span>
+                </div>
+                <!-- Mobile Menu Button -->
+                <div class="md:hidden flex items-center">
+                    <button class="text-slate-500 hover:text-indigo-600 focus:outline-none" onclick="document.getElementById('mobile-menu-stack').classList.toggle('hidden')">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile Nav -->
+        <div id="mobile-menu-stack" class="hidden md:hidden bg-white border-b border-slate-200 px-4 pt-2 pb-4 space-y-2 shadow-lg absolute w-full top-16 left-0">
+            <a href="index.html" class="block px-3 py-2 rounded-md text-base font-semibold text-slate-700 hover:text-indigo-600 hover:bg-slate-50">Dashboard</a>
+            <a href="studies.html" class="block px-3 py-2 rounded-md text-base font-semibold text-slate-700 hover:text-indigo-600 hover:bg-slate-50">Evidence</a>
+            <a href="11d-projection.html" class="block px-3 py-2 rounded-md text-base font-semibold text-slate-700 hover:text-indigo-600 hover:bg-slate-50">11D Simulation</a>
+            <span class="block px-3 py-2 rounded-md text-base font-bold text-indigo-600 bg-indigo-50">Dynamic Stimulus & Polypharmacy Projection</span>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="flex-grow flex flex-col lg:flex-row w-full mx-auto p-4 gap-4 min-h-[calc(100vh-4rem)]">
+        
+        <!-- Left Panel: Stack Builder -->
+        <div class="w-full lg:w-[350px] flex flex-col gap-4 flex-none h-full">
+            <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex-none">
+                <div class="inline-block px-2 py-1 bg-indigo-50 text-indigo-700 rounded text-[9px] font-bold uppercase tracking-widest mb-3">Database Query</div>
+                <h2 class="text-xl font-bold text-slate-900 mb-1">NeuroStack Builder</h2>
+                <p class="text-xs text-slate-500 mb-5">Simulate interactions across 150+ indexed compounds.</p>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-[10px] uppercase font-bold text-slate-400 block mb-2 tracking-widest">Search</label>
+                        <input type="text" id="mol-search" onkeyup="populateMolecules()" placeholder="Type to search..." class="w-full bg-slate-50 border border-slate-200 text-sm font-semibold text-slate-700 rounded-lg p-2.5 focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="text-[10px] uppercase font-bold text-slate-400 block mb-2 tracking-widest">Compound Class</label>
+                        <select id="class-select" class="w-full bg-slate-50 border border-slate-200 text-sm font-semibold text-slate-700 rounded-lg p-2.5 focus:outline-none focus:border-indigo-500" onchange="populateMolecules()">
+                            <option value="all">All Classes</option>
+                            <option value="novel">Novel Therapeutics (Precision)</option>
+                            <option value="ssri">SSRIs / SNRIs</option>
+                            <option value="stimulant">Stimulants (Amphetamines)</option>
+                            <option value="antipsychotic">Antipsychotics</option>
+                            <option value="cannabinoid">Cannabinoids</option>
+                            <option value="depressant">Depressants / Benzos</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="text-[10px] uppercase font-bold text-slate-400 block mb-2 tracking-widest">Select Molecule</label>
+                        <select id="mol-select" class="w-full bg-slate-50 border border-slate-200 text-sm font-semibold text-slate-700 rounded-lg p-2.5 focus:outline-none focus:border-indigo-500">
+                            <!-- Populated by JS -->
+                        </select>
+                    </div>
+                    
+                    <button onclick="addToStack()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold uppercase tracking-widest py-3 rounded-lg transition-colors shadow-md shadow-indigo-200">
+                        + Add to Stack
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex-grow flex flex-col overflow-hidden">
+                <div class="flex justify-between items-center mb-4 flex-none">
+                    <h3 class="text-sm font-bold text-slate-900 uppercase tracking-widest">Active Stack</h3>
+                    <span id="stack-count" class="bg-slate-100 text-slate-500 text-[10px] font-bold px-2 py-0.5 rounded-full">0/10</span>
+                </div>
+                
+                <div id="stack-list" class="flex-grow overflow-y-auto space-y-3 pr-1">
+                    <!-- Stack items injected here -->
+                    <div id="empty-stack" class="h-full flex flex-col items-center justify-center text-center opacity-50">
+                        <svg viewBox="0 0 24 24" class="w-10 h-10 mb-2 opacity-50" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2L20 6.5V17.5L12 22L4 17.5V6.5L12 2Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                            <circle cx="12" cy="12" r="3" fill="currentColor"/>
+                        </svg>
+                        <p class="text-xs font-medium text-slate-500">Stack is empty.</p>
+                        <p class="text-[10px] text-slate-400 mt-1 max-w-[200px]">Add molecules above to simulate neurological interactions.</p>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-4 border-t border-slate-100 flex-none">
+                    <div class="text-[9px] uppercase font-bold text-slate-400 mb-3 tracking-widest">Net Pharmacological Vectors</div>
+                    <div class="grid grid-cols-2 gap-2 text-xs font-mono">
+                        <div class="flex justify-between bg-slate-50 p-2 rounded"><span class="text-slate-500">Arousal</span><span id="net-arousal" class="font-bold text-slate-900">0.0</span></div>
+                        <div class="flex justify-between bg-slate-50 p-2 rounded"><span class="text-slate-500">Dampening</span><span id="net-dampening" class="font-bold text-slate-900">0.0</span></div>
+                        <div class="flex justify-between bg-slate-50 p-2 rounded"><span class="text-slate-500">Chaos</span><span id="net-chaos" class="font-bold text-slate-900">0.0</span></div>
+                        <div class="flex justify-between bg-slate-50 p-2 rounded"><span class="text-slate-500">Repair</span><span id="net-repair" class="font-bold text-indigo-600">0.0</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Middle Panel: Smart Assistant -->
+        <div class="w-full lg:w-[350px] flex flex-col gap-4 flex-none h-full">
+            <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex-none">
+                <div class="inline-block px-2 py-1 bg-emerald-50 text-emerald-700 rounded text-[9px] font-bold uppercase tracking-widest mb-3">Computational Assistant</div>
+                <h2 class="text-xl font-bold text-slate-900 mb-1">Dosage Calculator</h2>
+                <p class="text-xs text-slate-500 mb-5">Optimize stack based on patient profile and goals.</p>
+
+                <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-[10px] uppercase font-bold text-slate-400 block mb-2 tracking-widest">Weight (kg)</label>
+                            <input type="number" id="patient-weight" value="70" class="w-full bg-slate-50 border border-slate-200 text-sm font-semibold text-slate-700 rounded-lg p-2.5 focus:outline-none focus:border-emerald-500" onchange="runAssistant()">
+                        </div>
+                        <div>
+                            <label class="text-[10px] uppercase font-bold text-slate-400 block mb-2 tracking-widest">Tolerance</label>
+                            <select id="patient-tolerance" class="w-full bg-slate-50 border border-slate-200 text-sm font-semibold text-slate-700 rounded-lg p-2.5 focus:outline-none focus:border-emerald-500" onchange="runAssistant()">
+                                <option value="0.8">Low (Naïve)</option>
+                                <option value="1.0" selected>Medium (Standard)</option>
+                                <option value="1.5">High (Adapted)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-[10px] uppercase font-bold text-slate-400 block mb-2 tracking-widest">Environmental Stimulus</label>
+                        <select id="stimulus-mode" class="w-full bg-slate-50 border border-slate-200 text-sm font-semibold text-indigo-700 rounded-lg p-2.5 focus:outline-none focus:border-indigo-500" onchange="updateSimulation()">
+                            <option value="rest">Rest (Baseline Oscillations)</option>
+                            <option value="react">React / Stress (Acute Hyper-Arousal)</option>
+                            <option value="cognitive">Cognitive Load (High Focus / Processing)</option>
+                            <option value="sleep">Sleep Phase (Deep Theta / Delta)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <label class="text-[10px] uppercase font-bold text-slate-400 block mb-2 tracking-widest">Target Optimal State</label>
+                        <select id="target-state" class="w-full bg-slate-50 border border-slate-200 text-sm font-semibold text-slate-700 rounded-lg p-2.5 focus:outline-none focus:border-emerald-500" onchange="runAssistant()">
+                            <option value="baseline">Healthy Baseline (Balanced)</option>
+                            <option value="focus">Deep Focus (High Arousal, Low Chaos)</option>
+                            <option value="relaxation">Relaxation (Low Arousal, High Dampening)</option>
+                            <option value="sleep">Sleep/Sedation (Max Dampening)</option>
+                            <option value="creative">Creative Flow (High Repair, Mild Chaos)</option>
+                        </select>
+                    </div>
+
+                    <button onclick="applyOptimalDoses()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold uppercase tracking-widest py-3 rounded-lg transition-colors shadow-md shadow-emerald-200">
+                        ⚡ Auto-Adjust Dosages
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex-grow flex flex-col overflow-hidden">
+                <div class="flex justify-between items-center mb-4 flex-none">
+                    <h3 class="text-sm font-bold text-slate-900 uppercase tracking-widest">Theoretical Observations</h3>
+                </div>
+                <div id="assistant-feedback" class="flex-grow overflow-y-auto text-sm text-slate-600 space-y-4">
+                    <p class="italic text-slate-400 text-center mt-10">Add molecules to your stack to generate theoretical interaction insights.</p>
+                </div>
+            </div>
+        </div>
+
+            <!-- Right Panel: 3D Visualization -->
+        <div class="flex-grow bg-white border border-slate-200 rounded-2xl p-1 shadow-sm flex flex-col relative min-h-[500px] lg:min-h-full">
+            <div id="canvas-container" class="w-full h-full min-h-[500px] lg:min-h-[auto] cursor-crosshair rounded-xl overflow-hidden bg-[#030008]"></div>
+            
+            <!-- Overlay Info -->
+            <div class="absolute top-6 left-6 pointer-events-none z-10">
+                <div class="flex items-center gap-2 mb-1">
+                    <div class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></div>
+                    <span class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Interaction Physics Engine</span>
+                </div>
+                <h4 id="brain-state-label" class="text-xl font-bold text-white drop-shadow-md">Baseline State</h4>
+                <p id="brain-state-desc" class="text-xs text-slate-300 mt-1 max-w-sm leading-relaxed drop-shadow">No pharmacological intervention applied. Normal oscillatory dynamics.</p>
+            </div>
+
+            <!-- Anatomical Legend -->
+            <div class="absolute top-6 right-32 z-10 bg-slate-900/80 border border-slate-700 rounded-lg p-3 backdrop-blur-md pointer-events-none">
+                <div class="text-[9px] uppercase font-bold text-slate-400 mb-2 tracking-widest border-b border-slate-700 pb-1">Anatomical Map (Z-Axis)</div>
+                <ul class="text-[10px] text-slate-300 space-y-1 font-mono">
+                    <li><span class="text-indigo-400">Frontal (z > 20):</span> Control / Executive</li>
+                    <li><span class="text-emerald-400">Superior (y > 15):</span> Somatomotor</li>
+                    <li><span class="text-amber-400">Inferior (y < 0):</span> Limbic / Ventral Attn</li>
+                    <li><span class="text-rose-400">Posterior (z < -20):</span> Visual Cortex</li>
+                </ul>
+            </div>
+
+            <!-- Explanation Toggle -->
+            <div class="absolute top-6 right-6 z-20">
+                <button onclick="toggleExplanation()" class="bg-indigo-600/80 hover:bg-indigo-500 text-white text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-md transition-all border border-indigo-400/50 backdrop-blur-md shadow-lg flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Explain Science
+                </button>
+            </div>
+
+            <!-- Science Explanation Overlay -->
+            <div id="science-explanation" class="absolute inset-0 bg-slate-950/95 backdrop-blur-xl z-30 hidden p-10 overflow-y-auto border border-indigo-500/20 rounded-xl">
+                <div class="max-w-2xl mx-auto mt-6 relative">
+                    <button onclick="toggleExplanation()" class="absolute -top-4 -right-4 text-slate-400 hover:text-white transition-colors">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                    
+                    <h3 class="text-3xl font-bold text-white mb-6">Polypharmacy Interaction Mathematics</h3>
+                    <p class="text-indigo-200 text-lg mb-8 leading-relaxed font-light">The Dynamic Stimulus & Polypharmacy Projection does not use pre-rendered animations. It dynamically computes non-linear drug-drug interactions (DDIs) using vector mathematics and renders the result via a live WebGL topological simulation.</p>
+                    
+                    <div class="space-y-8">
+                        <div class="border-l-2 border-indigo-500 pl-6">
+                            <h4 class="text-xl font-bold text-white mb-2">1. Pharmacological Vectors</h4>
+                            <p class="text-slate-400 leading-relaxed text-sm">Every molecule in the database is mapped to a 4-dimensional vector: <strong class="text-white">[Arousal, Dampening, Chaos, Repair]</strong>. For example, a classical Stimulant heavily weights the 'Arousal' axis, while a Benzodiazepine weights the 'Dampening' axis. These baseline effects are linearly scaled based on the precise milligram dose selected relative to the compound's optimal therapeutic window.</p>
+                        </div>
+                        
+                        <div class="border-l-2 border-indigo-500 pl-6">
+                            <h4 class="text-xl font-bold text-white mb-2">2. Non-Linear Synergies (DDIs)</h4>
+                            <p class="text-slate-400 leading-relaxed text-sm">When mixing specific drug classes, the engine applies exponential modifiers:<br><br>
+                            - <strong class="text-rose-400">Serotonin Toxicity:</strong> Mixing SSRIs with Stimulants/Empathogens triggers synergistic arousal and chaos.<br>
+                            - <strong class="text-amber-400">Severe CNS Depression:</strong> Stacking Depressants (like alcohol and benzos) with Antipsychotics multiplies the dampening effect exponentially, destroying network variance.<br>
+                            - <strong class="text-indigo-400">Precision Interference:</strong> SSRIs mathematically blunt the efficacy (Repair vector) of 5-HT2A agonists (classic psychedelics or ZB-01), mimicking real-world receptor downregulation.</p>
+                        </div>
+                        
+                        <div class="border-l-2 border-indigo-500 pl-6">
+                            <h4 class="text-xl font-bold text-white mb-2">3. Topological Translation</h4>
+                            <p class="text-slate-400 leading-relaxed text-sm">The 3D ellipsoid brain translates these net vectors into visual physics in real-time:<br>
+                            - <strong class="text-white">Arousal</strong> increases the speed and amplitude of the cortical wave.<br>
+                            - <strong class="text-white">Dampening</strong> shrinks the lobes, slows the wave, and renders the network a dull grey.<br>
+                            - <strong class="text-white">Chaos</strong> introduces erratic X/Y/Z jittering and red emissive spiking, simulating uncoordinated noise.<br>
+                            - <strong class="text-white">Repair</strong> expands the nodes organically and harmonizes them into a glowing golden pulse, representing the stabilization of 11D cliques.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="node-inspector-overlay" class="absolute bottom-6 right-[240px] p-4 bg-slate-900/90 border border-slate-700 rounded-xl backdrop-blur-xl min-w-[200px] shadow-2xl z-10 hidden">
+                <div class="text-[9px] uppercase font-bold text-indigo-400 mb-2 tracking-widest border-b border-slate-700 pb-1">Node Inspector</div>
+                <h4 id="insp-name" class="font-bold text-white text-sm mb-2">Node</h4>
+                <div class="text-[10px] text-slate-300 space-y-1 font-mono">
+                    <div class="flex justify-between"><span>Power:</span><span id="insp-power" class="text-emerald-400">100%</span></div>
+                    <div class="flex justify-between mt-1 border-t border-slate-700/50 pt-1"><span>State:</span><span id="insp-state" class="font-bold text-indigo-400">Baseline</span></div>
+                </div>
+                <div class="mt-2 pt-2 border-t border-slate-700">
+                    <div class="text-[9px] uppercase font-bold text-slate-400 mb-1 tracking-widest">Top Connections</div>
+                    <ul id="insp-conns" class="text-[9px] text-indigo-300 font-mono space-y-1"></ul>
+                </div>
+            </div>
+
+            <div class="absolute bottom-6 right-6 p-4 bg-slate-900/90 border border-slate-700 rounded-xl backdrop-blur-xl min-w-[200px] shadow-2xl z-10 flex flex-col gap-3">
+                <div>
+                    <div class="text-[9px] uppercase font-bold text-indigo-400 mb-2 tracking-widest">Global Synchronization</div>
+                    <div class="flex justify-between items-end mb-1">
+                        <span class="text-xs font-bold text-slate-400">Order (r)</span>
+                        <span id="sync-score" class="text-lg text-emerald-400 font-mono font-bold">0.88</span>
+                    </div>
+                    <div class="w-full bg-slate-800 rounded-full h-1 mt-2 overflow-hidden">
+                        <div id="sync-bar" class="h-full bg-emerald-500 transition-all duration-300" style="width: 88%"></div>
+                    </div>
+                </div>
+                
+                <div class="border-t border-slate-700 pt-3">
+                    <p id="dosage-explanation" class="text-[10px] text-slate-300 leading-relaxed font-mono">
+                        Awaiting compound selection...
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Logic -->
+    <script>
+        // --- Molecular Database (Simulating 150+ indexing) ---
+        // Base SVGs
+        const svgIndole = `<svg viewBox="0 0 160 100" class="h-full w-auto stroke-current fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="50,40 70,30 90,40 90,60 70,70 50,60" />
+    <path d="M55,45 L55,55 M70,35 L85,45 M70,65 L85,55" stroke-width="1.5" />
+    <polygon points="90,40 110,30 120,45 105,60 90,60" />
+    <text x="96" y="74" font-family="Inter" font-size="12" fill="currentColor" stroke="none" font-weight="bold">NH</text>
+    <path d="M120,45 L135,35 L135,20" />
+    <text x="126" y="15" font-family="Inter" font-size="12" fill="currentColor" stroke="none" font-weight="bold">N(CH₃)₂</text>
+    <path d="M70,30 L70,15" />
+    <text x="63" y="10" font-family="Inter" font-size="12" fill="#ef4444" stroke="none" font-weight="bold">OH</text>
+</svg>`;
+        const svgPhen = `<svg viewBox="0 0 160 100" class="h-full w-auto stroke-current fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="40,50 60,38 80,50 80,70 60,82 40,70" />
+    <path d="M45,53 L45,67 M60,43 L75,53 M60,77 L75,67" stroke-width="1.5" />
+    <path d="M80,50 L105,35 L130,50" />
+    <path d="M105,35 L105,15" />
+    <text x="135" y="55" font-family="Inter" font-size="12" fill="currentColor" stroke="none" font-weight="bold">NH₂</text>
+    <text x="98" y="10" font-family="Inter" font-size="12" fill="currentColor" stroke="none" font-weight="bold">CH₃</text>
+</svg>`;
+        const svgTricyclic = `<svg viewBox="0 0 200 100" class="h-full w-auto stroke-current fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <text x="5" y="55" font-family="Inter" font-size="12" fill="#10b981" stroke="none" font-weight="bold">F</text>
+    <path d="M15,50 L35,50" />
+    <polygon points="35,50 45,35 65,35 75,50 65,65 45,65" />
+    <path d="M42,48 L48,40 M60,40 L68,48 M60,60 L48,60" stroke-width="1.5" />
+    <path d="M75,50 L90,50 L100,35 L120,35" />
+    <path d="M90,50 L90,65 M86,50 L86,65" />
+    <text x="84" y="78" font-family="Inter" font-size="12" fill="#ef4444" stroke="none" font-weight="bold">O</text>
+    <text x="125" y="40" font-family="Inter" font-size="12" fill="currentColor" stroke="none" font-weight="bold">N</text>
+    <polygon points="135,35 145,20 165,20 175,35 165,50 145,50" />
+    <path d="M175,35 L190,35" />
+    <text x="195" y="40" font-family="Inter" font-size="12" fill="#64748b" stroke="none" font-weight="bold">Cl</text>
+</svg>`;
+        const svgCannabinoid = `<svg viewBox="0 0 100 50" class="h-full w-auto stroke-current fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="30,25 40,10 55,10 65,25 55,40 40,40" /><polygon points="65,25 75,10 90,10 100,25 90,40 75,40" /><path d="M55,10 L75,10" /><path d="M20,15 L30,25 L20,35" /><circle cx="65" cy="25" r="2" fill="currentColor" /></svg>`;
+
+        const molecules = [
+            // Novel Therapeutics
+            { id: 'zb01', name: 'ZenBud™ (ZB-01)', class: 'novel', classLabel: 'Precision Agonist', svg: svgIndole, minDose: 0, maxDose: 100, optimalDose: 50, doses: { low: 20, mild: 50, high: 80 }, effects: { arousal: 0.1, dampening: 0.0, chaos: -0.8, repair: 1.5 } },
+            { id: 'ss20', name: 'SynaptoStim (SS-20)', class: 'novel', classLabel: 'Precision Stimulant', svg: svgPhen, minDose: 0, maxDose: 60, optimalDose: 30, doses: { low: 10, mild: 30, high: 50 }, effects: { arousal: 0.8, dampening: -0.2, chaos: -0.2, repair: 0.8 } },
+            { id: 'dr02', name: 'DopaReg-D2 (DR-02)', class: 'novel', classLabel: 'Precision Antagonist', svg: svgTricyclic, minDose: 0, maxDose: 10, optimalDose: 5, doses: { low: 2, mild: 5, high: 8 }, effects: { arousal: -0.5, dampening: 0.6, chaos: -0.5, repair: 0.6 } },
+            { id: 'psilo', name: 'Psilocybin', class: 'novel', classLabel: 'Classic Psychedelic', svg: svgIndole, minDose: 0, maxDose: 30, optimalDose: 15, doses: { low: 5, mild: 15, high: 25 }, effects: { arousal: 0.8, dampening: -0.2, chaos: 1.2, repair: 0.5 } },
+            { id: 'mdma', name: 'MDMA', class: 'novel', classLabel: 'Empathogen', svg: svgPhen, minDose: 0, maxDose: 150, optimalDose: 80, doses: { low: 50, mild: 80, high: 120 }, effects: { arousal: 1.2, dampening: -0.3, chaos: 0.4, repair: 0.7 } },
+            { id: 'ketamine', name: 'Ketamine', class: 'novel', classLabel: 'Dissociative', svg: svgTricyclic, minDose: 0, maxDose: 100, optimalDose: 50, doses: { low: 20, mild: 50, high: 80 }, effects: { arousal: -0.2, dampening: 0.5, chaos: 1.0, repair: 0.9 } },
+            { id: 'lsd', name: 'LSD', class: 'novel', classLabel: 'Classic Psychedelic', svg: svgIndole, minDose: 0, maxDose: 400, optimalDose: 100, doses: { low: 50, mild: 100, high: 250 }, effects: { arousal: 0.7, dampening: -0.1, chaos: 1.4, repair: 0.4 } },
+            
+            // SSRIs, SNRIs & Antidepressants
+            { id: 'sert', name: 'Sertraline', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, minDose: 0, maxDose: 200, optimalDose: 100, doses: { low: 50, mild: 100, high: 150 }, effects: { arousal: -0.2, dampening: 0.8, chaos: -0.1, repair: 0.0 } },
+            { id: 'fluox', name: 'Fluoxetine', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, minDose: 0, maxDose: 80, optimalDose: 40, doses: { low: 20, mild: 40, high: 60 }, effects: { arousal: -0.1, dampening: 0.7, chaos: 0.0, repair: 0.0 } },
+            { id: 'escit', name: 'Escitalopram', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, minDose: 0, maxDose: 40, optimalDose: 20, doses: { low: 10, mild: 20, high: 30 }, effects: { arousal: -0.3, dampening: 0.9, chaos: -0.2, repair: 0.0 } },
+            { id: 'venla', name: 'Venlafaxine', class: 'ssri', classLabel: 'SNRI', svg: svgTricyclic, minDose: 0, maxDose: 225, optimalDose: 75, doses: { low: 37.5, mild: 75, high: 150 }, effects: { arousal: 0.1, dampening: 0.6, chaos: 0.0, repair: 0.0 } },
+            { id: 'dulox', name: 'Duloxetine', class: 'ssri', classLabel: 'SNRI', svg: svgTricyclic, minDose: 0, maxDose: 120, optimalDose: 60, doses: { low: 30, mild: 60, high: 90 }, effects: { arousal: 0.2, dampening: 0.5, chaos: 0.1, repair: 0.0 } },
+            { id: 'citalo', name: 'Citalopram', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, minDose: 0, maxDose: 40, optimalDose: 20, doses: { low: 10, mild: 20, high: 30 }, effects: { arousal: -0.2, dampening: 0.8, chaos: -0.1, repair: 0.0 } },
+            { id: 'parox', name: 'Paroxetine', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, minDose: 0, maxDose: 60, optimalDose: 20, doses: { low: 10, mild: 20, high: 40 }, effects: { arousal: -0.4, dampening: 1.0, chaos: -0.2, repair: 0.0 } },
+            { id: 'fluvox', name: 'Fluvoxamine', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, minDose: 0, maxDose: 300, optimalDose: 100, doses: { low: 50, mild: 100, high: 200 }, effects: { arousal: -0.5, dampening: 1.1, chaos: -0.1, repair: 0.0 } },
+            { id: 'bupropion', name: 'Bupropion', class: 'stimulant', classLabel: 'NDRI', svg: svgPhen, minDose: 0, maxDose: 450, optimalDose: 300, doses: { low: 150, mild: 300, high: 450 }, effects: { arousal: 0.9, dampening: -0.1, chaos: 0.2, repair: 0.1 } },
+            { id: 'mirtaz', name: 'Mirtazapine', class: 'ssri', classLabel: 'TeCA / NaSSA', svg: svgTricyclic, minDose: 0, maxDose: 45, optimalDose: 15, doses: { low: 7.5, mild: 15, high: 30 }, effects: { arousal: -0.8, dampening: 1.2, chaos: -0.1, repair: 0.1 } },
+            { id: 'traz', name: 'Trazodone', class: 'ssri', classLabel: 'SARI', svg: svgTricyclic, minDose: 0, maxDose: 400, optimalDose: 100, doses: { low: 50, mild: 100, high: 200 }, effects: { arousal: -1.0, dampening: 1.4, chaos: 0.1, repair: 0.0 } },
+            
+            // Stimulants & Wakefulness
+            { id: 'amph', name: 'Amphetamine Salts', class: 'stimulant', classLabel: 'Stimulant', svg: svgPhen, minDose: 0, maxDose: 60, optimalDose: 20, doses: { low: 10, mild: 20, high: 40 }, effects: { arousal: 1.5, dampening: -0.5, chaos: 0.8, repair: -0.2 } },
+            { id: 'mph', name: 'Methylphenidate', class: 'stimulant', classLabel: 'Stimulant', svg: svgPhen, minDose: 0, maxDose: 72, optimalDose: 36, doses: { low: 18, mild: 36, high: 54 }, effects: { arousal: 1.2, dampening: -0.3, chaos: 0.5, repair: -0.1 } },
+            { id: 'lisdexamph', name: 'Lisdexamfetamine', class: 'stimulant', classLabel: 'Stimulant', svg: svgPhen, minDose: 0, maxDose: 70, optimalDose: 30, doses: { low: 20, mild: 40, high: 60 }, effects: { arousal: 1.3, dampening: -0.4, chaos: 0.6, repair: -0.1 } },
+            { id: 'dexmph', name: 'Dexmethylphenidate', class: 'stimulant', classLabel: 'Stimulant', svg: svgPhen, minDose: 0, maxDose: 40, optimalDose: 15, doses: { low: 5, mild: 15, high: 30 }, effects: { arousal: 1.1, dampening: -0.2, chaos: 0.4, repair: 0.0 } },
+            { id: 'modaf', name: 'Modafinil', class: 'stimulant', classLabel: 'Eugeroic', svg: svgPhen, minDose: 0, maxDose: 400, optimalDose: 200, doses: { low: 100, mild: 200, high: 300 }, effects: { arousal: 0.8, dampening: 0.0, chaos: 0.1, repair: 0.1 } },
+            { id: 'armodaf', name: 'Armodafinil', class: 'stimulant', classLabel: 'Eugeroic', svg: svgPhen, minDose: 0, maxDose: 250, optimalDose: 150, doses: { low: 50, mild: 150, high: 250 }, effects: { arousal: 0.9, dampening: 0.0, chaos: 0.1, repair: 0.1 } },
+            { id: 'caffeine', name: 'Caffeine', class: 'stimulant', classLabel: 'Xanthine', svg: svgPhen, minDose: 0, maxDose: 800, optimalDose: 200, doses: { low: 100, mild: 200, high: 400 }, effects: { arousal: 0.6, dampening: 0.0, chaos: 0.3, repair: 0.0 } },
+            { id: 'nicotine', name: 'Nicotine', class: 'stimulant', classLabel: 'Alkaloid Stimulant', svg: svgPhen, minDose: 0, maxDose: 20, optimalDose: 2, doses: { low: 1, mild: 2, high: 6 }, effects: { arousal: 0.5, dampening: 0.1, chaos: 0.2, repair: 0.0 } },
+            
+            // Antipsychotics & Mood Stabilizers
+            { id: 'halo', name: 'Haloperidol', class: 'antipsychotic', classLabel: 'Typical Antipsychotic', svg: svgTricyclic, minDose: 0, maxDose: 10, optimalDose: 2, doses: { low: 1, mild: 2, high: 5 }, effects: { arousal: -1.0, dampening: 1.8, chaos: -0.5, repair: -0.5 } },
+            { id: 'queti', name: 'Quetiapine', class: 'antipsychotic', classLabel: 'Atypical Antipsychotic', svg: svgTricyclic, minDose: 0, maxDose: 800, optimalDose: 300, doses: { low: 100, mild: 300, high: 600 }, effects: { arousal: -0.8, dampening: 1.5, chaos: -0.3, repair: -0.2 } },
+            { id: 'arip', name: 'Aripiprazole', class: 'antipsychotic', classLabel: 'Atypical Antipsychotic', svg: svgTricyclic, minDose: 0, maxDose: 30, optimalDose: 10, doses: { low: 5, mild: 10, high: 20 }, effects: { arousal: -0.4, dampening: 1.2, chaos: -0.2, repair: 0.0 } },
+            { id: 'risper', name: 'Risperidone', class: 'antipsychotic', classLabel: 'Atypical Antipsychotic', svg: svgTricyclic, minDose: 0, maxDose: 8, optimalDose: 2, doses: { low: 1, mild: 2, high: 4 }, effects: { arousal: -0.6, dampening: 1.4, chaos: -0.3, repair: -0.1 } },
+            { id: 'olan', name: 'Olanzapine', class: 'antipsychotic', classLabel: 'Atypical Antipsychotic', svg: svgTricyclic, minDose: 0, maxDose: 20, optimalDose: 10, doses: { low: 5, mild: 10, high: 15 }, effects: { arousal: -0.7, dampening: 1.6, chaos: -0.4, repair: -0.1 } },
+            { id: 'cloz', name: 'Clozapine', class: 'antipsychotic', classLabel: 'Atypical Antipsychotic', svg: svgTricyclic, minDose: 0, maxDose: 900, optimalDose: 300, doses: { low: 100, mild: 300, high: 500 }, effects: { arousal: -0.9, dampening: 1.7, chaos: -0.6, repair: -0.3 } },
+            { id: 'lithium', name: 'Lithium', class: 'antipsychotic', classLabel: 'Mood Stabilizer', svg: svgTricyclic, minDose: 0, maxDose: 1200, optimalDose: 600, doses: { low: 300, mild: 600, high: 900 }, effects: { arousal: -0.2, dampening: 0.8, chaos: -0.7, repair: 0.4 } },
+            { id: 'lamo', name: 'Lamotrigine', class: 'antipsychotic', classLabel: 'Mood Stabilizer', svg: svgTricyclic, minDose: 0, maxDose: 400, optimalDose: 200, doses: { low: 100, mild: 200, high: 300 }, effects: { arousal: 0.0, dampening: 0.5, chaos: -0.5, repair: 0.2 } },
+            
+            // Cannabinoids & Endocannabinoid Modulators
+            { id: 'thc', name: 'Delta-9-THC', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 100, optimalDose: 10, doses: { low: 5, mild: 10, high: 25 }, effects: { arousal: 0.2, dampening: 0.5, chaos: 0.6, repair: -0.1 } },
+            { id: 'cbd', name: 'Cannabidiol (CBD)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 1500, optimalDose: 300, doses: { low: 50, mild: 300, high: 800 }, effects: { arousal: -0.2, dampening: 0.6, chaos: -0.4, repair: 0.1 } },
+            { id: 'delta8', name: 'Delta-8-THC', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 100, optimalDose: 25, doses: { low: 10, mild: 25, high: 50 }, effects: { arousal: 0.1, dampening: 0.7, chaos: 0.3, repair: 0.0 } },
+            { id: 'hhc', name: 'HHC (Hexahydrocannabinol)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 100, optimalDose: 20, doses: { low: 10, mild: 20, high: 40 }, effects: { arousal: 0.15, dampening: 0.6, chaos: 0.4, repair: -0.05 } },
+            { id: 'cbga', name: 'CBGA (Cannabigerolic acid)', class: 'cannabinoid', classLabel: 'Cannabinoid Precursor', svg: svgCannabinoid, minDose: 0, maxDose: 1000, optimalDose: 150, doses: { low: 50, mild: 150, high: 300 }, effects: { arousal: 0.0, dampening: 0.3, chaos: -0.1, repair: 0.2 } },
+            { id: 'cbn', name: 'Cannabinol (CBN)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 50, optimalDose: 10, doses: { low: 5, mild: 10, high: 20 }, effects: { arousal: -0.4, dampening: 0.9, chaos: -0.1, repair: 0.0 } },
+            { id: 'cbg', name: 'Cannabigerol (CBG)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 150, optimalDose: 25, doses: { low: 10, mild: 25, high: 50 }, effects: { arousal: 0.1, dampening: 0.4, chaos: -0.2, repair: 0.3 } },
+            { id: 'thcv', name: 'Tetrahydrocannabivarin (THCV)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 50, optimalDose: 10, doses: { low: 5, mild: 10, high: 20 }, effects: { arousal: 0.5, dampening: 0.1, chaos: 0.1, repair: 0.0 } },
+            { id: 'cbdv', name: 'Cannabidivarin (CBDV)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 800, optimalDose: 100, doses: { low: 25, mild: 100, high: 200 }, effects: { arousal: -0.1, dampening: 0.4, chaos: -0.3, repair: 0.2 } },
+            { id: 'thcp', name: 'THC-P (Tetrahydrocannabiphorol)', class: 'cannabinoid', classLabel: 'Potent Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 10, optimalDose: 2, doses: { low: 1, mild: 2, high: 4 }, effects: { arousal: 0.3, dampening: 0.7, chaos: 0.8, repair: -0.2 } },
+            { id: 'thco', name: 'THC-O-Acetate', class: 'cannabinoid', classLabel: 'Synthetic Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 50, optimalDose: 15, doses: { low: 5, mild: 15, high: 25 }, effects: { arousal: 0.4, dampening: 0.8, chaos: 1.0, repair: -0.3 } },
+            { id: 'delta10', name: 'Delta-10-THC', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 100, optimalDose: 30, doses: { low: 15, mild: 30, high: 60 }, effects: { arousal: 0.25, dampening: 0.4, chaos: 0.35, repair: -0.05 } },
+            { id: 'cbc', name: 'Cannabichromene (CBC)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 100, optimalDose: 20, doses: { low: 10, mild: 20, high: 50 }, effects: { arousal: 0.0, dampening: 0.4, chaos: -0.1, repair: 0.2 } },
+            { id: 'cbl', name: 'Cannabicyclol (CBL)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 50, optimalDose: 10, doses: { low: 5, mild: 10, high: 25 }, effects: { arousal: -0.1, dampening: 0.5, chaos: 0.0, repair: 0.1 } },
+            { id: 'cbdp', name: 'Cannabidiphorol (CBDP)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, minDose: 0, maxDose: 50, optimalDose: 10, doses: { low: 5, mild: 10, high: 20 }, effects: { arousal: -0.3, dampening: 0.8, chaos: -0.2, repair: 0.2 } },
+            
+            // Depressants / Benzos / Gabapentinoids / Z-Drugs
+            { id: 'alpraz', name: 'Alprazolam', class: 'depressant', classLabel: 'Benzodiazepine', svg: svgTricyclic, minDose: 0, maxDose: 4, optimalDose: 1, doses: { low: 0.25, mild: 1, high: 2 }, effects: { arousal: -1.2, dampening: 1.4, chaos: -0.6, repair: -0.3 } },
+            { id: 'clonaz', name: 'Clonazepam', class: 'depressant', classLabel: 'Benzodiazepine', svg: svgTricyclic, minDose: 0, maxDose: 4, optimalDose: 1, doses: { low: 0.5, mild: 1, high: 2 }, effects: { arousal: -1.0, dampening: 1.3, chaos: -0.5, repair: -0.2 } },
+            { id: 'diaz', name: 'Diazepam', class: 'depressant', classLabel: 'Benzodiazepine', svg: svgTricyclic, minDose: 0, maxDose: 40, optimalDose: 10, doses: { low: 2, mild: 10, high: 20 }, effects: { arousal: -0.9, dampening: 1.2, chaos: -0.4, repair: -0.1 } },
+            { id: 'loraz', name: 'Lorazepam', class: 'depressant', classLabel: 'Benzodiazepine', svg: svgTricyclic, minDose: 0, maxDose: 6, optimalDose: 2, doses: { low: 0.5, mild: 2, high: 4 }, effects: { arousal: -1.1, dampening: 1.3, chaos: -0.5, repair: -0.2 } },
+            { id: 'pregab', name: 'Pregabalin', class: 'depressant', classLabel: 'Gabapentinoid', svg: svgPhen, minDose: 0, maxDose: 600, optimalDose: 150, doses: { low: 50, mild: 150, high: 300 }, effects: { arousal: -0.6, dampening: 0.9, chaos: -0.3, repair: 0.1 } },
+            { id: 'gaba', name: 'Gabapentin', class: 'depressant', classLabel: 'Gabapentinoid', svg: svgPhen, minDose: 0, maxDose: 3600, optimalDose: 900, doses: { low: 300, mild: 900, high: 1800 }, effects: { arousal: -0.5, dampening: 0.8, chaos: -0.2, repair: 0.0 } },
+            { id: 'zolp', name: 'Zolpidem', class: 'depressant', classLabel: 'Z-Drug', svg: svgTricyclic, minDose: 0, maxDose: 20, optimalDose: 10, doses: { low: 5, mild: 10, high: 15 }, effects: { arousal: -1.5, dampening: 1.6, chaos: 0.2, repair: -0.4 } },
+            { id: 'zopic', name: 'Zopiclone', class: 'depressant', classLabel: 'Z-Drug', svg: svgTricyclic, minDose: 0, maxDose: 15, optimalDose: 7.5, doses: { low: 3.75, mild: 7.5, high: 10 }, effects: { arousal: -1.4, dampening: 1.5, chaos: 0.1, repair: -0.3 } },
+            { id: 'alc', name: 'Ethanol (Alcohol)', class: 'depressant', classLabel: 'GABAergic', svg: svgPhen, minDose: 0, maxDose: 100, optimalDose: 30, doses: { low: 15, mild: 30, high: 60 }, effects: { arousal: -0.5, dampening: 1.0, chaos: 1.2, repair: -0.8 } }, // grams
+            
+            // Acetylcholine, NMDA & Other
+            { id: 'donepezil', name: 'Donepezil', class: 'stimulant', classLabel: 'AChEI', svg: svgTricyclic, minDose: 0, maxDose: 23, optimalDose: 10, doses: { low: 5, mild: 10, high: 15 }, effects: { arousal: 0.4, dampening: 0.0, chaos: -0.1, repair: 0.2 } },
+            { id: 'memantine', name: 'Memantine', class: 'depressant', classLabel: 'NMDA Antagonist', svg: svgTricyclic, minDose: 0, maxDose: 28, optimalDose: 10, doses: { low: 5, mild: 10, high: 20 }, effects: { arousal: -0.1, dampening: 0.3, chaos: -0.2, repair: 0.3 } },
+            { id: 'dextro', name: 'Dextromethorphan (DXM)', class: 'depressant', classLabel: 'NMDA Antagonist', svg: svgTricyclic, minDose: 0, maxDose: 600, optimalDose: 150, doses: { low: 30, mild: 150, high: 300 }, effects: { arousal: 0.1, dampening: 0.6, chaos: 0.9, repair: 0.1 } }
+        ];
+
+        let currentStack = [];
+
+        function populateMolecules() {
+            const classFilter = document.getElementById('class-select').value;
+            const searchQuery = (document.getElementById('mol-search') ? document.getElementById('mol-search').value.toLowerCase() : '');
+            const select = document.getElementById('mol-select');
+            select.innerHTML = '';
+            
+            const filtered = molecules.filter(m => {
+                const matchClass = classFilter === 'all' || m.class === classFilter;
+                const matchSearch = m.name.toLowerCase().includes(searchQuery) || m.classLabel.toLowerCase().includes(searchQuery);
+                return matchClass && matchSearch;
+            });
+                
+            filtered.forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = m.id;
+                opt.textContent = m.name;
+                select.appendChild(opt);
+            });
+        }
+
+        function addToStack() {
+            if (currentStack.length >= 10) {
+                alert("Maximum stack size (10) reached to prevent fatal simulated toxicity.");
+                return;
+            }
+            
+            const id = document.getElementById('mol-select').value;
+            const mol = molecules.find(m => m.id === id);
+            
+            if (mol) {
+                currentStack.push({ ...mol, currentDose: mol.optimalDose });
+                renderStack();
+                updateSimulation();
+            }
+        }
+
+        function removeFromStack(index) {
+            currentStack.splice(index, 1);
+            renderStack();
+            updateSimulation();
+        }
+
+        function renderStack() {
+            const list = document.getElementById('stack-list');
+            document.getElementById('stack-count').innerText = currentStack.length + '/10';
+            
+            if (currentStack.length === 0) {
+                list.innerHTML = `
+                    <div id="empty-stack" class="h-full flex flex-col items-center justify-center text-center opacity-50 py-10">
+                        <svg viewBox="0 0 24 24" class="w-10 h-10 mb-2 opacity-50" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2L20 6.5V17.5L12 22L4 17.5V6.5L12 2Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                            <circle cx="12" cy="12" r="3" fill="currentColor"/>
+                        </svg>
+                        <p class="text-xs font-medium text-slate-500">Stack is empty.</p>
+                        <p class="text-[10px] text-slate-400 mt-1 max-w-[200px]">Add molecules above to simulate neurological interactions.</p>
+                    </div>`;
+                return;
+            }
+            
+            list.innerHTML = '';
+            currentStack.forEach((mol, idx) => {
+                const isNovel = mol.class === 'novel';
+                const colorClass = isNovel ? 'text-indigo-600' : 'text-slate-600';
+                const bgClass = isNovel ? 'bg-indigo-50 border-indigo-200' : 'bg-white border-slate-200';
+                
+                list.innerHTML += `
+                    <div class="stack-item flex flex-col p-3 rounded-xl border ${bgClass} shadow-sm gap-2">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 flex-none opacity-80 ${colorClass}">
+                                    ${mol.svg}
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-xs text-slate-900">${mol.name}</h4>
+                                    <p class="text-[9px] uppercase tracking-widest font-bold ${colorClass}">${mol.classLabel}</p>
+                                </div>
+                            </div>
+                            <button onclick="removeFromStack(${idx})" class="text-slate-400 hover:text-red-500 p-1 self-start">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            </button>
+                        </div>
+                        <div class="flex flex-col gap-2 w-full px-1 mt-1 border-t border-slate-100 pt-2">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[9px] font-bold text-slate-400 uppercase">Presets</span>
+                                <div class="flex gap-1">
+                                    <button onclick="updateStackDoseUI(${idx}, ${mol.doses.low})" class="px-2 py-0.5 text-[9px] font-bold rounded bg-slate-100 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">Low</button>
+                                    <button onclick="updateStackDoseUI(${idx}, ${mol.doses.mild})" class="px-2 py-0.5 text-[9px] font-bold rounded bg-slate-100 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">Mild</button>
+                                    <button onclick="updateStackDoseUI(${idx}, ${mol.doses.high})" class="px-2 py-0.5 text-[9px] font-bold rounded bg-slate-100 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">High</button>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3 w-full">
+                                <span class="text-[9px] font-bold text-slate-400 uppercase w-8">Dose</span>
+                                <input type="range" id="slider-${idx}" min="${mol.minDose}" max="${mol.maxDose}" value="${mol.currentDose}" class="flex-grow h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-500" oninput="updateStackDose(${idx}, this.value)">
+                                <span class="text-[10px] font-mono font-bold text-slate-600 w-12 text-right" id="dose-val-${idx}">${mol.currentDose} mg</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        
+        function updateStackDoseUI(index, val) {
+            const slider = document.getElementById(`slider-${index}`);
+            if (slider) slider.value = val;
+            updateStackDose(index, val);
+        }
+        function updateStackDose(index, val) {
+            currentStack[index].currentDose = parseFloat(val);
+            document.getElementById(`dose-val-${index}`).innerText = val + ' mg';
+            updateSimulation();
+        }
+
+        // --- Three.js Simulation Logic ---
+        let scene, camera, renderer, controls, lobeGroup, edgeGroup, particleSystem, packetSystem;
+        let baseNodes = [];
+        let edges = [];
+        let signalPackets = [];
+        let raycaster = new THREE.Raycaster();
+        let mouse = new THREE.Vector2();
+        let hoveredNode = null;
+        let selectedNode = null;
+        
+        let currentVectors = { arousal: 0, dampening: 0, chaos: 0, repair: 0 };
+
+        function init3D() {
             const container = document.getElementById('canvas-container');
-
             scene = new THREE.Scene();
-            scene.fog = new THREE.FogExp2(0x050816, 0.002);
+            scene.fog = new THREE.FogExp2(0x030008, 0.001);
 
-            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 2000);
-            camera.position.set(0, 0, 400);
+            let cw = container.clientWidth || 800;
+            let ch = container.clientHeight || 500;
+
+            camera = new THREE.PerspectiveCamera(50, cw / ch, 0.1, 1500);
+            camera.position.set(0, 80, 200);
 
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(cw, ch);
             renderer.setPixelRatio(window.devicePixelRatio);
-            renderer.setSize(window.innerWidth, window.innerHeight);
             container.appendChild(renderer.domElement);
 
             controls = new THREE.OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
-            controls.dampingFactor = 0.05;
             controls.autoRotate = true;
-            controls.autoRotateSpeed = 1.0;
+            controls.autoRotateSpeed = 0.5;
 
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-            scene.add(ambientLight);
-            const pointLight = new THREE.PointLight(0x9333EA, 1);
-            pointLight.position.set(200, 200, 200);
-            scene.add(pointLight);
+            lobeGroup = new THREE.Group();
+            edgeGroup = new THREE.Group();
+            scene.add(lobeGroup, edgeGroup);
 
-            scene.add(currentEdgesGroup);
-            scene.add(currentCliquesGroup);
-
-            fetch('data/pharma_projection.json')
-                .then(response => response.json())
-                .then(data => {
-                    nodesData = data.nodes;
-                    preEdges = data.states.pre_treatment.edges;
-                    postEdges = data.states.post_treatment.edges;
-                    postCliques = data.states.post_treatment.cliques;
-                    buildNodes();
-                    buildEdges(preEdges);
-                    animate();
-                })
-                .catch(err => console.error('Error loading topological data:', err));
-
-            window.addEventListener('resize', onWindowResize);
-
-            document.getElementById('inject-btn').addEventListener('click', toggleTreatment);
-        }
-
-        function buildNodes() {
-            const geometry = new THREE.SphereGeometry(2, 16, 16);
-            nodesData.forEach(node => {
-                const material = new THREE.MeshStandardMaterial({ 
-                    color: new THREE.Color(node.color),
-                    emissive: new THREE.Color(node.color),
-                    emissiveIntensity: 0.5,
-                    roughness: 0.2
-                });
-                const sphere = new THREE.Mesh(geometry, material);
-                sphere.position.set(node.x, node.y, node.z);
-                scene.add(sphere);
-                nodeObjects[node.id] = sphere;
-            });
-        }
-
-        function buildEdges(edgesData) {
-            while(currentEdgesGroup.children.length > 0){ 
-                currentEdgesGroup.remove(currentEdgesGroup.children[0]); 
-            }
+            // Generate Ellipsoid Brain
+            const numNodes = 120;
+            const a = 40, b = 30, c = 50;
+            const lobeGeo = new THREE.SphereGeometry(3, 16, 16);
             
-            const material = new THREE.LineBasicMaterial({ 
-                color: 0xffffff, 
-                transparent: true, 
-                opacity: 0.15 
-            });
-
-            const geometry = new THREE.BufferGeometry();
-            const positions = [];
-
-            edgesData.forEach(edge => {
-                const sourceNode = nodeObjects[edge.source];
-                const targetNode = nodeObjects[edge.target];
-                if(sourceNode && targetNode) {
-                    positions.push(sourceNode.position.x, sourceNode.position.y, sourceNode.position.z);
-                    positions.push(targetNode.position.x, targetNode.position.y, targetNode.position.z);
+            for (let i = 0; i < numNodes; i++) {
+                let x, y, z;
+                while (true) {
+                    x = (Math.random() - 0.5) * 2 * a;
+                    y = (Math.random() - 0.5) * 2 * b;
+                    z = (Math.random() - 0.5) * 2 * c;
+                    if ((x/a)**2 + (y/b)**2 + (z/c)**2 <= 1 && Math.abs(x) > 3) break;
                 }
-            });
 
-            geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-            const lines = new THREE.LineSegments(geometry, material);
-            currentEdgesGroup.add(lines);
-        }
+                let baseColor = 0x8b5cf6; // Default (Purple)
+                if (z < -20) baseColor = 0xf43f5e; // Visual Cortex (Rose)
+                else if (y > 15 && z >= -20 && z <= 20) baseColor = 0x10b981; // Somatomotor (Emerald)
+                else if (y < 0 && z >= -20 && z <= 20) baseColor = 0xf59e0b; // Limbic / Ventral Attn (Amber)
+                else if (z > 20) baseColor = 0x818cf8; // Frontal / Control (Indigo)
 
-        function buildCliques(cliquesData) {
-            while(currentCliquesGroup.children.length > 0){ 
-                currentCliquesGroup.remove(currentCliquesGroup.children[0]); 
+                const mat = new THREE.MeshPhongMaterial({ color: baseColor, emissive: baseColor, emissiveIntensity: 0.3, transparent: true, opacity: 0.9, shininess: 100 });
+                const mesh = new THREE.Mesh(lobeGeo, mat);
+                mesh.position.set(x, y, z);
+                mesh.userData = { origin: new THREE.Vector3(x, y, z), id: i, baseColor: baseColor };                baseNodes.push(mesh);
+                lobeGroup.add(mesh);
             }
 
-            cliquesData.forEach(clique => {
-                if (clique.length < 3) return;
-                
-                const geometry = new THREE.BufferGeometry();
-                const positions = [];
-                const centerNode = nodeObjects[clique[0]];
-                
-                for(let i = 1; i < clique.length - 1; i++) {
-                    const n1 = nodeObjects[clique[i]];
-                    const n2 = nodeObjects[clique[i+1]];
-                    positions.push(centerNode.position.x, centerNode.position.y, centerNode.position.z);
-                    positions.push(n1.position.x, n1.position.y, n1.position.z);
-                    positions.push(n2.position.x, n2.position.y, n2.position.z);
-                }
-                
-                geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-                geometry.computeVertexNormals();
-                
-                const material = new THREE.MeshBasicMaterial({
-                    color: 0x9333EA,
-                    transparent: true,
-                    opacity: 0.05,
-                    side: THREE.DoubleSide,
-                    wireframe: false
-                });
-                
-                const mesh = new THREE.Mesh(geometry, material);
-                currentCliquesGroup.add(mesh);
-            });
-        }
-
-        function toggleTreatment() {
-            const btn = document.getElementById('inject-btn');
-            const status = document.getElementById('status');
-            const stateText = document.getElementById('state-text');
+            // Generate edges and signal packets
+            const edgeMat = new THREE.LineBasicMaterial({ color: 0x6366f1, transparent: true, opacity: 0.15 });
+            let packetPos = [];
             
-            isTreated = !isTreated;
-            
-            if(isTreated) {
-                btn.innerText = "Revert Treatment";
-                status.innerText = "11D CLIQUES RESTORED";
-                status.className = "status-responsive";
-                if (stateText) stateText.innerHTML = "<strong>Current State:</strong> Healthy (11D Topology)";
-                
-                buildEdges(postEdges);
-                buildCliques(postCliques);
-                
-                controls.autoRotateSpeed = 5.0;
-                setTimeout(() => { controls.autoRotateSpeed = 1.0; }, 2000);
-
-            } else {
-                btn.innerText = "Inject Simulated Agonist";
-                status.innerText = "TOPOLOGY COLLAPSED";
-                status.className = "status-resistant";
-                if (stateText) stateText.innerHTML = "<strong>Current State:</strong> Treatment-Resistant (1D Collapse)";
-                
-                buildEdges(preEdges);
-                while(currentCliquesGroup.children.length > 0){ 
-                    currentCliquesGroup.remove(currentCliquesGroup.children[0]); 
+            for (let i = 0; i < numNodes; i++) {
+                for (let j = i + 1; j < numNodes; j++) {
+                    const dist = baseNodes[i].position.distanceTo(baseNodes[j].position);
+                    if (dist < 15 && Math.random() > 0.3) {
+                        const geo = new THREE.BufferGeometry().setFromPoints([baseNodes[i].position, baseNodes[j].position]);
+                        const line = new THREE.Line(geo, edgeMat);
+                        line.userData = { source: i, target: j, baseOpacity: 0.15 };
+                        edges.push(line);
+                        edgeGroup.add(line);
+                        
+                        // Spawn a signal packet on 40% of the edges
+                        if (Math.random() > 0.6) {
+                            signalPackets.push({
+                                start: baseNodes[i].position.clone(),
+                                end: baseNodes[j].position.clone(),
+                                speed: 0.005 + Math.random() * 0.015,
+                                t: Math.random()
+                            });
+                            packetPos.push(0, 0, 0); // Placeholder coordinate
+                        }
+                    }
                 }
             }
+            
+            const packetGeo = new THREE.BufferGeometry();
+            packetGeo.setAttribute('position', new THREE.Float32BufferAttribute(packetPos, 3));
+            const packetMat = new THREE.PointsMaterial({ color: 0x38bdf8, size: 1.5, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending });
+            packetSystem = new THREE.Points(packetGeo, packetMat);
+            scene.add(packetSystem);
+
+            // Lights
+            scene.add(new THREE.AmbientLight(0x150830));
+            const mainLight = new THREE.PointLight(0x8b5cf6, 2, 500);
+            mainLight.position.set(50, 100, 100);
+            scene.add(mainLight);
+
+            window.addEventListener('resize', () => {
+                let cw = container.clientWidth || 800;
+                let ch = container.clientHeight || 500;
+                camera.aspect = cw / ch;
+                camera.updateProjectionMatrix();
+                renderer.setSize(cw, ch);
+            });
+
+            animate();
         }
 
-        function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
+        function updateSimulation() {
+            const stimulus = document.getElementById('stimulus-mode').value;
+            
+            // Baseline Stimulus Modifiers
+            let stimMod = { arousal: 0, dampening: 0, chaos: 0, repair: 0 };
+            if (stimulus === 'react') { stimMod = { arousal: 1.5, dampening: -0.5, chaos: 1.2, repair: -0.5 }; }
+            else if (stimulus === 'cognitive') { stimMod = { arousal: 0.8, dampening: 0.5, chaos: 0.1, repair: 0.2 }; }
+            else if (stimulus === 'sleep') { stimMod = { arousal: -1.0, dampening: 1.8, chaos: -0.5, repair: 0.8 }; }
+
+            // Calculate Net Vectors based on dosage
+            let net = { arousal: stimMod.arousal, dampening: stimMod.dampening, chaos: stimMod.chaos, repair: stimMod.repair };
+            
+            let classCounts = { ssri: 0, stimulant: 0, depressant: 0, antipsychotic: 0, cannabinoid: 0, novel: 0 };
+            
+            currentStack.forEach(mol => {
+                const ratio = mol.currentDose / mol.optimalDose;
+                const overDose = Math.max(0, ratio - 1);
+                
+                classCounts[mol.class] = (classCounts[mol.class] || 0) + ratio;
+                
+                // Scale baseline effects
+                net.arousal += mol.effects.arousal * Math.min(1, ratio);
+                net.dampening += mol.effects.dampening * Math.min(1, ratio);
+                net.repair += mol.effects.repair * Math.min(1, ratio);
+                net.chaos += mol.effects.chaos * Math.min(1, ratio);
+                
+                // Overdose toxicity penalties
+                if (overDose > 0) {
+                    if (mol.class === 'stimulant' || mol.class === 'novel' && mol.effects.arousal > 0) {
+                        net.chaos += overDose * 1.5;
+                        net.arousal += overDose * 0.5;
+                        net.repair -= overDose * 0.5;
+                    } else if (mol.class === 'antipsychotic' || mol.class === 'depressant' || mol.class === 'ssri') {
+                        net.dampening += overDose * 2.0; // severe rigidity
+                        net.chaos += overDose * 0.5;
+                        net.repair -= overDose * 0.5;
+                    } else {
+                        net.chaos += overDose * 1.0;
+                        net.repair -= overDose * 0.5;
+                    }
+                }
+            });
+            
+            // --- Non-Linear Overlapping (Drug-Drug Interactions) ---
+            
+            // 1. Synergistic Dampening (CNS Depression Overlap)
+            // e.g. mixing multiple Benzos, or Benzo + Antipsychotic
+            if (classCounts.depressant > 0 && (classCounts.antipsychotic > 0 || classCounts.depressant > 1)) {
+                const overlapMod = 1.5 * (classCounts.depressant * (classCounts.antipsychotic || classCounts.depressant));
+                net.dampening += overlapMod;
+                net.chaos += overlapMod * 0.3; // confusion / memory loss
+                net.repair -= overlapMod * 0.4;
+            }
+            
+            // 2. Serotonin Syndrome / Severe Stimulant Toxicity Overlap
+            if ((classCounts.ssri > 0 && classCounts.stimulant > 0) || classCounts.stimulant > 1.5 || classCounts.ssri > 1.5) {
+                const overlapMod = 2.0 * ((classCounts.ssri || 1) * (classCounts.stimulant || 1));
+                net.arousal += overlapMod * 0.8;
+                net.chaos += overlapMod * 1.2; // severe jitter/toxicity
+                net.repair -= overlapMod * 0.8;
+            }
+            
+            // 3. Cannabinoid Hyper-emesis / Anxiety Overlap
+            // THC + other cannabinoids multiply chaos if high, but CBD buffers it slightly
+            if (classCounts.cannabinoid > 1) {
+                 net.chaos += (classCounts.cannabinoid - 1) * 0.4;
+                 net.dampening += (classCounts.cannabinoid - 1) * 0.2;
+            }
+            
+            // 4. Novel Precision Synergies
+            if (classCounts.novel > 0 && classCounts.ssri > 0) {
+                 // SSRIs blunt the efficacy of classical psychedelics / novel 5-HT2A agonists
+                 net.repair = Math.max(0, net.repair - (classCounts.ssri * 1.0));
+                 net.arousal = Math.max(0, net.arousal - (classCounts.ssri * 0.5));
+            }
+            
+            currentVectors = net;
+            
+            document.getElementById('net-arousal').innerText = (net.arousal > 0 ? '+' : '') + net.arousal.toFixed(1);
+            document.getElementById('net-dampening').innerText = (net.dampening > 0 ? '+' : '') + net.dampening.toFixed(1);
+            document.getElementById('net-chaos').innerText = (net.chaos > 0 ? '+' : '') + net.chaos.toFixed(1);
+            document.getElementById('net-repair').innerText = (net.repair > 0 ? '+' : '') + net.repair.toFixed(1);
+            
+            // Determine State
+            let label = "Baseline State";
+            let desc = "Normal oscillatory dynamics.";
+            let sync = 0.88;
+            
+            if (currentStack.length > 0) {
+                if ((classCounts.ssri > 0 && classCounts.stimulant > 0) || classCounts.stimulant > 2.0 || classCounts.ssri > 2.0) {
+                    label = "Toxicity (Serotonin/Stimulant)";
+                    desc = "Dangerous overlapping toxicity. Severe chaotic structural fragmentation detected.";
+                    sync = 0.10;
+                } else if (classCounts.depressant > 0 && classCounts.antipsychotic > 0) {
+                    label = "Severe CNS Depression";
+                    desc = "Overlapping dampening effects have dangerously suppressed global network amplitude.";
+                    sync = 0.20;
+                } else if (net.repair > 1.0 && net.chaos <= 0) {
+                    label = "Topological Optimization";
+                    desc = "Precision compounds are expanding Arnold Tongues, locking high-dimensional cliques safely.";
+                    sync = 0.95;
+                } else if (net.dampening > 2.0 && net.arousal <= 0) {
+                    label = "Severe Rigidity / Sedation";
+                    desc = "Excessive dampening has frozen the network, destroying functional variance.";
+                    sync = 0.30;
+                } else if (net.arousal > 2.0 || net.chaos > 1.5) {
+                    label = "Hyper-Arousal Toxicity";
+                    desc = "Dangerous over-stimulation. Cliques are shattering into chaotic low-dimensional fragments.";
+                    sync = 0.15;
+                } else if (net.arousal > 0.5 && net.dampening > 0.5 && net.chaos > 0.5) {
+                    label = "Polypharmacy Conflict";
+                    desc = "Competing mechanisms are creating uncoordinated signal propagation and localized noise.";
+                    sync = 0.55;
+                } else if (net.dampening > 0.5) {
+                    label = "Global Suppression";
+                    desc = "Network amplitude is blunted globally. Topologies are preserved but sluggish.";
+                    sync = 0.70;
+                } else if (net.arousal > 0.5) {
+                    label = "Upregulated State";
+                    desc = "Network firing rates increased. Potential narrowing of therapeutic window.";
+                    sync = 0.80;
+                }
+            }
+
+            document.getElementById('brain-state-label').innerText = label + ' [' + stimulus.toUpperCase() + ']';
+            document.getElementById('brain-state-desc').innerText = desc;
+            
+            const syncScore = Math.max(0.05, Math.min(1.0, sync + (Math.random()*0.02 - 0.01)));
+            document.getElementById('sync-score').innerText = syncScore.toFixed(2) + ' r';
+            
+            const bar = document.getElementById('sync-bar');
+            bar.style.width = (syncScore * 100) + '%';
+            if (syncScore > 0.8) bar.className = 'h-full bg-emerald-500 transition-all duration-300';
+            else if (syncScore > 0.5) bar.className = 'h-full bg-amber-500 transition-all duration-300';
+            else bar.className = 'h-full bg-rose-500 transition-all duration-300';
         }
 
         function animate() {
             requestAnimationFrame(animate);
             controls.update();
+            const time = Date.now() * 0.001;
+
+            const v = currentVectors;
+
+            const speed = Math.max(0.5, 4 + v.arousal * 2 - v.dampening * 1.5);
+            const scaleBase = Math.max(0.1, 1.0 + v.arousal * 0.2 - v.dampening * 0.4 + v.repair * 0.3);
+            const jitterBase = Math.max(0, v.chaos * 6 + Math.max(0, v.arousal - 1.5) * 4);
+
+            baseNodes.forEach((node, i) => {
+                const dist = node.userData.origin.length();
+                const wave = Math.sin(dist * 0.05 - time * speed);
+                
+                // Position
+                let jx = (Math.random() - 0.5) * jitterBase;
+                let jy = (Math.random() - 0.5) * jitterBase;
+                let jz = (Math.random() - 0.5) * jitterBase;
+                
+                // Wave movement (dampened if rigid)
+                let waveMod = wave * Math.max(0, (10 - v.dampening * 3));
+                
+                node.position.x = node.userData.origin.x + jx;
+                node.position.y = node.userData.origin.y + jy + waveMod;
+                node.position.z = node.userData.origin.z + jz;
+                
+                // Scale
+                node.scale.setScalar(Math.max(0.1, scaleBase + wave * 0.2));
+                
+                // Color & Emissive
+                let targetColor = new THREE.Color(node.userData.baseColor); // Base regional color
+                if (v.repair > 0.5 && v.chaos <= 0) targetColor.setHex(0xfcd34d); // Gold repair
+                else if (v.dampening > 1.0) targetColor.setHex(0x475569); // Slate grey rigid
+                else if (v.chaos > 0.5 || v.arousal > 2.0) targetColor.setHex(0xef4444); // Red toxic
+                
+                node.material.color.lerp(targetColor, 0.1);
+                
+                let emissiveInt = 0.3;
+                if (v.repair > 0) emissiveInt = 0.6;
+                if (v.dampening > 1) emissiveInt = 0.1;
+                if (v.chaos > 1) emissiveInt = 1.5;
+                node.material.emissiveIntensity = emissiveInt + wave*0.2;
+            });
+
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(lobeGroup.children);
+            if (intersects.length > 0) {
+                hoveredNode = intersects[0].object;
+                document.body.style.cursor = 'pointer';
+            } else {
+                hoveredNode = null;
+                document.body.style.cursor = 'default';
+            }
+            
+            if (selectedNode) {
+                document.getElementById('insp-power').innerText = (selectedNode.scale.x * 100).toFixed(0) + '%';
+                
+                const stateEl = document.getElementById('insp-state');
+                let nodeState = 'Baseline Alignment';
+                let stateColor = 'text-indigo-400';
+                
+                if (currentStack.length > 0) {
+                    if (v.repair > 1.0 && v.chaos <= 0) { nodeState = 'Optimized'; stateColor = 'text-amber-400'; }
+                    else if (v.dampening > 2.0 && v.arousal <= 0) { nodeState = 'Frozen / Suppressed'; stateColor = 'text-slate-500'; }
+                    else if (v.arousal > 2.0 || v.chaos > 1.5) { nodeState = 'Hyper-Aroused (Toxic)'; stateColor = 'text-rose-500'; }
+                    else if (v.arousal > 0.5 && v.dampening > 0.5 && v.chaos > 0.5) { nodeState = 'Conflicted Signal'; stateColor = 'text-amber-500'; }
+                    else if (v.dampening > 0.5) { nodeState = 'Dampened'; stateColor = 'text-slate-400'; }
+                    else if (v.arousal > 0.5) { nodeState = 'Upregulated'; stateColor = 'text-sky-400'; }
+                }
+                
+                stateEl.innerText = nodeState;
+                stateEl.className = `font-bold ${stateColor}`;
+            }
+
+            // Edge flickering based on chaos/dampening + selection highlight
+            edges.forEach(edge => {
+                const isSelected = selectedNode && (edge.userData.source === selectedNode.userData.id || edge.userData.target === selectedNode.userData.id);
+                
+                if (isSelected) {
+                    edge.visible = true;
+                    edge.material.color.setHex(0x38bdf8);
+                    edge.material.opacity = 0.8;
+                } else if (v.dampening > 1.5) {
+                    edge.visible = false;
+                } else if (v.chaos > 0.5) {
+                    edge.visible = Math.random() > 0.5;
+                    edge.material.color.setHex(0xef4444);
+                    edge.material.opacity = selectedNode ? 0.05 : 0.15;
+                } else {
+                    edge.visible = true;
+                    edge.material.color.lerp(new THREE.Color(v.repair > 0.5 ? 0xf59e0b : 0x6366f1), 0.1);
+                    edge.material.opacity = selectedNode ? 0.05 : 0.15;
+                }
+            });
+
+            // Animate Signal Packets (Real-time connection flow)
+            if (packetSystem && signalPackets.length > 0) {
+                const positions = packetSystem.geometry.attributes.position.array;
+                const packetSpeed = Math.max(0.5, 4 + v.arousal * 2 - v.dampening * 1.5) * 0.01;
+                let activePackets = 0;
+                signalPackets.forEach((p, i) => {
+                    if (v.dampening > 1.5 || v.chaos > 1.0) {
+                        // Suppress packets if highly dampened or chaotic
+                        positions[i*3] = 0; positions[i*3+1] = 0; positions[i*3+2] = 0;
+                    } else {
+                        activePackets++;
+                        p.t += p.speed * packetSpeed;
+                        if (p.t > 1) p.t = 0;
+                        const curPos = new THREE.Vector3().lerpVectors(p.start, p.end, p.t);
+                        positions[i*3] = curPos.x;
+                        positions[i*3+1] = curPos.y;
+                        positions[i*3+2] = curPos.z;
+                    }
+                });
+                packetSystem.geometry.attributes.position.needsUpdate = true;
+                packetSystem.material.opacity = (activePackets > 0) ? (0.8 + Math.sin(time*2) * 0.2) : 0;
+            }
+
             renderer.render(scene, camera);
         }
+
+        let assistantRecommendations = [];
+
+        function runAssistant() {
+            const weight = parseFloat(document.getElementById('patient-weight').value) || 70;
+            const tolerance = parseFloat(document.getElementById('patient-tolerance').value) || 1.0;
+            const targetState = document.getElementById('target-state').value;
+
+            const feedbackBox = document.getElementById('assistant-feedback');
+            assistantRecommendations = [];
+
+            if (currentStack.length === 0) {
+                feedbackBox.innerHTML = '<p class="italic text-slate-400 text-center mt-10">Add molecules to your stack to generate theoretical interaction insights.</p>';
+                return;
+            }
+
+            let html = '<ul class="space-y-4">';
+
+            const patientMultiplier = (weight / 70) * tolerance;
+            const targets = {
+                baseline: { arousal: [0, 0.4], dampening: [0, 0.4], chaos: [0, 0.5], repair: [0, 2] },
+                focus: { arousal: [0.8, 1.4], dampening: [0, 0.3], chaos: [0, 0.5], repair: [0, 2] },
+                relaxation: { arousal: [0, 0.3], dampening: [0.5, 1.0], chaos: [0, 0.5], repair: [0, 2] },
+                sleep: { arousal: [0, 0.2], dampening: [1.2, 2.0], chaos: [0, 0.5], repair: [0, 2] },
+                creative: { arousal: [0.3, 0.8], dampening: [0, 0.3], chaos: [0.5, 1.2], repair: [0.5, 2] }
+            };
+            const t = targets[targetState];
+            
+            // 1. Analyze and Recalculate based on Target State
+            let aligned = true;
+            let prescriptions = [];
+            
+            currentStack.forEach(mol => {
+                let recommendedDose = Math.round(mol.optimalDose * patientMultiplier);
+                let molStatus = 'Neutral';
+                let molColor = 'text-slate-500';
+                
+                // Determine if molecule is inhibiting or synergizing with the target state
+                const isStimulant = mol.effects.arousal > 0.5;
+                const isDepressant = mol.effects.dampening > 0.5;
+                const isPsychedelic = mol.effects.chaos > 0.5;
+                
+                if (targetState === 'sleep' || targetState === 'relaxation') {
+                    if (isStimulant || isPsychedelic) {
+                        recommendedDose = 0; // Inhibit
+                        molStatus = 'Inhibiting State';
+                        molColor = 'text-rose-500';
+                        prescriptions.push(`Wait 6-8 hours for <strong>${mol.name}</strong> to clear pharmacokinetically before attempting ${targetState}.`);
+                    } else if (isDepressant) {
+                        molStatus = 'Synergistic';
+                        molColor = 'text-emerald-500';
+                    }
+                } else if (targetState === 'focus' || targetState === 'creative') {
+                    if (isDepressant) {
+                        recommendedDose = 0;
+                        molStatus = 'Inhibiting State';
+                        molColor = 'text-rose-500';
+                        prescriptions.push(`<strong>${mol.name}</strong> is causing excessive CNS depression. Wait for clearance to achieve ${targetState}.`);
+                    } else if (isStimulant || (isPsychedelic && targetState === 'creative')) {
+                        molStatus = 'Synergistic';
+                        molColor = 'text-emerald-500';
+                    }
+                } else if (targetState === 'baseline') {
+                    if (isStimulant || isDepressant || isPsychedelic) {
+                        recommendedDose = 0;
+                        molStatus = 'Disruptive';
+                        molColor = 'text-amber-500';
+                        prescriptions.push(`Taper <strong>${mol.name}</strong> to return to healthy baseline dynamics.`);
+                    }
+                }
+                
+                assistantRecommendations.push({ id: mol.id, recommendedDose: recommendedDose });
+
+                let doseDisplay = '';
+                if (mol.currentDose < recommendedDose * 0.8 && recommendedDose > 0) {
+                    doseDisplay = '<span class="text-amber-500 font-bold">Sub-therapeutic</span>';
+                } else if (mol.currentDose > recommendedDose * 1.2 || (recommendedDose === 0 && mol.currentDose > 0)) {
+                    doseDisplay = '<span class="text-rose-500 font-bold">Inhibitive / Toxic</span>';
+                } else {
+                    doseDisplay = '<span class="text-emerald-500 font-bold">Optimal Alignment</span>';
+                }
+
+                html += `
+                    <li class="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                        <div class="flex justify-between items-center mb-1">
+                            <strong class="text-slate-900">${mol.name}</strong>
+                            ${doseDisplay}
+                        </div>
+                        <div class="text-[10px] text-slate-500 mb-1 flex justify-between">
+                            <span>Effect: <span class="${molColor} font-bold uppercase">${molStatus}</span></span>
+                            <span>Target Dose: <span class="font-mono font-bold text-indigo-600">${recommendedDose} mg</span></span>
+                        </div>
+                    </li>
+                `;
+            });
+
+            // 2. Global Vector Alignment
+            html += '<div class="border-t border-slate-200 pt-3 mt-4">';
+            html += '<strong class="text-slate-900 block mb-2">Network Diagnostics: ' + targetState.toUpperCase() + '</strong>';
+
+            const cv = currentVectors;
+
+            // Arousal
+            if (cv.arousal < t.arousal[0]) {
+                const deficit = (t.arousal[0] - cv.arousal).toFixed(2);
+                prescriptions.push(`<strong>Arousal Deficit (-${deficit}):</strong> Add ~${Math.round(deficit * 20 * patientMultiplier)}mg of a precision stimulant to reach threshold.`);
+                aligned = false;
+            } else if (cv.arousal > t.arousal[1]) {
+                const excess = (cv.arousal - t.arousal[1]).toFixed(2);
+                prescriptions.push(`<strong>Arousal Excess (+${excess}):</strong> Severe risk of network shattering. Reduce stimulants immediately.`);
+                aligned = false;
+            }
+
+            // Dampening
+            if (cv.dampening < t.dampening[0]) {
+                const deficit = (t.dampening[0] - cv.dampening).toFixed(2);
+                prescriptions.push(`<strong>Dampening Deficit (-${deficit}):</strong> Consider adding a GABAergic agent to enforce required topological suppression.`);
+                aligned = false;
+            } else if (cv.dampening > t.dampening[1]) {
+                const excess = (cv.dampening - t.dampening[1]).toFixed(2);
+                prescriptions.push(`<strong>Dampening Excess (+${excess}):</strong> Network is rigidly frozen. Taper down depressant dosage.`);
+                aligned = false;
+            }
+
+            if (cv.chaos > t.chaos[1]) {
+                prescriptions.push(`<strong>Severe Chaos Detected:</strong> Add precision agonist ZB-01 to immediately stabilize 11D cliques.`);
+                aligned = false;
+            }
+
+            if (prescriptions.length > 0) {
+                html += '<div class="space-y-2 mt-2">';
+                prescriptions.forEach(p => {
+                    html += `<p class="text-slate-600 text-xs bg-amber-50 p-2 rounded border border-amber-100 flex gap-2"><span>⚠️</span> <span>${p}</span></p>`;
+                });
+                html += '</div>';
+            }
+
+            if (aligned && prescriptions.length === 0) {
+                html += `<div class="mt-3 p-3 bg-emerald-50 rounded-lg border border-emerald-100 flex gap-2 items-start"><span class="text-emerald-500">✅</span> <p class="text-emerald-700 text-xs leading-relaxed"><strong>Mathematically Aligned:</strong> Current dosages and pharmacokinetics are perfectly optimized for the <strong>${targetState.toUpperCase()}</strong> state.</p></div>`;
+            } else {
+                html += `<p class="text-slate-400 text-[10px] mt-4 italic text-center">Press Auto-Adjust to recalculate dosages based on reported intake and current pharmacological conflicts.</p>`;
+            }
+
+            html += '</div></ul>';
+            feedbackBox.innerHTML = html;
+        }
+
+        function applyOptimalDoses() {
+            if (currentStack.length === 0 || assistantRecommendations.length === 0) return;
+            
+            assistantRecommendations.forEach((rec, idx) => {
+                const input = document.querySelector(`input[oninput="updateStackDose(${idx}, this.value)"]`);
+                if (input) {
+                    let safeVal = Math.min(rec.recommendedDose, input.max);
+                    input.value = safeVal;
+                    updateStackDose(idx, safeVal);
+                }
+            });
+            
+            // The sliders trigger state updates, but we need to ensure the Assistant recalculates post-adjustment
+            setTimeout(() => { runAssistant(); }, 50);
+        }
+
+        function toggleExplanation() {
+            const overlay = document.getElementById('science-explanation');
+            overlay.classList.toggle('hidden');
+        }
+
+        populateMolecules();
+        init3D();
+        updateSimulation();
     </script>
 </body>
 </html>
