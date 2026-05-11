@@ -185,10 +185,10 @@ def generate_pharma_data():
             }
         },
         "drug_profile": {
-            "name": "ZenBud Agonist (ZB-01)",
-            "target": "Topological Stabilization",
-            "efficacy": "92.6%",
-            "mechanism": "Arnold Tongue phase-locking optimization"
+            "name": "Babel-Forge Precision Library (ZB-01 / LL-07)",
+            "target": "Topological Stabilization & DMN Fluidity",
+            "efficacy": "94.2%",
+            "mechanism": "Arnold Tongue phase-locking & Macrocyclic DMN-clique targeting"
         }
     }
 

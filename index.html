@@ -1598,20 +1598,23 @@
                 label = 'Depression (MDD)';
                 targetState = 'DEPRESSION';
                 if (dashTreatmentClass === 'NOVEL') {
-                    drugName = 'Ketamine Infusion';
-                    drugDesc = 'Rapid NMDA modulation. Inducing synaptogenesis to repair Default Mode Network (DMN) topology.';
-                    moleculeSVG = `<svg viewBox="0 0 100 50" class="h-full w-auto stroke-indigo-600 fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <polygon points="40,10 60,10 70,30 50,45 30,30 Z"/>
-                                        <path d="M50 45 L50 10"/>
-                                   </svg>`;
-                    moleculeName = 'Ketamine (NMDA Modulator)';
+                    drugName = 'LimbicLink (LL-07) Dosage';
+                    drugDesc = 'Precision-engineered molecule targeting hyper-stable DMN cliques. Restores topological fluidity in reward circuits.';
+                    moleculeSVG = `<svg viewBox="0 0 160 100" class="h-full w-auto stroke-indigo-600 fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="80" cy="50" r="30" stroke-dasharray="10 5" />
+    <path d="M80,20 L80,10 M80,80 L80,90 M50,50 L40,50 M110,50 L120,50" />
+    <polygon points="70,40 90,40 90,60 70,60" />
+    <text x="72" y="75" font-family="Inter" font-size="10" fill="currentColor" stroke="none" font-weight="bold">LL-07</text>
+</svg>`;
+                    moleculeName = 'LL-07 (Macrocyclic Plasticity Modulator)';
                 } else {
-                    drugName = 'Fluoxetine Dosage';
-                    drugDesc = 'Conventional SSRI. Aiming for global serotonin increase; topological repair is typically slow and non-specific.';
+                    drugName = 'Conventional Infusion (KT/FX)';
+                    drugDesc = 'Ketamine or Fluoxetine (SSRI). Standard pharmacological intervention for symptomatic relief and broad serotonergic/glutamatergic modulation.';
                     moleculeSVG = `<svg viewBox="0 0 100 50" class="h-full w-auto stroke-slate-500 fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <circle cx="30" cy="25" r="8"/><circle cx="70" cy="25" r="8"/><path d="M38 25 L62 25"/>
+                                        <polygon points="45,10 55,10 60,20 50,30 40,20 Z" opacity="0.6"/>
                                    </svg>`;
-                    moleculeName = 'Fluoxetine (Prozac)';
+                    moleculeName = 'Ketamine / Fluoxetine (Conventional)';
                 }
             }
 
@@ -1818,14 +1821,14 @@
                     subjectiveInsight = '"The Grey." A loss of emotional contrast. Rumination feels like a physical weight; the self is an inescapable cage.';
                     if (dashTreatmentClass === 'NOVEL') {
                         if (dashPharmaEfficacy === 0) explanation = 'Negative State (Depression). DMN hyper-stability noted.';
-                        else if (dashPharmaEfficacy < 1) explanation = 'Ketamine disrupting DMN stability and promoting synaptogenesis.';
-                        else if (dashPharmaEfficacy === 1) explanation = 'Optimal dosage. Shift towards healthy connectivity.';
-                        else explanation = 'Dissociative threshold. Fragmenting into chaotic states.';
+                        else if (dashPharmaEfficacy < 1) explanation = 'LL-07 is precision-targeting DMN cliques, beginning to restore topological fluidity.';
+                        else if (dashPharmaEfficacy === 1) explanation = 'Optimal LL-07 dosage. Topology indicates precision repair of reward circuits and healthy connectivity baselines.';
+                        else explanation = 'Dissociative threshold. High-entropy fragmentation and signal breakdown.';
                     } else {
                         if (dashPharmaEfficacy === 0) explanation = 'Negative State (Depression). reward/executive hypo-connectivity.';
-                        else if (dashPharmaEfficacy < 1) explanation = 'Titration increasing serotonin; topological repair negligible.';
-                        else if (dashPharmaEfficacy === 1) explanation = 'Conventional level. Modest relief via dampening.';
-                        else explanation = 'Serotonin toxicity risk. Emotional numbing dominant.';
+                        else if (dashPharmaEfficacy < 1) explanation = 'Conventional titration (KT/FX) beginning; network-level repair remains negligible.';
+                        else if (dashPharmaEfficacy === 1) explanation = 'Conventional therapeutic level. Modest symptomatic relief via global dampening, but structural repair is incomplete.';
+                        else explanation = 'Serotonin/Ketamine toxicity risk. Emotional numbing or severe dissociation.';
                     }
                 }
 

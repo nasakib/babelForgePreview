@@ -373,8 +373,8 @@
                 label.innerText = "DR-02";
                 loadTopology('TOURETTES');
             } else if (state === 'DEPRESSION') {
-                currentDrugName = "KETAMINE";
-                label.innerText = "KT-01";
+                currentDrugName = "LL-07";
+                label.innerText = "LL-07";
                 loadTopology('DEPRESSION');
             }
             slider.value = 0;
@@ -508,9 +508,13 @@
                     neuroInsight = 'Hyper-stability in the Default Mode Network (DMN). Reward circuits show profound hypo-connectivity.';
                     subjectiveInsight = '"The Grey." Loss of emotional contrast. Rumination feels like a physical weight.';
                     if (pharmaEfficacy === 0) explanation = 'Negative State (Depression). Hypo-connectivity in reward circuits.';
-                    else if (pharmaEfficacy < 1) explanation = 'Ketamine disrupting rigid DMN patterns and promoting synaptogenesis.';
-                    else if (pharmaEfficacy === 1) explanation = 'Optimal sub-anesthetic effect. Significant shift towards baseline.';
-                    else explanation = 'Dissociative threshold. Network entering high-entropy fragmentation.';
+                    else if (pharmaEfficacy < 1) {
+                        if (currentDrugName === 'LL-07') explanation = 'LL-07 targeting DMN cliques; beginning to restore topological fluidity.';
+                        else explanation = 'Conventional titration beginning; network-level repair remains negligible.';
+                    } else if (pharmaEfficacy === 1) {
+                        if (currentDrugName === 'LL-07') explanation = 'Optimal LL-07 effect. Precision repair of DMN topology and reward pathway synchronization.';
+                        else explanation = 'Conventional therapeutic level achieved. Symptomatic relief via global dampening.';
+                    } else explanation = 'Over-dosage/Dissociative threshold. Network entering high-entropy fragmentation.';
                 }
 
                 explanationBox.innerHTML = `
