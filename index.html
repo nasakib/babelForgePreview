@@ -78,9 +78,14 @@
                         <input type="number" id="patient-weight" value="70" min="40" max="150" class="w-full bg-white border border-slate-200 text-sm font-semibold text-slate-700 rounded p-2 focus:outline-none focus:border-indigo-500" onchange="updateSimulation()">
                     </div>
                     <div>
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 block">Substance Tolerance (Months)</label>
-                        <input type="number" id="patient-tolerance" value="0" min="0" max="120" class="w-full bg-white border border-slate-200 text-sm font-semibold text-slate-700 rounded p-2 focus:outline-none focus:border-indigo-500" onchange="updateSimulation()">
-                        <p class="text-[9px] text-slate-400 mt-1">Duration of prior exposure to active compound.</p>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block">Pharmacological Tolerance</label>
+                            <button onclick="document.getElementById('tolerance-list').classList.toggle('hidden')" class="text-[9px] text-indigo-500 font-bold hover:underline">Toggle List</button>
+                        </div>
+                        <p class="text-[9px] text-slate-400 mb-2">Duration of prior exposure (Months). Affects receptor downregulation decay.</p>
+                        <div id="tolerance-list" class="space-y-3 hidden max-h-56 overflow-y-auto pr-2 bg-white border border-slate-200 p-3 rounded-lg shadow-inner">
+                            <!-- Sliders injected by JS -->
+                        </div>
                     </div>
                 </div>
             </div>
@@ -331,6 +336,7 @@
         let currentDrug = 'NONE';
         let currentDose = 0.0;
         let isComparing = false;
+        let patientTolerances = {};
 
         // UI Initialization
         const stateDefinitions = {
@@ -341,18 +347,18 @@
         };
 
         const drugDefinitions = {
-            "NONE": { name: "No Intervention", class: "None", target: "N/A", mech: "Natural baseline state without exogenous perturbation." },
-            "ZB-01": { name: "ZB-01 (Precision)", class: "Novel", target: "Global Phase-Locking", mech: "Stabilizes chaos via Arnold Tongue phase-locking optimization." },
-            "LL-07": { name: "LimbicLink (Precision)", class: "Novel", target: "DMN Fluidity", mech: "Macrocyclic plasticity modulator. Breaks rigid DMN cliques." },
-            "SS-20": { name: "SynaptoStim (Precision)", class: "Novel", target: "Frontal Upregulation", mech: "Targeted dopaminergic stimulation in executive control regions." },
-            "DR-02": { name: "DopaReg-D2 (Precision)", class: "Novel", target: "Somatomotor Dampening", mech: "Precision D2 antagonism to selectively dampen hyper-connected motor loops." },
-            "NX-44": { name: "NeuroX (Precision)", class: "Novel", target: "Global Synaptogenesis", mech: "BDNF modulator enhancing wide-scale topological repair." },
-            "KET": { name: "Ketamine (Conventional)", class: "Conventional", target: "NMDA Antagonism", mech: "Rapid glutamate burst inducing dissociative DMN disruption." },
-            "FLX": { name: "Fluoxetine (Conventional)", class: "Conventional", target: "SSRI", mech: "Broad serotonin reuptake inhibition. Induces global dampening." },
-            "AMP": { name: "Amphetamine (Conventional)", class: "Conventional", target: "Monoamine Release", mech: "Global stimulant. High risk of hyperarousal toxicity." },
-            "THC": { name: "Delta-9-THC (Recreational)", class: "Recreational", target: "CB1 Agonism", mech: "Increases entropy in DMN, disrupts working memory cliques." },
-            "CBD": { name: "Cannabidiol (Functional)", class: "Functional", target: "CB Modulator", mech: "Soft dampening of limbic hyperarousal. Increases global stability." },
-            "NIC": { name: "Nicotine (Functional)", class: "Recreational", target: "nAChR Agonism", mech: "Transient sharp increase in Frontoparietal coupling." }
+            "NONE": { name: "No Intervention", class: "None", target: "N/A", mech: "Natural baseline state without exogenous perturbation.", toleranceRate: 0.0, indications: [] },
+            "ZB-01": { name: "ZB-01 (Precision)", class: "Novel", target: "Global Phase-Locking", mech: "Stabilizes chaos via Arnold Tongue phase-locking optimization.", toleranceRate: 0.05, indications: ["PTSD"] },
+            "LL-07": { name: "LimbicLink (Precision)", class: "Novel", target: "DMN Fluidity", mech: "Macrocyclic plasticity modulator. Breaks rigid DMN cliques.", toleranceRate: 0.05, indications: ["DEPRESSION"] },
+            "SS-20": { name: "SynaptoStim (Precision)", class: "Novel", target: "Frontal Upregulation", mech: "Targeted dopaminergic stimulation in executive control regions.", toleranceRate: 0.05, indications: ["ADHD"] },
+            "DR-02": { name: "DopaReg-D2 (Precision)", class: "Novel", target: "Somatomotor Dampening", mech: "Precision D2 antagonism to selectively dampen hyper-connected motor loops.", toleranceRate: 0.05, indications: ["TOURETTES"] },
+            "NX-44": { name: "NeuroX (Precision)", class: "Novel", target: "Global Synaptogenesis", mech: "BDNF modulator enhancing wide-scale topological repair.", toleranceRate: 0.02, indications: ["DEPRESSION", "PTSD"] },
+            "KET": { name: "Ketamine (Conventional)", class: "Conventional", target: "NMDA Antagonism", mech: "Rapid glutamate burst inducing dissociative DMN disruption.", toleranceRate: 0.3, indications: ["DEPRESSION"] },
+            "FLX": { name: "Fluoxetine (Conventional)", class: "Conventional", target: "SSRI", mech: "Broad serotonin reuptake inhibition. Induces global dampening.", toleranceRate: 0.1, indications: ["DEPRESSION", "PTSD"] },
+            "AMP": { name: "Amphetamine (Conventional)", class: "Conventional", target: "Monoamine Release", mech: "Global stimulant. High risk of hyperarousal toxicity.", toleranceRate: 0.5, indications: ["ADHD"] },
+            "THC": { name: "Delta-9-THC (Recreational)", class: "Recreational", target: "CB1 Agonism", mech: "Increases entropy in DMN, disrupts working memory cliques.", toleranceRate: 0.6, indications: [] },
+            "CBD": { name: "Cannabidiol (Functional)", class: "Functional", target: "CB Modulator", mech: "Soft dampening of limbic hyperarousal. Increases global stability.", toleranceRate: 0.05, indications: ["PTSD", "TOURETTES"] },
+            "NIC": { name: "Nicotine (Functional)", class: "Recreational", target: "nAChR Agonism", mech: "Transient sharp increase in Frontoparietal coupling.", toleranceRate: 0.8, indications: ["ADHD"] }
         };
 
         function initUI() {
@@ -373,9 +379,30 @@
             });
 
             const select = document.getElementById('molecule-select');
+            const tolList = document.getElementById('tolerance-list');
+            
             Object.entries(drugDefinitions).forEach(([key, def]) => {
                 select.innerHTML += `<option value="${key}">${def.name}</option>`;
+                
+                if (key !== 'NONE') {
+                    patientTolerances[key] = 0;
+                    tolList.innerHTML += `
+                        <div>
+                            <div class="flex justify-between text-[9px] font-bold text-slate-600 mb-1">
+                                <span>${def.name.split(' ')[0]}</span>
+                                <span id="tol-val-${key}">0 mo</span>
+                            </div>
+                            <input type="range" id="tol-${key}" min="0" max="120" step="1" value="0" class="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-500" oninput="updateTolerance('${key}', this.value)">
+                        </div>
+                    `;
+                }
             });
+        }
+
+        function updateTolerance(key, val) {
+            patientTolerances[key] = parseFloat(val);
+            document.getElementById(`tol-val-${key}`).innerText = `${val} mo`;
+            updateSimulation();
         }
 
         function toggleState(state) {
@@ -811,27 +838,49 @@
                 return;
             }
 
-            let bestDrug = "ZB-01";
-            let efficacyMultiplier = 40;
-            if (activeStates.has("ADHD")) { bestDrug = "SS-20"; efficacyMultiplier = 45; }
-            if (activeStates.has("DEPRESSION")) { bestDrug = "LL-07"; efficacyMultiplier = 40; }
-            if (activeStates.has("TOURETTES")) { bestDrug = "DR-02"; efficacyMultiplier = 35; }
+            let dominantState = Array.from(activeStates)[0];
+            if (activeStates.has("ADHD")) dominantState = "ADHD";
+            if (activeStates.has("DEPRESSION")) dominantState = "DEPRESSION";
+            if (activeStates.has("TOURETTES")) dominantState = "TOURETTES";
+            if (activeStates.has("PTSD")) dominantState = "PTSD";
+
+            const options = {
+                "ADHD": [ { id: "SS-20", mult: 45 }, { id: "AMP", mult: 30 }, { id: "NIC", mult: 15 } ],
+                "PTSD": [ { id: "ZB-01", mult: 40 }, { id: "FLX", mult: 20 }, { id: "CBD", mult: 15 } ],
+                "DEPRESSION": [ { id: "LL-07", mult: 40 }, { id: "KET", mult: 35 }, { id: "FLX", mult: 25 }, { id: "NX-44", mult: 45 } ],
+                "TOURETTES": [ { id: "DR-02", mult: 35 }, { id: "CBD", mult: 10 } ]
+            };
 
             const gap = activeStates.size * 25;
-            const requiredEffectiveDose = gap / efficacyMultiplier;
-
             const weight = parseFloat(document.getElementById('patient-weight').value) || 70;
-            const toleranceMonths = parseFloat(document.getElementById('patient-tolerance').value) || 0;
-            
             const weightFactor = 70 / weight;
-            const toleranceFactor = 1 / (1 + Math.log1p(toleranceMonths * 0.2));
+
+            let bestDrug = "NONE";
+            let bestDose = Infinity;
+            const candidates = options[dominantState] || [];
             
-            let optimalBaseDose = requiredEffectiveDose / (weightFactor * toleranceFactor);
-            optimalBaseDose = Math.min(3.0, Math.max(0.1, optimalBaseDose));
+            for (let c of candidates) {
+                const tolMonths = patientTolerances[c.id] || 0;
+                const tolRate = drugDefinitions[c.id].toleranceRate;
+                const tolFactor = 1 / (1 + Math.log1p(tolMonths * tolRate));
+                
+                const requiredEffectiveDose = gap / c.mult;
+                let requiredBaseDose = requiredEffectiveDose / (weightFactor * tolFactor);
+                
+                if (requiredBaseDose < bestDose) {
+                    bestDose = requiredBaseDose;
+                    bestDrug = c.id;
+                }
+            }
+
+            if (bestDrug === "NONE" || bestDose > 3.0) {
+                bestDose = Math.min(3.0, bestDose);
+                if (bestDrug === "NONE") bestDrug = "ZB-01"; 
+            }
 
             document.getElementById('molecule-select').value = bestDrug;
-            document.getElementById('dose-slider').value = optimalBaseDose.toFixed(1);
-            updateDoseLabel(optimalBaseDose.toFixed(1));
+            document.getElementById('dose-slider').value = bestDose.toFixed(1);
+            updateDoseLabel(bestDose.toFixed(1));
         }
 
         function updateSimulation() {
