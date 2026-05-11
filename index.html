@@ -52,6 +52,7 @@
             <span class="font-bold text-lg tracking-tight">babelForge <span class="text-indigo-600">Engine</span></span>
         </div>
         <div class="flex gap-4">
+            <button onclick="toggleMethodology()" class="text-xs font-bold text-slate-500 hover:text-indigo-600 uppercase tracking-widest transition-colors">Methodology & Validity</button>
             <a href="11d-projection.html" class="text-xs font-bold text-slate-500 hover:text-indigo-600 uppercase tracking-widest transition-colors">11D Legacy</a>
             <a href="pharma-projection.html" class="text-xs font-bold text-slate-500 hover:text-indigo-600 uppercase tracking-widest transition-colors">Stack Builder</a>
         </div>
@@ -185,8 +186,99 @@
 
     </main>
 
+    <!-- Methodology Modal -->
+    <div id="methodology-modal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onclick="toggleMethodology()"></div>
+        <div class="absolute inset-y-0 right-0 w-full max-w-2xl bg-white shadow-2xl flex flex-col transform transition-transform translate-x-full duration-300" id="methodology-panel">
+            <div class="p-6 border-b border-slate-200 flex justify-between items-center">
+                <h2 class="text-lg font-bold text-slate-900">Scientific & Medical Validity</h2>
+                <button onclick="toggleMethodology()" class="text-slate-400 hover:text-slate-600 transition-colors">
+                    <svg viewBox="0 0 24 24" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-1 space-y-8">
+                <section>
+                    <h3 class="text-sm font-extrabold text-indigo-500 uppercase tracking-widest mb-3">1. Mathematical Foundations</h3>
+                    <p class="text-sm text-slate-600 leading-relaxed mb-3">
+                        The babelForge engine leverages <strong>Algebraic Topology</strong> and <strong>Simplicial Complexes</strong> to model brain networks. Rather than simple pairwise connections (graph theory), the brain processes information in high-dimensional structures called "cliques" and "cavities." The Kuramoto Model governs phase-locking synchronization across these regions.
+                    </p>
+                    <p class="text-[11px] text-slate-500 leading-relaxed italic border-l-2 border-indigo-200 pl-3">
+                        <strong>Source:</strong> Giusti, C., Pastalkova, E., Curto, C., & Itskov, V. (2015). Clique topology reveals intrinsic geometric structure in neural correlations. <em>Proceedings of the National Academy of Sciences, 112(44), 13455-13460.</em>
+                    </p>
+                </section>
+                <section>
+                    <h3 class="text-sm font-extrabold text-indigo-500 uppercase tracking-widest mb-3">2. Network Neuroscience & Medicine</h3>
+                    <p class="text-sm text-slate-600 leading-relaxed mb-3">
+                        Pathologies are modeled as topological deviations. <strong>Major Depressive Disorder (MDD)</strong> is represented by hyper-stability in the <strong>Default Mode Network (DMN)</strong>, preventing fluid state transitions (experientially: rumination). <strong>ADHD</strong> is modeled as hypo-connectivity in the <strong>Frontoparietal Control Network</strong>, leading to insufficient "gain" to maintain high-dimensional cliques (experientially: attentional drift).
+                    </p>
+                    <p class="text-[11px] text-slate-500 leading-relaxed italic border-l-2 border-indigo-200 pl-3">
+                        <strong>Source:</strong> Bassett, D. S., & Sporns, O. (2017). Network neuroscience. <em>Nature Neuroscience, 20(3), 353-364.</em>
+                    </p>
+                </section>
+                <section>
+                    <h3 class="text-sm font-extrabold text-indigo-500 uppercase tracking-widest mb-3">3. Pharmacodynamics (Interference Mechanics)</h3>
+                    <p class="text-sm text-slate-600 leading-relaxed mb-3">
+                        Pharmacological interventions act as exogenous perturbations. <strong>Ketamine</strong> (an NMDA antagonist) rapidly disrupts DMN hyper-stability and induces synaptogenesis. The simulation models this as an interference pulse (cyan/gold) modifying edge density and resetting hubness constraints, overcoming the topological "rut" of depression far faster than conventional SSRIs.
+                    </p>
+                    <p class="text-[11px] text-slate-500 leading-relaxed italic border-l-2 border-indigo-200 pl-3">
+                        <strong>Source:</strong> Krystal, J. H., et al. (2013). Ketamine: A Paradigm Shift for Depression Research and Treatment. <em>Neuron, 79(6), 1170-1178.</em>
+                    </p>
+                </section>
+                <section class="bg-slate-50 p-5 rounded-xl border border-slate-200">
+                    <h3 class="text-sm font-extrabold text-emerald-600 uppercase tracking-widest mb-3">Interactive Experimental Flow</h3>
+                    <p class="text-sm text-slate-600 leading-relaxed mb-4">Validate the simulation logic by executing the following clinical trial flow:</p>
+                    <ol class="list-decimal list-inside text-sm text-slate-700 space-y-3 mb-6">
+                        <li><strong>Induce Pathology:</strong> Select <span class="font-bold text-slate-900">Depression (MDD)</span> from the Patient State Modifiers. Observe the topological "rut" in the 3D visualizer and the resulting Integrity Score drop.</li>
+                        <li><strong>Apply Conventional Therapy:</strong> Select <span class="font-bold text-slate-900">Fluoxetine (Conventional)</span> and increase the dosage to Mild (1.0). Notice the partial, global dampening effect with incomplete structural repair.</li>
+                        <li><strong>Apply Precision Therapy:</strong> Switch the compound to <span class="font-bold text-slate-900">LimbicLink (Precision)</span> or <span class="font-bold text-slate-900">Ketamine (Conventional)</span> at Mild dosage. Observe the dynamic disruption of DMN cliques (cyan/gold interference) and the subsequent recovery of the System Score.</li>
+                        <li><strong>Analyze Results:</strong> Review the AI Diagnostic Engine's readout to verify the mechanistic breakdown of the topological shift.</li>
+                    </ol>
+                    <button onclick="startExperimentFlow()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold uppercase tracking-widest py-3 rounded-lg transition-colors shadow-md">
+                        ▶ Start Guided Experiment
+                    </button>
+                </section>
+            </div>
+        </div>
+    </div>
+
     <!-- Logic -->
     <script>
+        function toggleMethodology() {
+            const modal = document.getElementById('methodology-modal');
+            const panel = document.getElementById('methodology-panel');
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                setTimeout(() => panel.classList.remove('translate-x-full'), 10);
+            } else {
+                panel.classList.add('translate-x-full');
+                setTimeout(() => modal.classList.add('hidden'), 300);
+            }
+        }
+
+        function startExperimentFlow() {
+            toggleMethodology();
+            
+            // Reset active states
+            activeStates.clear();
+            document.querySelectorAll('.chk-input').forEach(chk => chk.checked = false);
+            
+            // Toggle Depression
+            const depChk = document.getElementById('chk-DEPRESSION');
+            if (depChk) {
+                depChk.checked = true;
+                activeStates.add('DEPRESSION');
+            }
+            
+            // Reset Drug
+            document.getElementById('molecule-select').value = 'NONE';
+            document.getElementById('dose-slider').value = 0;
+            updateDoseLabel(0); // Will update currentDrug, currentDose, and call updateSimulation()
+            
+            setTimeout(() => {
+                alert("Step 1 Complete: Depression (MDD) Pathology Induced.\n\nObserve the drop in Topological Integrity and read the AI Diagnosis.\n\nNext Step: Select 'Fluoxetine' and increase dosage, then compare the results with 'Ketamine'.");
+            }, 500);
+        }
+
         // Global State
         let topoData = null;
         let activeStates = new Set();
