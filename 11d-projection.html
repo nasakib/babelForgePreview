@@ -147,10 +147,19 @@
                 <button id="btn-adhd" style="border-color: #64748b; color: #64748b;" onclick="triggerState('ADHD')">ADHD</button>
                 <button id="btn-tourettes" style="border-color: #10b981; color: #10b981;" onclick="triggerState('TOURETTES')">Tourette's</button>
                 <button class="btn-stim" id="btn-stim" onclick="toggleStimulus()">Neural Stimulus</button>
-                <div style="display: flex; align-items: center; gap: 8px; background: rgba(252, 211, 77, 0.1); padding: 4px 10px; border: 1px solid #fcd34d; border-radius: 4px;">
-                    <span id="drug-label-name" style="color: #fcd34d; font-size: 10px; font-weight: bold; text-transform: uppercase;">ZB-01</span>
-                    <input type="range" id="pharma-slider" min="0" max="100" value="0" style="width: 80px; accent-color: #fcd34d;" oninput="updatePharma(this.value)">
-                    <span id="pharma-val" style="color: #fcd34d; font-size: 10px; font-weight: bold; width: 35px; text-align: right;">0 mg</span>
+                <div style="display: flex; flex-direction: column; gap: 4px; background: rgba(252, 211, 77, 0.05); padding: 6px 10px; border: 1px solid rgba(252, 211, 77, 0.5); border-radius: 4px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span id="drug-label-name" style="color: #fcd34d; font-size: 10px; font-weight: bold; text-transform: uppercase;">ZB-01</span>
+                        <div style="display: flex; gap: 2px;">
+                            <button onclick="setSimDose('low')" style="padding: 2px 6px; font-size: 8px; border: 1px solid #fcd34d; color: #fcd34d; background: transparent; border-radius: 3px;">LOW</button>
+                            <button onclick="setSimDose('mild')" style="padding: 2px 6px; font-size: 8px; border: 1px solid #fcd34d; color: #fcd34d; background: transparent; border-radius: 3px;">MILD</button>
+                            <button onclick="setSimDose('high')" style="padding: 2px 6px; font-size: 8px; border: 1px solid #fcd34d; color: #fcd34d; background: transparent; border-radius: 3px;">HIGH</button>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <input type="range" id="pharma-slider" min="0" max="100" value="0" style="width: 120px; accent-color: #fcd34d;" oninput="updatePharma(this.value)">
+                        <span id="pharma-val" style="color: #fcd34d; font-size: 10px; font-weight: bold; width: 35px; text-align: right;">0 mg</span>
+                    </div>
                 </div>
             </div>
             <div style="display: flex; gap: 10px;">
@@ -261,8 +270,16 @@
         }
 
         let currentOptimalDose = 50;
+        let currentDosePresets = { low: 20, mild: 50, high: 80 };
         let currentDrugName = "ZENBUD";
 
+                const setSimDose = (level) => {
+            const val = currentDosePresets[level];
+            const slider = document.getElementById('pharma-slider');
+            if (slider) slider.value = val;
+            updatePharma(val);
+        };
+        
         function triggerState(state) {
             const slider = document.getElementById('pharma-slider');
             const label = document.getElementById('drug-label-name');
@@ -270,12 +287,14 @@
             if (state === 'ADHD') {
                 slider.max = 60;
                 currentOptimalDose = 30;
+                currentDosePresets = { low: 10, mild: 30, high: 50 };
                 currentDrugName = "SYNAPTOSTIM";
                 label.innerText = "SS-20";
                 loadTopology('ADHD');
             } else if (state === 'TOURETTES') {
                 slider.max = 10;
                 currentOptimalDose = 5;
+                currentDosePresets = { low: 2, mild: 5, high: 8 };
                 currentDrugName = "DOPAREG";
                 label.innerText = "DR-02";
                 loadTopology('TOURETTES');
@@ -293,6 +312,7 @@
             const label = document.getElementById('drug-label-name');
             slider.max = 100;
             currentOptimalDose = 50;
+            currentDosePresets = { low: 20, mild: 50, high: 80 };
             currentDrugName = "ZENBUD";
             label.innerText = "ZB-01";
             slider.value = 0;
@@ -322,6 +342,7 @@
             const label = document.getElementById('drug-label-name');
             slider.max = 100;
             currentOptimalDose = 50;
+            currentDosePresets = { low: 20, mild: 50, high: 80 };
             currentDrugName = "ZENBUD";
             label.innerText = "ZB-01";
             slider.value = 0;
