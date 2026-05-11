@@ -1692,49 +1692,41 @@
                 // Smoothed target scale from 11D integrity + pulse
                 const targetBaseScale = node.userData.targetScale || 1.0;
                 
+                node.material.color.setHex(node.userData.baseColor);
+                node.material.emissive.setHex(node.userData.baseColor);
+                let emissiveInt = 0.4 + wave * 0.3;
+                
                 if (dashStatus === 'PTSD') {
                     if (dashTreatmentClass === 'NOVEL') {
                         if (dashPharmaEfficacy <= 1) {
                             const jitter = (1 - dashPharmaEfficacy) * 12;
                             node.position.x = node.userData.origin.x + (Math.random() - 0.5) * jitter;
                             node.position.z = node.userData.origin.z + (Math.random() - 0.5) * jitter;
-                            
                             const ptsdScale = targetBaseScale + wave * 0.4;
                             node.scale.setScalar(Math.max(0.2, ptsdScale));
-                            
-                            const pharmaColor = new THREE.Color(0xfcd34d);
-                            const ptsdColor = new THREE.Color(0x991b1b);
-                            node.material.color.lerpColors(ptsdColor, pharmaColor, dashPharmaEfficacy);
-                            node.material.emissiveIntensity = 0.2 + (1 - dashPharmaEfficacy) * 0.8;
+                            emissiveInt = 0.8 + (wave * 0.5) - (dashPharmaEfficacy * 0.4);
                         } else {
-                            // Hyper-synchrony / Toxicity (> 50mg)
-                            const overDose = dashPharmaEfficacy - 1; // 0 to 1
+                            const overDose = dashPharmaEfficacy - 1;
                             const jitter = overDose * 6; 
                             node.position.x = node.userData.origin.x + (Math.random() - 0.5) * jitter;
                             node.position.y = node.userData.origin.y + (Math.random() - 0.5) * jitter;
                             node.position.z = node.userData.origin.z + (Math.random() - 0.5) * jitter;
-                            
                             const rigidScale = targetBaseScale * (1 - (overDose * 0.5));
                             node.scale.setScalar(Math.max(0.1, rigidScale));
-                            
-                            const pharmaColor = new THREE.Color(0xfcd34d);
-                            const toxicColor = new THREE.Color(0xe0f2fe);
-                            node.material.color.lerpColors(pharmaColor, toxicColor, overDose);
-                            node.material.emissiveIntensity = 0.2 + (overDose * 2.0);
+                            emissiveInt = 0.4 + (overDose * 2.0);
                         }
                     } else {
-                        // Conventional (SSRI) - broad suppression
                         const jitter = (1 - Math.min(1, dashPharmaEfficacy)) * 12;
                         node.position.x = node.userData.origin.x + (Math.random() - 0.5) * jitter;
                         node.position.z = node.userData.origin.z + (Math.random() - 0.5) * jitter;
-                        
                         const ssriScale = targetBaseScale + (wave * 0.4 * (1 - Math.min(1, dashPharmaEfficacy)));
                         node.scale.setScalar(Math.max(0.1, ssriScale));
                         
-                        const ptsdColor = new THREE.Color(0x991b1b);
-                        const dullColor = new THREE.Color(0x64748b);
-                        node.material.color.lerpColors(ptsdColor, dullColor, Math.min(1, dashPharmaEfficacy));
-                        node.material.emissiveIntensity = 0.2 + (1 - Math.min(1, dashPharmaEfficacy)) * 0.8;
+                        if (dashPharmaEfficacy <= 1) {
+                            emissiveInt = 0.8 - (dashPharmaEfficacy * 0.6);
+                        } else {
+                            emissiveInt = 0.1;
+                        }
                     }
                 } else if (dashStatus === 'ADHD') {
                     if (dashTreatmentClass === 'NOVEL') {
@@ -1742,109 +1734,71 @@
                             const adhdScale = targetBaseScale + wave * 0.3;
                             node.scale.setScalar(Math.max(0.2, adhdScale));
                             node.position.lerp(node.userData.origin, 0.1);
-                            
-                            const adhdColor = new THREE.Color(0x64748b); // dull slate
-                            const pharmaColor = new THREE.Color(0xfcd34d); // gold
-                            node.material.color.lerpColors(adhdColor, pharmaColor, dashPharmaEfficacy);
-                            node.material.emissiveIntensity = 0.1 + (dashPharmaEfficacy * 0.5);
+                            emissiveInt = 0.1 + (dashPharmaEfficacy * 0.5);
                         } else {
                             const overDose = dashPharmaEfficacy - 1;
                             const jitter = overDose * 15;
                             node.position.x = node.userData.origin.x + (Math.random() - 0.5) * jitter;
                             node.position.y = node.userData.origin.y + (Math.random() - 0.5) * jitter;
-                            
                             const overScale = targetBaseScale + wave * 0.8;
                             node.scale.setScalar(Math.max(0.2, overScale));
-                            
-                            const pharmaColor = new THREE.Color(0xfcd34d);
-                            const toxicColor = new THREE.Color(0xef4444); // red jitter
-                            node.material.color.lerpColors(pharmaColor, toxicColor, overDose);
-                            node.material.emissiveIntensity = 0.6 + (overDose * 1.5);
+                            emissiveInt = 0.6 + (overDose * 1.5);
                         }
                     } else {
-                        // Conventional (Amphetamine)
                         if (dashPharmaEfficacy <= 1) {
                             const adhdScale = targetBaseScale + wave * 0.3;
                             node.scale.setScalar(Math.max(0.2, adhdScale));
                             node.position.lerp(node.userData.origin, 0.1);
-                            
-                            const adhdColor = new THREE.Color(0x64748b);
-                            const activeColor = new THREE.Color(0x38bdf8); // bright blue
-                            node.material.color.lerpColors(adhdColor, activeColor, dashPharmaEfficacy);
-                            node.material.emissiveIntensity = 0.1 + (dashPharmaEfficacy * 0.8);
+                            emissiveInt = 0.1 + (dashPharmaEfficacy * 0.8);
                         } else {
                             const overDose = dashPharmaEfficacy - 1;
-                            const jitter = overDose * 25; // More severe jitter
+                            const jitter = overDose * 25; 
                             node.position.x = node.userData.origin.x + (Math.random() - 0.5) * jitter;
                             node.position.y = node.userData.origin.y + (Math.random() - 0.5) * jitter;
-                            
                             const overScale = targetBaseScale + wave * 1.2;
                             node.scale.setScalar(Math.max(0.2, overScale));
-                            
-                            const activeColor = new THREE.Color(0x38bdf8);
-                            const toxicColor = new THREE.Color(0xef4444);
-                            node.material.color.lerpColors(activeColor, toxicColor, Math.min(1, overDose));
-                            node.material.emissiveIntensity = 0.9 + (overDose * 2.0);
+                            emissiveInt = 0.9 + (overDose * 2.0);
                         }
                     }
                 } else if (dashStatus === 'TOURETTES') {
                     if (dashTreatmentClass === 'NOVEL') {
                         if (dashPharmaEfficacy <= 1) {
-                            const tickJitter = (1 - dashPharmaEfficacy) * 8 * (Math.random() > 0.8 ? 1 : 0); // Sudden tics
+                            const tickJitter = (1 - dashPharmaEfficacy) * 8 * (Math.random() > 0.8 ? 1 : 0); 
                             node.position.y = node.userData.origin.y + (Math.random() - 0.5) * tickJitter;
                             node.position.x = node.userData.origin.x + (Math.random() - 0.5) * tickJitter;
-                            
                             const touretteScale = targetBaseScale + wave * 0.8;
                             node.scale.setScalar(Math.max(0.2, touretteScale));
-                            
-                            const tColor = new THREE.Color(0x10b981); // green hyper
-                            const pharmaColor = new THREE.Color(0xfcd34d);
-                            node.material.color.lerpColors(tColor, pharmaColor, dashPharmaEfficacy);
-                            node.material.emissiveIntensity = 0.8 - (dashPharmaEfficacy * 0.4);
+                            emissiveInt = 0.8 - (dashPharmaEfficacy * 0.4);
                         } else {
                             const overDose = dashPharmaEfficacy - 1;
-                            node.position.lerp(node.userData.origin, 0.2); // Very rigid
-                            
+                            node.position.lerp(node.userData.origin, 0.2); 
                             const rigidScale = targetBaseScale * (1 - (overDose * 0.6));
                             node.scale.setScalar(Math.max(0.1, rigidScale));
-                            
-                            const pharmaColor = new THREE.Color(0xfcd34d);
-                            const toxicColor = new THREE.Color(0x475569); // dull grey
-                            node.material.color.lerpColors(pharmaColor, toxicColor, overDose);
-                            node.material.emissiveIntensity = 0.4 - (overDose * 0.3);
+                            emissiveInt = 0.4 - (overDose * 0.3);
                         }
                     } else {
-                        // Conventional (Haloperidol)
                         if (dashPharmaEfficacy <= 1) {
                             const tickJitter = (1 - dashPharmaEfficacy) * 8 * (Math.random() > 0.8 ? 1 : 0);
                             node.position.y = node.userData.origin.y + (Math.random() - 0.5) * tickJitter;
                             node.position.x = node.userData.origin.x + (Math.random() - 0.5) * tickJitter;
-                            
-                            const rigidScale = targetBaseScale * (1 - (dashPharmaEfficacy * 0.8)); // severely dampens scale quickly
+                            const rigidScale = targetBaseScale * (1 - (dashPharmaEfficacy * 0.8)); 
                             node.scale.setScalar(Math.max(0.1, rigidScale));
-                            
-                            const tColor = new THREE.Color(0x10b981);
-                            const dullColor = new THREE.Color(0x475569);
-                            node.material.color.lerpColors(tColor, dullColor, dashPharmaEfficacy);
-                            node.material.emissiveIntensity = 0.8 - (dashPharmaEfficacy * 0.7);
+                            emissiveInt = 0.8 - (dashPharmaEfficacy * 0.7);
                         } else {
+                            node.position.lerp(node.userData.origin, 0.8); 
                             const overDose = dashPharmaEfficacy - 1;
-                            node.position.lerp(node.userData.origin, 0.8); // Total rigidity
-                            
                             const rigidScale = targetBaseScale * (1 - (overDose * 0.9));
                             node.scale.setScalar(Math.max(0.05, rigidScale));
-                            
-                            node.material.color.setHex(0x334155);
-                            node.material.emissiveIntensity = 0.1;
+                            emissiveInt = 0.1;
                         }
                     }
                 } else {
                     const healthyScale = targetBaseScale + wave * 0.6;
                     node.scale.setScalar(healthyScale);
                     node.position.lerp(node.userData.origin, 0.1);
-                    node.material.color.setHex(node.userData.baseColor);
-                    node.material.emissiveIntensity = 0.4 + wave * 0.3;
                 }
+                
+                node.material.emissiveIntensity = emissiveInt;
                 
                 if (node === dashHoveredNode) {
                     node.material.emissive.setHex(0xffffff);
