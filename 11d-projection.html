@@ -185,12 +185,18 @@
     </div>
 
     <div id="stats-overlay">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">
+            <span style="font-weight: bold; color: #8b5cf6;">PHYSICS_ENGINE_METRICS</span>
+            <button onclick="toggleControls()" style="background: transparent; border: 1px solid #8b5cf6; color: #8b5cf6; font-size: 8px; cursor: pointer; border-radius: 3px; padding: 2px 5px;">HIDE_UI</button>
+        </div>
         <p>State: <span id="state-val">AWAITING SIGNAL</span></p>
         <p>Topology Integrity: <span id="integrity-val">100%</span></p>
         <p>Active Cliques: <span id="clique-val">0</span></p>
         <p id="mod-val" style="color: #fcd34d; margin-top: 5px; font-weight: bold;"></p>
-        <p id="dosage-explanation" style="font-size: 0.7rem; color: #a78bfa; margin-top: 10px; max-width: 250px; line-height: 1.4;">Waiting for intervention...</p>
+        <div id="dosage-explanation" style="font-size: 0.7rem; color: #a78bfa; margin-top: 10px; max-width: 250px; line-height: 1.4;">Waiting for intervention...</div>
     </div>
+
+    <button id="show-ui-btn" onclick="toggleControls()" style="position: fixed; top: 20px; right: 20px; z-index: 2000; background: #8b5cf6; color: white; border: none; padding: 8px 15px; font-weight: bold; font-family: 'JetBrains Mono'; border-radius: 5px; display: none; cursor: pointer;">SHOW_INTERFACE</button>
 
     <div id="floating-label" class="node-label"></div>
 
@@ -354,6 +360,26 @@
             updateModText();
         }
 
+        function toggleControls() {
+            const banner = document.getElementById('banner');
+            const inspector = document.getElementById('inspector');
+            const overlay = document.getElementById('stats-overlay');
+            const showBtn = document.getElementById('show-ui-btn');
+            const isHidden = banner.style.display === 'none';
+
+            if (isHidden) {
+                banner.style.display = 'flex';
+                inspector.style.display = 'block';
+                overlay.style.display = 'block';
+                showBtn.style.display = 'none';
+            } else {
+                banner.style.display = 'none';
+                inspector.style.display = 'none';
+                overlay.style.display = 'none';
+                showBtn.style.display = 'block';
+            }
+        }
+
         function updatePharma(val) {
             pharmaEfficacy = val / 2.0;
             document.getElementById('pharma-val').innerText = ['None', 'Low', 'Mild', 'High'][val];
@@ -377,31 +403,51 @@
 
             const explanationBox = document.getElementById('dosage-explanation');
             if (explanationBox) {
-                let explanation = '';
+                let explanation = "";
+                let neuroInsight = "";
+                let subjectiveInsight = "";
+
                 if (currentStatus === 'RESPONSIVE') {
-                    explanation = 'Baseline optimal synchronization. High-dimensional cliques form and dissolve rhythmically. No intervention required.';
+                    explanation = 'Baseline optimal synchronization.';
+                    neuroInsight = 'Fluid synchronization across Dorsal Attention and Executive Control networks.';
+                    subjectiveInsight = 'A sense of "Flow." Focus is easily directed; thoughts transition naturally.';
                 } else if (currentStatus === 'RESISTANT') {
-                    if (pharmaEfficacy === 0) explanation = 'Negative State (PTSD Flash). Severe hyperarousal detected. Suggest dosing mild intensity ZB-01 for rapid stabilization, or waiting 12-24 hours to return to baseline naturally.';
-                    else if (pharmaEfficacy < 1) explanation = 'Sub-therapeutic dosage. ZB-01 is physically widening Arnold Tongues, but topological repair is incomplete.';
-                    else if (pharmaEfficacy === 1) explanation = 'Optimal dosage (mild intensity). Arnold Tongues widened, stabilizing the network and allowing 11D cliques to reassemble organically.';
-                    else explanation = 'Toxicity (Hyper-synchrony). Excessive coupling has induced pathological rigidity, destroying functional wave dynamics.';
+                    neuroInsight = 'Massive topological shattering. High-frequency spikes in limbic circuits; PFC cliques collapse.';
+                    subjectiveInsight = '"Time collapse." The past becomes a visceral, sensory present.';
+                    if (pharmaEfficacy === 0) explanation = 'Negative State (PTSD Flash). Severe hyperarousal detected.';
+                    else if (pharmaEfficacy < 1) explanation = 'Sub-therapeutic. ZB-01 is beginning to widen Arnold Tongues.';
+                    else if (pharmaEfficacy === 1) explanation = 'Optimal dosage. Arnold Tongues sufficiently widened for stabilization.';
+                    else explanation = 'Hyper-synchrony toxicity. Pathological network rigidity induced.';
                 } else if (currentStatus === 'ADHD') {
-                    if (pharmaEfficacy === 0) explanation = 'Negative State (ADHD). Hypo-connectivity detected in frontal control networks. Suggest dosing mild intensity SS-20 to upregulate dynamics.';
-                    else if (pharmaEfficacy < 1) explanation = 'Sub-therapeutic dosage. Dopaminergic stimulation is gradually upregulating network activity.';
-                    else if (pharmaEfficacy === 1) explanation = 'Optimal dosage (mild intensity). Frontal networks are perfectly upregulated, matching healthy baseline wave dynamics.';
-                    else explanation = 'Over-stimulation. Excessive dopamine is causing chaotic, hyper-aroused jittering and signal breakdown.';
+                    neuroInsight = 'Insufficient "top-down" coupling from Frontoparietal Control. Signal gain too low to maintain 11D cliques.';
+                    subjectiveInsight = 'Mental "drift."Monologue hijacked by tangents; focus feels like wading through static.';
+                    if (pharmaEfficacy === 0) explanation = 'Negative State (ADHD). Hypo-connectivity in prefrontal control.';
+                    else if (pharmaEfficacy < 1) explanation = 'Upregulating network dynamics via dopaminergic stimulation.';
+                    else if (pharmaEfficacy === 1) explanation = 'Optimal upregulation. Matching healthy baseline wave dynamics.';
+                    else explanation = 'Over-stimulation. Excessive dopamine inducing signal breakdown.';
                 } else if (currentStatus === 'TOURETTES') {
-                    if (pharmaEfficacy === 0) explanation = 'Negative State (Tourette\'s). Pathological hyper-connectivity causing tics. Suggest dosing mild intensity DR-02 to dampen loops, or waiting out the tic cluster.';
-                    else if (pharmaEfficacy < 1) explanation = 'Sub-therapeutic. Targeted D2 antagonism is beginning to soften erratic synchronization spikes.';
-                    else if (pharmaEfficacy === 1) explanation = 'Optimal dosage (mild intensity). DR-02 has successfully dampened hyper-connectivity back to smooth baseline dynamics.';
-                    else explanation = 'Over-dampening. Excessive D2 blockade is leading to network rigidity (Parkinsonian side-effects).';
+                    neuroInsight = 'Pathological hyper-connectivity within somatomotor loops. Low-D cliques become hyper-stable.';
+                    subjectiveInsight = '"The urge." Physical pressure building in limbs; motor discharge required to resolve tension.';
+                    if (pharmaEfficacy === 0) explanation = 'Negative State (Tourette\'s). Pathological hyper-connectivity causing tics.';
+                    else if (pharmaEfficacy < 1) explanation = 'Sub-therapeutic. Targeted D2 antagonism softening spikes.';
+                    else if (pharmaEfficacy === 1) explanation = 'Optimal dosage. Successful dampening back to smooth baseline.';
+                    else explanation = 'Over-dampening. network rigidity (Parkinsonian side-effects).';
                 } else if (currentStatus === 'DEPRESSION') {
-                    if (pharmaEfficacy === 0) explanation = 'Negative State (Depression). Hypo-connectivity in executive circuits; hyper-stability in the DMN. Suggest Ketamine modulation.';
-                    else if (pharmaEfficacy < 1) explanation = 'Glutamatergic modulation is beginning to disrupt rigid DMN patterns and trigger plasticity.';
-                    else if (pharmaEfficacy === 1) explanation = 'Optimal sub-anesthetic effect. Topological reorganization and enhanced synaptic plasticity achieved.';
-                    else explanation = 'Dissociative threshold. The network is entering a state of high-entropy fragmentation.';
+                    neuroInsight = 'Hyper-stability in the Default Mode Network (DMN). Reward circuits show profound hypo-connectivity.';
+                    subjectiveInsight = '"The Grey." Loss of emotional contrast. Rumination feels like a physical weight.';
+                    if (pharmaEfficacy === 0) explanation = 'Negative State (Depression). Hypo-connectivity in reward circuits.';
+                    else if (pharmaEfficacy < 1) explanation = 'Ketamine disrupting rigid DMN patterns and promoting synaptogenesis.';
+                    else if (pharmaEfficacy === 1) explanation = 'Optimal sub-anesthetic effect. Significant shift towards baseline.';
+                    else explanation = 'Dissociative threshold. Network entering high-entropy fragmentation.';
                 }
-                explanationBox.innerText = explanation;
+
+                explanationBox.innerHTML = `
+                    <div style="margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
+                        <div style="font-weight: bold; margin-bottom: 5px; color: #fff;">${explanation}</div>
+                        <div style="margin-bottom: 5px;"><span style="color: #8b5cf6; font-size: 8px; font-weight: bold; text-transform: uppercase; display: block;">Neuroscience</span><span style="font-style: italic;">${neuroInsight}</span></div>
+                        <div><span style="color: #f87171; font-size: 8px; font-weight: bold; text-transform: uppercase; display: block;">Subjective View</span>${subjectiveInsight}</div>
+                    </div>
+                `;
             }
         }
         function loadTopology(status) {

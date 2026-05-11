@@ -611,65 +611,68 @@
             <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xl shadow-slate-200/50 relative">
                 <div class="grid grid-cols-1 lg:grid-cols-4 min-h-[700px]">
                     <!-- Control Sidebar -->
-                    <div class="p-8 border-r border-slate-100 bg-slate-50/50 flex flex-col justify-between">
-                        <div>
-                            <div class="inline-block px-2 py-1 bg-indigo-100 text-indigo-700 rounded text-[10px] font-bold uppercase tracking-widest mb-6">Simulation Engine</div>
-                            <h3 class="text-xl font-bold text-slate-900 mb-8">Clinical Parameters</h3>
-                            
-                            <div class="space-y-8">
-                                <div>
-                                    <label class="text-[10px] uppercase font-bold text-slate-400 block mb-4 tracking-widest">Treatment Class</label>
-                                    <div class="flex bg-slate-100 p-1 rounded-lg mb-6">
-                                        <button id="btn-novel" class="flex-1 text-xs font-bold py-2 rounded-md bg-white shadow-sm text-indigo-600 transition-all" onclick="updateTreatmentClass('NOVEL')">Novel (Precision)</button>
-                                        <button id="btn-conv" class="flex-1 text-xs font-bold py-2 rounded-md text-slate-500 hover:text-slate-700 transition-all" onclick="updateTreatmentClass('CONVENTIONAL')">Conventional</button>
-                                    </div>
-                                    <label class="text-[10px] uppercase font-bold text-slate-400 block mb-4 tracking-widest">Select Patient State</label>
-                                    <div class="grid grid-cols-1 gap-3">
-                                        <button id="btn-healthy" class="w-full text-left px-4 py-3 rounded-lg border border-slate-200 font-semibold text-sm transition-all active" onclick="updateDashboardState('HEALTHY')">
-                                            Healthy Baseline
-                                        </button>
-                                        <button id="btn-ptsd" class="w-full text-left px-4 py-3 rounded-lg border border-slate-200 font-semibold text-sm transition-all" onclick="updateDashboardState('PTSD')">
-                                            PTSD Flash (D7)
-                                        </button>
-                                        <button id="btn-adhd" class="w-full text-left px-4 py-3 rounded-lg border border-slate-200 font-semibold text-sm transition-all" onclick="updateDashboardState('ADHD')">
-                                            ADHD (Inattentive)
-                                        </button>
-                                        <button id="btn-tourettes" class="w-full text-left px-4 py-3 rounded-lg border border-slate-200 font-semibold text-sm transition-all" onclick="updateDashboardState('TOURETTES')">
-                                            Tourette's (Motor Tic)
-                                        </button>
-                                        <button id="btn-depression" class="w-full text-left px-4 py-3 rounded-lg border border-slate-200 font-semibold text-sm transition-all" onclick="updateDashboardState('DEPRESSION')">
-                                            Depression (MDD)
-                                        </button>                                    </div>
+                    <div id="control-sidebar" class="p-8 border-r border-slate-100 bg-slate-50/50 flex flex-col justify-between transition-all duration-500 overflow-y-auto">
+                        <div class="flex justify-between items-center mb-6">
+                             <div class="inline-block px-2 py-1 bg-indigo-100 text-indigo-700 rounded text-[10px] font-bold uppercase tracking-widest">Simulation Engine</div>
+                             <button onclick="toggleControls()" class="p-2 hover:bg-slate-200 rounded-lg transition-colors text-slate-400" title="Collapse Menu">
+                                <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+                             </button>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-8">Clinical Parameters</h3>
+
+                        <div class="space-y-8">
+                            <div>
+                                <label class="text-[10px] uppercase font-bold text-slate-400 block mb-4 tracking-widest">Treatment Class</label>
+                                <div class="flex bg-slate-100 p-1 rounded-lg mb-6">
+                                    <button id="btn-novel" class="flex-1 text-xs font-bold py-2 rounded-md bg-white shadow-sm text-indigo-600 transition-all" onclick="updateTreatmentClass('NOVEL')">Novel (Precision)</button>
+                                    <button id="btn-conv" class="flex-1 text-xs font-bold py-2 rounded-md text-slate-500 hover:text-slate-700 transition-all" onclick="updateTreatmentClass('CONVENTIONAL')">Conventional</button>
                                 </div>
-                                
-                                <div class="p-5 bg-white border border-slate-200 rounded-xl shadow-sm">
-                                    <div class="flex justify-between items-center mb-2">
-                                        <label id="drug-name-label" class="text-[10px] uppercase font-bold text-indigo-600 tracking-widest">ZB-01 Dosage</label>
-                                        <div class="flex gap-1" id="preset-buttons-container">
-                                            <button onclick="setDashboardDose('low')" class="px-2 py-0.5 text-[9px] font-bold rounded bg-slate-100 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">Low</button>
-                                            <button onclick="setDashboardDose('mild')" class="px-2 py-0.5 text-[9px] font-bold rounded bg-slate-100 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">Mild</button>
-                                            <button onclick="setDashboardDose('high')" class="px-2 py-0.5 text-[9px] font-bold rounded bg-slate-100 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">High</button>
-                                        </div>
+                                <label class="text-[10px] uppercase font-bold text-slate-400 block mb-4 tracking-widest">Select Patient State</label>
+                                <div class="grid grid-cols-1 gap-3">
+                                    <button id="btn-healthy" class="w-full text-left px-4 py-3 rounded-lg border border-slate-200 font-semibold text-sm transition-all active" onclick="updateDashboardState('HEALTHY')">
+                                        Healthy Baseline
+                                    </button>
+                                    <button id="btn-ptsd" class="w-full text-left px-4 py-3 rounded-lg border border-slate-200 font-semibold text-sm transition-all" onclick="updateDashboardState('PTSD')">
+                                        PTSD Flash (D7)
+                                    </button>
+                                    <button id="btn-adhd" class="w-full text-left px-4 py-3 rounded-lg border border-slate-200 font-semibold text-sm transition-all" onclick="updateDashboardState('ADHD')">
+                                        ADHD (Inattentive)
+                                    </button>
+                                    <button id="btn-tourettes" class="w-full text-left px-4 py-3 rounded-lg border border-slate-200 font-semibold text-sm transition-all" onclick="updateDashboardState('TOURETTES')">
+                                        Tourette's (Motor Tic)
+                                    </button>
+                                    <button id="btn-depression" class="w-full text-left px-4 py-3 rounded-lg border border-slate-200 font-semibold text-sm transition-all" onclick="updateDashboardState('DEPRESSION')">
+                                        Depression (MDD)
+                                    </button>                                    </div>
+                            </div>
+
+                            <div class="p-5 bg-white border border-slate-200 rounded-xl shadow-sm">
+                                <div class="flex justify-between items-center mb-2">
+                                    <label id="drug-name-label" class="text-[10px] uppercase font-bold text-indigo-600 tracking-widest">ZB-01 Dosage</label>
+                                    <div class="flex gap-1" id="preset-buttons-container">
+                                        <button onclick="setDashboardDose('low')" class="px-2 py-0.5 text-[9px] font-bold rounded bg-slate-100 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">Low</button>
+                                        <button onclick="setDashboardDose('mild')" class="px-2 py-0.5 text-[9px] font-bold rounded bg-slate-100 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">Mild</button>
+                                        <button onclick="setDashboardDose('high')" class="px-2 py-0.5 text-[9px] font-bold rounded bg-slate-100 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">High</button>
                                     </div>
-                                    <div class="flex items-center gap-3 w-full">
-                                        <input type="range" id="pharma-slider" min="0" max="3" step="1" value="0" class="flex-grow h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600" oninput="updatePharmaEfficacy(this.value)">
-                                        <span id="pharma-percent" class="font-mono text-sm font-bold text-indigo-600 w-16 text-right">None</span>
+                                </div>
+                                <div class="flex items-center gap-3 w-full">
+                                    <input type="range" id="pharma-slider" min="0" max="3" step="1" value="0" class="flex-grow h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600" oninput="updatePharmaEfficacy(this.value)">
+                                    <span id="pharma-percent" class="font-mono text-sm font-bold text-indigo-600 w-16 text-right">None</span>
+                                </div>
+                                <p id="drug-desc-label" class="text-[10px] text-slate-400 mt-4 leading-relaxed">Adjust precision dosage to monitor regional stabilization and topological repair rate.</p>
+                                <div class="mt-4 p-3 bg-indigo-50 border border-indigo-100 rounded-lg text-[11px] text-indigo-800 leading-relaxed font-medium" id="dosage-explanation">
+                                    Waiting for intervention...
+                                </div>
+
+                                <div class="mt-4 pt-4 border-t border-slate-100 flex flex-col items-center">
+                                    <div id="molecule-svg-container" class="h-16 w-full flex items-center justify-center opacity-60">
+                                        <svg viewBox="0 0 100 50" class="h-full w-auto stroke-indigo-600 fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M30 25 L40 15 L55 15 L65 25 L55 35 L40 35 Z"/>
+                                            <path d="M40 15 L35 5 M65 25 L75 25 L80 15 M55 35 L60 45"/>
+                                            <circle cx="35" cy="5" r="2" fill="#4f46e5"/><circle cx="80" cy="15" r="2" fill="#4f46e5"/><circle cx="60" cy="45" r="2" fill="#4f46e5"/>
+                                        </svg>
                                     </div>
-                                    <p id="drug-desc-label" class="text-[10px] text-slate-400 mt-4 leading-relaxed">Adjust precision dosage to monitor regional stabilization and topological repair rate.</p>
-                                    <div class="mt-4 p-3 bg-indigo-50 border border-indigo-100 rounded-lg text-[11px] text-indigo-800 leading-relaxed font-medium" id="dosage-explanation">
-                                        Waiting for intervention...
-                                    </div>
-                                    
-                                    <div class="mt-4 pt-4 border-t border-slate-100 flex flex-col items-center">
-                                        <div id="molecule-svg-container" class="h-16 w-full flex items-center justify-center opacity-60">
-                                            <svg viewBox="0 0 100 50" class="h-full w-auto stroke-indigo-600 fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                <path d="M30 25 L40 15 L55 15 L65 25 L55 35 L40 35 Z"/>
-                                                <path d="M40 15 L35 5 M65 25 L75 25 L80 15 M55 35 L60 45"/>
-                                                <circle cx="35" cy="5" r="2" fill="#4f46e5"/><circle cx="80" cy="15" r="2" fill="#4f46e5"/><circle cx="60" cy="45" r="2" fill="#4f46e5"/>
-                                            </svg>
-                                        </div>
-                                        <p id="molecule-name" class="text-[9px] font-bold text-indigo-400 tracking-widest mt-2 uppercase">ZB-01 (Indole Derivative)</p>
-                                    </div>
+                                    <p id="molecule-name" class="text-[9px] font-bold text-indigo-400 tracking-widest mt-2 uppercase">ZB-01 (Indole Derivative)</p>
                                 </div>
                             </div>
                         </div>
@@ -687,9 +690,11 @@
                     </div>
 
                     <!-- 3D Canvas Area -->
-                    <div class="lg:col-span-3 relative bg-[#030008] cursor-crosshair overflow-hidden">
-                        <div id="dashboard-brain-container" class="absolute inset-0"></div>
-                        
+                    <div id="visualizer-container" class="lg:col-span-3 relative bg-[#030008] cursor-crosshair overflow-hidden transition-all duration-500">
+                        <button id="show-sidebar-btn" onclick="toggleControls()" class="absolute top-8 left-8 z-50 p-2 bg-indigo-600 text-white rounded-lg shadow-lg hidden hover:bg-indigo-700 transition-all" title="Show Menu">
+                            <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+                        </button>
+                        <div id="dashboard-brain-container" class="absolute inset-0"></div>                        
                         <!-- Overlay Labels -->
                         <div class="absolute top-8 left-8 pointer-events-none z-10">
                             <div class="flex items-center gap-3 mb-2">
@@ -1163,6 +1168,38 @@
             ul.innerHTML = top5.length ? top5.map(name => `<li>→ ${name}</li>`).join('') : '<li class="text-slate-500">No active pathways</li>';
         };
 
+        const toggleControls = () => {
+            const sidebar = document.getElementById('control-sidebar');
+            const container = document.getElementById('visualizer-container');
+            const showBtn = document.getElementById('show-sidebar-btn');
+            const isHidden = sidebar.classList.contains('hidden');
+
+            if (isHidden) {
+                sidebar.classList.remove('hidden');
+                sidebar.style.width = '';
+                sidebar.style.opacity = '1';
+                container.classList.add('lg:col-span-3');
+                showBtn.classList.add('hidden');
+            } else {
+                sidebar.classList.add('hidden');
+                sidebar.style.width = '0';
+                sidebar.style.opacity = '0';
+                container.classList.remove('lg:col-span-3');
+                container.classList.add('lg:col-span-4');
+                showBtn.classList.remove('hidden');
+            }
+            
+            // Trigger Three.js resize
+            setTimeout(() => {
+                const canvasContainer = document.getElementById('dashboard-brain-container');
+                if (dashCamera && dashRenderer && canvasContainer) {
+                    dashCamera.aspect = canvasContainer.clientWidth / canvasContainer.clientHeight;
+                    dashCamera.updateProjectionMatrix();
+                    dashRenderer.setSize(canvasContainer.clientWidth, canvasContainer.clientHeight);
+                }
+            }, 500);
+        };
+
         const initDashboardBrain = () => {
             const container = document.getElementById('dashboard-brain-container');
             if (!container) return;
@@ -1192,7 +1229,16 @@
             dashCliqueGroup = new THREE.Group();
             dashScene.add(dashLobeGroup, dashEdgeGroup, dashCliqueGroup);
 
-            // 1. Atmosphere: Neural Dust
+            window.addEventListener('resize', () => {
+                const canvasContainer = document.getElementById('dashboard-brain-container');
+                if (dashCamera && dashRenderer && canvasContainer) {
+                    dashCamera.aspect = canvasContainer.clientWidth / canvasContainer.clientHeight;
+                    dashCamera.updateProjectionMatrix();
+                    dashRenderer.setSize(canvasContainer.clientWidth, canvasContainer.clientHeight);
+                }
+            });
+
+            // 1. Neural Dust (Particle System)
             const partCount = 400;
             const partGeo = new THREE.BufferGeometry();
             const partPos = new Float32Array(partCount * 3);
@@ -1647,58 +1693,78 @@
             const explanationBox = document.getElementById('dosage-explanation');
             if (explanationBox) {
                 let explanation = '';
+                let neuroInsight = '';
+                let subjectiveInsight = '';
+
                 if (dashStatus === 'HEALTHY') {
-                    explanation = 'The network is operating at baseline optimal synchronization. High-dimensional cliques are forming and dissolving rhythmically. No intervention required.';
+                    explanation = 'The network is operating at baseline optimal synchronization.';
+                    neuroInsight = 'High-dimensional cliques form and dissolve in a "critical" state—balanced between order and chaos. fluid synchronization across the Dorsal Attention and Executive Control networks.';
+                    subjectiveInsight = 'A sense of "Flow." Thoughts transition naturally; focus is easily directed and maintained. Emotional responses are congruent with the environment.';
                 } else if (dashStatus === 'PTSD') {
+                    neuroInsight = 'Massive topological "shattering." High-frequency power spikes in the amygdala mientras 11D cliques in the prefrontal cortex collapse.';
+                    subjectiveInsight = '"Time collapse." The past becomes the present. A visceral, sensory-rich flood of trauma that bypasses linguistic processing.';
                     if (dashTreatmentClass === 'NOVEL') {
-                        if (dashPharmaEfficacy === 0) explanation = 'Negative State (PTSD Flash). Severe hyperarousal detected. Suggest dosing mild intensity ZB-01 for rapid stabilization, or waiting 12-24 hours to return to baseline naturally.';
-                        else if (dashPharmaEfficacy < 1) explanation = 'Sub-therapeutic dosage. ZB-01 is beginning to physically widen Arnold Tongues, but topological repair is incomplete.';
-                        else if (dashPharmaEfficacy === 1) explanation = 'Optimal dosage (mild intensity). Arnold Tongues are sufficiently widened, stabilizing the network and allowing 11D cliques to reassemble organically.';
-                        else explanation = 'Toxicity (Hyper-synchrony). Excessive coupling has induced pathological rigidity, locking nodes and destroying functional wave dynamics.';
+                        if (dashPharmaEfficacy === 0) explanation = 'Negative State (PTSD Flash). Severe hyperarousal detected.';
+                        else if (dashPharmaEfficacy < 1) explanation = 'Sub-therapeutic dosage. ZB-01 is beginning to physically widen Arnold Tongues.';
+                        else if (dashPharmaEfficacy === 1) explanation = 'Optimal dosage. Arnold Tongues are widened, stabilizing the network.';
+                        else explanation = 'Toxicity (Hyper-synchrony). Excessive coupling has induced pathological rigidity.';
                     } else {
-                        if (dashPharmaEfficacy === 0) explanation = 'Negative State (PTSD Flash). Severe hyperarousal detected. Suggest intervention or waiting 12-24 hours to return to baseline.';
-                        else if (dashPharmaEfficacy < 1) explanation = 'Broad serotonin reuptake inhibition is dampening network amplitude globally, but failing to restore targeted high-D clique structures.';
-                        else if (dashPharmaEfficacy === 1) explanation = 'Maximal SSRI effect. The network is suppressed (dull grey), masking arousal symptoms but leaving underlying topological damage unrepaired.';
-                        else explanation = 'SSRI toxicity/Serotonin syndrome. Severe structural blunting and over-suppression.';
+                        if (dashPharmaEfficacy === 0) explanation = 'Negative State (PTSD Flash).';
+                        else if (dashPharmaEfficacy < 1) explanation = 'SSRI broad dampening. Failing to restore targeted high-D cliques.';
+                        else if (dashPharmaEfficacy === 1) explanation = 'Maximal SSRI effect. Network suppressed, masking symptoms but damaging topology.';
+                        else explanation = 'SSRI toxicity. Severe structural blunting.';
                     }
                 } else if (dashStatus === 'ADHD') {
+                    neuroInsight = 'Insufficient "top-down" coupling from the Frontoparietal Control network. The "gain" on neural signals is too low to maintain stable cliques.';
+                    subjectiveInsight = 'Mental "drift." Effortful focus feels like wading through static. The internal monologue is easily hijacked by tangential stimuli.';
                     if (dashTreatmentClass === 'NOVEL') {
-                        if (dashPharmaEfficacy === 0) explanation = 'Negative State (ADHD). Hypo-connectivity detected in prefrontal control networks. Suggest dosing mild intensity SS-20 to upregulate dynamics.';
-                        else if (dashPharmaEfficacy < 1) explanation = 'Sub-therapeutic dosage. Dopaminergic stimulation is gradually upregulating network activity.';
-                        else if (dashPharmaEfficacy === 1) explanation = 'Optimal dosage (mild intensity). Frontal networks are perfectly upregulated, matching healthy baseline wave dynamics without over-stimulation.';
-                        else explanation = 'Over-stimulation. Excessive dopamine is causing chaotic, hyper-aroused jittering and signal breakdown.';
+                        if (dashPharmaEfficacy === 0) explanation = 'Negative State (ADHD). Hypo-connectivity in control networks.';
+                        else if (dashPharmaEfficacy < 1) explanation = 'Sub-therapeutic dosage. Upregulating network activity.';
+                        else if (dashPharmaEfficacy === 1) explanation = 'Optimal dosage. Frontal networks upregulated to healthy baseline.';
+                        else explanation = 'Over-stimulation. Excessive dopamine causing chaotic jittering.';
                     } else {
-                        if (dashPharmaEfficacy === 0) explanation = 'Negative State (ADHD). Hypo-connectivity detected in prefrontal control networks.';
-                        else if (dashPharmaEfficacy < 1) explanation = 'Amphetamine salts are aggressively upregulating network activity, accelerating rapidly towards toxicity.';
-                        else if (dashPharmaEfficacy === 1) explanation = 'Peak therapeutic effect, but with a highly dangerous, narrow window before severe toxicity onset.';
-                        else explanation = 'Amphetamine toxicity. Rapid onset of severe hyper-arousal, erratic jumping, and topological fragmentation.';
+                        if (dashPharmaEfficacy === 0) explanation = 'Negative State (ADHD).';
+                        else if (dashPharmaEfficacy < 1) explanation = 'Aggressive upregulation. Accelerating towards toxicity.';
+                        else if (dashPharmaEfficacy === 1) explanation = 'Peak therapeutic effect, narrow window before toxicity.';
+                        else explanation = 'Amphetamine toxicity. Fragmentation and severe hyper-arousal.';
                     }
                 } else if (dashStatus === 'TOURETTES') {
+                    neuroInsight = 'Pathological hyper-connectivity within somatomotor loops. Low-D cliques become hyper-stable and rigid, leading to motor discharges.';
+                    subjectiveInsight = '"The urge." A physical pressure building in the limbs. The tic is not "wanted," but "needed" to discharge topological tension.';
                     if (dashTreatmentClass === 'NOVEL') {
-                        if (dashPharmaEfficacy === 0) explanation = 'Negative State (Tourette\'s). Pathological hyper-connectivity causing tics. Suggest dosing mild intensity DR-02 to dampen loops, or waiting out the tic cluster.';
-                        else if (dashPharmaEfficacy < 1) explanation = 'Sub-therapeutic. Targeted D2 antagonism is beginning to soften erratic synchronization spikes.';
-                        else if (dashPharmaEfficacy === 1) explanation = 'Optimal dosage (mild intensity). DR-02 has successfully dampened hyper-connectivity back to smooth baseline dynamics.';
-                        else explanation = 'Over-dampening. Excessive D2 blockade is leading to network rigidity (Parkinsonian side-effects).';
+                        if (dashPharmaEfficacy === 0) explanation = 'Negative State (Tourette\\'s). Pathological hyper-connectivity.';
+                        else if (dashPharmaEfficacy < 1) explanation = 'Sub-therapeutic. Targeted D2 antagonism softening spikes.';
+                        else if (dashPharmaEfficacy === 1) explanation = 'Optimal dosage. Dampened back to smooth baseline dynamics.';
+                        else explanation = 'Over-dampening. network rigidity (Parkinsonian side-effects).';
                     } else {
-                        if (dashPharmaEfficacy === 0) explanation = 'Negative State (Tourette\'s). Pathological hyper-connectivity causing sudden, rigid synchronization spikes (tics).';
-                        else if (dashPharmaEfficacy < 1) explanation = 'Aggressive D2 antagonism is rapidly crashing network amplitude and freezing nodes.';
-                        else if (dashPharmaEfficacy === 1) explanation = 'Tics suppressed, but at the cost of significant network rigidity and structural dampening.';
-                        else explanation = 'Haloperidol toxicity. Severe Parkinsonian rigidity (Tardive Dyskinesia). The network is completely frozen.';
+                        if (dashPharmaEfficacy === 0) explanation = 'Negative State (Tourette\\'s). Sudden spikes (tics).';
+                        else if (dashPharmaEfficacy < 1) explanation = 'Crashing network amplitude and freezing nodes.';
+                        else if (dashPharmaEfficacy === 1) explanation = 'Tics suppressed, but at the cost of structural dampening.';
+                        else explanation = 'Haloperidol toxicity. completely frozen network.';
                     }
                 } else if (dashStatus === 'DEPRESSION') {
+                    neuroInsight = 'Hyper-stability in the Default Mode Network (DMN), creating a "topological rut." Reward circuits show profound hypo-connectivity.';
+                    subjectiveInsight = '"The Grey." A loss of emotional contrast. Rumination feels like a physical weight; the self is an inescapable cage.';
                     if (dashTreatmentClass === 'NOVEL') {
-                        if (dashPharmaEfficacy === 0) explanation = 'Negative State (Depression). Hypo-connectivity detected in reward and executive circuits. DMN hyper-stability noted.';
-                        else if (dashPharmaEfficacy < 1) explanation = 'Ketamine is inducing rapid glutamate release, beginning to disrupt pathological DMN stability and promote synaptogenesis.';
-                        else if (dashPharmaEfficacy === 1) explanation = 'Optimal sub-anesthetic dosage. Topology indicates a significant shift towards healthy connectivity baselines and enhanced plasticity.';
-                        else explanation = 'Dissociative threshold exceeded. Network is fragmenting into high-entropy, chaotic states.';
+                        if (dashPharmaEfficacy === 0) explanation = 'Negative State (Depression). DMN hyper-stability noted.';
+                        else if (dashPharmaEfficacy < 1) explanation = 'Ketamine disrupting DMN stability and promoting synaptogenesis.';
+                        else if (dashPharmaEfficacy === 1) explanation = 'Optimal dosage. Shift towards healthy connectivity.';
+                        else explanation = 'Dissociative threshold. Fragmenting into chaotic states.';
                     } else {
-                        if (dashPharmaEfficacy === 0) explanation = 'Negative State (Depression). Hypo-connectivity detected in reward and executive circuits.';
-                        else if (dashPharmaEfficacy < 1) explanation = 'SSRI titration is increasing serotonin availability, but network-level topological repair remains negligible in the acute phase.';
-                        else if (dashPharmaEfficacy === 1) explanation = 'Conventional therapeutic level. Modest symptom relief via global dampening, but underlying structural hypo-connectivity persists.';
-                        else explanation = 'Serotonin toxicity risk. Structural blunting and emotional numbing effects are dominant.';
+                        if (dashPharmaEfficacy === 0) explanation = 'Negative State (Depression). reward/executive hypo-connectivity.';
+                        else if (dashPharmaEfficacy < 1) explanation = 'Titration increasing serotonin; topological repair negligible.';
+                        else if (dashPharmaEfficacy === 1) explanation = 'Conventional level. Modest relief via dampening.';
+                        else explanation = 'Serotonin toxicity risk. Emotional numbing dominant.';
                     }
                 }
-                explanationBox.innerText = explanation;
+
+                explanationBox.innerHTML = `
+                    <div class="space-y-3">
+                        <div class="font-bold border-b border-indigo-100 pb-1 mb-2">${explanation}</div>
+                        <div><span class="text-[9px] uppercase font-extrabold text-indigo-400 block mb-0.5">Neuroscience</span><span class="text-slate-600 italic">${neuroInsight}</span></div>
+                        <div><span class="text-[9px] uppercase font-extrabold text-rose-400 block mb-0.5">Subjective View</span><span class="text-slate-600">${subjectiveInsight}</span></div>
+                    </div>
+                `;
             }
         };
 
