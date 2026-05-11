@@ -58,10 +58,10 @@
     </nav>
 
     <!-- Three-Panel Dashboard -->
-    <main class="flex-1 flex overflow-hidden">
+    <main class="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden">
         
         <!-- Left Panel: Patient Setup (Filters) -->
-        <aside class="w-80 border-r border-slate-200 bg-slate-50 flex flex-col overflow-y-auto z-40 relative">
+        <aside class="w-full lg:w-80 border-b lg:border-b-0 lg:border-r border-slate-200 bg-slate-50 flex flex-col shrink-0 lg:overflow-y-auto z-40 relative">
             <div class="p-6">
                 <h2 class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-6">Patient State Modifiers</h2>
                 <p class="text-xs text-slate-500 mb-6 leading-relaxed">Overlap multiple pathological states to simulate complex psychiatric comorbidities. The topology engine mathematically merges the modifiers.</p>
@@ -85,7 +85,7 @@
         </aside>
 
         <!-- Middle Panel: 3D Visualizer -->
-        <section class="flex-1 relative bg-void overflow-hidden" id="visualizer-container">
+        <section class="w-full h-[50vh] min-h-[400px] lg:min-h-0 lg:h-auto flex-1 relative bg-void overflow-hidden shrink-0" id="visualizer-container">
             <div class="absolute top-6 left-6 z-10 pointer-events-none">
                 <h3 class="text-white/80 font-bold text-lg" id="vis-title">Network Topology</h3>
                 <p class="text-white/50 text-xs font-mono" id="vis-stats">Loading...</p>
@@ -99,7 +99,7 @@
         </section>
 
         <!-- Right Panel: Pharmacy & AI Recommendations -->
-        <aside class="w-96 border-l border-slate-200 bg-white flex flex-col overflow-y-auto z-40 relative shadow-[-10px_0_15px_-3px_rgba(0,0,0,0.05)]">
+        <aside class="w-full lg:w-96 border-t lg:border-t-0 lg:border-l border-slate-200 bg-white flex flex-col shrink-0 lg:overflow-y-auto z-40 relative shadow-none lg:shadow-[-10px_0_15px_-3px_rgba(0,0,0,0.05)]">
             
             <div class="p-6 border-b border-slate-100">
                 <h2 class="text-[10px] font-extrabold text-indigo-500 uppercase tracking-widest mb-6">Pharmacological Intervention</h2>

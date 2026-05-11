@@ -550,7 +550,7 @@
                 } else if (currentStatus === 'TOURETTES') {
                     neuroInsight = 'Pathological hyper-connectivity within somatomotor loops. Low-D cliques become hyper-stable.';
                     subjectiveInsight = '"The urge." Physical pressure building in limbs; motor discharge required to resolve tension.';
-                    if (pharmaEfficacy === 0) explanation = 'Negative State (Tourette\'s). Pathological hyper-connectivity causing tics.';
+                    if (pharmaEfficacy === 0) explanation = "Negative State (Tourette's). Pathological hyper-connectivity causing tics.";
                     else if (pharmaEfficacy < 1) explanation = 'Sub-therapeutic. Targeted D2 antagonism softening spikes.';
                     else if (pharmaEfficacy === 1) explanation = 'Optimal dosage. Successful dampening back to smooth baseline.';
                     else explanation = 'Over-dampening. network rigidity (Parkinsonian side-effects).';
@@ -577,51 +577,56 @@
             }
         }
         function loadTopology(status) {
-            if (!topologyData) return;
+            if (!topologyData || !topologyData.baseline) return;
             currentStatus = status;
             
             while(lobeGroup.children.length > 0) lobeGroup.remove(lobeGroup.children[0]);
             while(edgeGroup.children.length > 0) edgeGroup.remove(edgeGroup.children[0]);
             while(cliqueGroup.children.length > 0) cliqueGroup.remove(cliqueGroup.children[0]);
 
-            const data = topologyData[status];
+            const data = topologyData.baseline;
             const isResistant = status === 'RESISTANT';
             
             document.getElementById('state-val').innerText = isResistant ? "PTSD_FLASH_DYSFUNCTION" : (status === 'DEPRESSION' ? "MAJOR_DEPRESSIVE_DYSREGULATION" : "HEALTHY_COGNITION");
             document.getElementById('state-val').style.color = isResistant ? "#ff0055" : (status === 'DEPRESSION' ? "#38bdf8" : "#00ffcc");
             document.getElementById('integrity-val').innerText = isResistant ? "24%" : (status === 'DEPRESSION' ? "42%" : "100%");
             document.getElementById('integrity-val').style.color = isResistant ? "#ff0055" : (status === 'DEPRESSION' ? "#38bdf8" : "#00ffcc");
-            document.getElementById('clique-val').innerText = data.stats.total_cliques_2D_plus;
+            document.getElementById('clique-val').innerText = data.stats.clique_count;
 
             // Render Lobes (Dynamic Spheres)
-            const lobeGeo = new THREE.SphereGeometry(4, 16, 16);
+            const lobeGeo = new THREE.SphereGeometry(1, 24, 24);
             data.nodes.forEach((n) => {
-                let baseColor = 0x8b5cf6; // Default (Purple)
-                if (n.z < -20) baseColor = 0xf43f5e; // Visual Cortex (Rose)
-                else if (n.y > 15 && n.z >= -20 && n.z <= 20) baseColor = 0x10b981; // Somatomotor (Emerald)
-                else if (n.y < 0 && n.z >= -20 && n.z <= 20) baseColor = 0xf59e0b; // Limbic / Ventral Attn (Amber)
-                else if (n.z > 20) baseColor = 0x818cf8; // Frontal / Control (Indigo)
+                let baseColor = 0x8b5cf6;
+                if (n.region === "Visual") baseColor = 0xf43f5e;
+                else if (n.region === "SomatoMotor") baseColor = 0x10b981;
+                else if (n.region === "Limbic") baseColor = 0xf59e0b;
+                else if (n.region === "Control") baseColor = 0x818cf8;
+                else if (n.region === "VentAttn") baseColor = 0x06b6d4;
 
                 const color = isResistant ? 0xaa0033 : baseColor;
                 const lobeMat = new THREE.MeshPhongMaterial({ 
                     color: color, 
                     emissive: color,
-                    emissiveIntensity: 0.2,
+                    emissiveIntensity: 0.3,
                     transparent: true,
-                    opacity: 0.8
+                    opacity: 0.85,
+                    shininess: 100
                 });
                 const mesh = new THREE.Mesh(lobeGeo, lobeMat);
                 mesh.position.set(n.x, n.y, n.z);
-                mesh.userData = n;
-                mesh.userData.origin = new THREE.Vector3(n.x, n.y, n.z);
-                mesh.userData.baseColor = baseColor;
+                
+                const hScale = 3 + (n.hubness || 0) * 2;
+                mesh.scale.setScalar(hScale);
+                
+                mesh.userData = { ...n, origin: new THREE.Vector3(n.x, n.y, n.z), baseColor: baseColor, hScale: hScale };
                 lobeGroup.add(mesh);
             });
 
             // Edges
-            const edgeMat = new THREE.LineBasicMaterial({ color: isResistant ? 0x660022 : 0x4c1d95, transparent: true, opacity: 0.1 });
+            const edgeMat = new THREE.LineBasicMaterial({ color: isResistant ? 0x660022 : 0x4c1d95, transparent: true, opacity: 0.15 });
             data.edges.forEach(e => {
                 const s = data.nodes[e.source], t = data.nodes[e.target];
+                if (!s || !t) return;
                 const points = [new THREE.Vector3(s.x, s.y, s.z), new THREE.Vector3(t.x, t.y, t.z)];
                 const geo = new THREE.BufferGeometry().setFromPoints(points);
                 const line = new THREE.Line(geo, edgeMat);
@@ -635,6 +640,7 @@
                     const positions = [];
                     for (let i = 1; i < c.nodes.length - 1; i++) {
                         const n0 = data.nodes[c.nodes[0]], ni = data.nodes[c.nodes[i]], ni1 = data.nodes[c.nodes[i+1]];
+                        if (!n0 || !ni || !ni1) continue;
                         positions.push(n0.x, n0.y, n0.z, ni.x, ni.y, ni.z, ni1.x, ni1.y, ni1.z);
                     }
                     const geo = new THREE.BufferGeometry();
@@ -643,12 +649,15 @@
                     const mat = new THREE.MeshPhongMaterial({ 
                         color: isResistant ? 0xff0055 : 0x00ffcc, 
                         transparent: true, 
-                        opacity: 0.15, 
-                        side: THREE.DoubleSide 
+                        opacity: 0.18, 
+                        side: THREE.DoubleSide,
+                        blending: THREE.AdditiveBlending 
                     });
                     cliqueGroup.add(new THREE.Mesh(geo, mat));
                 }
             });
+
+            updateModText();
         }
 
         function onMouseMove(event) {
