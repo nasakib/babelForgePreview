@@ -190,9 +190,14 @@
                         </select>
                     </div>
 
-                    <button onclick="applyOptimalDoses()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold uppercase tracking-widest py-3 rounded-lg transition-colors shadow-md shadow-emerald-200">
-                        ⚡ Auto-Adjust Dosages
-                    </button>
+                    <div class="flex gap-2">
+                        <button onclick="applyOptimalDoses()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold uppercase tracking-widest py-3 rounded-lg transition-colors shadow-md shadow-emerald-200">
+                            ⚡ Auto-Adjust
+                        </button>
+                        <button onclick="autoBuildStack()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold uppercase tracking-widest py-3 rounded-lg transition-colors shadow-md shadow-indigo-200">
+                            🤖 Auto-Build Stack
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -1165,6 +1170,56 @@
         function toggleExplanation() {
             const overlay = document.getElementById('science-explanation');
             overlay.classList.toggle('hidden');
+        }
+
+        function autoBuildStack() {
+            const targetState = document.getElementById('target-state').value;
+            const feedbackBox = document.getElementById('assistant-feedback');
+            
+            feedbackBox.innerHTML = `
+                <div class="space-y-2 p-3 bg-indigo-50 border border-indigo-100 rounded-lg text-xs font-mono text-indigo-800">
+                    <p>> Initiating Auto-Build Optimization Protocol...</p>
+                    <p>> Target Vector: ${targetState.toUpperCase()}</p>
+                    <p>> Evaluating pharmacopeia (150+ indexed compounds)...</p>
+                </div>
+            `;
+            
+            setTimeout(() => {
+                currentStack = [];
+                let newStackIds = [];
+                
+                if (targetState === 'focus') {
+                    newStackIds = ['SS-20', 'NIC']; // Frontoparietal upregulation + transient coupling
+                } else if (targetState === 'relaxation') {
+                    newStackIds = ['CBD', 'DR-02']; // Global stabilization + motor dampening
+                } else if (targetState === 'sleep') {
+                    newStackIds = ['FLX']; // Broad dampening (simulated as heavy sedation for this specific library)
+                } else if (targetState === 'creative') {
+                    newStackIds = ['LL-07', 'THC']; // DMN fluidity + entropy
+                } else {
+                    newStackIds = ['ZB-01']; // Baseline stabilization
+                }
+                
+                // Construct the stack objects with default zero tolerance
+                currentStack = newStackIds.map(id => {
+                    const molData = moleculeDB.find(m => m.id === id);
+                    return { ...molData, currentIntensity: 0, toleranceMonths: 0 };
+                });
+                
+                renderStack();
+                
+                const logEl = feedbackBox.querySelector('div');
+                logEl.innerHTML += `<p>> Selected primary agents: ${newStackIds.join(', ')}</p>`;
+                logEl.innerHTML += `<p>> Calculating mass and tolerance scalar vectors...</p>`;
+                
+                setTimeout(() => {
+                    logEl.innerHTML += `<p>> <strong>Stack Constructed.</strong> Triggering algorithmic titration...</p>`;
+                    setTimeout(() => {
+                        applyOptimalDoses();
+                    }, 800);
+                }, 800);
+                
+            }, 600);
         }
 
         populateMolecules();

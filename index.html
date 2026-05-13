@@ -118,6 +118,14 @@
                 <button onclick="document.getElementById('color-keys').classList.toggle('hidden')" class="bg-slate-900/80 hover:bg-slate-800 text-white border border-slate-700/50 px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-widest transition-all backdrop-blur-md pointer-events-auto">Toggle Legend</button>
                 <div id="color-keys" class="flex flex-col gap-2 pointer-events-none hidden lg:flex">
                     <div class="bg-slate-900/80 backdrop-blur-md p-3 rounded-lg border border-slate-700/50">
+                        <h4 class="text-[9px] uppercase font-bold text-slate-400 mb-2 border-b border-slate-700/50 pb-1">Physics & Movement</h4>
+                        <div class="grid grid-cols-1 gap-1.5 text-[10px] text-slate-300 font-mono">
+                            <div class="flex items-center gap-1.5">🌊 Smooth Wave: Healthy Phase-Locking</div>
+                            <div class="flex items-center gap-1.5">⚡ Jittering: Pathological Noise / Entropy</div>
+                            <div class="flex items-center gap-1.5">🛑 Frozen: Over-Dampened / Rigid</div>
+                        </div>
+                    </div>
+                    <div class="bg-slate-900/80 backdrop-blur-md p-3 rounded-lg border border-slate-700/50">
                         <h4 class="text-[9px] uppercase font-bold text-slate-400 mb-2 border-b border-slate-700/50 pb-1">Anatomical Regions</h4>
                         <div class="grid grid-cols-2 gap-x-4 gap-y-1.5 text-[10px] text-slate-300 font-mono">
                             <div class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full shadow-[0_0_5px_#8b5cf6]" style="background:#8b5cf6"></div> Default</div>
@@ -238,7 +246,13 @@
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                                 Optimization
                             </span>
-                            <button onclick="autoOptimizeIntervention()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded shadow-sm transition-colors">Auto-Optimize</button>
+                            <div class="flex items-center gap-2">
+                                <label class="flex items-center gap-1 text-[9px] font-bold text-emerald-700 cursor-pointer">
+                                    <input type="checkbox" id="allow-neuromod" class="accent-emerald-600" checked>
+                                    Allow Neuromod
+                                </label>
+                                <button onclick="autoOptimizeIntervention()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded shadow-sm transition-colors">Auto-Optimize</button>
+                            </div>
                         </div>
                         <div id="auto-optimize-log" class="text-[9px] font-mono text-emerald-700 mb-2 space-y-1 hidden">
                             <!-- Logs injected here -->
@@ -835,8 +849,21 @@
                     if (activeDrugIDs.includes("LL-07") && activeStates.has("DEPRESSION")) { targetScore += 40 * (currentRegimen.find(r=>r.id==="LL-07").dose * weightFactor); analysis += "LL-07 restoring reward circuit fluidity. "; }
                     if (activeDrugIDs.includes("DR-02") && activeStates.has("TOURETTES")) { targetScore += 35 * (currentRegimen.find(r=>r.id==="DR-02").dose * weightFactor); analysis += "DR-02 dampening somatomotor loops. "; }
                     
-                    if (currentStim === 'TMS' && activeStates.has("ADHD")) { targetScore += 15; analysis += "TMS augmenting Frontal control. "; }
-                    if (currentStim === 'DBS' && activeStates.has("TOURETTES")) { targetScore += 20; analysis += "DBS forcefully breaking rigid motor cliques. "; }
+                    if (currentStim === 'TMS' && activeStates.has("ADHD")) { 
+                        targetScore += 15; 
+                        analysis += "TMS augmenting Frontal control. "; 
+                        subjective += " A distinct, rhythmic tapping sensation accompanies a sharp clearing of mental static.";
+                    }
+                    if (currentStim === 'DBS' && activeStates.has("TOURETTES")) { 
+                        targetScore += 20; 
+                        analysis += "DBS forcefully breaking rigid motor cliques. "; 
+                        subjective += " A deep structural resetting feeling; the physical urge to tic is abruptly halted.";
+                    }
+                    if (currentStim === 'TDCS') {
+                        targetScore += 10;
+                        analysis += "tDCS elevating cortical excitability. ";
+                        subjective += " A mild tingling at the scalp corresponds with a gentle lift in energy and mood.";
+                    }
                     
                     if (targetScore > score + 20) {
                         subjective = "Symptoms are receding. The topological structures are actively shifting towards a healthy configuration.";
@@ -953,9 +980,14 @@
                  addLog(`Dosage adjusted up to counteract ${patientTolerances[bestDrug]}mo tolerance.`, 1300);
             }
             
+            const allowNeuromod = document.getElementById('allow-neuromod').checked;
             let optimalStim = 'NONE';
-            if (activeStates.has("ADHD")) optimalStim = 'TMS';
-            if (activeStates.has("TOURETTES")) optimalStim = 'DBS';
+            if (allowNeuromod) {
+                if (activeStates.has("ADHD")) optimalStim = 'TMS';
+                if (activeStates.has("TOURETTES")) optimalStim = 'DBS';
+                if (activeStates.has("DEPRESSION") && bestDose > 1.5) optimalStim = 'TDCS';
+            }
+            
             if (optimalStim !== 'NONE') addLog(`Adjunct Therapy: Assigned ${optimalStim} neuromodulation.`, 1500);
 
             setTimeout(() => {
