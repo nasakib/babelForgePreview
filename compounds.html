@@ -175,48 +175,10 @@
         </div>
     </div>
 
+    <script src="data/molecules.js"></script>
     <script>
-        // Shared Database (mirrored from stack-simulator)
-        const svgIndole = `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" class="w-full h-full"><path d="M30 70 L30 40 L55 25 L80 40 L80 70 L55 85 Z"/><path d="M30 40 L10 25 L10 50 Z"/><circle cx="55" cy="55" r="10"/></svg>`;
-        const svgPhen = `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" class="w-full h-full"><path d="M20 50 L40 20 L70 20 L90 50 L70 80 L40 80 Z"/><line x1="20" y1="50" x2="5" y2="50"/><line x1="40" y1="80" x2="30" y2="95"/></svg>`;
-        const svgTricyclic = `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" class="w-full h-full"><path d="M10 50 L30 20 L60 20 L80 50 L60 80 L30 80 Z"/><path d="M60 20 L80 10 L100 30 L80 50"/><circle cx="45" cy="50" r="12"/></svg>`;
-
-        const molecules = [
-            { id: 'zb01', name: 'ZenBud™ (ZB-01)', class: 'novel', classLabel: 'Precision Agonist', svg: svgIndole, halfLife: 'medium', effects: { arousal: 0.1, dampening: 0.0, chaos: -0.8, repair: 1.5 } },
-            { id: 'll07', name: 'LimbicLink™ (LL-07)', class: 'novel', classLabel: 'DMN Modulator', svg: svgTricyclic, halfLife: 'long', effects: { arousal: -0.2, dampening: 0.3, chaos: 0.4, repair: 1.2 } },
-            { id: 'ss20', name: 'SynaptoStim™ (SS-20)', class: 'novel', classLabel: 'Targeted DRI', svg: svgPhen, halfLife: 'short', effects: { arousal: 1.5, dampening: 0.0, chaos: -0.2, repair: 0.5 } },
-            { id: 'dr02', name: 'DopaReg™ (DR-02)', class: 'novel', classLabel: 'Precision Antagonist', svg: svgPhen, halfLife: 'medium', effects: { arousal: -0.5, dampening: 1.2, chaos: -0.4, repair: 0.2 } },
-            { id: 'nx44', name: 'NeuroX™ (NX-44)', class: 'novel', classLabel: 'BDNF Enhancer', svg: svgIndole, halfLife: 'long', effects: { arousal: 0.2, dampening: 0.1, chaos: -0.5, repair: 2.5 } },
-            { id: 'fluox', name: 'Fluoxetine', class: 'ssri', classLabel: 'SSRI', svg: svgPhen, halfLife: 'long', effects: { arousal: 0.0, dampening: 0.8, chaos: -0.2, repair: 0.4 } },
-            { id: 'escit', name: 'Escitalopram', class: 'ssri', classLabel: 'SSRI', svg: svgPhen, halfLife: 'medium', effects: { arousal: 0.1, dampening: 0.7, chaos: -0.1, repair: 0.3 } },
-            { id: 'venla', name: 'Venlafaxine', class: 'ssri', classLabel: 'SNRI', svg: svgPhen, halfLife: 'short', effects: { arousal: 0.5, dampening: 0.4, chaos: 0.1, repair: 0.2 } },
-            { id: 'amph', name: 'Amphetamine', class: 'stimulant', classLabel: 'Releaser', svg: svgPhen, halfLife: 'medium', addictionPotential: 0.7, effects: { arousal: 2.0, dampening: -0.5, chaos: 0.5, repair: -0.2 } },
-            { id: 'methyp', name: 'Methylphenidate', class: 'stimulant', classLabel: 'NDRI', svg: svgPhen, halfLife: 'short', addictionPotential: 0.4, effects: { arousal: 1.5, dampening: -0.2, chaos: 0.3, repair: -0.1 } },
-            { id: 'modaf', name: 'Modafinil', class: 'stimulant', classLabel: 'Eugeroic', svg: svgPhen, halfLife: 'long', addictionPotential: 0.1, effects: { arousal: 0.8, dampening: 0.0, chaos: -0.1, repair: 0.1 } },
-            { id: 'arip', name: 'Aripiprazole', class: 'antipsychotic', classLabel: 'Partial Agonist', svg: svgTricyclic, halfLife: 'long', effects: { arousal: -0.2, dampening: 1.5, chaos: -0.5, repair: 0.2 } },
-            { id: 'quet', name: 'Quetiapine', class: 'antipsychotic', classLabel: 'SGA', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.5, dampening: 2.0, chaos: -0.2, repair: 0.1 } },
-            { id: 'halo', name: 'Haloperidol', class: 'antipsychotic', classLabel: 'FGA', svg: svgTricyclic, halfLife: 'long', effects: { arousal: -0.8, dampening: 2.5, chaos: 0.1, repair: -0.2 } },
-            { id: 'thc', name: 'Delta-9-THC', class: 'cannabinoid', classLabel: 'CB1 Agonist', svg: svgIndole, halfLife: 'short', addictionPotential: 0.3, effects: { arousal: -0.2, dampening: 0.5, chaos: 1.5, repair: -0.1 } },
-            { id: 'cbd', name: 'Cannabidiol (CBD)', class: 'cannabinoid', classLabel: 'Modulator', svg: svgIndole, halfLife: 'medium', effects: { arousal: -0.1, dampening: 0.4, chaos: -0.3, repair: 0.2 } },
-            { id: 'cbn', name: 'Cannabinol (CBN)', class: 'cannabinoid', classLabel: 'CB1 Weak Agonist', svg: svgIndole, halfLife: 'medium', effects: { arousal: -0.4, dampening: 0.8, chaos: 0.1, repair: 0.0 } },
-            { id: 'alpraz', name: 'Alprazolam', class: 'depressant', classLabel: 'Benzodiazepine', svg: svgTricyclic, halfLife: 'short', addictionPotential: 0.8, effects: { arousal: -0.6, dampening: 1.8, chaos: -0.4, repair: -0.2 } },
-            { id: 'clonaz', name: 'Clonazepam', class: 'depressant', classLabel: 'Benzodiazepine', svg: svgTricyclic, halfLife: 'long', addictionPotential: 0.7, effects: { arousal: -0.4, dampening: 1.5, chaos: -0.2, repair: -0.1 } },
-            { id: 'zolp', name: 'Zolpidem', class: 'depressant', classLabel: 'Z-Drug', svg: svgTricyclic, halfLife: 'short', addictionPotential: 0.6, effects: { arousal: -0.8, dampening: 2.0, chaos: 0.2, repair: -0.1 } },
-            { id: 'keta', name: 'Ketamine', class: 'novel', classLabel: 'NMDA Antagonist', svg: svgTricyclic, halfLife: 'short', effects: { arousal: 0.5, dampening: 0.0, chaos: 2.0, repair: 1.8 } },
-            { id: 'psilo', name: 'Psilocybin', class: 'novel', classLabel: '5-HT2A Agonist', svg: svgIndole, halfLife: 'short', effects: { arousal: 1.0, dampening: -0.5, chaos: 2.5, repair: 1.5 } },
-            { id: 'nicotine', name: 'Nicotine', class: 'stimulant', classLabel: 'nAChR Agonist', svg: svgPhen, halfLife: 'short', addictionPotential: 0.9, effects: { arousal: 0.6, dampening: 0.0, chaos: 0.1, repair: 0.0 } },
-            { id: 'donepezil', name: 'Donepezil', class: 'stimulant', classLabel: 'AChEI', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: 0.4, dampening: 0.0, chaos: -0.1, repair: 0.2 } },
-            { id: 'memantine', name: 'Memantine', class: 'depressant', classLabel: 'NMDA Antagonist', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.1, dampening: 0.3, chaos: -0.2, repair: 0.3 } },
-            { id: 'dextro', name: 'Dextromethorphan (DXM)', class: 'depressant', classLabel: 'NMDA Antagonist', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: 0.1, dampening: 0.6, chaos: 0.9, repair: 0.1 } },
-            { id: 'fent', name: 'Fentanyl', class: 'depressant', classLabel: 'Mu-Opioid Agonist', svg: svgTricyclic, halfLife: 'short', addictionPotential: 1.0, effects: { arousal: -1.5, dampening: 2.5, chaos: 0.2, repair: 1.2 } },
-            { id: 'oxy', name: 'Oxycodone', class: 'depressant', classLabel: 'Mu-Opioid Agonist', svg: svgTricyclic, halfLife: 'medium', addictionPotential: 0.8, effects: { arousal: -0.8, dampening: 1.8, chaos: 0.3, repair: 1.0 } },
-            { id: 'meth', name: 'Methamphetamine', class: 'stimulant', classLabel: 'Potent Releaser', svg: svgPhen, halfLife: 'long', addictionPotential: 0.9, effects: { arousal: 2.8, dampening: -1.2, chaos: 2.5, repair: -1.0 } },
-            { id: 'coke', name: 'Cocaine', class: 'stimulant', classLabel: 'DRI / SNDRI', svg: svgPhen, halfLife: 'short', addictionPotential: 0.85, effects: { arousal: 2.2, dampening: -0.8, chaos: 1.8, repair: -0.5 } },
-            { id: 'sr17', name: 'SR17-018', class: 'novel', classLabel: 'Biased Opioid Agonist', svg: svgIndole, halfLife: 'long', isCure: true, targetAddiction: 'depressant', effects: { arousal: 0.1, dampening: 0.2, chaos: -1.5, repair: 2.0 } }
-        ];
-
         // Sort alphabetically
-        molecules.sort((a, b) => a.name.localeCompare(b.name));
+        window.molecules.sort((a, b) => a.name.localeCompare(b.name));
 
         function filterCompounds() {
             const query = document.getElementById('comp-search').value.toLowerCase();
@@ -226,7 +188,7 @@
             list.innerHTML = '';
             let count = 0;
 
-            molecules.forEach(mol => {
+            window.molecules.forEach(mol => {
                 if (cls !== 'all' && mol.class !== cls) return;
                 if (query && !mol.name.toLowerCase().includes(query) && !mol.classLabel.toLowerCase().includes(query)) return;
                 

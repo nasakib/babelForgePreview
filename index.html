@@ -46,16 +46,29 @@
 <body class="h-screen w-screen overflow-hidden flex flex-col font-sans">
 
     <!-- Top Navigation -->
-    <nav class="h-14 border-b border-slate-200 bg-white flex items-center justify-between px-6 shrink-0 z-50">
+    <nav class="h-14 border-b border-slate-200 bg-white flex items-center justify-between px-6 shrink-0 z-50 relative">
         <a href="index.html" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <svg class="w-6 h-6 text-indigo-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
             <span class="font-bold text-lg tracking-tight">babelForge <span class="text-indigo-600">Engine</span></span>
         </a>
-        <div class="flex gap-4">
+        <div class="hidden lg:flex gap-4">
             <button onclick="toggleMethodology()" class="text-xs font-bold text-slate-500 hover:text-indigo-600 uppercase tracking-widest transition-colors">Methodology & Validity</button>
             <a href="11d-projection.html" class="text-xs font-bold text-slate-500 hover:text-indigo-600 uppercase tracking-widest transition-colors">11D Legacy</a>
             <a href="pharma-projection.html" class="text-xs font-bold text-slate-500 hover:text-indigo-600 uppercase tracking-widest transition-colors">Stack Builder</a>
             <a href="compounds.html" class="text-xs font-bold text-slate-500 hover:text-indigo-600 uppercase tracking-widest transition-colors">Compounds</a>
+        </div>
+        <!-- Mobile Menu Button -->
+        <div class="lg:hidden flex items-center">
+            <button class="text-slate-500 hover:text-indigo-600 focus:outline-none" onclick="document.getElementById('mobile-menu-index').classList.toggle('hidden')">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+            </button>
+        </div>
+        <!-- Mobile Nav -->
+        <div id="mobile-menu-index" class="hidden lg:hidden bg-white border-b border-slate-200 px-4 pt-2 pb-4 space-y-2 shadow-lg absolute w-full top-14 left-0">
+            <button onclick="toggleMethodology(); document.getElementById('mobile-menu-index').classList.add('hidden')" class="block w-full text-left px-3 py-2 rounded-md text-base font-semibold text-slate-700 hover:text-indigo-600 hover:bg-slate-50">Methodology & Validity</button>
+            <a href="11d-projection.html" class="block px-3 py-2 rounded-md text-base font-semibold text-slate-700 hover:text-indigo-600 hover:bg-slate-50">11D Legacy</a>
+            <a href="pharma-projection.html" class="block px-3 py-2 rounded-md text-base font-semibold text-slate-700 hover:text-indigo-600 hover:bg-slate-50">Stack Builder</a>
+            <a href="compounds.html" class="block px-3 py-2 rounded-md text-base font-semibold text-slate-700 hover:text-indigo-600 hover:bg-slate-50">Compounds</a>
         </div>
     </nav>
 
@@ -453,9 +466,14 @@
             "DR-02": { name: "DopaReg-D2 (Precision)", class: "Novel", target: "Somatomotor Dampening", mech: "Precision D2 antagonism to selectively dampen hyper-connected motor loops.", toleranceRate: 0.05, indications: ["TOURETTES"] },
             "NX-44": { name: "NeuroX (Precision)", class: "Novel", target: "Global Synaptogenesis", mech: "BDNF modulator enhancing wide-scale topological repair.", toleranceRate: 0.02, indications: ["DEPRESSION", "PTSD"] },
             "SR17": { name: "SR17-018 (Precision)", class: "Novel", target: "Biased Opioid Agonism", mech: "Stabilizes opioid withdrawal without respiratory depression. Reverses chaotic debt.", toleranceRate: 0.02, indications: ["WITHDRAWAL_OPIOID"] },
+            "NRG01": { name: "NRG-01 (Precision)", class: "Novel", target: "DA Plasticity", mech: "Reverses stimulant-induced dopaminergic crash without rebound.", toleranceRate: 0.02, indications: ["WITHDRAWAL_STIMULANT"] },
             "KET": { name: "Ketamine (Conventional)", class: "Conventional", target: "NMDA Antagonism", mech: "Rapid glutamate burst inducing dissociative DMN disruption.", toleranceRate: 0.3, indications: ["DEPRESSION"] },
             "FLX": { name: "Fluoxetine (Conventional)", class: "Conventional", target: "SSRI", mech: "Broad serotonin reuptake inhibition. Induces global dampening.", toleranceRate: 0.1, indications: ["DEPRESSION", "PTSD"] },
             "AMP": { name: "Amphetamine (Conventional)", class: "Conventional", target: "Monoamine Release", mech: "Global stimulant. High risk of hyperarousal toxicity.", toleranceRate: 0.5, indications: ["ADHD"] },
+            "METHADONE": { name: "Methadone (Conventional)", class: "Conventional", target: "Mu-Opioid Agonism", mech: "Long-acting full agonist. Prevents acute withdrawal chaos but maintains high tolerance.", toleranceRate: 0.5, indications: ["WITHDRAWAL_OPIOID"] },
+            "BUPRE": { name: "Buprenorphine (Conventional)", class: "Conventional", target: "Partial Agonism", mech: "High-affinity partial agonist. Displaces full agonists, lowering withdrawal ceiling.", toleranceRate: 0.3, indications: ["WITHDRAWAL_OPIOID"] },
+            "CLON": { name: "Clonidine (Conventional)", class: "Conventional", target: "Alpha-2 Agonism", mech: "Dampens autonomic hyperactivity (noradrenergic storms) during acute withdrawal.", toleranceRate: 0.1, indications: ["WITHDRAWAL_OPIOID", "WITHDRAWAL_STIMULANT"] },
+            "ACAMP": { name: "Acamprosate (Conventional)", class: "Conventional", target: "GABA/Glu Modulator", mech: "Stabilizes hyper-glutamatergic state post-alcohol withdrawal.", toleranceRate: 0.1, indications: [] },
             "THC": { name: "Delta-9-THC (Recreational)", class: "Recreational", target: "CB1 Agonism", mech: "Increases entropy in DMN, disrupts working memory cliques.", toleranceRate: 0.6, indications: [] },
             "CBD": { name: "Cannabidiol (Functional)", class: "Functional", target: "CB Modulator", mech: "Soft dampening of limbic hyperarousal. Increases global stability.", toleranceRate: 0.05, indications: ["PTSD", "TOURETTES"] },
             "NIC": { name: "Nicotine (Functional)", class: "Recreational", target: "nAChR Agonism", mech: "Transient sharp increase in Frontoparietal coupling.", toleranceRate: 0.8, indications: ["ADHD"] }
@@ -1002,8 +1020,8 @@
                 "PTSD": [ { id: "ZB-01", mult: 40 }, { id: "FLX", mult: 20 }, { id: "CBD", mult: 15 } ],
                 "DEPRESSION": [ { id: "LL-07", mult: 40 }, { id: "KET", mult: 35 }, { id: "FLX", mult: 25 }, { id: "NX-44", mult: 45 } ],
                 "TOURETTES": [ { id: "DR-02", mult: 35 }, { id: "CBD", mult: 10 } ],
-                "WITHDRAWAL_OPIOID": [ { id: "SR17", mult: 55 }, { id: "CBD", mult: 15 } ],
-                "WITHDRAWAL_STIMULANT": [ { id: "SS-20", mult: 35 }, { id: "AMP", mult: 15 } ]
+                "WITHDRAWAL_OPIOID": [ { id: "SR17", mult: 55 }, { id: "BUPRE", mult: 40 }, { id: "METHADONE", mult: 35 }, { id: "CLON", mult: 25 }, { id: "CBD", mult: 15 } ],
+                "WITHDRAWAL_STIMULANT": [ { id: "NRG01", mult: 50 }, { id: "SS-20", mult: 35 }, { id: "CLON", mult: 20 }, { id: "AMP", mult: 15 } ]
             };
 
             addLog(`Detected dominant pathology: ${dominantState}`, 100);
