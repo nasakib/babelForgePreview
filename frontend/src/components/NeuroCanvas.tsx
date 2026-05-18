@@ -259,7 +259,8 @@ function BrainScene({
       tmpObj.current.updateMatrix();
       inst.setMatrixAt(i, tmpObj.current.matrix);
 
-      // Color: white base, with phase/pharma adjustments
+      // Color: region base, with phase/pharma adjustments
+      let baseHex = REGION_COLOR[topo.nodes[i].region as keyof typeof REGION_COLOR] || "#ffffff";
       if (viewPerspective === "physics") {
         // Pure phase chromatic for physics
         tmpColor.current.setHSL((phase / (Math.PI * 2) + 1) % 1, 0.85, 0.5 + 0.3 * amp);
@@ -270,11 +271,11 @@ function BrainScene({
           (vectors.arousal > 0.3 && (cls === "Control" || cls === "SomatoMotor")) ||
           (vectors.dampening > 0.3 && (cls === "Default" || cls === "Limbic")) ||
           (vectors.repair > 0.3);
-        tmpColor.current.set(targeted ? "#ffffff" : "#2a3441");
+        tmpColor.current.set(targeted ? baseHex : "#2a3441");
         if (targeted) tmpColor.current.multiplyScalar(0.8 + amp * 0.4);
       } else {
-        // White nodes for anatomy/topology
-        tmpColor.current.set("#ffffff").multiplyScalar(0.6 + 0.4 * amp);
+        // Region colors for anatomy/topology
+        tmpColor.current.set(baseHex).multiplyScalar(0.6 + 0.4 * amp);
       }
       inst.setColorAt(i, tmpColor.current);
     }
