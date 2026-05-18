@@ -220,6 +220,15 @@
             <!-- Right Panel: 3D Visualization -->
         <div class="flex-grow bg-white border border-slate-200 rounded-2xl p-1 shadow-sm flex flex-col relative min-h-[500px] lg:min-h-full">
             <div id="canvas-container" class="w-full h-full min-h-[500px] lg:min-h-[auto] cursor-crosshair rounded-xl overflow-hidden bg-[#030008]"></div>
+            <!-- Target Area Overlay -->
+            <div id="target-overlay" class="absolute bottom-6 right-6 z-10 bg-slate-900/80 border border-slate-700 rounded-xl p-3 backdrop-blur-md pointer-events-none w-64 hidden transition-opacity duration-300">
+                <div class="flex items-center gap-2 mb-2 border-b border-slate-700 pb-1">
+                    <div class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></div>
+                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Active Targets</span>
+                </div>
+                <div id="target-regions-list" class="space-y-1.5">
+                </div>
+            </div>
             
             <!-- Overlay Info -->
             <div class="absolute top-6 left-6 pointer-events-none z-10">
@@ -613,15 +622,16 @@
                 }
 
                 let baseColor = 0x8b5cf6; // Default (Purple)
-                if (z < -20) baseColor = 0xf43f5e; // Visual Cortex (Rose)
-                else if (y > 15 && z >= -20 && z <= 20) baseColor = 0x10b981; // Somatomotor (Emerald)
-                else if (y < 0 && z >= -20 && z <= 20) baseColor = 0xf59e0b; // Limbic / Ventral Attn (Amber)
-                else if (z > 20) baseColor = 0x818cf8; // Frontal / Control (Indigo)
+                let regionStr = 'Default';
+                if (z < -20) { baseColor = 0xf43f5e; regionStr = 'Visual'; }
+                else if (y > 15 && z >= -20 && z <= 20) { baseColor = 0x10b981; regionStr = 'SomatoMotor'; }
+                else if (y < 0 && z >= -20 && z <= 20) { baseColor = 0xf59e0b; regionStr = 'Limbic'; }
+                else if (z > 20) { baseColor = 0x818cf8; regionStr = 'Control'; }
 
                 const mat = new THREE.MeshPhongMaterial({ color: baseColor, emissive: baseColor, emissiveIntensity: 0.3, transparent: true, opacity: 0.9, shininess: 100 });
                 const mesh = new THREE.Mesh(lobeGeo, mat);
                 mesh.position.set(x, y, z);
-                mesh.userData = { origin: new THREE.Vector3(x, y, z), id: i, baseColor: baseColor };                baseNodes.push(mesh);
+                mesh.userData = { origin: new THREE.Vector3(x, y, z), id: i, baseColor: baseColor, region: regionStr };                baseNodes.push(mesh);
                 lobeGroup.add(mesh);
             }
 
@@ -676,7 +686,51 @@
             animate();
         }
 
+        let activeTargetRegions = new Set();
+        let activeTargetEffects = {};
+
         function updateSimulation() {
+            // --- Target Regions Logic ---
+            activeTargetRegions.clear();
+            activeTargetEffects = {};
+            
+            currentStack.forEach(mol => {
+                if (mol.currentIntensity > 0) {
+                    let regions = [];
+                    if (mol.class === 'stimulant') regions = ['Control', 'SomatoMotor'];
+                    else if (mol.class === 'depressant' || mol.id === 'keta') regions = ['Default', 'Limbic'];
+                    else if (mol.class === 'ssri') regions = ['Default', 'Limbic'];
+                    else if (mol.id === 'zb01' || mol.id === 'nx44') regions = ['Control', 'SomatoMotor', 'Limbic', 'Default', 'Visual'];
+                    else if (mol.id === 'ss20') regions = ['Control'];
+                    else if (mol.id === 'dr02') regions = ['SomatoMotor'];
+                    else regions = ['Default'];
+                    
+                    regions.forEach(region => {
+                        activeTargetRegions.add(region);
+                        if (!activeTargetEffects[region]) activeTargetEffects[region] = [];
+                        activeTargetEffects[region].push(mol);
+                    });
+                }
+            });
+
+            const overlay = document.getElementById('target-overlay');
+            const list = document.getElementById('target-regions-list');
+            if (activeTargetRegions.size > 0 && overlay && list) {
+                overlay.classList.remove('hidden');
+                list.innerHTML = Array.from(activeTargetRegions).map(region => {
+                    const fx = activeTargetEffects[region];
+                    let desc = fx.map(f => `<span class="text-[9px] text-${f.isBabelForge ? 'purple' : (f.isBlue ? 'blue' : 'indigo')}-400 font-bold">${f.name}</span>`).join(', ');
+                    return `
+                        <div class="bg-slate-800/50 p-2 rounded border border-slate-700">
+                            <span class="block text-[10px] font-bold text-rose-400 uppercase tracking-widest mb-1">${region} Target</span>
+                            <p class="text-[9px] text-slate-300 leading-tight">${desc}</p>
+                        </div>
+                    `;
+                }).join('');
+            } else if (overlay) {
+                overlay.classList.add('hidden');
+            }
+
             // Calculate Net Vectors based on dosage
             let net = { arousal: 0, dampening: 0, chaos: 0, repair: 0 };
             
@@ -885,17 +939,26 @@
                 
                 // Color & Emissive
                 let targetColor = new THREE.Color(node.userData.baseColor); // Base regional color
-                if (v.repair > 0.5 && v.chaos <= 0) targetColor.setHex(0xfcd34d); // Gold repair
+                
+                let isTargeted = activeTargetRegions.has(node.userData.region);
+                
+                if (isTargeted) {
+                    targetColor.setHex(0xe11d48); // Rose highlight for active pharmacological targets
+                } else if (v.repair > 0.5 && v.chaos <= 0) targetColor.setHex(0xfcd34d); // Gold repair
                 else if (v.dampening > 1.0) targetColor.setHex(0x475569); // Slate grey rigid
                 else if (v.chaos > 0.5 || v.arousal > 2.0) targetColor.setHex(0xef4444); // Red toxic
                 
                 node.material.color.lerp(targetColor, 0.1);
                 
                 let emissiveInt = 0.3;
-                if (v.repair > 0) emissiveInt = 0.6;
-                if (v.dampening > 1) emissiveInt = 0.1;
-                if (v.chaos > 1) emissiveInt = 1.5;
-                node.material.emissiveIntensity = emissiveInt + wave*0.2;
+                if (isTargeted) {
+                    emissiveInt = 0.8 + wave * 0.4;
+                } else {
+                    if (v.repair > 0) emissiveInt = 0.6;
+                    if (v.dampening > 1) emissiveInt = 0.1;
+                    if (v.chaos > 1) emissiveInt = 1.5;
+                }
+                node.material.emissiveIntensity = emissiveInt + (!isTargeted ? wave*0.2 : 0);
             });
 
             raycaster.setFromCamera(mouse, camera);

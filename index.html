@@ -168,6 +168,16 @@
 
             <div id="canvas-container" class="w-full h-full cursor-crosshair"></div>
 
+            <!-- Target Area Overlay -->
+            <div id="target-overlay" class="absolute bottom-4 right-4 z-10 bg-slate-900/80 border border-slate-700 rounded-xl p-3 backdrop-blur-md pointer-events-none w-64 hidden transition-opacity duration-300">
+                <div class="flex items-center gap-2 mb-2 border-b border-slate-700 pb-1">
+                    <div class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></div>
+                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Active Pharmacological Targets</span>
+                </div>
+                <div id="target-regions-list" class="space-y-1.5">
+                </div>
+            </div>
+
             <!-- Node Inspector Overlay -->
             <div id="node-inspector" class="absolute bottom-4 left-4 z-20 bg-slate-900/90 backdrop-blur-md border border-slate-700 p-3 rounded-xl shadow-2xl text-white w-[calc(100%-2rem)] sm:w-64 hidden transition-opacity duration-300">
                 <div class="flex justify-between items-start mb-3">
@@ -1093,12 +1103,60 @@
             }, 1800);
         }
 
+        let activeTargetRegions = new Set();
+        let activeTargetEffects = {};
+
         function updateSimulation(skipAiReset = false) {
             currentStim = document.getElementById('stim-select').value;
             composeTopology();
             const statesText = activeStates.size > 0 ? Array.from(activeStates).join(' + ') : 'Healthy Baseline';
             document.getElementById('state-summary-text').innerText = `Active Modifiers: ${statesText}`;
             
+            // --- Target Regions Logic ---
+            activeTargetRegions.clear();
+            activeTargetEffects = {};
+
+            currentRegimen.forEach(r => {
+                const def = drugDefinitions[r.id];
+                let regions = [];
+                if (def.class === 'Stimulant' || (def.class === 'Conventional' && r.id === 'AMP')) regions = ['Control', 'SomatoMotor'];
+                else if (def.class === 'Depressant' || def.target.includes('Opioid') || def.target.includes('GABA') || r.id === 'KET') regions = ['Default', 'Limbic'];
+                else if (def.class === 'SSRI' || def.class === 'SNRI') regions = ['Default', 'Limbic'];
+                else if (r.id === 'ZB-01' || r.id === 'NX-44' || def.target.includes('Global')) regions = ['Control', 'SomatoMotor', 'Limbic', 'Default', 'Visual'];
+                else if (r.id === 'SS-20') regions = ['Control'];
+                else if (r.id === 'DR-02') regions = ['SomatoMotor'];
+                else regions = ['Default'];
+                
+                regions.forEach(region => {
+                    activeTargetRegions.add(region);
+                    if (!activeTargetEffects[region]) activeTargetEffects[region] = [];
+                    activeTargetEffects[region].push(def);
+                });
+            });
+
+            if (currentStim === 'TMS') { activeTargetRegions.add('Control'); if(!activeTargetEffects['Control']) activeTargetEffects['Control'] = []; activeTargetEffects['Control'].push({name: 'TMS', mech: 'Neuromodulation targeting left DLPFC', isBlue: true}); }
+            if (currentStim === 'DBS') { activeTargetRegions.add('SomatoMotor'); if(!activeTargetEffects['SomatoMotor']) activeTargetEffects['SomatoMotor'] = []; activeTargetEffects['SomatoMotor'].push({name: 'DBS', mech: 'Neuromodulation targeting motor loops', isBlue: true}); }
+            if (currentStim === 'TDCS') { activeTargetRegions.add('Control'); if(!activeTargetEffects['Control']) activeTargetEffects['Control'] = []; activeTargetEffects['Control'].push({name: 'tDCS', mech: 'Neuromodulation via anodal frontal stimulation', isBlue: true}); }
+
+            const overlay = document.getElementById('target-overlay');
+            const list = document.getElementById('target-regions-list');
+            if (activeTargetRegions.size > 0) {
+                overlay.classList.remove('hidden');
+                list.innerHTML = Array.from(activeTargetRegions).map(region => {
+                    const fx = activeTargetEffects[region];
+                    let desc = fx.map(f => `<span class="text-[9px] text-${f.isBabelForge ? 'purple' : (f.isBlue ? 'blue' : 'indigo')}-400 font-bold">${f.name}</span>: <span class="italic opacity-80">${f.mech}</span>`).join('<br>');
+                    return `
+                        <div class="bg-slate-800/50 p-2 rounded border border-slate-700">
+                            <span class="block text-[10px] font-bold text-rose-400 uppercase tracking-widest mb-1">${region} Target</span>
+                            <p class="text-[9px] text-slate-300 leading-tight">${desc}</p>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                overlay.classList.add('hidden');
+            }
+            // --- End Target Regions Logic ---
+
             if (!skipAiReset) {
                 document.getElementById('ai-diagnostics-container').style.display = 'none';
                 document.getElementById('ai-placeholder').style.display = 'flex';
@@ -1156,8 +1214,14 @@
                 } else {
                     node.scale.setScalar(3 + node.userData.nodeData.hubness);
                     node.material.color.setHex(node.userData.baseColor);
-                    node.material.emissive.setHex(node.userData.baseColor);
-                    node.material.emissiveIntensity = 0.4 + wave * 0.3 + (totalDose * 0.2);
+                    
+                    if (activeTargetRegions.has(node.userData.nodeData.region)) {
+                         node.material.emissive.setHex(0xe11d48); // Rose highlight
+                         node.material.emissiveIntensity = 0.6 + wave * 0.4 + (totalDose * 0.1);
+                    } else {
+                         node.material.emissive.setHex(node.userData.baseColor);
+                         node.material.emissiveIntensity = 0.4 + wave * 0.3 + (totalDose * 0.2);
+                    }
                 }
             });
             renderer.render(scene, camera);
