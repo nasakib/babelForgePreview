@@ -5,10 +5,6 @@ terraform {
       version = "~> 5.0"
     }
   }
-  backend "gcs" {
-    bucket = "babelforge-tf-state"
-    prefix = "terraform/state"
-  }
 }
 
 provider "google" {
