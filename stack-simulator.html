@@ -429,10 +429,18 @@
             // Acetylcholine, NMDA & Other
             { id: 'donepezil', name: 'Donepezil', class: 'stimulant', classLabel: 'AChEI', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: 0.4, dampening: 0.0, chaos: -0.1, repair: 0.2 } },
             { id: 'memantine', name: 'Memantine', class: 'depressant', classLabel: 'NMDA Antagonist', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.1, dampening: 0.3, chaos: -0.2, repair: 0.3 } },
-            { id: 'dextro', name: 'Dextromethorphan (DXM)', class: 'depressant', classLabel: 'NMDA Antagonist', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: 0.1, dampening: 0.6, chaos: 0.9, repair: 0.1 } }
+            { id: 'dextro', name: 'Dextromethorphan (DXM)', class: 'depressant', classLabel: 'NMDA Antagonist', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: 0.1, dampening: 0.6, chaos: 0.9, repair: 0.1 } },
+            
+            // --- NEW: Addictive Substances & Cures ---
+            { id: 'fent', name: 'Fentanyl', class: 'depressant', classLabel: 'Mu-Opioid Agonist', svg: svgTricyclic, halfLife: 'short', addictionPotential: 1.0, effects: { arousal: -1.5, dampening: 2.5, chaos: 0.2, repair: 1.2 } },
+            { id: 'oxy', name: 'Oxycodone', class: 'depressant', classLabel: 'Mu-Opioid Agonist', svg: svgTricyclic, halfLife: 'medium', addictionPotential: 0.8, effects: { arousal: -0.8, dampening: 1.8, chaos: 0.3, repair: 1.0 } },
+            { id: 'meth', name: 'Methamphetamine', class: 'stimulant', classLabel: 'Potent Releaser', svg: svgPhen, halfLife: 'long', addictionPotential: 0.9, effects: { arousal: 2.8, dampening: -1.2, chaos: 2.5, repair: -1.0 } },
+            { id: 'coke', name: 'Cocaine', class: 'stimulant', classLabel: 'DRI / SNDRI', svg: svgPhen, halfLife: 'short', addictionPotential: 0.85, effects: { arousal: 2.2, dampening: -0.8, chaos: 1.8, repair: -0.5 } },
+            { id: 'sr17', name: 'SR17-018', class: 'novel', classLabel: 'Biased Opioid Agonist', svg: svgIndole, halfLife: 'long', isCure: true, targetAddiction: 'depressant', effects: { arousal: 0.1, dampening: 0.2, chaos: -1.5, repair: 2.0 } }
         ];
 
         let currentStack = [];
+        let withdrawalStates = {}; // Track substances currently in withdrawal
 
         function populateMolecules() {
             const classFilter = document.getElementById('class-select').value;
@@ -471,16 +479,57 @@
         }
 
         function removeFromStack(index) {
+            const mol = currentStack[index];
+            if (mol.toleranceMonths > 3 && mol.addictionPotential > 0.5) {
+                withdrawalStates[mol.id] = { 
+                    name: mol.name, 
+                    potential: mol.addictionPotential, 
+                    class: mol.class,
+                    intensity: Math.min(1.0, mol.toleranceMonths / 24) 
+                };
+            }
             currentStack.splice(index, 1);
             renderStack();
             updateSimulation();
+        }
+
+        function clearWithdrawal(id) {
+            delete withdrawalStates[id];
+            updateSimulation();
+            renderStack();
         }
 
         function renderStack() {
             const list = document.getElementById('stack-list');
             document.getElementById('stack-count').innerText = currentStack.length + '/10';
             
-            if (currentStack.length === 0) {
+            let html = '';
+            
+            // Render Withdrawal States
+            Object.keys(withdrawalStates).forEach(id => {
+                const w = withdrawalStates[id];
+                html += `
+                    <div class="stack-item flex flex-col p-3 rounded-xl border border-rose-200 bg-rose-50 shadow-sm gap-2 animate-pulse">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 flex-none text-rose-600">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-xs text-rose-900">Withdrawal: ${w.name}</h4>
+                                    <p class="text-[9px] uppercase tracking-widest font-bold text-rose-500">Neurochemical Debt</p>
+                                </div>
+                            </div>
+                            <button onclick="clearWithdrawal('${id}')" class="text-rose-400 hover:text-rose-600 p-1 self-start" title="Forced Stabilization (Cheating)">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            </button>
+                        </div>
+                        <p class="text-[10px] text-rose-700 leading-tight">Severe downregulation detected. Endogenous ${w.class === 'depressant' ? 'opioid' : 'dopamine'} system is failing to maintain homeostasis.</p>
+                    </div>
+                `;
+            });
+
+            if (currentStack.length === 0 && Object.keys(withdrawalStates).length === 0) {
                 list.innerHTML = `
                     <div id="empty-stack" class="h-full flex flex-col items-center justify-center text-center opacity-50 py-10">
                         <svg viewBox="0 0 24 24" class="w-10 h-10 mb-2 opacity-50" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -493,13 +542,12 @@
                 return;
             }
             
-            list.innerHTML = '';
             currentStack.forEach((mol, idx) => {
                 const isNovel = mol.class === 'novel';
                 const colorClass = isNovel ? 'text-indigo-600' : 'text-slate-600';
                 const bgClass = isNovel ? 'bg-indigo-50 border-indigo-200' : 'bg-white border-slate-200';
                 
-                list.innerHTML += `
+                html += `
                     <div class="stack-item flex flex-col p-3 rounded-xl border ${bgClass} shadow-sm gap-2">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-3">
@@ -537,6 +585,7 @@
                     </div>
                 `;
             });
+            list.innerHTML = html;
         }
 
         function updateStackTolerance(index, val) {
@@ -709,7 +758,8 @@
             let net = { arousal: 0, dampening: 0, chaos: 0, repair: 0 };
             
             let classCounts = { ssri: 0, stimulant: 0, depressant: 0, antipsychotic: 0, cannabinoid: 0, novel: 0 };
-            
+            let cures = [];
+
             const weight = parseFloat(document.getElementById('patient-weight').value) || 70;
             const weightFactor = 70 / weight;
             
@@ -730,7 +780,8 @@
                 const overDose = Math.max(0, ratio - 1);
                 
                 classCounts[mol.class] = (classCounts[mol.class] || 0) + ratio;
-                
+                if (mol.isCure) cures.push(mol);
+
                 // Scale baseline effects
                 net.arousal += mol.effects.arousal * Math.min(1, ratio);
                 net.dampening += mol.effects.dampening * Math.min(1, ratio);
@@ -752,6 +803,25 @@
                         net.repair -= overDose * 0.5;
                     }
                 }
+            });
+
+            // --- Withdrawal Effects (Stackable) ---
+            Object.keys(withdrawalStates).forEach(id => {
+                const w = withdrawalStates[id];
+                let wChaos = w.potential * 3.0 * w.intensity;
+                let wArousal = (w.class === 'depressant') ? 1.0 : -1.0; // Opioid withdrawal is hyper-aroused; Stimulant withdrawal is hypo-aroused
+                
+                // Apply Cures (SR17-018)
+                cures.forEach(cure => {
+                    if (cure.targetAddiction === w.class) {
+                        wChaos *= 0.2; // Significant reduction in withdrawal chaos
+                        net.repair += 1.0; // Extra stabilization
+                    }
+                });
+
+                net.chaos += wChaos;
+                net.arousal += wArousal * w.intensity;
+                net.repair -= 0.5 * w.intensity;
             });
             
             // --- Non-Linear Overlapping (Drug-Drug Interactions) ---
@@ -1131,9 +1201,16 @@
             }
 
             if (cv.chaos > t.chaos[1]) {
-                prescriptions.push(`<strong>Severe Chaos Detected:</strong> Add precision agonist ZB-01 to stabilize cliques.`);
+                prescriptions.push(`<strong>Severe Chaos Detected:</strong> High topological jittering. If this is withdrawal, consider <strong>SR17-018</strong> for opioid-specific stabilization or ZB-01 for global clique locking.`);
                 aligned = false;
             }
+
+            // Addiction & Withdrawal Specifics
+            Object.keys(withdrawalStates).forEach(id => {
+                const w = withdrawalStates[id];
+                aligned = false;
+                prescriptions.push(`<strong>ACTIVE WITHDRAWAL: ${w.name}</strong>. Severe neurochemical debt. Homeostasis is compromised. ${w.class === 'depressant' ? 'SR17-018' : 'Precision Titration'} recommended.`);
+            });
 
             if (prescriptions.length > 0) {
                 html += '<div class="space-y-2 mt-2">';
@@ -1189,20 +1266,20 @@
                 let newStackIds = [];
                 
                 if (targetState === 'focus') {
-                    newStackIds = ['SS-20', 'NIC']; // Frontoparietal upregulation + transient coupling
+                    newStackIds = ['ss20', 'nicotine']; // Frontoparietal upregulation + transient coupling
                 } else if (targetState === 'relaxation') {
-                    newStackIds = ['CBD', 'DR-02']; // Global stabilization + motor dampening
+                    newStackIds = ['cbd', 'dr02']; // Global stabilization + motor dampening
                 } else if (targetState === 'sleep') {
-                    newStackIds = ['FLX']; // Broad dampening (simulated as heavy sedation for this specific library)
+                    newStackIds = ['fluox']; // Broad dampening (simulated as heavy sedation for this specific library)
                 } else if (targetState === 'creative') {
-                    newStackIds = ['LL-07', 'THC']; // DMN fluidity + entropy
+                    newStackIds = ['zb01', 'thc']; // DMN fluidity + entropy
                 } else {
-                    newStackIds = ['ZB-01']; // Baseline stabilization
+                    newStackIds = ['zb01']; // Baseline stabilization
                 }
                 
                 // Construct the stack objects with default zero tolerance
                 currentStack = newStackIds.map(id => {
-                    const molData = moleculeDB.find(m => m.id === id);
+                    const molData = molecules.find(m => m.id === id);
                     return { ...molData, currentIntensity: 0, toleranceMonths: 0 };
                 });
                 
