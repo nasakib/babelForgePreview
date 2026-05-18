@@ -12,7 +12,7 @@ app = FastAPI(title="babelForge API", description="Backend Engine for Computatio
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # For development, allows all. In production, restrict to frontend domain.
+    allow_origins=["*"], # Allowing all origins for custom domain compatibility
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
