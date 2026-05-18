@@ -2,7 +2,7 @@ import random
 import math
 import os
 import google.generativeai as genai
-from fastapi import FastAPI
+from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional, Any, Dict
@@ -276,3 +276,87 @@ def chat_endpoint(req: ChatRequest):
         return {"response": response.text}
     except Exception as e:
         return {"response": f"Error communicating with AI: {str(e)}"}
+
+@app.post("/api/fmri/analyze")
+async def analyze_fmri(file: UploadFile = File(...)):
+    # Simulate processing of an fMRI BOLD signal file
+    # In a real scenario, this would use nibabel/nilearn to extract time series
+    # and compute functional connectivity matrices, then apply algebraic topology.
+    
+    # Simulate a processing delay
+    import asyncio
+    await asyncio.sleep(2)
+    
+    # Generate a patient-specific topological model based on the "fMRI"
+    num_nodes = 150
+    nodes = []
+    a, b, c = 48, 38, 58
+    
+    for i in range(num_nodes):
+        while True:
+            x = random.uniform(-a, a)
+            y = random.uniform(-b, b)
+            z = random.uniform(-c, c)
+            if (x/a)**2 + (y/b)**2 + (z/c)**2 <= 1:
+                if abs(x) < 4: continue
+                break
+                
+        hemi = "RH" if x > 0 else "LH"
+        if z < -25: cluster = "Visual"
+        elif y > 18 and -25 <= z <= 20: cluster = "SomatoMotor"
+        elif z > 25 and y > 5: cluster = "Control"
+        elif z > 25 and y <= 5: cluster = "Limbic"
+        elif y < -5 and -25 <= z <= 20: cluster = "VentAttn"
+        else: cluster = "Default"
+            
+        nodes.append({
+            "id": i,
+            "name": f"{hemi}_{cluster}_{i}",
+            "region": cluster,
+            "hemi": hemi,
+            "x": round(x, 2),
+            "y": round(y, 2),
+            "z": round(z, 2),
+            "cliques": 0,
+            "hubness": 0
+        })
+
+    # Generate custom patient edges
+    patient_edges = []
+    k_neighbors = random.randint(2, 4)
+    for i in range(num_nodes):
+        distances = [(j, (nodes[j]["x"]-nodes[i]["x"])**2 + (nodes[j]["y"]-nodes[i]["y"])**2 + (nodes[j]["z"]-nodes[i]["z"])**2) for j in range(num_nodes) if i != j]
+        distances.sort(key=lambda item: item[1])
+        for j, dist in distances[:k_neighbors]:
+            pair = tuple(sorted((i, j)))
+            patient_edges.append(pair)
+            
+    # Simulate finding specific pathology based on the file contents
+    # We'll just randomly assign one for the simulation
+    detected_pathologies = random.sample(["DEPRESSION", "ADHD", "PTSD", "TOURETTES"], random.randint(1, 2))
+    
+    # Introduce topological artifacts based on pathology
+    if "DEPRESSION" in detected_pathologies:
+        # Hyper-stable DMN
+        dmn_nodes = [n["id"] for n in nodes if n["region"] == "Default"]
+        if dmn_nodes:
+            for _ in range(20):
+                u, v = random.sample(dmn_nodes, 2)
+                patient_edges.append(tuple(sorted((u, v))))
+
+    patient_edges = list(set(patient_edges))
+    edges_formatted = [{"source": u, "target": v} for u, v in patient_edges]
+
+    return {
+        "filename": file.filename,
+        "status": "success",
+        "diagnostic_profile": detected_pathologies,
+        "topology": {
+            "nodes": nodes,
+            "edges": edges_formatted,
+            "stats": {
+                "total_edges": len(edges_formatted),
+                "estimated_entropy": random.uniform(0.3, 0.8)
+            }
+        }
+    }

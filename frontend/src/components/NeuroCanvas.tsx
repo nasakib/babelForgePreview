@@ -6,7 +6,7 @@ import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useAI } from "@/context/AIContext";
 
-export default function NeuroCanvas({ activeStack = [], vectors = { arousal: 0, dampening: 0, chaos: 0, repair: 0 } }: any) {
+export default function NeuroCanvas({ activeStack = [], vectors = { arousal: 0, dampening: 0, chaos: 0, repair: 0 }, customTopology = null }: any) {
   const aiContext = useAI();
   const viewPerspective = aiContext?.viewPerspective || 'topology';
   
@@ -15,6 +15,23 @@ export default function NeuroCanvas({ activeStack = [], vectors = { arousal: 0, 
   const a = 40, b = 30, c = 50;
   
   const nodes = useMemo(() => {
+    if (customTopology && customTopology.nodes) {
+        return customTopology.nodes.map((n: any) => {
+            let baseColor = 0x8b5cf6;
+            if (n.region === 'Visual') baseColor = 0xf43f5e;
+            else if (n.region === 'SomatoMotor') baseColor = 0x10b981;
+            else if (n.region === 'Limbic') baseColor = 0xf59e0b;
+            else if (n.region === 'Control') baseColor = 0x818cf8;
+            return {
+                id: n.id,
+                position: new THREE.Vector3(n.x, n.y, n.z),
+                baseColor,
+                region: n.region || 'Default',
+                hubness: n.hubness || 0
+            };
+        });
+    }
+
     const tempNodes = [];
     for (let i = 0; i < numNodes; i++) {
       let x, y, z;
@@ -41,9 +58,20 @@ export default function NeuroCanvas({ activeStack = [], vectors = { arousal: 0, 
       });
     }
     return tempNodes;
-  }, []);
+  }, [customTopology]);
 
   const edges = useMemo(() => {
+    if (customTopology && customTopology.edges) {
+        return customTopology.edges.map((e: any) => {
+            const sourceNode = nodes.find((n: any) => n.id === e.source);
+            const targetNode = nodes.find((n: any) => n.id === e.target);
+            if (sourceNode && targetNode) {
+                return [sourceNode.position, targetNode.position];
+            }
+            return null;
+        }).filter(Boolean);
+    }
+
     const tempEdges: THREE.Vector3[][] = [];
     for (let i = 0; i < nodes.length; i++) {
       for (let j = i + 1; j < nodes.length; j++) {
@@ -53,7 +81,7 @@ export default function NeuroCanvas({ activeStack = [], vectors = { arousal: 0, 
       }
     }
     return tempEdges;
-  }, [nodes]);
+  }, [nodes, customTopology]);
 
   const activeTargetRegions = useMemo(() => {
     const regions = new Set<string>();

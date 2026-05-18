@@ -33,6 +33,12 @@ export default function Navbar() {
         <Link href="/stack-simulator" className={`text-xs font-bold uppercase tracking-widest transition-colors ${isActive('/stack-simulator') ? 'text-indigo-600' : 'text-slate-500 hover:text-indigo-600'}`}>
           Stack Builder
         </Link>
+        <Link href="/signal-analyzer" className={`text-xs font-bold uppercase tracking-widest transition-colors ${isActive('/signal-analyzer') ? 'text-indigo-600' : 'text-slate-500 hover:text-indigo-600'}`}>
+          Signal Analyzer
+        </Link>
+        <Link href="/fmri-analysis" className={`text-xs font-bold uppercase tracking-widest transition-colors ${isActive('/fmri-analysis') ? 'text-indigo-600' : 'text-slate-500 hover:text-indigo-600'}`}>
+          fMRI Upload
+        </Link>
         <Link href="/compounds" className={`text-xs font-bold uppercase tracking-widest transition-colors ${isActive('/compounds') ? 'text-indigo-600' : 'text-slate-500 hover:text-indigo-600'}`}>
           Compounds
         </Link>
@@ -63,6 +69,9 @@ export default function Navbar() {
         </Link>
         <Link href="/signal-analyzer" className="block px-3 py-2 rounded-md text-base font-semibold text-slate-700 hover:text-indigo-600 hover:bg-slate-50">
           Signal Analyzer
+        </Link>
+        <Link href="/fmri-analysis" className="block px-3 py-2 rounded-md text-base font-semibold text-slate-700 hover:text-indigo-600 hover:bg-slate-50">
+          fMRI Upload
         </Link>
         <Link href="/compounds" className="block px-3 py-2 rounded-md text-base font-semibold text-slate-700 hover:text-indigo-600 hover:bg-slate-50">
           Compounds
