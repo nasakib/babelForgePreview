@@ -284,8 +284,8 @@ function BrainScene({
 
     // Edge opacity pulses with global coherence
     if (lineMatRef.current) {
-      const baseOp = viewPerspective === "physics" ? 0.15 : 0.35;
-      lineMatRef.current.opacity = baseOp + kuramoto.R * 0.5;
+      const baseOp = viewPerspective === "physics" ? 0.08 : 0.15;
+      lineMatRef.current.opacity = baseOp + kuramoto.R * 0.25;
     }
   });
 
@@ -300,10 +300,9 @@ function BrainScene({
         <sphereGeometry args={[1, 14, 14]} />
         <meshStandardMaterial
           vertexColors
-          emissive={new THREE.Color("#ffffff")}
-          emissiveIntensity={0.2}
-          roughness={0.2}
-          metalness={0.8}
+          emissive={new THREE.Color("#05070d")}
+          roughness={0.4}
+          metalness={0.1}
           toneMapped={false}
         />
       </instancedMesh>
@@ -313,7 +312,7 @@ function BrainScene({
           ref={lineMatRef}
           vertexColors
           transparent
-          opacity={0.4}
+          opacity={0.15}
           depthWrite={false}
           blending={THREE.AdditiveBlending}
         />
