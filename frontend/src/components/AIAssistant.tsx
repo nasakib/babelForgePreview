@@ -21,7 +21,7 @@ export default function AIAssistant() {
     );
   }
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!input.trim()) return;
     
     // Add user message
@@ -29,24 +29,26 @@ export default function AIAssistant() {
     setMessages(newMessages);
     setInput("");
 
-    // Simulate AI response based on context (Placeholder for FastAPI integration)
-    setTimeout(() => {
-      let aiResponse = "Processing request...";
-      if (activePathologies.length > 0) {
-        aiResponse = `I see you are analyzing ${activePathologies.join(', ')}. `;
-        if (integrityScore < 60) {
-          aiResponse += `The baseline alignment is critically low (${integrityScore}%). Consider adding a targeted precision compound like ZB-01 or applying neuromodulation.`;
-        } else {
-          aiResponse += `The current alignment is stable (${integrityScore}%).`;
-        }
-      } else if (activeStack.length > 0) {
-         aiResponse = `Analyzing current stack: ${activeStack.map(s => s.name).join(', ')}. `;
-      } else {
-         aiResponse = `The simulation is at a healthy baseline. Select a pathology or compound to begin modeling.`;
-      }
+    // Build context
+    const context = {
+      module: currentModule,
+      pathologies: activePathologies,
+      stack: activeStack.map(s => ({ name: s.name, dose: s.currentIntensity })),
+      integrityScore: integrityScore
+    };
 
-      setMessages([...newMessages, { role: 'ai', content: aiResponse }]);
-    }, 800);
+    try {
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL || "https://babelforge-backend-6zvkkshyoq-uc.a.run.app";
+      const response = await fetch(`${backendUrl}/api/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: input, context })
+      });
+      const data = await response.json();
+      setMessages([...newMessages, { role: 'ai', content: data.response }]);
+    } catch (e) {
+      setMessages([...newMessages, { role: 'ai', content: "Error connecting to AI Backend." }]);
+    }
   };
 
   return (

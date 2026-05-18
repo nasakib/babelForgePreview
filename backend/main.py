@@ -1,9 +1,11 @@
 import random
 import math
+import os
+import google.generativeai as genai
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Any, Dict
 
 app = FastAPI(title="babelForge API", description="Backend Engine for Computational Topology and Pharmacopeia")
 
@@ -18,6 +20,10 @@ app.add_middleware(
 
 class PathologicalState(BaseModel):
     states: List[str]
+
+class ChatRequest(BaseModel):
+    message: str
+    context: Dict[str, Any]
 
 @app.get("/api/health")
 def health_check():
@@ -249,3 +255,24 @@ def get_pharma_data():
         },
         "drugs": drugs
     }
+
+@app.post("/api/chat")
+def chat_endpoint(req: ChatRequest):
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        return {"response": "GEMINI_API_KEY not configured on server. Please configure it in GitHub Secrets."}
+    
+    genai.configure(api_key=api_key)
+    
+    try:
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        
+        system_instruction = "You are babelForge AI, a clinical computational neuroscience assistant. You help users analyze 3D brain network topologies, pharmacological stacks, and psychiatric comorbidities. Be concise, clinical, and precise. Analyze the user's current context provided below."
+        
+        prompt = f"{system_instruction}\n\nSystem Context:\nModule: {req.context.get('module', 'None')}\nPathologies: {req.context.get('pathologies', [])}\nStack: {req.context.get('stack', [])}\nBaseline Alignment Score: {req.context.get('integrityScore', 'N/A')}%\n\nUser Query: {req.message}"
+        
+        response = model.generate_content(prompt)
+        
+        return {"response": response.text}
+    except Exception as e:
+        return {"response": f"Error communicating with AI: {str(e)}"}
