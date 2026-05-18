@@ -61,8 +61,16 @@ export default function Navbar() {
         <Link href="/stack-simulator" className="block px-3 py-2 rounded-md text-base font-semibold text-slate-700 hover:text-indigo-600 hover:bg-slate-50">
           Stack Builder
         </Link>
+        <Link href="/signal-analyzer" className="block px-3 py-2 rounded-md text-base font-semibold text-slate-700 hover:text-indigo-600 hover:bg-slate-50">
+          Signal Analyzer
+        </Link>
         <Link href="/compounds" className="block px-3 py-2 rounded-md text-base font-semibold text-slate-700 hover:text-indigo-600 hover:bg-slate-50">
           Compounds
+        </Link>
+      </div>
+    </nav>
+  );
+}unds
         </Link>
       </div>
     </nav>
