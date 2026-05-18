@@ -194,8 +194,9 @@
                 
                 count++;
                 const isBabel = mol.isBabelForge;
-                const isNovel = mol.class === 'novel' && !isBabel;
-                const colorClass = isBabel ? 'text-purple-600' : (isNovel ? 'text-indigo-600' : 'text-slate-600');
+                const isBlue = mol.isBlue;
+                const isNovel = mol.class === 'novel' && !isBabel && !isBlue;
+                const colorClass = isBabel ? 'text-purple-600' : (isBlue ? 'text-blue-600' : (isNovel ? 'text-indigo-600' : 'text-slate-600'));
                 const badge = isBabel ? `<span class="bg-purple-100 text-purple-700 text-[8px] font-extrabold px-1.5 py-0.5 rounded ml-2 align-middle">babelForge</span>` : '';
                 
                 list.innerHTML += `
@@ -230,9 +231,10 @@
             document.getElementById('p-class').innerText = mol.classLabel;
             
             const isBabel = mol.isBabelForge;
-            const isNovel = mol.class === 'novel' && !isBabel;
-            const colorClass = isBabel ? 'text-purple-600' : (isNovel ? 'text-indigo-600' : 'text-slate-600');
-            const borderClass = isBabel ? 'border-purple-200 bg-purple-50' : (isNovel ? 'border-indigo-200 bg-indigo-50' : 'border-slate-200 bg-slate-50');
+            const isBlue = mol.isBlue;
+            const isNovel = mol.class === 'novel' && !isBabel && !isBlue;
+            const colorClass = isBabel ? 'text-purple-600' : (isBlue ? 'text-blue-600' : (isNovel ? 'text-indigo-600' : 'text-slate-600'));
+            const borderClass = isBabel ? 'border-purple-200 bg-purple-50' : (isBlue ? 'border-blue-200 bg-blue-50' : (isNovel ? 'border-indigo-200 bg-indigo-50' : 'border-slate-200 bg-slate-50'));
             const badge = isBabel ? `<span class="bg-purple-600 text-white text-[9px] font-bold px-2 py-0.5 rounded ml-2 align-middle border border-purple-500 shadow-sm">babelForge</span>` : '';
             
             document.getElementById('p-class').className = `text-xs uppercase tracking-widest font-bold px-3 py-1 rounded-full border ${colorClass} ${borderClass}`;

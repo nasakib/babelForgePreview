@@ -11,10 +11,10 @@ window.molecules = [
     { id: 'ss20', name: 'SynaptoStim™ (SS-20)', class: 'novel', classLabel: 'Targeted DRI', isBabelForge: true, svg: svgPhen, halfLife: 'short', effects: { arousal: 1.5, dampening: 0.0, chaos: -0.2, repair: 0.5 } },
     { id: 'dr02', name: 'DopaReg™ (DR-02)', class: 'novel', classLabel: 'Precision Antagonist', isBabelForge: true, svg: svgPhen, halfLife: 'medium', effects: { arousal: -0.5, dampening: 1.2, chaos: -0.4, repair: 0.2 } },
     { id: 'nx44', name: 'NeuroX™ (NX-44)', class: 'novel', classLabel: 'BDNF Enhancer', isBabelForge: true, svg: svgIndole, halfLife: 'long', effects: { arousal: 0.2, dampening: 0.1, chaos: -0.5, repair: 2.5 } },
-    { id: 'psilo', name: 'Psilocybin', class: 'novel', classLabel: 'Classic Psychedelic', svg: svgIndole, halfLife: 'medium', effects: { arousal: 0.8, dampening: -0.2, chaos: 1.2, repair: 0.5 } },
-    { id: 'mdma', name: 'MDMA', class: 'novel', classLabel: 'Empathogen', svg: svgPhen, halfLife: 'medium', effects: { arousal: 1.2, dampening: -0.3, chaos: 0.4, repair: 0.7 } },
-    { id: 'ketamine', name: 'Ketamine', class: 'novel', classLabel: 'Dissociative', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.2, dampening: 0.5, chaos: 1.0, repair: 0.9 } },
-    { id: 'lsd', name: 'LSD', class: 'novel', classLabel: 'Classic Psychedelic', svg: svgIndole, halfLife: 'medium', effects: { arousal: 0.7, dampening: -0.1, chaos: 1.4, repair: 0.4 } },
+    { id: 'psilo', name: 'Psilocybin', class: 'novel', classLabel: 'Classic Psychedelic', isBabelForge: true, svg: svgIndole, halfLife: 'medium', effects: { arousal: 0.8, dampening: -0.2, chaos: 1.2, repair: 0.5 } },
+    { id: 'mdma', name: 'MDMA', class: 'novel', classLabel: 'Empathogen', isBabelForge: true, svg: svgPhen, halfLife: 'medium', effects: { arousal: 1.2, dampening: -0.3, chaos: 0.4, repair: 0.7 } },
+    { id: 'ketamine', name: 'Ketamine', class: 'novel', classLabel: 'Dissociative', isBabelForge: true, svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.2, dampening: 0.5, chaos: 1.0, repair: 0.9 } },
+    { id: 'lsd', name: 'LSD', class: 'novel', classLabel: 'Classic Psychedelic', isBabelForge: true, svg: svgIndole, halfLife: 'medium', effects: { arousal: 0.7, dampening: -0.1, chaos: 1.4, repair: 0.4 } },
     
     // SSRIs, SNRIs & Antidepressants
     { id: 'sert', name: 'Sertraline', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.2, dampening: 0.8, chaos: -0.1, repair: 0.0 } },
@@ -87,7 +87,7 @@ window.molecules = [
     { id: 'dextro', name: 'Dextromethorphan (DXM)', class: 'depressant', classLabel: 'NMDA Antagonist', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: 0.1, dampening: 0.6, chaos: 0.9, repair: 0.1 } },
 
     // Novel & Conventional Withdrawal Treatments
-    { id: 'sr17', name: 'SR17-018', class: 'novel', classLabel: 'Biased Opioid Agonist', isBabelForge: true, svg: svgIndole, halfLife: 'long', isCure: true, targetAddiction: 'depressant', effects: { arousal: 0.1, dampening: 0.2, chaos: -1.5, repair: 2.0 } },
+    { id: 'sr17', name: 'SR17-018', class: 'novel', classLabel: 'Biased Opioid Agonist', isBlue: true, svg: svgIndole, halfLife: 'long', isCure: true, targetAddiction: 'depressant', effects: { arousal: 0.1, dampening: 0.2, chaos: -1.5, repair: 2.0 } },
     { id: 'nrg01', name: 'NRG-01 (DopaRestore)', class: 'novel', classLabel: 'DA Plasticity Enhancer', isBabelForge: true, svg: svgPhen, halfLife: 'long', isCure: true, targetAddiction: 'stimulant', effects: { arousal: 0.4, dampening: 0.0, chaos: -0.5, repair: 2.2 } },
     { id: 'methadone', name: 'Methadone', class: 'depressant', classLabel: 'Mu-Opioid Agonist', svg: svgTricyclic, halfLife: 'long', addictionPotential: 0.5, isCure: true, targetAddiction: 'depressant', effects: { arousal: -0.5, dampening: 1.5, chaos: -0.8, repair: 0.5 } },
     { id: 'buprenorphine', name: 'Buprenorphine', class: 'depressant', classLabel: 'Partial Opioid Agonist', svg: svgTricyclic, halfLife: 'long', addictionPotential: 0.3, isCure: true, targetAddiction: 'depressant', effects: { arousal: -0.2, dampening: 1.0, chaos: -1.0, repair: 0.8 } },
