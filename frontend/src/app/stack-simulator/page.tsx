@@ -3,12 +3,23 @@
 import { useState, useMemo, useEffect } from "react";
 import NeuroCanvas from "@/components/NeuroCanvas";
 import { molecules } from "@/data/molecules";
+import { useAI } from "@/context/AIContext";
 
 export default function StackSimulator() {
+  const { setCurrentModule, setActiveStack, setIntegrityScore, triggerAIAnalysis } = useAI();
+
+  useEffect(() => {
+    setCurrentModule("stack-simulator");
+  }, [setCurrentModule]);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [classFilter, setClassFilter] = useState("all");
   const [selectedMolId, setSelectedMolId] = useState(molecules[0]?.id || "");
   const [stack, setStack] = useState<any[]>([]);
+
+  useEffect(() => {
+    setActiveStack(stack);
+  }, [stack, setActiveStack]);
 
   // Computed Properties
   const filteredMolecules = useMemo(() => {
@@ -116,6 +127,10 @@ export default function StackSimulator() {
 
     return { net, label, desc, subj, sync };
   }, [stack]);
+
+  useEffect(() => {
+    setIntegrityScore(Math.round(simulationState.sync * 100));
+  }, [simulationState.sync, setIntegrityScore]);
 
   // Actions
   const addToStack = () => {
@@ -259,6 +274,10 @@ export default function StackSimulator() {
               <span className="text-[9px] uppercase font-bold text-rose-400 block mb-1">Projected Subjective Experience</span>
               <p className="text-xs text-slate-300 italic leading-relaxed drop-shadow">{simulationState.subj}</p>
           </div>
+          <button onClick={() => triggerAIAnalysis("Analyze the pharmacological interactions in my current stack.")} className="mt-4 bg-indigo-600/80 hover:bg-indigo-500 text-white text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-md transition-all border border-indigo-400/50 backdrop-blur-md shadow-lg flex items-center gap-2 pointer-events-auto">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+              Ask AI Co-Pilot
+          </button>
         </div>
 
         <div className="absolute bottom-6 right-6 p-4 bg-slate-900/90 border border-slate-700 rounded-xl backdrop-blur-xl min-w-[200px] shadow-2xl z-10 flex flex-col gap-3">
