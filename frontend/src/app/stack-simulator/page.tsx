@@ -295,26 +295,4 @@ export default function StackSimulator() {
       </div>
     </div>
   );
-}        </div>
-          <button onClick={() => triggerAIAnalysis("Analyze the pharmacological interactions in my current stack.")} className="mt-4 bg-indigo-600/80 hover:bg-indigo-500 text-white text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-md transition-all border border-indigo-400/50 backdrop-blur-md shadow-lg flex items-center gap-2 pointer-events-auto">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-              Ask babelAI
-          </button>
-        </div>
-
-        <div className="absolute bottom-6 right-6 p-4 bg-slate-900/90 border border-slate-700 rounded-xl backdrop-blur-xl min-w-[200px] shadow-2xl z-10 flex flex-col gap-3">
-            <div>
-                <div className="text-[9px] uppercase font-bold text-indigo-400 mb-2 tracking-widest">Baseline Alignment (Healthy)</div>
-                <div className="flex justify-between items-end mb-1">
-                    <span className="text-xs font-bold text-slate-400">Order (r)</span>
-                    <span className="text-lg text-emerald-400 font-mono font-bold">{simulationState.sync.toFixed(2)}</span>
-                </div>
-                <div className="w-full bg-slate-800 rounded-full h-1 mt-2 overflow-hidden">
-                    <div className="h-full bg-emerald-500 transition-all duration-300" style={{width: `${simulationState.sync * 100}%`}}></div>
-                </div>
-            </div>
-        </div>
-      </div>
-    </div>
-  );
 }

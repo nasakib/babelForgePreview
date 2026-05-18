@@ -70,9 +70,4 @@ export default function Navbar() {
       </div>
     </nav>
   );
-}unds
-        </Link>
-      </div>
-    </nav>
-  );
 }
