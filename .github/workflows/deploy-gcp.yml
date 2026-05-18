@@ -1,0 +1,100 @@
+name: Deploy to GCP
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'frontend/**'
+      - 'backend/**'
+      - '.github/workflows/deploy-gcp.yml'
+  workflow_dispatch:
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  REGION: us-central1
+  BACKEND_SERVICE: babelforge-backend
+  REPO_NAME: babelforge-backend-repo
+  FRONTEND_BUCKET: babelforge-frontend-prod
+
+jobs:
+  build-and-deploy-backend:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Google Auth
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+      - name: Build and Push Docker Image
+        working-directory: ./backend
+        run: |
+          IMAGE_NAME=${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/backend:${{ github.sha }}
+          docker build -t $IMAGE_NAME .
+          docker push $IMAGE_NAME
+
+      - name: Deploy to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ env.BACKEND_SERVICE }}
+          region: ${{ env.REGION }}
+          image: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/backend:${{ github.sha }}
+          env_vars: |
+            ENVIRONMENT=production
+
+  build-and-deploy-frontend:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Build Next.js (Static Export)
+        working-directory: ./frontend
+        # Requires output: 'export' in next.config.js
+        run: npm run build
+
+      - name: Google Auth
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Upload to Cloud Storage
+        working-directory: ./frontend/out
+        run: |
+          gsutil -m rsync -r -d . gs://${{ env.FRONTEND_BUCKET }}
+          # Set cache control to avoid serving stale content
+          gsutil -m setmeta -h "Cache-Control:no-cache, max-age=0" gs://${{ env.FRONTEND_BUCKET }}/index.html
+          gsutil -m setmeta -h "Cache-Control:public, max-age=31536000" gs://${{ env.FRONTEND_BUCKET }}/_next/**
