@@ -16,7 +16,7 @@ export default function SignalAnalyzer() {
   ];
 
   return (
-    <div className="flex-1 flex flex-col lg:flex-row overflow-hidden w-full h-[calc(100vh-3.5rem)]">
+    <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden w-full lg:h-[calc(100vh-3.5rem)]">
       
       {/* Sidebar Controls */}
       <div className="w-full lg:w-[350px] bg-surface-0 border-r border-line flex-none overflow-y-auto custom-scrollbar p-6 shadow-sm shrink-0 flex flex-col">

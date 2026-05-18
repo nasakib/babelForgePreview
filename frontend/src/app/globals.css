@@ -32,6 +32,21 @@ html, body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Mobile-safe heights using dvh with svh fallback */
+.min-h-screen-dvh { min-height: 100vh; min-height: 100svh; min-height: 100dvh; }
+.h-screen-dvh { height: 100vh; height: 100svh; height: 100dvh; }
+.h-app-mobile { height: calc(100vh - 3rem); height: calc(100svh - 3rem); height: calc(100dvh - 3rem); }
+@media (min-width: 1024px) {
+  .h-app-mobile { height: calc(100vh - 3rem); height: calc(100svh - 3rem); height: calc(100dvh - 3rem); }
+}
+
+/* Allow tap-highlight removal but keep focus visible */
+button, a, [role="button"] { -webkit-tap-highlight-color: transparent; }
+input, textarea, select { font-size: 16px; } /* prevents iOS zoom on focus */
+@media (min-width: 640px) {
+  input.input-clinical, textarea.input-clinical { font-size: 0.8125rem; }
+}
+
 ::selection { background: rgba(31, 109, 255, 0.32); color: #fff; }
 
 /* Scrollbar */

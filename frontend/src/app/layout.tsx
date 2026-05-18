@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter_Tight, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
 import Navbar from '@/components/Navbar'
@@ -23,6 +23,14 @@ export const metadata: Metadata = {
     'Computational topology + Kuramoto phase dynamics + precision-compound optimization for clinical neuroscience research.',
 }
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: 'cover',
+  themeColor: '#05070d',
+}
+
 export default function RootLayout({
   children,
 }: {
@@ -30,10 +38,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${interTight.variable} ${jetbrains.variable}`}>
-      <body className="font-sans antialiased min-h-screen flex flex-col overflow-hidden bg-canvas text-ink">
+      <body className="font-sans antialiased min-h-screen-dvh flex flex-col lg:overflow-hidden bg-canvas text-ink">
         <AIProvider>
           <Navbar />
-          <main className="flex-1 flex flex-col overflow-y-auto lg:overflow-hidden relative bg-void">
+          <main className="flex-1 flex flex-col lg:overflow-hidden relative bg-void">
             {children}
           </main>
           <AIAssistant />

@@ -29,7 +29,7 @@ export default function AIAssistant() {
       <button
         onClick={() => setIsAssistantOpen(true)}
         aria-label="Open babelAI"
-        className="fixed bottom-5 right-5 z-40 bg-surface-100 border border-line-strong hover:border-accent-500 text-ink p-3 rounded-clinical shadow-lg flex items-center gap-2 transition"
+        className="fixed bottom-4 right-4 sm:bottom-5 sm:right-5 z-40 bg-surface-100 border border-line-strong hover:border-accent-500 text-ink p-3 rounded-clinical shadow-lg flex items-center gap-2 transition min-h-[44px] min-w-[44px]"
       >
         <span className="status-dot ok" />
         <span className="text-[11px] font-mono uppercase tracking-widest2 text-ink-subtle">babelAI</span>
@@ -76,7 +76,7 @@ export default function AIAssistant() {
   };
 
   return (
-    <div className="fixed bottom-5 right-5 w-[360px] max-h-[70vh] z-50 clinical-card flex flex-col animate-fade-in-up shadow-2xl">
+    <div className="fixed bottom-3 right-3 left-3 sm:left-auto sm:bottom-5 sm:right-5 sm:w-[360px] max-h-[75vh] sm:max-h-[70vh] z-50 clinical-card flex flex-col animate-fade-in-up shadow-2xl">
       <div className="clinical-card-header">
         <div className="flex items-center gap-2">
           <span className="status-dot ok" />

@@ -20,8 +20,8 @@ export default function ElevenDProjection() {
   const eulerProxy = dimHist.reduce((acc, n, k) => acc + (k % 2 === 0 ? n : -n), 0);
 
   return (
-    <div className="flex-1 flex overflow-hidden h-[calc(100vh-3rem)] bg-canvas">
-      <aside className="w-[360px] border-r border-line flex flex-col">
+    <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden lg:h-[calc(100vh-3rem)] bg-canvas">
+      <aside className="w-full lg:w-[360px] shrink-0 border-b lg:border-b-0 lg:border-r border-line flex flex-col">
         <div className="clinical-card-header">
           <span className="section-label-strong">F6 · ALGEBRAIC TOPOLOGY</span>
           <span className="text-micro text-ink-muted font-mono">N={topo.N}</span>

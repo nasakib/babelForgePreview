@@ -36,8 +36,8 @@ export default function PharmaProjection() {
   }, []);
 
   return (
-    <div className="flex-1 flex overflow-hidden h-[calc(100vh-3rem)] bg-canvas">
-      <aside className="w-[320px] border-r border-line flex flex-col">
+    <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden lg:h-[calc(100vh-3rem)] bg-canvas">
+      <aside className="w-full lg:w-[320px] shrink-0 border-b lg:border-b-0 lg:border-r border-line flex flex-col">
         <div className="clinical-card-header">
           <span className="section-label-strong">F7 · 4-VECTOR PROJECTION</span>
           <span className="text-micro text-ink-muted font-mono">{visible.length}/{counts.total}</span>

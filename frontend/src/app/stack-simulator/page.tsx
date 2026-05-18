@@ -152,7 +152,7 @@ export default function StackSimulator() {
   };
 
   return (
-    <div className="flex-1 flex flex-col lg:flex-row overflow-hidden w-full h-[calc(100vh-3.5rem)]">
+    <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden w-full lg:h-[calc(100vh-3.5rem)]">
       {/* Left Sidebar: Stack Builder */}
       <div id="left-sidebar" className="w-full lg:w-[350px] bg-surface-0 border-r border-line flex-none overflow-y-auto custom-scrollbar z-20 flex flex-col p-4 shadow-sm shrink-0">
         <div className="clinical-card p-4 flex-none mb-4">
