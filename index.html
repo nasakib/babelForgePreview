@@ -440,7 +440,9 @@
             "ADHD": "ADHD (Frontoparietal Hypo-connectivity)",
             "PTSD": "PTSD (Limbic Hyperarousal)",
             "DEPRESSION": "Depression (DMN Hyper-stability)",
-            "TOURETTES": "Tourette's (Motor Loop Rigidity)"
+            "TOURETTES": "Tourette's (Motor Loop Rigidity)",
+            "WITHDRAWAL_OPIOID": "Opioid Withdrawal (Neurochemical Debt / Chaos)",
+            "WITHDRAWAL_STIMULANT": "Stimulant Withdrawal (Dopamine Depletion / Apathy)"
         };
 
         const drugDefinitions = {
@@ -449,6 +451,7 @@
             "SS-20": { name: "SynaptoStim (Precision)", class: "Novel", target: "Frontal Upregulation", mech: "Targeted dopaminergic stimulation in executive control regions.", toleranceRate: 0.05, indications: ["ADHD"] },
             "DR-02": { name: "DopaReg-D2 (Precision)", class: "Novel", target: "Somatomotor Dampening", mech: "Precision D2 antagonism to selectively dampen hyper-connected motor loops.", toleranceRate: 0.05, indications: ["TOURETTES"] },
             "NX-44": { name: "NeuroX (Precision)", class: "Novel", target: "Global Synaptogenesis", mech: "BDNF modulator enhancing wide-scale topological repair.", toleranceRate: 0.02, indications: ["DEPRESSION", "PTSD"] },
+            "SR17": { name: "SR17-018 (Precision)", class: "Novel", target: "Biased Opioid Agonism", mech: "Stabilizes opioid withdrawal without respiratory depression. Reverses chaotic debt.", toleranceRate: 0.02, indications: ["WITHDRAWAL_OPIOID"] },
             "KET": { name: "Ketamine (Conventional)", class: "Conventional", target: "NMDA Antagonism", mech: "Rapid glutamate burst inducing dissociative DMN disruption.", toleranceRate: 0.3, indications: ["DEPRESSION"] },
             "FLX": { name: "Fluoxetine (Conventional)", class: "Conventional", target: "SSRI", mech: "Broad serotonin reuptake inhibition. Induces global dampening.", toleranceRate: 0.1, indications: ["DEPRESSION", "PTSD"] },
             "AMP": { name: "Amphetamine (Conventional)", class: "Conventional", target: "Monoamine Release", mech: "Global stimulant. High risk of hyperarousal toxicity.", toleranceRate: 0.5, indications: ["ADHD"] },
@@ -670,6 +673,14 @@
                     stateText = 'Hyperaroused (PTSD)';
                     stateColor = 'text-rose-500';
                     impactDesc = 'Severe low-D edge density. Node is locked in a high-frequency trauma-recall loop.';
+                } else if (activeStates.has('WITHDRAWAL_OPIOID')) {
+                    stateText = 'Neurochemical Debt';
+                    stateColor = 'text-rose-600';
+                    impactDesc = 'Severe structural chaos due to rapid withdrawal of exogenous opioids.';
+                } else if (activeStates.has('WITHDRAWAL_STIMULANT') && (data.region === 'Control' || data.region === 'SomatoMotor')) {
+                    stateText = 'Dopaminergic Crash';
+                    stateColor = 'text-slate-500';
+                    impactDesc = 'Severe hypo-connectivity. Loss of motivation and structural drive.';
                 } else if (activeStates.has('ADHD') && data.region === 'Control') {
                     stateText = 'Hypo-active (ADHD)';
                     stateColor = 'text-slate-400';
@@ -760,7 +771,9 @@
                 let stateColor = baseColor;
                 if (isInterference) stateColor = 0x0ea5e9; // Cyan for treatment
                 else if (isPathological) {
-                    if (activeStates.has("PTSD") && n.region === "Limbic") stateColor = 0xe11d48;
+                    if (activeStates.has("WITHDRAWAL_OPIOID")) stateColor = 0xe11d48;
+                    else if (activeStates.has("WITHDRAWAL_STIMULANT") && (n.region === "Control" || n.region === "SomatoMotor")) stateColor = 0x64748b;
+                    else if (activeStates.has("PTSD") && n.region === "Limbic") stateColor = 0xe11d48;
                     else if (activeStates.has("ADHD") && n.region === "Control") stateColor = 0x64748b;
                     else if (activeStates.has("DEPRESSION") && n.region === "Default") stateColor = 0x818cf8;
                     else if (activeStates.has("TOURETTES") && n.region === "SomatoMotor") stateColor = 0xf59e0b;
@@ -877,6 +890,8 @@
                 if (activeStates.has("ADHD")) subExp.push("Effortful focus feeling like 'wading through static'.");
                 if (activeStates.has("DEPRESSION")) subExp.push("A profound 'Grey' loss of emotional contrast and heavy rumination.");
                 if (activeStates.has("TOURETTES")) subExp.push("A physical 'urge' or pressure requiring motor discharge.");
+                if (activeStates.has("WITHDRAWAL_OPIOID")) subExp.push("Extreme physical discomfort, dysautonomia, and severe anxiety (neurochemical debt).");
+                if (activeStates.has("WITHDRAWAL_STIMULANT")) subExp.push("Profound lethargy, anhedonia, and lack of drive (dopaminergic crash).");
                 subjective = "The patient is likely experiencing: " + subExp.join(" ");
                 
                 let targetScore = score;
@@ -889,6 +904,8 @@
                     if (activeDrugIDs.includes("SS-20") && activeStates.has("ADHD")) { targetScore += 45 * (currentRegimen.find(r=>r.id==="SS-20").dose * weightFactor); analysis += "SS-20 bridging Frontoparietal connectivity gap. "; }
                     if (activeDrugIDs.includes("LL-07") && activeStates.has("DEPRESSION")) { targetScore += 40 * (currentRegimen.find(r=>r.id==="LL-07").dose * weightFactor); analysis += "LL-07 restoring reward circuit fluidity. "; }
                     if (activeDrugIDs.includes("DR-02") && activeStates.has("TOURETTES")) { targetScore += 35 * (currentRegimen.find(r=>r.id==="DR-02").dose * weightFactor); analysis += "DR-02 dampening somatomotor loops. "; }
+                    if (activeDrugIDs.includes("SR17") && activeStates.has("WITHDRAWAL_OPIOID")) { targetScore += 50 * (currentRegimen.find(r=>r.id==="SR17").dose * weightFactor); analysis += "SR17-018 stabilizing opioid withdrawal debt without respiratory depression. "; }
+                    if (activeDrugIDs.includes("SS-20") && activeStates.has("WITHDRAWAL_STIMULANT")) { targetScore += 30 * (currentRegimen.find(r=>r.id==="SS-20").dose * weightFactor); analysis += "SS-20 slowly restoring dopaminergic drive. "; }
                     
                     if (currentStim === 'TMS' && activeStates.has("ADHD")) { 
                         targetScore += 15; 
@@ -976,12 +993,16 @@
             if (activeStates.has("DEPRESSION")) dominantState = "DEPRESSION";
             if (activeStates.has("TOURETTES")) dominantState = "TOURETTES";
             if (activeStates.has("PTSD")) dominantState = "PTSD";
+            if (activeStates.has("WITHDRAWAL_OPIOID")) dominantState = "WITHDRAWAL_OPIOID";
+            if (activeStates.has("WITHDRAWAL_STIMULANT")) dominantState = "WITHDRAWAL_STIMULANT";
 
             const options = {
                 "ADHD": [ { id: "SS-20", mult: 45 }, { id: "AMP", mult: 30 }, { id: "NIC", mult: 15 } ],
                 "PTSD": [ { id: "ZB-01", mult: 40 }, { id: "FLX", mult: 20 }, { id: "CBD", mult: 15 } ],
                 "DEPRESSION": [ { id: "LL-07", mult: 40 }, { id: "KET", mult: 35 }, { id: "FLX", mult: 25 }, { id: "NX-44", mult: 45 } ],
-                "TOURETTES": [ { id: "DR-02", mult: 35 }, { id: "CBD", mult: 10 } ]
+                "TOURETTES": [ { id: "DR-02", mult: 35 }, { id: "CBD", mult: 10 } ],
+                "WITHDRAWAL_OPIOID": [ { id: "SR17", mult: 55 }, { id: "CBD", mult: 15 } ],
+                "WITHDRAWAL_STIMULANT": [ { id: "SS-20", mult: 35 }, { id: "AMP", mult: 15 } ]
             };
 
             addLog(`Detected dominant pathology: ${dominantState}`, 100);
@@ -1084,6 +1105,7 @@
                 // Add jitter if high dose or pathological
                 let jitter = 0;
                 if (activeStates.size > 0 && totalDose < 1) jitter = 1.0;
+                if (activeStates.has("WITHDRAWAL_OPIOID") && totalDose < 1) jitter = 2.5; // Severe withdrawal chaos
                 if (totalDose > 2.5) jitter = 2.0; // toxicity
                 if (currentStim === 'TMS' && node.userData.nodeData.region === 'Control') jitter += 0.5;
                 if (currentStim === 'DBS' && node.userData.nodeData.region === 'SomatoMotor') jitter += 0.8;

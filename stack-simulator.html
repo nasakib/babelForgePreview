@@ -124,9 +124,14 @@
                         </select>
                     </div>
                     
-                    <button onclick="addToStack()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold uppercase tracking-widest py-3 rounded-lg transition-colors shadow-md shadow-indigo-200">
-                        + Add to Stack
-                    </button>
+                    <div class="flex gap-2">
+                        <button onclick="inspectCompound()" class="w-1/3 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold uppercase tracking-widest py-3 rounded-lg transition-colors shadow-sm border border-slate-200">
+                            Inspect
+                        </button>
+                        <button onclick="addToStack()" class="w-2/3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold uppercase tracking-widest py-3 rounded-lg transition-colors shadow-md shadow-indigo-200">
+                            + Add to Stack
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -1299,9 +1304,126 @@
             }, 600);
         }
 
+        function inspectCompound() {
+            const id = document.getElementById('mol-select').value;
+            const mol = molecules.find(m => m.id === id);
+            if (!mol) return;
+
+            const modal = document.getElementById('compound-modal');
+            const panel = document.getElementById('compound-panel');
+            
+            document.getElementById('c-name').innerText = mol.name;
+            document.getElementById('c-class').innerText = mol.classLabel;
+            document.getElementById('c-class').className = `text-[10px] uppercase tracking-widest font-bold ${mol.class === 'novel' ? 'text-indigo-500' : 'text-slate-500'}`;
+            document.getElementById('c-svg').innerHTML = mol.svg;
+            document.getElementById('c-svg').className = `w-16 h-16 opacity-80 ${mol.class === 'novel' ? 'text-indigo-600' : 'text-slate-600'}`;
+
+            document.getElementById('c-half-life').innerText = mol.halfLife;
+            document.getElementById('c-addiction').innerText = mol.addictionPotential ? `${(mol.addictionPotential * 100).toFixed(0)}%` : 'Negligible';
+            if (mol.addictionPotential > 0.5) document.getElementById('c-addiction').classList.add('text-rose-600');
+            else document.getElementById('c-addiction').classList.remove('text-rose-600');
+
+            const eff = mol.effects;
+            document.getElementById('bar-arousal').style.width = `${Math.min(100, Math.max(0, (eff.arousal + 2) / 4 * 100))}%`;
+            document.getElementById('val-arousal').innerText = eff.arousal > 0 ? `+${eff.arousal}` : eff.arousal;
+            
+            document.getElementById('bar-damp').style.width = `${Math.min(100, Math.max(0, (eff.dampening + 2) / 4 * 100))}%`;
+            document.getElementById('val-damp').innerText = eff.dampening > 0 ? `+${eff.dampening}` : eff.dampening;
+
+            document.getElementById('bar-chaos').style.width = `${Math.min(100, Math.max(0, (eff.chaos + 2) / 4 * 100))}%`;
+            document.getElementById('val-chaos').innerText = eff.chaos > 0 ? `+${eff.chaos}` : eff.chaos;
+            if(eff.chaos > 0) document.getElementById('bar-chaos').classList.add('bg-rose-500');
+            else document.getElementById('bar-chaos').classList.replace('bg-rose-500', 'bg-indigo-400');
+
+            document.getElementById('bar-repair').style.width = `${Math.min(100, Math.max(0, (eff.repair + 2) / 4 * 100))}%`;
+            document.getElementById('val-repair').innerText = eff.repair > 0 ? `+${eff.repair}` : eff.repair;
+            
+            let targets = "Systemic / Network-wide";
+            if (mol.class === 'stimulant' && eff.arousal > 1) targets = "Frontoparietal Control, Basal Ganglia";
+            else if (mol.class === 'depressant' || mol.class === 'ssri') targets = "Default Mode Network, Limbic System";
+            else if (mol.id === 'zb01' || mol.id === 'cbd') targets = "Global Phase-Locking Modulator";
+            
+            document.getElementById('c-targets').innerText = targets;
+
+            modal.classList.remove('hidden');
+            setTimeout(() => panel.classList.remove('scale-95', 'opacity-0'), 10);
+        }
+
+        function closeCompoundModal() {
+            const modal = document.getElementById('compound-modal');
+            const panel = document.getElementById('compound-panel');
+            panel.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
         populateMolecules();
         init3D();
         updateSimulation();
     </script>
+
+    <!-- Compound Panel Modal -->
+    <div id="compound-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeCompoundModal()"></div>
+        <div class="relative bg-white shadow-2xl rounded-2xl flex flex-col overflow-hidden w-full max-w-md mx-4 z-10 transform scale-95 opacity-0 transition-all duration-300" id="compound-panel">
+            <div class="p-5 border-b border-slate-100 flex justify-between items-start bg-slate-50">
+                <div class="flex items-center gap-4">
+                    <div id="c-svg" class="w-16 h-16"></div>
+                    <div>
+                        <h2 id="c-name" class="text-xl font-bold text-slate-900">Molecule Name</h2>
+                        <span id="c-class" class="text-[10px] uppercase tracking-widest font-bold text-slate-500">Class</span>
+                    </div>
+                </div>
+                <button onclick="closeCompoundModal()" class="text-slate-400 hover:text-slate-700 transition-colors">
+                    <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="p-6 space-y-6">
+                <!-- Properties -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-slate-50 border border-slate-100 p-3 rounded-lg">
+                        <span class="block text-[9px] uppercase tracking-widest font-bold text-slate-400 mb-1">Half-life</span>
+                        <span id="c-half-life" class="text-sm font-semibold text-slate-700 capitalize">Medium</span>
+                    </div>
+                    <div class="bg-slate-50 border border-slate-100 p-3 rounded-lg">
+                        <span class="block text-[9px] uppercase tracking-widest font-bold text-slate-400 mb-1">Addiction Potential</span>
+                        <span id="c-addiction" class="text-sm font-semibold text-slate-700">Negligible</span>
+                    </div>
+                </div>
+                
+                <!-- Pharmacological Vectors -->
+                <div>
+                    <h3 class="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-3 border-b border-slate-100 pb-1">Pharmacological Vectors</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <div class="flex justify-between text-[10px] font-bold text-slate-600 mb-1"><span>Arousal (Excitatory)</span><span id="val-arousal">+0.0</span></div>
+                            <div class="w-full bg-slate-100 rounded-full h-1.5"><div id="bar-arousal" class="bg-emerald-400 h-1.5 rounded-full" style="width: 50%"></div></div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-[10px] font-bold text-slate-600 mb-1"><span>Dampening (Inhibitory)</span><span id="val-damp">+0.0</span></div>
+                            <div class="w-full bg-slate-100 rounded-full h-1.5"><div id="bar-damp" class="bg-indigo-400 h-1.5 rounded-full" style="width: 50%"></div></div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-[10px] font-bold text-slate-600 mb-1"><span>Chaos (Entropy/Noise)</span><span id="val-chaos">+0.0</span></div>
+                            <div class="w-full bg-slate-100 rounded-full h-1.5"><div id="bar-chaos" class="bg-indigo-400 h-1.5 rounded-full" style="width: 50%"></div></div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-[10px] font-bold text-slate-600 mb-1"><span>Repair (Synaptogenesis)</span><span id="val-repair">+0.0</span></div>
+                            <div class="w-full bg-slate-100 rounded-full h-1.5"><div id="bar-repair" class="bg-cyan-400 h-1.5 rounded-full" style="width: 50%"></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Targets -->
+                <div>
+                    <h3 class="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-2 border-b border-slate-100 pb-1">Primary Brain Regions Targeted</h3>
+                    <p id="c-targets" class="text-xs text-slate-600 font-semibold leading-relaxed">Default Mode Network, Limbic System</p>
+                </div>
+                
+                <button onclick="addToStack(); closeCompoundModal();" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold uppercase tracking-widest text-xs py-3 rounded-xl shadow-md transition-colors">
+                    Add to Stack
+                </button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
