@@ -214,7 +214,7 @@
                 <!-- Brain Stimulation -->
                 <div class="mb-5">
                     <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Neuromodulation</label>
-                    <select id="stim-select" class="w-full bg-white border border-slate-200 text-xs font-semibold text-slate-700 rounded p-2 focus:outline-none focus:border-indigo-500" onchange="updateSimulation()">
+                    <select id="stim-select" class="w-full bg-white border border-slate-200 text-xs font-semibold text-slate-700 rounded p-2 focus:outline-none focus:border-indigo-500" onchange="handleStimChange()">
                         <option value="NONE">None</option>
                         <option value="TMS">TMS (High-Frequency Left DLPFC)</option>
                         <option value="DBS">DBS (Deep Brain Stimulation - Motor)</option>
@@ -535,6 +535,10 @@
             const drugId = document.getElementById('molecule-select').value;
             if (!currentRegimen.find(r => r.id === drugId)) {
                 currentRegimen.push({ id: drugId, dose: 1.0 });
+                const def = drugDefinitions[drugId];
+                if (def.isBabelForge) {
+                    showToast('Proprietary Synthesis', `${def.name} added to simulation vector.`, true);
+                }
                 renderRegimenList();
                 updateSimulation();
             }
@@ -1157,6 +1161,47 @@
                 }
             });
             renderer.render(scene, camera);
+        }
+
+        function handleStimChange() {
+            const stim = document.getElementById('stim-select').value;
+            if (stim !== 'NONE') {
+                showToast('Neuromodulation Active', `Initiating ${stim} targeting protocols...`, false);
+            }
+            updateSimulation();
+        }
+
+        function showToast(title, message, isBabelForge = false) {
+            let container = document.getElementById('toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toast-container';
+                container.className = 'fixed bottom-4 right-4 z-[100] flex flex-col gap-2 pointer-events-none';
+                document.body.appendChild(container);
+            }
+            
+            const toast = document.createElement('div');
+            const colorClass = isBabelForge ? 'bg-purple-600' : 'bg-indigo-600';
+            const badge = isBabelForge ? `<span class="ml-2 bg-white/20 px-1.5 py-0.5 rounded text-[8px] uppercase tracking-wider shadow-sm">babelForge Protocol</span>` : '';
+            
+            toast.className = `${colorClass} text-white px-4 py-3 rounded-xl shadow-lg transform transition-all duration-300 translate-y-4 opacity-0 flex flex-col gap-1 min-w-[250px]`;
+            toast.innerHTML = `
+                <div class="flex justify-between items-center">
+                    <span class="text-[10px] font-bold uppercase tracking-widest">${title}${badge}</span>
+                </div>
+                <span class="text-xs font-medium">${message}</span>
+            `;
+            
+            container.appendChild(toast);
+            
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-4', 'opacity-0');
+            });
+            
+            setTimeout(() => {
+                toast.classList.add('translate-y-4', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
         }
 
         // Boot

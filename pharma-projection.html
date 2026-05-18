@@ -365,6 +365,9 @@
             
             if (mol) {
                 currentStack.push({ ...mol, currentDose: mol.optimalDose });
+                if (mol.isBabelForge) {
+                    showToast('Proprietary Synthesis', `${mol.name} added to stack.`, true);
+                }
                 renderStack();
                 updateSimulation();
             }
@@ -1030,6 +1033,39 @@
         function toggleExplanation() {
             const overlay = document.getElementById('science-explanation');
             overlay.classList.toggle('hidden');
+        }
+
+        function showToast(title, message, isBabelForge = false) {
+            let container = document.getElementById('toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toast-container';
+                container.className = 'fixed bottom-4 right-4 z-[100] flex flex-col gap-2 pointer-events-none';
+                document.body.appendChild(container);
+            }
+            
+            const toast = document.createElement('div');
+            const colorClass = isBabelForge ? 'bg-purple-600' : 'bg-indigo-600';
+            const badge = isBabelForge ? `<span class="ml-2 bg-white/20 px-1.5 py-0.5 rounded text-[8px] uppercase tracking-wider shadow-sm">babelForge Protocol</span>` : '';
+            
+            toast.className = `${colorClass} text-white px-4 py-3 rounded-xl shadow-lg transform transition-all duration-300 translate-y-4 opacity-0 flex flex-col gap-1 min-w-[250px]`;
+            toast.innerHTML = `
+                <div class="flex justify-between items-center">
+                    <span class="text-[10px] font-bold uppercase tracking-widest">${title}${badge}</span>
+                </div>
+                <span class="text-xs font-medium">${message}</span>
+            `;
+            
+            container.appendChild(toast);
+            
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-4', 'opacity-0');
+            });
+            
+            setTimeout(() => {
+                toast.classList.add('translate-y-4', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
         }
 
         populateMolecules();
