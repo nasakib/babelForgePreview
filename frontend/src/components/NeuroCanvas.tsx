@@ -297,9 +297,9 @@ function BrainScene({
         args={[undefined, undefined, topo.N]}
         frustumCulled={false}
       >
+        <instancedBufferAttribute attach="instanceColor" args={[new Float32Array(topo.N * 3), 3]} />
         <sphereGeometry args={[1, 14, 14]} />
         <meshStandardMaterial
-          vertexColors
           emissive={new THREE.Color("#05070d")}
           roughness={0.4}
           metalness={0.1}

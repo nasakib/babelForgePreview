@@ -45,15 +45,23 @@ export default function RootLayout({
             {children}
           </main>
           <footer className="flex-none p-2 border-t border-line bg-surface-50 flex items-center justify-between text-[10px] font-mono uppercase tracking-widest2 text-ink-muted z-30 relative">
-            <div className="flex items-center gap-2">
-              <span className="status-dot ok"></span>
-              <span>babelForge Core Engine v1.0.0</span>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <span className="status-dot ok shadow-[0_0_6px_rgba(16,185,129,0.8)] animate-pulse"></span>
+                <span className="text-ok font-bold">babelForge Core Engine v2.1.0</span>
+              </div>
+              <div className="hidden md:flex items-center gap-2">
+                <span className="text-accent-500">SYNC: LOCKED</span>
+                <span className="text-ink-dim">|</span>
+                <span>FREQ: 120Hz</span>
+              </div>
             </div>
-            <div className="hidden sm:block">
-              For Clinical and Research Purposes Only
+            <div className="hidden sm:block text-ink-subtle font-bold tracking-widest">
+              FOR CLINICAL AND RESEARCH PURPOSES ONLY
             </div>
-            <div>
-              &copy; {new Date().getFullYear()} babelForge
+            <div className="flex items-center gap-4">
+              <span className="hidden lg:block">SYS.OP: NORMAL</span>
+              <span className="text-ink-dim">&copy; {new Date().getFullYear()} babelForge</span>
             </div>
           </footer>
           <AIAssistant />

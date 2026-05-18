@@ -20,13 +20,16 @@ export default function Navbar() {
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [clock, setClock] = useState('');
+  const [uptime, setUptime] = useState(0);
   const pathname = usePathname();
   const isActive = (p: string) => p === '/' ? pathname === '/' : pathname.startsWith(p);
 
   useEffect(() => {
+    const start = Date.now();
     const upd = () => {
       const d = new Date();
       setClock(d.toISOString().substring(11, 19) + 'Z');
+      setUptime(Math.floor((Date.now() - start) / 1000));
     };
     upd();
     const id = setInterval(upd, 1000);
@@ -35,101 +38,118 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="h-14 border-b border-line bg-surface-0/95 backdrop-blur flex items-center justify-between px-4 shrink-0 z-50 relative shadow-md">
-        {/* Brand */}
-        <div className="flex items-center gap-6">
-          <Link href="/" className="flex items-center gap-2.5 group hover:opacity-80 transition-opacity">
-            <svg className="w-6 h-6 text-accent-500 drop-shadow-[0_0_8px_rgba(31,109,255,0.6)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-            </svg>
-            <div className="flex items-baseline gap-1.5">
-              <span className="font-bold text-[16px] tracking-tight text-ink">babelForge</span>
-              <span className="text-[11px] font-mono text-ink-muted tracking-widest2 uppercase">Engine</span>
-            </div>
-          </Link>
-          <div className="hidden lg:flex items-center gap-1 text-[11px] font-mono uppercase tracking-widest2 text-ink-muted">
-            <span className="status-dot ok mr-1.5 shadow-[0_0_6px_rgba(16,185,129,0.8)]" /> Operational
-            <span className="px-2">·</span>
+      <nav className="flex flex-col border-b border-line bg-surface-0 z-50 relative shadow-md font-mono">
+        {/* Top Telemetry Bar */}
+        <div className="flex items-center justify-between px-4 py-1.5 bg-surface-100 border-b border-line text-[9px] text-ink-muted tracking-widest2 uppercase">
+          <div className="flex items-center gap-4">
+            <span className="flex items-center gap-1.5"><span className="status-dot ok animate-pulse" /> SYSTEM ONLINE</span>
+            <span className="hidden sm:inline">UPTIME {Math.floor(uptime/60).toString().padStart(2, '0')}:{(uptime%60).toString().padStart(2, '0')}</span>
+            <span className="hidden md:inline">FREQ: 120Hz</span>
+            <span className="hidden lg:inline text-accent-500">SYNC: PHASE-LOCKED</span>
+          </div>
+          <div className="flex items-center gap-4 flex-1 justify-center max-w-[400px] opacity-40 hidden xl:flex">
+             {/* Fake EEG sparkline */}
+             <svg width="100%" height="12" viewBox="0 0 100 12" preserveAspectRatio="none">
+               <path d="M0 6 L10 6 L12 2 L14 10 L16 6 L30 6 L32 1 L34 11 L36 6 L50 6 L52 3 L54 9 L56 6 L80 6 L82 0 L84 12 L86 6 L100 6" fill="none" stroke="currentColor" strokeWidth="0.5" className="animate-[slideLeft_2s_linear_infinite]" />
+             </svg>
+          </div>
+          <div className="flex items-center gap-4">
             <span className="text-ink-subtle">{clock || '--:--:--Z'}</span>
+            <span className="hidden sm:inline">BABELFORGE ENGINE V2.1</span>
           </div>
         </div>
 
-        {/* Primary nav */}
-        <div className="hidden xl:flex items-center gap-0 h-full">
-          {NAV_ITEMS.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`relative h-full flex items-center px-4 text-[11px] font-mono uppercase tracking-widest2 transition-colors border-r border-line/60 last:border-r-0 ${
-                isActive(item.href)
-                  ? 'text-accent-400 bg-accent-500/5 font-semibold'
-                  : 'text-ink-muted hover:text-ink hover:bg-surface-50'
-              }`}
-            >
-              {isActive(item.href) && (
-                <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-accent-500 shadow-[0_0_8px_rgba(31,109,255,0.8)]" />
-              )}
-              {item.label}
+        {/* Main Nav Bar */}
+        <div className="h-12 flex items-center justify-between px-4 bg-surface-0/95 backdrop-blur">
+          {/* Brand */}
+          <div className="flex items-center gap-6">
+            <Link href="/" className="flex items-center gap-2.5 group hover:opacity-80 transition-opacity">
+              <svg className="w-6 h-6 text-accent-500 drop-shadow-[0_0_8px_rgba(31,109,255,0.6)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+              </svg>
+              <div className="flex items-baseline gap-1.5">
+                <span className="font-bold font-sans text-[16px] tracking-tight text-ink">babelForge</span>
+              </div>
             </Link>
-          ))}
-          <div className="flex items-center ml-2 border-l border-line/60 pl-2 gap-2">
-            <button
-              onClick={() => setTutorialOpen(true)}
-              className="px-4 py-2 bg-surface-100 hover:bg-surface-200 border border-line-strong rounded-clinical text-[10.5px] font-mono uppercase tracking-widest2 text-ink transition-colors shadow-sm flex items-center gap-2"
-            >
-              <span className="text-accent-400">?</span> Guide
-            </button>
-            <button
-              onClick={() => setMethodOpen(true)}
-              className="px-4 py-2 bg-surface-100 hover:bg-surface-200 border border-line-strong rounded-clinical text-[10.5px] font-mono uppercase tracking-widest2 text-ink transition-colors shadow-sm"
-            >
-              Methodology
-            </button>
           </div>
-        </div>
 
-        {/* Mobile toggle */}
-        <button
-          aria-label="Toggle menu"
-          className="xl:hidden text-ink-subtle p-1.5"
-          onClick={() => setMobileOpen((s) => !s)}
-        >
-          <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path strokeLinecap="round" d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
-
-        {/* Mobile menu */}
-        {mobileOpen && (
-          <div className="xl:hidden absolute top-14 left-0 right-0 bg-surface-0 border-b border-line z-40 shadow-2xl">
+          {/* Primary nav */}
+          <div className="hidden xl:flex items-center gap-0 h-full">
             {NAV_ITEMS.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                onClick={() => setMobileOpen(false)}
-                className={`block px-5 py-4 border-b border-line/50 text-[13px] font-mono uppercase tracking-widest2 ${
-                  isActive(item.href) ? 'text-accent-400 bg-accent-500/10 font-bold border-l-4 border-l-accent-500' : 'text-ink-subtle'
+                className={`relative h-full flex items-center px-3 text-[10px] uppercase tracking-widest2 transition-colors border-r border-line/60 last:border-r-0 ${
+                  isActive(item.href)
+                    ? 'text-accent-400 bg-accent-500/5 font-bold'
+                    : 'text-ink-muted hover:text-ink hover:bg-surface-50'
                 }`}
               >
+                {isActive(item.href) && (
+                  <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-accent-500 shadow-[0_0_8px_rgba(31,109,255,0.8)]" />
+                )}
                 {item.label}
               </Link>
             ))}
-            <div className="p-4 flex flex-col gap-2 bg-surface-50">
+            <div className="flex items-center ml-2 border-l border-line/60 pl-2 gap-2">
               <button
-                onClick={() => { setTutorialOpen(true); setMobileOpen(false); }}
-                className="w-full text-center px-5 py-3 text-xs font-bold font-mono uppercase tracking-widest2 text-ink bg-surface-200 rounded-clinical border border-line-strong"
+                onClick={() => setTutorialOpen(true)}
+                className="px-3 py-1.5 bg-surface-100 hover:bg-surface-200 border border-line-strong rounded-clinical text-[10px] uppercase tracking-widest2 text-ink transition-colors shadow-sm flex items-center gap-2"
               >
-                Quick Start Guide
+                <span className="text-accent-400">?</span> Guide
               </button>
               <button
-                onClick={() => { setMethodOpen(true); setMobileOpen(false); }}
-                className="w-full text-center px-5 py-3 text-xs font-mono uppercase tracking-widest2 text-ink-muted border border-line-strong rounded-clinical"
+                onClick={() => setMethodOpen(true)}
+                className="px-3 py-1.5 bg-surface-100 hover:bg-surface-200 border border-line-strong rounded-clinical text-[10px] uppercase tracking-widest2 text-ink transition-colors shadow-sm"
               >
                 Methodology
               </button>
             </div>
           </div>
-        )}
+
+          {/* Mobile toggle */}
+          <button
+            aria-label="Toggle menu"
+            className="xl:hidden text-ink-subtle p-1.5"
+            onClick={() => setMobileOpen((s) => !s)}
+          >
+            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+
+          {/* Mobile menu */}
+          {mobileOpen && (
+            <div className="xl:hidden absolute top-full mt-[1px] left-0 right-0 bg-surface-0 border-b border-line z-40 shadow-2xl">
+              {NAV_ITEMS.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMobileOpen(false)}
+                  className={`block px-5 py-4 border-b border-line/50 text-[12px] uppercase tracking-widest2 ${
+                    isActive(item.href) ? 'text-accent-400 bg-accent-500/10 font-bold border-l-4 border-l-accent-500' : 'text-ink-subtle'
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              ))}
+              <div className="p-4 flex flex-col gap-2 bg-surface-50">
+                <button
+                  onClick={() => { setTutorialOpen(true); setMobileOpen(false); }}
+                  className="w-full text-center px-5 py-3 text-xs font-bold uppercase tracking-widest2 text-ink bg-surface-200 rounded-clinical border border-line-strong"
+                >
+                  Quick Start Guide
+                </button>
+                <button
+                  onClick={() => { setMethodOpen(true); setMobileOpen(false); }}
+                  className="w-full text-center px-5 py-3 text-xs uppercase tracking-widest2 text-ink-muted border border-line-strong rounded-clinical"
+                >
+                  Methodology
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </nav>
 
       {methodOpen && <MethodologyModal onClose={() => setMethodOpen(false)} />}
