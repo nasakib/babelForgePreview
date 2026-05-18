@@ -20,6 +20,10 @@ interface AIContextProps {
   isAssistantOpen: boolean;
   setIsAssistantOpen: (open: boolean) => void;
   triggerAIAnalysis: (customPrompt?: string) => void;
+
+  // Visualization State
+  viewPerspective: 'topology' | 'anatomy' | 'pharma' | 'physics';
+  setViewPerspective: (mode: 'topology' | 'anatomy' | 'pharma' | 'physics') => void;
 }
 
 const AIContext = createContext<AIContextProps | undefined>(undefined);
@@ -30,6 +34,7 @@ export function AIProvider({ children }: { children: ReactNode }) {
   const [activeStack, setActiveStack] = useState<any[]>([]);
   const [integrityScore, setIntegrityScore] = useState<number>(100);
   const [isAssistantOpen, setIsAssistantOpen] = useState<boolean>(false);
+  const [viewPerspective, setViewPerspective] = useState<'topology' | 'anatomy' | 'pharma' | 'physics'>('topology');
 
   const triggerAIAnalysis = (customPrompt?: string) => {
     setIsAssistantOpen(true);
@@ -39,6 +44,7 @@ export function AIProvider({ children }: { children: ReactNode }) {
       pathologies: activePathologies,
       stack: activeStack,
       score: integrityScore,
+      perspective: viewPerspective,
       prompt: customPrompt
     });
   };
@@ -50,7 +56,8 @@ export function AIProvider({ children }: { children: ReactNode }) {
       activeStack, setActiveStack,
       integrityScore, setIntegrityScore,
       isAssistantOpen, setIsAssistantOpen,
-      triggerAIAnalysis
+      triggerAIAnalysis,
+      viewPerspective, setViewPerspective
     }}>
       {children}
     </AIContext.Provider>
