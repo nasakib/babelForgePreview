@@ -41,8 +41,7 @@ export default function ConsolePage() {
   const [weight, setWeight] = useState(70);
   const [tolerance, setTolerance] = useState(0);
 
-  const pathologies = activePathologies as Pathology[];
-  const topo = useMemo(() => composeTopology(pathologies), [pathologies.join("|")]);
+  const topo = useMemo(() => composeTopology(activePathologies as Pathology[]), [activePathologies]);
 
   const vectors: PharmaVectors = useMemo(() => {
     const v = { ...ZERO_VECTORS };
@@ -71,7 +70,7 @@ export default function ConsolePage() {
     (opts?: { silent?: boolean }) => {
       setComputing(true);
       setTimeout(() => {
-        const r = runDiagnosis(pathologies, vectors, {
+        const r = runDiagnosis(activePathologies as Pathology[], vectors, {
           weightKg: weight,
           toleranceMonths: tolerance,
         });
@@ -88,7 +87,8 @@ export default function ConsolePage() {
         }
       }, 16);
     },
-    [pathologies, vectors, weight, tolerance, setIntegrityScore]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [activePathologies, vectors, weight, tolerance, setIntegrityScore]
   );
 
   useEffect(() => {
@@ -102,7 +102,7 @@ export default function ConsolePage() {
       ...l,
     ]);
     setTimeout(() => {
-      const result = autoOptimize(pathologies, {
+      const result = autoOptimize(activePathologies as Pathology[], {
         weightKg: weight,
         toleranceMonths: tolerance,
       });
@@ -116,12 +116,13 @@ export default function ConsolePage() {
       );
       setComputing(false);
     }, 30);
-  }, [pathologies, weight, tolerance, setActiveStack]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activePathologies, weight, tolerance, setActiveStack]);
 
   const togglePathology = (p: Pathology) => {
-    const next = pathologies.includes(p)
-      ? pathologies.filter((x) => x !== p)
-      : [...pathologies, p];
+    const next = activePathologies.includes(p)
+      ? activePathologies.filter((x) => x !== p)
+      : [...activePathologies, p];
     setActivePathologies(next);
   };
 
@@ -142,7 +143,7 @@ export default function ConsolePage() {
         <div className="p-4 border-b border-line space-y-2.5">
           {PATHOLOGIES.map((p) => {
             const meta = PATHOLOGY_META[p];
-            const active = pathologies.includes(p);
+            const active = activePathologies.includes(p);
             return (
               <label
                 key={p}
@@ -230,7 +231,7 @@ export default function ConsolePage() {
         <NeuroCanvas
           topology={topo}
           vectors={vectors}
-          pathologies={pathologies}
+          pathologies={activePathologies as Pathology[]}
           activeStack={activeStack}
           onCoherence={setLiveR}
         />
@@ -409,3 +410,4 @@ function SliderField({
     </div>
   );
 }
+

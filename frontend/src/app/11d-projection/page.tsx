@@ -97,7 +97,7 @@ export default function ElevenDProjection() {
         </div>
       </aside>
 
-      <main className="flex-1 relative">
+      <main className="flex-1 relative min-h-[50vh] lg:min-h-0">
         <NeuroCanvas topology={topo} />
         <div className="absolute top-4 left-4 z-10 pointer-events-none">
           <div className="flex items-center gap-2">

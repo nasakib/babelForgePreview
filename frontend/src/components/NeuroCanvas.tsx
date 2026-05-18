@@ -39,7 +39,7 @@ export default function NeuroCanvas({
 
   const topo = useMemo<ComposedTopology>(
     () => topology ?? composeTopology(pathologies),
-    [topology, pathologies.join("|")]
+    [topology, pathologies]
   );
 
   return (
@@ -170,7 +170,7 @@ function BrainScene({
   useEffect(() => {
     kuramoto.K = effectiveCoupling(vectors);
     kuramoto.noise = effectiveNoise(vectors);
-  }, [vectors.arousal, vectors.dampening, vectors.chaos, vectors.repair, kuramoto]);
+  }, [vectors, vectors.arousal, vectors.dampening, vectors.chaos, vectors.repair, kuramoto]);
 
   // Refs to point-cloud-like instanced spheres (we use InstancedMesh)
   const instRef = useRef<THREE.InstancedMesh>(null);
@@ -215,10 +215,9 @@ function BrainScene({
       tmpObj.current.updateMatrix();
       inst.setMatrixAt(i, tmpObj.current.matrix);
 
-      // Color: region tint mixed with phase-driven warm/cool shift
-      let baseHex = REGION_COLOR[topo.nodes[i].region];
+      // Color: white base, with phase/pharma adjustments
       if (viewPerspective === "physics") {
-        // Pure phase chromatic
+        // Pure phase chromatic for physics
         tmpColor.current.setHSL((phase / (Math.PI * 2) + 1) % 1, 0.75, 0.4 + 0.25 * amp);
       } else if (viewPerspective === "pharma") {
         // Highlight nodes whose region is targeted by the stack vectors
@@ -227,13 +226,11 @@ function BrainScene({
           (vectors.arousal > 0.3 && (cls === "Control" || cls === "SomatoMotor")) ||
           (vectors.dampening > 0.3 && (cls === "Default" || cls === "Limbic")) ||
           (vectors.repair > 0.3);
-        tmpColor.current.set(targeted ? "#1f6dff" : "#1b2230");
-        if (targeted) tmpColor.current.multiplyScalar(0.6 + amp * 0.8);
-      } else if (viewPerspective === "anatomy") {
-        tmpColor.current.set(baseHex).multiplyScalar(0.5 + 0.4 * amp);
+        tmpColor.current.set(targeted ? "#ffffff" : "#1b2230");
+        if (targeted) tmpColor.current.multiplyScalar(0.7 + amp * 0.3);
       } else {
-        // topology
-        tmpColor.current.set(baseHex).multiplyScalar(0.55 + 0.55 * amp);
+        // White nodes for anatomy/topology
+        tmpColor.current.set("#ffffff").multiplyScalar(0.4 + 0.6 * amp);
       }
       inst.setColorAt(i, tmpColor.current);
     }
@@ -242,9 +239,8 @@ function BrainScene({
 
     // Edge opacity pulses with global coherence
     if (lineMatRef.current) {
-      const baseOp = viewPerspective === "physics" ? 0.05 : 0.08;
-      lineMatRef.current.opacity = baseOp + kuramoto.R * 0.35;
-      lineMatRef.current.color.set(viewPerspective === "physics" ? "#1f6dff" : "#4d8dff");
+      const baseOp = viewPerspective === "physics" ? 0.05 : 0.25;
+      lineMatRef.current.opacity = baseOp + kuramoto.R * 0.4;
     }
   });
 
@@ -268,7 +264,7 @@ function BrainScene({
       <lineSegments geometry={edgeGeo} renderOrder={-1}>
         <lineBasicMaterial
           ref={lineMatRef}
-          color="#4d8dff"
+          vertexColors
           transparent
           opacity={0.12}
           depthWrite={false}
