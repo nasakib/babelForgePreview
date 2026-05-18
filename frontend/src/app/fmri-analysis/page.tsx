@@ -129,7 +129,7 @@ export default function FMRIAnalysis() {
       </div>
 
       {/* Right Panel: 3D Visualization */}
-      <div className="flex-grow bg-canvas m-3 rounded-clinical flex flex-col overflow-hidden relative border border-line-strong">
+      <div className="flex-grow bg-canvas m-3 rounded-clinical flex flex-col overflow-hidden relative border border-line-strong min-h-[500px] lg:min-h-0">
         <div className="absolute top-6 left-6 z-10 pointer-events-none">
           <div className="flex items-center gap-2 mb-1">
             <div className="w-2 h-2 rounded-full bg-info/100 animate-pulse"></div>

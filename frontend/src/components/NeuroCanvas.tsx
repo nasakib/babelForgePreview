@@ -43,7 +43,7 @@ export default function NeuroCanvas({
   );
 
   return (
-    <div className="w-full h-full bg-canvas overflow-hidden relative">
+    <div className="absolute inset-0 bg-canvas overflow-hidden">
       <div className="absolute inset-0 grid-bg opacity-30 pointer-events-none" />
       <Canvas camera={{ position: [0, 60, 220], fov: 45 }} dpr={[1, 2]}>
         <fogExp2 attach="fog" color="#03050b" density={0.0015} />
