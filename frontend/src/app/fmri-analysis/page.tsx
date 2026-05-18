@@ -151,7 +151,7 @@ export default function FMRIAnalysis() {
         ) : null}
 
         <div className="flex-1 w-full relative">
-          <NeuroCanvas customTopology={analysisResult?.topology} />
+          <NeuroCanvas />
         </div>
       </div>
     </div>
