@@ -41,6 +41,21 @@ jobs:
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
 
+      - name: Ensure Artifact Registry repository exists
+        run: |
+          if ! gcloud artifacts repositories describe ${{ env.REPO_NAME }} \
+              --location=${{ env.REGION }} \
+              --project=${{ env.PROJECT_ID }} >/dev/null 2>&1; then
+            echo "Repository ${{ env.REPO_NAME }} not found. Creating..."
+            gcloud artifacts repositories create ${{ env.REPO_NAME }} \
+              --repository-format=docker \
+              --location=${{ env.REGION }} \
+              --description="Docker repository for babelForge backend API" \
+              --project=${{ env.PROJECT_ID }}
+          else
+            echo "Repository ${{ env.REPO_NAME }} already exists."
+          fi
+
       - name: Build and Push Docker Image
         working-directory: ./backend
         run: |
