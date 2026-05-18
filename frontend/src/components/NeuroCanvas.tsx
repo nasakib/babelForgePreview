@@ -58,6 +58,17 @@ export default function NeuroCanvas({
           autoRotateSpeed={0.4}
           minDistance={120}
           maxDistance={420}
+          enablePan={true}
+          panSpeed={2}
+          mouseButtons={{
+            LEFT: THREE.MOUSE.ROTATE,
+            MIDDLE: THREE.MOUSE.DOLLY,
+            RIGHT: THREE.MOUSE.PAN
+          }}
+          touches={{
+            ONE: THREE.TOUCH.ROTATE,
+            TWO: THREE.TOUCH.PAN
+          }}
         />
 
         <BrainScene
