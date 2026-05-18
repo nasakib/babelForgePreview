@@ -70,22 +70,55 @@ export default function NeuroCanvas({
       </Canvas>
 
       {/* HUD overlay */}
-      <div className="absolute top-3 left-3 pointer-events-none flex items-center gap-3 text-[10px] font-mono uppercase tracking-widest2 text-ink-muted">
-        <span className="status-dot ok" /> Real-time Kuramoto Â· N={topo.N} Â· view: {viewPerspective}
+      <div className="absolute top-4 left-4 pointer-events-none flex items-center gap-3 text-[11px] font-mono uppercase tracking-widest2 text-ink drop-shadow-md">
+        <span className="status-dot ok shadow-[0_0_8px_rgba(16,185,129,0.8)]" /> Real-time Kuramoto · N={topo.N} · view: {viewPerspective}
       </div>
-      <div className="absolute top-3 right-3 pointer-events-none flex flex-col items-end gap-1 text-[10px] font-mono uppercase tracking-widest2 text-ink-muted">
-        <div>edges +{topo.edgeStats.added} / âˆ’{topo.edgeStats.removed}</div>
+      <div className="absolute top-4 right-4 pointer-events-none flex flex-col items-end gap-1 text-[11px] font-mono uppercase tracking-widest2 text-ink drop-shadow-md">
+        <div>edges +{topo.edgeStats.added} / −{topo.edgeStats.removed}</div>
         <div>cliques {topo.cliques.length}</div>
       </div>
-      <div className="absolute bottom-3 left-3 right-3 flex flex-wrap gap-2 text-[9.5px] font-mono uppercase tracking-widest2 text-ink-muted pointer-events-none">
+      <div className="absolute bottom-4 left-4 right-4 flex flex-wrap gap-4 text-[11px] font-mono uppercase tracking-widest2 text-ink bg-surface-0/95 p-4 rounded-clinical backdrop-blur-xl border border-line-strong pointer-events-auto shadow-2xl z-20">
+        <div className="w-full text-ink-subtle mb-2 border-b border-line-strong pb-2 font-bold tracking-widest">Anatomical Region Legend & Color Coding</div>
         {(Object.keys(REGION_COLOR) as (keyof typeof REGION_COLOR)[]).map((r) => (
-          <span key={r} className="inline-flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-sm" style={{ background: REGION_COLOR[r] }} />
+          <span key={r} className="inline-flex items-center gap-2 hover:brightness-125 transition-all cursor-default font-semibold text-ink">
+            <span className="w-4 h-4 rounded shadow-[0_0_8px_currentColor]" style={{ background: REGION_COLOR[r], color: REGION_COLOR[r] }} />
             {r}
           </span>
         ))}
       </div>
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Brain Hull Outline
+// ---------------------------------------------------------------------------
+function BrainHull() {
+  const pointsRef = useRef<THREE.Points>(null);
+  const count = 2000;
+  
+  const positions = useMemo(() => {
+    const pos = new Float32Array(count * 3);
+    const a = 50, b = 40, c = 60; // Slightly larger than nodes
+    for (let i = 0; i < count; i++) {
+      const u = Math.random();
+      const v = Math.random();
+      const theta = u * 2.0 * Math.PI;
+      const phi = Math.acos(2.0 * v - 1.0);
+      pos[i * 3] = a * Math.sin(phi) * Math.cos(theta);
+      pos[i * 3 + 1] = b * Math.sin(phi) * Math.sin(theta);
+      pos[i * 3 + 2] = c * Math.cos(phi);
+    }
+    return pos;
+  }, []);
+
+  return (
+    <points ref={pointsRef}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" count={count} array={positions} itemSize={3} />
+      </bufferGeometry>
+      <pointsMaterial size={0.8} color="#8a94a6" transparent opacity={0.3} depthWrite={false} blending={THREE.AdditiveBlending} />
+    </points>
   );
 }
 
@@ -218,7 +251,7 @@ function BrainScene({
       // Color: white base, with phase/pharma adjustments
       if (viewPerspective === "physics") {
         // Pure phase chromatic for physics
-        tmpColor.current.setHSL((phase / (Math.PI * 2) + 1) % 1, 0.75, 0.4 + 0.25 * amp);
+        tmpColor.current.setHSL((phase / (Math.PI * 2) + 1) % 1, 0.85, 0.5 + 0.3 * amp);
       } else if (viewPerspective === "pharma") {
         // Highlight nodes whose region is targeted by the stack vectors
         const cls = topo.nodes[i].region;
@@ -226,11 +259,11 @@ function BrainScene({
           (vectors.arousal > 0.3 && (cls === "Control" || cls === "SomatoMotor")) ||
           (vectors.dampening > 0.3 && (cls === "Default" || cls === "Limbic")) ||
           (vectors.repair > 0.3);
-        tmpColor.current.set(targeted ? "#ffffff" : "#1b2230");
-        if (targeted) tmpColor.current.multiplyScalar(0.7 + amp * 0.3);
+        tmpColor.current.set(targeted ? "#ffffff" : "#2a3441");
+        if (targeted) tmpColor.current.multiplyScalar(0.8 + amp * 0.4);
       } else {
         // White nodes for anatomy/topology
-        tmpColor.current.set("#ffffff").multiplyScalar(0.4 + 0.6 * amp);
+        tmpColor.current.set("#ffffff").multiplyScalar(0.6 + 0.4 * amp);
       }
       inst.setColorAt(i, tmpColor.current);
     }
@@ -239,13 +272,14 @@ function BrainScene({
 
     // Edge opacity pulses with global coherence
     if (lineMatRef.current) {
-      const baseOp = viewPerspective === "physics" ? 0.05 : 0.25;
-      lineMatRef.current.opacity = baseOp + kuramoto.R * 0.4;
+      const baseOp = viewPerspective === "physics" ? 0.15 : 0.35;
+      lineMatRef.current.opacity = baseOp + kuramoto.R * 0.5;
     }
   });
 
   return (
     <group>
+      <BrainHull />
       <instancedMesh
         ref={instRef}
         args={[undefined, undefined, topo.N]}
@@ -254,9 +288,10 @@ function BrainScene({
         <sphereGeometry args={[1, 14, 14]} />
         <meshStandardMaterial
           vertexColors
-          emissive={new THREE.Color("#0a0d14")}
-          roughness={0.4}
-          metalness={0.05}
+          emissive={new THREE.Color("#ffffff")}
+          emissiveIntensity={0.2}
+          roughness={0.2}
+          metalness={0.8}
           toneMapped={false}
         />
       </instancedMesh>
@@ -266,7 +301,7 @@ function BrainScene({
           ref={lineMatRef}
           vertexColors
           transparent
-          opacity={0.12}
+          opacity={0.4}
           depthWrite={false}
           blending={THREE.AdditiveBlending}
         />

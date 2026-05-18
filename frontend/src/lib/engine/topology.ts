@@ -51,12 +51,12 @@ export interface Topology {
 }
 
 export const REGION_COLOR: Record<Region, string> = {
-  Default: "#6366f1", // indigo
-  Control: "#06b6d4", // cyan
-  Limbic: "#f59e0b", // amber
-  Visual: "#a855f7", // violet
-  SomatoMotor: "#10b981", // emerald
-  VentAttn: "#ec4899", // rose
+  Default: "#818cf8", // indigo-400
+  Control: "#2dd4bf", // teal-400
+  Limbic: "#fbbf24", // amber-400
+  Visual: "#c084fc", // purple-400
+  SomatoMotor: "#34d399", // emerald-400
+  VentAttn: "#fb7185", // rose-400
 };
 
 export const PATHOLOGIES = [

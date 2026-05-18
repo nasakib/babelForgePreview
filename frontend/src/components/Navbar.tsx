@@ -17,6 +17,7 @@ const NAV_ITEMS: { href: string; label: string; code: string }[] = [
 
 export default function Navbar() {
   const [methodOpen, setMethodOpen] = useState(false);
+  const [tutorialOpen, setTutorialOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [clock, setClock] = useState('');
   const pathname = usePathname();
@@ -34,51 +35,57 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="h-12 border-b border-line bg-surface-0/95 backdrop-blur flex items-center justify-between px-4 shrink-0 z-50 relative">
+      <nav className="h-14 border-b border-line bg-surface-0/95 backdrop-blur flex items-center justify-between px-4 shrink-0 z-50 relative shadow-md">
         {/* Brand */}
         <div className="flex items-center gap-6">
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <svg className="w-5 h-5 text-accent-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <Link href="/" className="flex items-center gap-2.5 group hover:opacity-80 transition-opacity">
+            <svg className="w-6 h-6 text-accent-500 drop-shadow-[0_0_8px_rgba(31,109,255,0.6)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
             </svg>
             <div className="flex items-baseline gap-1.5">
-              <span className="font-semibold text-[13px] tracking-tight text-ink">babelForge</span>
-              <span className="text-[10px] font-mono text-ink-muted tracking-widest2 uppercase">Engine</span>
+              <span className="font-bold text-[16px] tracking-tight text-ink">babelForge</span>
+              <span className="text-[11px] font-mono text-ink-muted tracking-widest2 uppercase">Engine</span>
             </div>
           </Link>
-          <div className="hidden lg:flex items-center gap-1 text-[10px] font-mono uppercase tracking-widest2 text-ink-muted">
-            <span className="status-dot ok mr-1.5" /> Operational
-            <span className="px-2">·</span>
-            <span>v2.1.0-clinical</span>
+          <div className="hidden lg:flex items-center gap-1 text-[11px] font-mono uppercase tracking-widest2 text-ink-muted">
+            <span className="status-dot ok mr-1.5 shadow-[0_0_6px_rgba(16,185,129,0.8)]" /> Operational
             <span className="px-2">·</span>
             <span className="text-ink-subtle">{clock || '--:--:--Z'}</span>
           </div>
         </div>
 
         {/* Primary nav */}
-        <div className="hidden xl:flex items-center gap-0">
+        <div className="hidden xl:flex items-center gap-0 h-full">
           {NAV_ITEMS.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className={`relative px-3 py-1.5 text-[10.5px] font-mono uppercase tracking-widest2 transition-colors border-r border-line/60 last:border-r-0 ${
+              className={`relative h-full flex items-center px-4 text-[11px] font-mono uppercase tracking-widest2 transition-colors border-r border-line/60 last:border-r-0 ${
                 isActive(item.href)
-                  ? 'text-accent-400'
-                  : 'text-ink-muted hover:text-ink'
+                  ? 'text-accent-400 bg-accent-500/5 font-semibold'
+                  : 'text-ink-muted hover:text-ink hover:bg-surface-50'
               }`}
             >
               {isActive(item.href) && (
-                <span className="absolute -bottom-px left-0 right-0 h-px bg-accent-500" />
+                <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-accent-500 shadow-[0_0_8px_rgba(31,109,255,0.8)]" />
               )}
               {item.label}
             </Link>
           ))}
-          <button
-            onClick={() => setMethodOpen(true)}
-            className="ml-2 px-3 py-1.5 text-[10.5px] font-mono uppercase tracking-widest2 text-ink-muted hover:text-ink border-l border-line/60"
-          >
-            Methodology
-          </button>
+          <div className="flex items-center ml-2 border-l border-line/60 pl-2 gap-2">
+            <button
+              onClick={() => setTutorialOpen(true)}
+              className="px-4 py-2 bg-surface-100 hover:bg-surface-200 border border-line-strong rounded-clinical text-[10.5px] font-mono uppercase tracking-widest2 text-ink transition-colors shadow-sm flex items-center gap-2"
+            >
+              <span className="text-accent-400">?</span> Guide
+            </button>
+            <button
+              onClick={() => setMethodOpen(true)}
+              className="px-4 py-2 bg-surface-100 hover:bg-surface-200 border border-line-strong rounded-clinical text-[10.5px] font-mono uppercase tracking-widest2 text-ink transition-colors shadow-sm"
+            >
+              Methodology
+            </button>
+          </div>
         </div>
 
         {/* Mobile toggle */}
@@ -87,38 +94,106 @@ export default function Navbar() {
           className="xl:hidden text-ink-subtle p-1.5"
           onClick={() => setMobileOpen((s) => !s)}
         >
-          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path strokeLinecap="round" d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </button>
 
         {/* Mobile menu */}
         {mobileOpen && (
-          <div className="xl:hidden absolute top-12 left-0 right-0 bg-surface-0 border-b border-line z-40 shadow-xl">
+          <div className="xl:hidden absolute top-14 left-0 right-0 bg-surface-0 border-b border-line z-40 shadow-2xl">
             {NAV_ITEMS.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 onClick={() => setMobileOpen(false)}
-                className={`block px-5 py-3 border-b border-line/50 text-xs font-mono uppercase tracking-widest2 ${
-                  isActive(item.href) ? 'text-accent-400 bg-accent-500/5' : 'text-ink-subtle'
+                className={`block px-5 py-4 border-b border-line/50 text-[13px] font-mono uppercase tracking-widest2 ${
+                  isActive(item.href) ? 'text-accent-400 bg-accent-500/10 font-bold border-l-4 border-l-accent-500' : 'text-ink-subtle'
                 }`}
               >
                 {item.label}
               </Link>
             ))}
-            <button
-              onClick={() => { setMethodOpen(true); setMobileOpen(false); }}
-              className="block w-full text-left px-5 py-3 text-xs font-mono uppercase tracking-widest2 text-ink-subtle"
-            >
-              Methodology
-            </button>
+            <div className="p-4 flex flex-col gap-2 bg-surface-50">
+              <button
+                onClick={() => { setTutorialOpen(true); setMobileOpen(false); }}
+                className="w-full text-center px-5 py-3 text-xs font-bold font-mono uppercase tracking-widest2 text-ink bg-surface-200 rounded-clinical border border-line-strong"
+              >
+                Quick Start Guide
+              </button>
+              <button
+                onClick={() => { setMethodOpen(true); setMobileOpen(false); }}
+                className="w-full text-center px-5 py-3 text-xs font-mono uppercase tracking-widest2 text-ink-muted border border-line-strong rounded-clinical"
+              >
+                Methodology
+              </button>
+            </div>
           </div>
         )}
       </nav>
 
       {methodOpen && <MethodologyModal onClose={() => setMethodOpen(false)} />}
+      {tutorialOpen && <TutorialModal onClose={() => setTutorialOpen(false)} />}
     </>
+  );
+}
+
+function TutorialModal({ onClose }: { onClose: () => void }) {
+  const [step, setStep] = useState(0);
+  const steps = [
+    {
+      title: "Welcome to babelForge",
+      content: "babelForge is a precision neuroscience engine. It models the human brain as an interconnected web of oscillators (using Kuramoto phase dynamics) to simulate the effects of psychiatric disorders and multi-drug regimens."
+    },
+    {
+      title: "Step 1: The Patient State",
+      content: "Start on the 'Console' tab. Select one or more 'Patient State Modifiers' (like Depression or PTSD). Watch as the engine mathematically deforms the baseline topological network—adding hyperconnectivity or severing critical pathways based on real fMRI research."
+    },
+    {
+      title: "Step 2: Polypharmacy Stacking",
+      content: "Navigate to the 'Stack Builder'. Here, you can combine precision compounds and conventional drugs. Adjust the dosage and tolerance sliders. The engine computes 4 vectors (Arousal, Dampening, Chaos, Repair) to determine how the regimen interacts with the active pathology."
+    },
+    {
+      title: "Step 3: Visualizing the Physics",
+      content: "Observe the 3D 'NeuroCanvas'. White nodes represent brain regions, and color-coded edges represent functional connections. Switch views between 'Physics', 'Topology', and 'Pharma' to see how the Kuramoto wave synchronization is mathematically altered by your stack."
+    },
+    {
+      title: "Step 4: AI & Auto-Optimization",
+      content: "Use the 'babelAI' chat bubble in the bottom right for instant clinical context and explanations. Alternatively, click 'Auto-Optimize' in the console to have the engine automatically discover the mathematically ideal pharmacological stack to reverse the current pathology."
+    }
+  ];
+
+  return (
+    <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in-up" onClick={onClose}>
+      <div className="clinical-card w-full max-w-2xl overflow-hidden shadow-2xl border border-accent-500/30 flex flex-col" onClick={e => e.stopPropagation()}>
+        <div className="clinical-card-header bg-accent-500/10 border-b border-accent-500/30 p-4">
+          <div className="flex items-center gap-3">
+            <span className="w-2.5 h-2.5 rounded-full bg-accent-400 shadow-[0_0_10px_rgba(77,141,255,0.8)] animate-pulse" />
+            <span className="text-sm font-bold text-accent-200 uppercase tracking-widest2">Quick Start Tutorial</span>
+          </div>
+          <button onClick={onClose} className="text-ink-muted hover:text-white font-bold px-2 py-1">✕</button>
+        </div>
+        <div className="p-6 sm:p-10 flex-1 bg-surface-0 min-h-[250px] flex flex-col justify-center">
+          <h2 className="text-2xl font-bold text-ink mb-4">{steps[step].title}</h2>
+          <p className="text-sm sm:text-base text-ink-subtle leading-relaxed drop-shadow-sm">{steps[step].content}</p>
+        </div>
+        <div className="p-4 bg-surface-50 border-t border-line-strong flex justify-between items-center">
+          <div className="flex gap-2">
+            {steps.map((_, i) => (
+              <div key={i} className={`w-2 h-2 rounded-full transition-all ${i === step ? 'bg-accent-500 w-4' : 'bg-line-strong'}`} />
+            ))}
+          </div>
+          <div className="flex gap-3">
+            <button onClick={() => setStep(Math.max(0, step - 1))} disabled={step === 0} className="px-4 py-2 bg-surface-100 hover:bg-surface-200 border border-line disabled:opacity-30 rounded-clinical text-xs font-mono uppercase font-bold text-ink transition-colors">Back</button>
+            {step < steps.length - 1 ? (
+              <button onClick={() => setStep(step + 1)} className="px-4 py-2 bg-accent-600 hover:bg-accent-500 border border-accent-400 rounded-clinical text-xs font-mono uppercase font-bold text-white transition-colors shadow-[0_0_15px_rgba(31,109,255,0.4)]">Next</button>
+            ) : (
+              <button onClick={onClose} className="px-4 py-2 bg-ok hover:brightness-110 border border-emerald-400 rounded-clinical text-xs font-mono uppercase font-bold text-white transition-colors shadow-[0_0_15px_rgba(16,185,129,0.4)]">Get Started</button>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
