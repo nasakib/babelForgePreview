@@ -276,7 +276,7 @@ export default function StackSimulator() {
           </div>
           <button onClick={() => triggerAIAnalysis("Analyze the pharmacological interactions in my current stack.")} className="mt-4 bg-indigo-600/80 hover:bg-indigo-500 text-white text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-md transition-all border border-indigo-400/50 backdrop-blur-md shadow-lg flex items-center gap-2 pointer-events-auto">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-              Ask AI Co-Pilot
+              Ask babelAI
           </button>
         </div>
 

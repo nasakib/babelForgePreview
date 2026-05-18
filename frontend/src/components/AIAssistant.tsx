@@ -6,7 +6,7 @@ import { useState } from "react";
 export default function AIAssistant() {
   const { isAssistantOpen, setIsAssistantOpen, currentModule, activePathologies, activeStack, integrityScore } = useAI();
   const [messages, setMessages] = useState<{role: 'ai' | 'user', content: string}[]>([
-    { role: 'ai', content: 'babelForge Clinical Assistant initialized. How can I assist with your current simulation?' }
+    { role: 'ai', content: 'babelAI initialized. How can I assist with your current simulation?' }
   ]);
   const [input, setInput] = useState("");
 
@@ -57,7 +57,7 @@ export default function AIAssistant() {
       <div className="bg-slate-900 p-4 flex justify-between items-center text-white">
         <div className="flex items-center gap-2">
           <svg className="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-          <span className="font-bold text-sm tracking-widest uppercase">babelForge AI</span>
+          <span className="font-bold text-sm tracking-widest uppercase">babelAI</span>
         </div>
         <button onClick={() => setIsAssistantOpen(false)} className="text-slate-400 hover:text-white">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -90,7 +90,7 @@ export default function AIAssistant() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-          placeholder="Ask the AI co-pilot..." 
+          placeholder="Ask babelAI..." 
           className="flex-1 bg-slate-50 border border-slate-200 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-indigo-500"
         />
         <button onClick={handleSend} className="bg-indigo-600 hover:bg-indigo-700 text-white p-2 rounded-lg transition-colors">

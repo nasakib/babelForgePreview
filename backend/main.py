@@ -267,7 +267,7 @@ def chat_endpoint(req: ChatRequest):
     try:
         model = genai.GenerativeModel('gemini-1.5-flash')
         
-        system_instruction = "You are babelForge AI, a clinical computational neuroscience assistant. You help users analyze 3D brain network topologies, pharmacological stacks, and psychiatric comorbidities. Be concise, clinical, and precise. Analyze the user's current context provided below."
+        system_instruction = "You are babelAI, a clinical computational neuroscience assistant. You explain everything and answer questions based on the proprietary science of babelForge (including algebraic topology, multi-dimensional cliques, and Kuramoto phase-locking for neuromodulation) and the most accurate and latest scientific literature. You help users analyze 3D brain network topologies, pharmacological stacks, and psychiatric comorbidities. Be concise, clinical, and precise. Analyze the user's current context provided below."
         
         prompt = f"{system_instruction}\n\nSystem Context:\nModule: {req.context.get('module', 'None')}\nPathologies: {req.context.get('pathologies', [])}\nStack: {req.context.get('stack', [])}\nBaseline Alignment Score: {req.context.get('integrityScore', 'N/A')}%\n\nUser Query: {req.message}"
         
