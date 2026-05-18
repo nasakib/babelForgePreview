@@ -44,6 +44,18 @@ export default function RootLayout({
           <main className="flex-1 flex flex-col lg:overflow-hidden relative bg-void">
             {children}
           </main>
+          <footer className="flex-none p-2 border-t border-line bg-surface-50 flex items-center justify-between text-[10px] font-mono uppercase tracking-widest2 text-ink-muted z-30 relative">
+            <div className="flex items-center gap-2">
+              <span className="status-dot ok"></span>
+              <span>babelForge Core Engine v1.0.0</span>
+            </div>
+            <div className="hidden sm:block">
+              For Clinical and Research Purposes Only
+            </div>
+            <div>
+              &copy; {new Date().getFullYear()} babelForge
+            </div>
+          </footer>
           <AIAssistant />
         </AIProvider>
       </body>

@@ -56,7 +56,7 @@ export default function AIAssistant() {
     };
 
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_API_URL || "https://babelforge-backend-6zvkkshyoq-uc.a.run.app";
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL || "https://babelforge-backend-pkynzfr2dq-uc.a.run.app";
       const ctrl = new AbortController();
       const t = setTimeout(() => ctrl.abort(), 8000);
       const res = await fetch(`${backendUrl}/api/chat`, {
