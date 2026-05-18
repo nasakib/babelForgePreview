@@ -552,9 +552,11 @@
             }
             
             currentStack.forEach((mol, idx) => {
-                const isNovel = mol.class === 'novel';
-                const colorClass = isNovel ? 'text-indigo-600' : 'text-slate-600';
-                const bgClass = isNovel ? 'bg-indigo-50 border-indigo-200' : 'bg-white border-slate-200';
+                const isBabel = mol.isBabelForge;
+                const isNovel = mol.class === 'novel' && !isBabel;
+                const colorClass = isBabel ? 'text-purple-600' : (isNovel ? 'text-indigo-600' : 'text-slate-600');
+                const bgClass = isBabel ? 'bg-purple-50 border-purple-200' : (isNovel ? 'bg-indigo-50 border-indigo-200' : 'bg-white border-slate-200');
+                const badge = isBabel ? `<span class="bg-purple-100 text-purple-700 text-[8px] font-extrabold px-1.5 py-0.5 rounded ml-2 align-middle">babelForge</span>` : '';
                 
                 html += `
                     <div class="stack-item flex flex-col p-3 rounded-xl border ${bgClass} shadow-sm gap-2">
@@ -565,7 +567,7 @@
                                 </div>
                                 <div>
                                     <h4 class="font-bold text-xs text-slate-900">${mol.name}</h4>
-                                    <p class="text-[9px] uppercase tracking-widest font-bold ${colorClass}">${mol.classLabel}</p>
+                                    <p class="text-[9px] uppercase tracking-widest font-bold ${colorClass}">${mol.classLabel}${badge}</p>
                                 </div>
                             </div>
                             <button onclick="removeFromStack(${idx})" class="text-slate-400 hover:text-red-500 p-1 self-start">
@@ -576,20 +578,20 @@
                             <div class="flex items-center justify-between">
                                 <span class="text-[9px] font-bold text-slate-400 uppercase">Intensity</span>
                                 <div class="flex gap-1">
-                                    <button onclick="updateStackDoseUI(${idx}, 1)" class="px-2 py-0.5 text-[9px] font-bold rounded bg-slate-100 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">Low</button>
-                                    <button onclick="updateStackDoseUI(${idx}, 2)" class="px-2 py-0.5 text-[9px] font-bold rounded bg-slate-100 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">Mild</button>
-                                    <button onclick="updateStackDoseUI(${idx}, 3)" class="px-2 py-0.5 text-[9px] font-bold rounded bg-slate-100 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">High</button>
+                                    <button onclick="updateStackDoseUI(${idx}, 1)" class="px-2 py-0.5 text-[9px] font-bold rounded bg-slate-100 text-slate-500 hover:bg-${isBabel?'purple':'indigo'}-50 hover:text-${isBabel?'purple':'indigo'}-600 transition-colors">Low</button>
+                                    <button onclick="updateStackDoseUI(${idx}, 2)" class="px-2 py-0.5 text-[9px] font-bold rounded bg-slate-100 text-slate-500 hover:bg-${isBabel?'purple':'indigo'}-50 hover:text-${isBabel?'purple':'indigo'}-600 transition-colors">Mild</button>
+                                    <button onclick="updateStackDoseUI(${idx}, 3)" class="px-2 py-0.5 text-[9px] font-bold rounded bg-slate-100 text-slate-500 hover:bg-${isBabel?'purple':'indigo'}-50 hover:text-${isBabel?'purple':'indigo'}-600 transition-colors">High</button>
                                 </div>
                             </div>
                             <div class="flex items-center gap-3 w-full">
-                                <input type="range" id="slider-${idx}" min="0" max="3" step="1" value="${mol.currentIntensity || 0}" class="flex-grow h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-500" oninput="updateStackDose(${idx}, this.value)">
+                                <input type="range" id="slider-${idx}" min="0" max="3" step="1" value="${mol.currentIntensity || 0}" class="flex-grow h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-${isBabel?'purple':'indigo'}-500" oninput="updateStackDose(${idx}, this.value)">
                                 <span class="text-[10px] font-mono font-bold text-slate-600 w-16 text-right" id="dose-val-${idx}">${['None', 'Low', 'Mild', 'High'][mol.currentIntensity || 0]}</span>
                             </div>
                             <div class="flex items-center justify-between mt-1">
                                 <span class="text-[9px] font-bold text-slate-400 uppercase">Tolerance (Mo)</span>
                                 <span class="text-[10px] font-mono font-bold text-slate-600" id="tol-val-${idx}">${mol.toleranceMonths || 0} mo</span>
                             </div>
-                            <input type="range" id="tol-${idx}" min="0" max="120" step="1" value="${mol.toleranceMonths || 0}" class="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-400" oninput="updateStackTolerance(${idx}, this.value)">
+                            <input type="range" id="tol-${idx}" min="0" max="120" step="1" value="${mol.toleranceMonths || 0}" class="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-${isBabel?'purple':'indigo'}-400" oninput="updateStackTolerance(${idx}, this.value)">
                         </div>
                     </div>
                 `;
@@ -1339,11 +1341,17 @@
             const modal = document.getElementById('compound-modal');
             const panel = document.getElementById('compound-panel');
             
+            const isBabel = mol.isBabelForge;
+            const isNovel = mol.class === 'novel' && !isBabel;
+            const colorClass = isBabel ? 'text-purple-600' : (isNovel ? 'text-indigo-600' : 'text-slate-600');
+            const badge = isBabel ? `<span class="bg-purple-600 text-white text-[9px] font-bold px-2 py-0.5 rounded ml-2 align-middle border border-purple-500 shadow-sm">babelForge</span>` : '';
+
             document.getElementById('c-name').innerText = mol.name;
-            document.getElementById('c-class').innerText = mol.classLabel;
-            document.getElementById('c-class').className = `text-[10px] uppercase tracking-widest font-bold ${mol.class === 'novel' ? 'text-indigo-500' : 'text-slate-500'}`;
+            document.getElementById('c-class').className = `text-[10px] uppercase tracking-widest font-bold ${colorClass}`;
+            document.getElementById('c-class').innerHTML = mol.classLabel + badge;
+            
             document.getElementById('c-svg').innerHTML = mol.svg;
-            document.getElementById('c-svg').className = `w-16 h-16 opacity-80 ${mol.class === 'novel' ? 'text-indigo-600' : 'text-slate-600'}`;
+            document.getElementById('c-svg').className = `w-16 h-16 opacity-80 ${colorClass}`;
 
             document.getElementById('c-half-life').innerText = mol.halfLife;
             document.getElementById('c-addiction').innerText = mol.addictionPotential ? `${(mol.addictionPotential * 100).toFixed(0)}%` : 'Negligible';

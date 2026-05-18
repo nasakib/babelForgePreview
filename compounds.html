@@ -193,18 +193,20 @@
                 if (query && !mol.name.toLowerCase().includes(query) && !mol.classLabel.toLowerCase().includes(query)) return;
                 
                 count++;
-                const isNovel = mol.class === 'novel';
-                const colorClass = isNovel ? 'text-indigo-600' : 'text-slate-600';
+                const isBabel = mol.isBabelForge;
+                const isNovel = mol.class === 'novel' && !isBabel;
+                const colorClass = isBabel ? 'text-purple-600' : (isNovel ? 'text-indigo-600' : 'text-slate-600');
+                const badge = isBabel ? `<span class="bg-purple-100 text-purple-700 text-[8px] font-extrabold px-1.5 py-0.5 rounded ml-2 align-middle">babelForge</span>` : '';
                 
                 list.innerHTML += `
-                    <button onclick="selectCompound('${mol.id}')" class="w-full text-left p-4 border-b border-slate-100 hover:bg-indigo-50/50 transition-colors focus:outline-none focus:bg-indigo-50 group">
+                    <button onclick="selectCompound('${mol.id}')" class="w-full text-left p-4 border-b border-slate-100 hover:bg-slate-50 transition-colors focus:outline-none focus:bg-slate-50 group">
                         <div class="flex items-center gap-3">
                             <div class="w-8 h-8 flex-none opacity-60 group-hover:opacity-100 transition-opacity ${colorClass}">
                                 ${mol.svg}
                             </div>
                             <div>
-                                <h4 class="font-bold text-sm text-slate-800 group-hover:text-indigo-700 transition-colors">${mol.name}</h4>
-                                <p class="text-[10px] uppercase tracking-widest font-bold ${colorClass}">${mol.classLabel}</p>
+                                <h4 class="font-bold text-sm text-slate-800 transition-colors">${mol.name}</h4>
+                                <p class="text-[10px] uppercase tracking-widest font-bold ${colorClass}">${mol.classLabel}${badge}</p>
                             </div>
                         </div>
                     </button>
@@ -227,11 +229,14 @@
             document.getElementById('p-name').innerText = mol.name;
             document.getElementById('p-class').innerText = mol.classLabel;
             
-            const isNovel = mol.class === 'novel';
-            const colorClass = isNovel ? 'text-indigo-600' : 'text-slate-600';
-            const borderClass = isNovel ? 'border-indigo-200 bg-indigo-50' : 'border-slate-200 bg-slate-50';
+            const isBabel = mol.isBabelForge;
+            const isNovel = mol.class === 'novel' && !isBabel;
+            const colorClass = isBabel ? 'text-purple-600' : (isNovel ? 'text-indigo-600' : 'text-slate-600');
+            const borderClass = isBabel ? 'border-purple-200 bg-purple-50' : (isNovel ? 'border-indigo-200 bg-indigo-50' : 'border-slate-200 bg-slate-50');
+            const badge = isBabel ? `<span class="bg-purple-600 text-white text-[9px] font-bold px-2 py-0.5 rounded ml-2 align-middle border border-purple-500 shadow-sm">babelForge</span>` : '';
             
             document.getElementById('p-class').className = `text-xs uppercase tracking-widest font-bold px-3 py-1 rounded-full border ${colorClass} ${borderClass}`;
+            document.getElementById('p-class').innerHTML = mol.classLabel + badge;
             
             document.getElementById('p-svg').innerHTML = mol.svg;
             document.getElementById('p-svg').className = `w-32 h-32 flex-none opacity-80 ${colorClass} drop-shadow-sm`;
