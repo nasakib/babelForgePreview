@@ -19,9 +19,9 @@ export default function SignalAnalyzer() {
     <div className="flex-1 flex flex-col lg:flex-row overflow-hidden w-full h-[calc(100vh-3.5rem)]">
       
       {/* Sidebar Controls */}
-      <div className="w-full lg:w-[350px] bg-slate-50 border-r border-slate-200 flex-none overflow-y-auto custom-scrollbar p-6 shadow-sm shrink-0 flex flex-col">
-        <h2 className="text-xl font-bold text-slate-900 mb-1">Stimulus Application</h2>
-        <p className="text-xs text-slate-500 mb-6 leading-relaxed">
+      <div className="w-full lg:w-[350px] bg-surface-0 border-r border-line flex-none overflow-y-auto custom-scrollbar p-6 shadow-sm shrink-0 flex flex-col">
+        <h2 className="text-xl font-bold text-ink mb-1">Stimulus Application</h2>
+        <p className="text-xs text-ink-muted mb-6 leading-relaxed">
           Select a stimulus to inject into the live simulated brain signal. Observe the real-time oscillatory response.
         </p>
 
@@ -30,45 +30,45 @@ export default function SignalAnalyzer() {
             <button
               key={idx}
               onClick={() => setActiveStimulus(stim)}
-              className={`w-full text-left p-4 rounded-xl border transition-all ${
+              className={`w-full text-left p-4 rounded-clinical border transition-all ${
                 activeStimulus?.label === stim.label 
-                  ? 'bg-indigo-50 border-indigo-300 shadow-sm ring-1 ring-indigo-200' 
-                  : 'bg-white border-slate-200 hover:bg-slate-50'
+                  ? 'bg-accent-500/10 border-accent-500/60 shadow-sm ring-1 ring-accent-500/40' 
+                  : 'bg-surface-50 border-line hover:bg-surface-0'
               }`}
             >
               <div className="flex justify-between items-center mb-1">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-500">{stim.category}</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-accent-500">{stim.category}</span>
                 {activeStimulus?.label === stim.label && (
                   <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-accent-500/100"></span>
                   </span>
                 )}
               </div>
-              <h4 className={`text-sm font-bold ${activeStimulus?.label === stim.label ? 'text-indigo-900' : 'text-slate-800'}`}>{stim.label}</h4>
-              <p className="text-[10px] text-slate-500 mt-1">{stim.desc}</p>
+              <h4 className={`text-sm font-bold ${activeStimulus?.label === stim.label ? 'text-accent-200' : 'text-ink'}`}>{stim.label}</h4>
+              <p className="text-[10px] text-ink-muted mt-1">{stim.desc}</p>
             </button>
           ))}
         </div>
 
         <button 
           onClick={() => setActiveStimulus(null)}
-          className="mt-6 w-full bg-slate-200 hover:bg-slate-300 text-slate-600 text-xs font-bold uppercase tracking-widest py-3 rounded-lg transition-colors"
+          className="mt-6 w-full bg-surface-200 hover:bg-surface-300 text-ink-subtle text-xs font-bold uppercase tracking-widest py-3 rounded-clinical transition-colors"
         >
           Reset to Baseline
         </button>
       </div>
 
       {/* Main Signal Display */}
-      <div className="flex-grow bg-slate-900 m-4 rounded-2xl shadow-xl flex flex-col overflow-hidden relative border border-slate-800">
+      <div className="flex-grow bg-canvas m-3 rounded-clinical flex flex-col overflow-hidden relative border border-line-strong">
         
         {/* Header Info */}
         <div className="absolute top-6 left-6 z-10 pointer-events-none">
           <div className="flex items-center gap-2 mb-1">
-            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-            <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Live Signal Analysis</span>
+            <div className="w-2 h-2 rounded-full bg-ok animate-pulse"></div>
+            <span className="text-[10px] font-bold text-ok uppercase tracking-widest">Live Signal Analysis</span>
           </div>
-          <h4 className="text-xl font-bold text-white drop-shadow-md">
+          <h4 className="text-xl font-bold text-ink font-semibold">
             {activeStimulus ? `Simulated LFP + ${activeStimulus.type}` : 'Resting State LFP (Baseline)'}
           </h4>
         </div>
@@ -81,10 +81,10 @@ export default function SignalAnalyzer() {
         </div>
 
         {/* Bottom Metrics Bar */}
-        <div className="absolute bottom-6 left-6 right-6 p-4 bg-slate-900/90 border border-slate-700 rounded-xl backdrop-blur-xl shadow-2xl z-10 flex gap-6">
+        <div className="absolute bottom-6 left-6 right-6 p-4 bg-surface-50 border border-line-strong rounded-clinical backdrop-blur-xl shadow-2xl z-10 flex gap-6">
           <div className="flex-1">
-            <span className="block text-[9px] uppercase font-bold text-indigo-400 mb-1 tracking-widest">Dominant Frequency</span>
-            <span className="text-lg text-white font-mono font-bold">
+            <span className="block text-[9px] uppercase font-bold text-accent-400 mb-1 tracking-widest">Dominant Frequency</span>
+            <span className="text-lg text-ink font-mono font-bold">
               {activeStimulus?.type === 'Stimulant' ? '28.5 Hz (Beta)' :
                activeStimulus?.type === 'Depressant' ? '4.2 Hz (Theta)' :
                activeStimulus?.type === 'TMS' ? '10.0 Hz (Alpha)' :
@@ -94,8 +94,8 @@ export default function SignalAnalyzer() {
           </div>
           <div className="w-px bg-slate-700"></div>
           <div className="flex-1">
-            <span className="block text-[9px] uppercase font-bold text-indigo-400 mb-1 tracking-widest">Signal Entropy</span>
-            <span className="text-lg text-white font-mono font-bold">
+            <span className="block text-[9px] uppercase font-bold text-accent-400 mb-1 tracking-widest">Signal Entropy</span>
+            <span className="text-lg text-ink font-mono font-bold">
               {activeStimulus?.type === 'Psychedelic' ? 'High (Chaotic)' :
                activeStimulus?.type === 'Depressant' ? 'Low (Ordered)' :
                activeStimulus?.type === 'TMS' ? 'Very Low (Locked)' :
@@ -104,8 +104,8 @@ export default function SignalAnalyzer() {
           </div>
           <div className="w-px bg-slate-700"></div>
           <div className="flex-1">
-            <span className="block text-[9px] uppercase font-bold text-indigo-400 mb-1 tracking-widest">Active Intervention</span>
-            <span className={`text-sm font-bold ${activeStimulus ? 'text-rose-400' : 'text-slate-400'}`}>
+            <span className="block text-[9px] uppercase font-bold text-accent-400 mb-1 tracking-widest">Active Intervention</span>
+            <span className={`text-sm font-bold ${activeStimulus ? 'text-crit' : 'text-ink-muted'}`}>
               {activeStimulus ? activeStimulus.category : 'None (Healthy Baseline)'}
             </span>
           </div>

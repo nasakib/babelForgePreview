@@ -1,72 +1,411 @@
 "use client";
 
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAI } from "@/context/AIContext";
 import NeuroCanvas from "@/components/NeuroCanvas";
-import { useEffect } from "react";
+import {
+  composeTopology,
+  PATHOLOGIES,
+  PATHOLOGY_META,
+  REGION_COLOR,
+  type Pathology,
+} from "@/lib/engine/topology";
+import {
+  runDiagnosis,
+  ZERO_VECTORS,
+  type DiagnosticReport,
+  type PharmaVectors,
+} from "@/lib/engine/diagnosis";
+import { autoOptimize, type RegimenItem } from "@/lib/engine/optimize";
+import { molecules } from "@/data/molecules";
 
-export default function Home() {
-  const { setCurrentModule, setIntegrityScore } = useAI();
+const VIEW_MODES = [
+  { id: "topology", label: "Topology", desc: "Region tint · amplitude pulse" },
+  { id: "physics", label: "Phase", desc: "Chromatic Kuramoto θᵢ" },
+  { id: "pharma", label: "Pharma", desc: "Compound target highlight" },
+  { id: "anatomy", label: "Anatomy", desc: "Dimmed parcels · structure only" },
+] as const;
+
+export default function ConsolePage() {
+  const {
+    setCurrentModule,
+    activePathologies,
+    setActivePathologies,
+    activeStack,
+    setActiveStack,
+    setIntegrityScore,
+    viewPerspective,
+    setViewPerspective,
+  } = useAI();
+
+  const [weight, setWeight] = useState(70);
+  const [tolerance, setTolerance] = useState(0);
+
+  const pathologies = activePathologies as Pathology[];
+  const topo = useMemo(() => composeTopology(pathologies), [pathologies.join("|")]);
+
+  const vectors: PharmaVectors = useMemo(() => {
+    const v = { ...ZERO_VECTORS };
+    for (const item of activeStack as RegimenItem[]) {
+      const mol = molecules.find((m) => m.id === item.id);
+      if (!mol) continue;
+      const ratio = Math.min(1, item.dose / 2);
+      v.arousal += mol.effects.arousal * ratio;
+      v.dampening += mol.effects.dampening * ratio;
+      v.chaos += mol.effects.chaos * ratio;
+      v.repair += mol.effects.repair * ratio;
+    }
+    return v;
+  }, [activeStack]);
+
+  const [report, setReport] = useState<DiagnosticReport | null>(null);
+  const [computing, setComputing] = useState(false);
+  const [log, setLog] = useState<string[]>([]);
+  const [liveR, setLiveR] = useState<number | null>(null);
 
   useEffect(() => {
     setCurrentModule("dashboard");
-    setIntegrityScore(100);
-  }, [setCurrentModule, setIntegrityScore]);
+  }, [setCurrentModule]);
+
+  const runReport = useCallback(
+    (opts?: { silent?: boolean }) => {
+      setComputing(true);
+      setTimeout(() => {
+        const r = runDiagnosis(pathologies, vectors, {
+          weightKg: weight,
+          toleranceMonths: tolerance,
+        });
+        setReport(r);
+        setIntegrityScore(r.integrity);
+        setComputing(false);
+        if (!opts?.silent) {
+          setLog((l) =>
+            [
+              `[${ts()}] Φ = ${r.integrity}%  ·  R = ${r.R}  ·  K* = ${r.K}  ·  ${r.label}`,
+              ...l,
+            ].slice(0, 30)
+          );
+        }
+      }, 16);
+    },
+    [pathologies, vectors, weight, tolerance, setIntegrityScore]
+  );
+
+  useEffect(() => {
+    runReport({ silent: true });
+  }, [runReport]);
+
+  const handleAutoOptimize = useCallback(() => {
+    setComputing(true);
+    setLog((l) => [
+      `[${ts()}] Auto-optimizer engaged · greedy search across precision compounds…`,
+      ...l,
+    ]);
+    setTimeout(() => {
+      const result = autoOptimize(pathologies, {
+        weightKg: weight,
+        toleranceMonths: tolerance,
+      });
+      setActiveStack(result.regimen);
+      setLog((l) =>
+        [
+          ...result.reasoning.map((line) => `   ${line}`),
+          `[${ts()}] Auto-optimization complete · final Φ = ${result.integrity}%`,
+          ...l,
+        ].slice(0, 60)
+      );
+      setComputing(false);
+    }, 30);
+  }, [pathologies, weight, tolerance, setActiveStack]);
+
+  const togglePathology = (p: Pathology) => {
+    const next = pathologies.includes(p)
+      ? pathologies.filter((x) => x !== p)
+      : [...pathologies, p];
+    setActivePathologies(next);
+  };
+
+  const clearStack = () => {
+    setActiveStack([]);
+    setLog((l) => [`[${ts()}] Regimen cleared.`, ...l]);
+  };
 
   return (
-    <main className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden relative bg-slate-50">
-      
-      {/* Left Panel: Pathology Selectors */}
-      <aside className="w-full lg:w-[320px] bg-white border-r border-slate-200 flex-none overflow-y-auto custom-scrollbar flex flex-col shadow-sm z-20 h-full shrink-0">
-        <div className="p-6 border-b border-slate-100 flex-none bg-slate-50/50">
-          <div className="flex items-center gap-2 mb-2">
-              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-              <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Diagnostic Engine Online</span>
-          </div>
-          <h2 className="text-xl font-bold text-slate-900 mb-1">Patient State Modifiers</h2>
-          <p className="text-xs text-slate-500 leading-relaxed">Overlap multiple pathological states to simulate complex psychiatric comorbidities.</p>
-        </div>
-        
-        <div className="p-6 flex-grow overflow-y-auto">
-           {/* Checkboxes would go here */}
-           <p className="text-xs text-slate-400 italic">State Modifiers are being ported to the Next.js architecture.</p>
+    <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden bg-canvas">
+      {/* LEFT */}
+      <aside className="w-full lg:w-[320px] shrink-0 border-r border-line bg-surface-0 flex flex-col overflow-y-auto custom-scrollbar">
+        <PanelHeader title="Patient State Modifiers" subtitle="Compose pathological networks">
+          <span className="status-dot ok" />
+          <span className="section-label">Engine Online</span>
+        </PanelHeader>
+
+        <div className="p-4 border-b border-line space-y-2.5">
+          {PATHOLOGIES.map((p) => {
+            const meta = PATHOLOGY_META[p];
+            const active = pathologies.includes(p);
+            return (
+              <label
+                key={p}
+                className={`group flex items-start gap-3 p-2.5 rounded-clinical border cursor-pointer transition-all ${
+                  active
+                    ? "border-accent-500/60 bg-accent-500/[0.06]"
+                    : "border-line hover:border-line-strong"
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  className="checkbox-clinical mt-0.5"
+                  checked={active}
+                  onChange={() => togglePathology(p)}
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[12.5px] text-ink font-medium">{meta.label}</span>
+                    <span
+                      className="w-1.5 h-1.5 rounded-sm flex-shrink-0"
+                      style={{ background: REGION_COLOR[meta.region] }}
+                    />
+                  </div>
+                  <div className="text-[10px] font-mono uppercase tracking-widest2 text-ink-muted mt-0.5">
+                    {meta.tone}
+                  </div>
+                </div>
+              </label>
+            );
+          })}
         </div>
 
-        <div className="p-6 mt-auto border-t border-slate-200 bg-white">
-            <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-3">Topological Integrity</div>
-            <div className="flex justify-between items-end mb-2">
-                <span className="text-sm font-bold text-slate-700">Baseline Alignment (Healthy)</span>
-                <span id="integrity-score" className="text-indigo-600 font-mono font-bold text-lg">100%</span>
-            </div>
-            <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-                <div id="integrity-bar" className="h-full bg-indigo-600 transition-all duration-700" style={{width: "100%"}}></div>
-            </div>
-            <p className="text-[10px] text-slate-400 mt-3">Healthy Baseline.</p>
+        <div className="p-4 border-b border-line space-y-4">
+          <SliderField label="Patient Mass" unit="kg" value={weight} min={40} max={140} step={1} onChange={setWeight} />
+          <SliderField label="Tolerance" unit="mo" value={tolerance} min={0} max={48} step={1} onChange={setTolerance} />
+        </div>
+
+        <div className="p-4 border-b border-line">
+          <div className="section-label mb-2">Visualization Mode</div>
+          <div className="grid grid-cols-2 gap-1">
+            {VIEW_MODES.map((m) => (
+              <button
+                key={m.id}
+                onClick={() => setViewPerspective(m.id as any)}
+                className={`text-left p-2 border rounded-clinical text-[10.5px] font-mono uppercase tracking-widest2 transition ${
+                  viewPerspective === m.id
+                    ? "border-accent-500/70 text-accent-400 bg-accent-500/[0.06]"
+                    : "border-line text-ink-muted hover:text-ink hover:border-line-strong"
+                }`}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
+          <div className="text-[10px] text-ink-muted mt-1.5 font-mono">
+            {VIEW_MODES.find((m) => m.id === viewPerspective)?.desc}
+          </div>
+        </div>
+
+        <div className="p-4 mt-auto">
+          <div className="section-label mb-2">Topological Integrity</div>
+          <div className="flex items-baseline justify-between mb-2">
+            <span className="text-[11px] text-ink-subtle">{report?.label ?? "Computing…"}</span>
+            <span className={`metric text-2xl font-semibold ${integrityTone(report?.integrity ?? 100)}`}>
+              {report?.integrity ?? "--"}
+              <span className="text-[11px] text-ink-muted ml-1">%</span>
+            </span>
+          </div>
+          <div className="progress-track">
+            <div
+              className={`progress-fill ${integrityFillClass(report?.integrity ?? 100)}`}
+              style={{ width: `${Math.min(100, report?.integrity ?? 0)}%` }}
+            />
+          </div>
+          <div className="flex justify-between mt-2 text-[10px] font-mono uppercase tracking-widest2 text-ink-muted">
+            <span>R = {report?.R ?? "—"}</span>
+            <span>K* = {report?.K ?? "—"}</span>
+            {liveR !== null && <span className="text-accent-400">live {liveR.toFixed(2)}</span>}
+          </div>
         </div>
       </aside>
 
-      {/* Middle Panel: 3D Visualizer */}
-      <section className="w-full h-[50vh] min-h-[400px] lg:min-h-0 lg:h-auto flex-1 relative bg-slate-900 overflow-hidden shrink-0">
-        <div className="absolute top-4 left-4 z-10 pointer-events-none">
-            <h3 className="text-white/80 font-bold text-base md:text-lg">Network Topology</h3>
-            <p className="text-white/50 text-[10px] md:text-xs font-mono">React Three Fiber Port</p>
-        </div>
-        <NeuroCanvas />
+      {/* MIDDLE */}
+      <section className="flex-1 relative min-h-[50vh] lg:min-h-0 border-r border-line">
+        <NeuroCanvas
+          topology={topo}
+          vectors={vectors}
+          pathologies={pathologies}
+          activeStack={activeStack}
+          onCoherence={setLiveR}
+        />
       </section>
 
-      {/* Right Panel: AI & Regimen */}
-      <aside className="w-full lg:w-[350px] bg-slate-50 border-l border-slate-200 flex-none flex flex-col z-20 h-full shrink-0 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)]">
-        <div className="p-6 border-b border-slate-100 bg-white">
-            <h2 className="text-xl font-bold text-slate-900 mb-1">Diagnostic AI</h2>
-            <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">FastAPI Integration Pending</p>
+      {/* RIGHT */}
+      <aside className="w-full lg:w-[380px] shrink-0 border-l border-line bg-surface-0 flex flex-col overflow-y-auto custom-scrollbar">
+        <PanelHeader title="Diagnostic AI" subtitle="Topology + Pharmacology Analyzer">
+          <span className={`status-dot ${computing ? "warn" : "ok"}`} />
+          <span className="section-label">{computing ? "Computing" : "Idle"}</span>
+        </PanelHeader>
+
+        <div className="p-4 border-b border-line grid grid-cols-2 gap-2">
+          <button className="btn-primary" onClick={() => runReport()} disabled={computing}>
+            Calculate Now
+          </button>
+          <button className="btn-secondary" onClick={handleAutoOptimize} disabled={computing}>
+            Auto-Optimize
+          </button>
         </div>
-        <div className="p-6 flex-grow flex flex-col gap-4 overflow-y-auto">
-            <button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold uppercase tracking-widest text-[10px] py-3 rounded-lg transition-all shadow-md flex items-center justify-center gap-2 cursor-not-allowed opacity-50">
-                <svg className="w-4 h-4 animate-spin-slow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
-                Auto-Optimize Protocol
-            </button>
+
+        <div className="p-4 border-b border-line">
+          <div className="section-label mb-2">Diagnosis</div>
+          {report ? (
+            <div className="space-y-2.5 animate-fade-in-up">
+              <div className="text-[14px] text-ink font-medium">{report.label}</div>
+              <div className="text-[12px] text-ink-subtle leading-relaxed">{report.description}</div>
+              {report.warnings.length > 0 && (
+                <div className="mt-2 space-y-1">
+                  {report.warnings.map((w, i) => (
+                    <div
+                      key={i}
+                      className="flex items-start gap-1.5 text-[11px] text-warn border border-warn/30 bg-warn/[0.06] rounded-sharp p-2"
+                    >
+                      <span className="status-dot warn mt-1" />
+                      <span>{w}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="text-[11px] text-ink-muted font-mono">Awaiting input…</div>
+          )}
+        </div>
+
+        <div className="p-4 border-b border-line">
+          <div className="section-label mb-2">Subjective Experience</div>
+          {report?.subjective.map((s, i) => (
+            <div key={i} className="text-[12px] text-ink-subtle italic leading-relaxed mb-1.5">
+              &ldquo;{s}&rdquo;
+            </div>
+          ))}
+        </div>
+
+        <div className="p-4 border-b border-line">
+          <div className="flex items-center justify-between mb-2">
+            <div className="section-label">Active Regimen</div>
+            <button onClick={clearStack} className="btn-ghost">Clear</button>
+          </div>
+          {activeStack.length === 0 ? (
+            <div className="text-[11px] text-ink-muted font-mono">No compounds in stack.</div>
+          ) : (
+            <div className="space-y-1.5">
+              {(activeStack as RegimenItem[]).map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between border border-line rounded-sharp px-2.5 py-1.5"
+                >
+                  <div className="min-w-0">
+                    <div className="text-[12px] text-ink truncate">{item.name}</div>
+                    <div className="text-[9.5px] font-mono uppercase tracking-widest2 text-ink-muted">
+                      {item.classLabel}
+                    </div>
+                  </div>
+                  <div className="text-[10px] font-mono text-accent-400">DOSE {item.dose}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="p-4 flex-1 min-h-[140px]">
+          <div className="section-label mb-2">Engine Log</div>
+          <div className="space-y-0.5 text-[10.5px] font-mono leading-snug text-ink-subtle">
+            {log.length === 0 && (
+              <div className="text-ink-muted">[boot] babelForge clinical engine ready.</div>
+            )}
+            {log.map((line, i) => (
+              <div key={i} className={i === 0 ? "live-caret text-accent-400" : ""}>
+                {line}
+              </div>
+            ))}
+          </div>
         </div>
       </aside>
+    </div>
+  );
+}
 
-    </main>
+function ts(): string {
+  return new Date().toISOString().substring(11, 19);
+}
+function integrityTone(score: number): string {
+  if (score >= 85) return "text-ok";
+  if (score >= 60) return "text-accent-400";
+  if (score >= 40) return "text-warn";
+  return "text-crit";
+}
+function integrityFillClass(score: number): string {
+  if (score >= 85) return "ok";
+  if (score >= 60) return "";
+  if (score >= 40) return "warn";
+  return "crit";
+}
+
+function PanelHeader({
+  title,
+  subtitle,
+  children,
+}: {
+  title: string;
+  subtitle: string;
+  children?: React.ReactNode;
+}) {
+  return (
+    <div className="px-4 py-3 border-b border-line bg-surface-50">
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="text-[14px] text-ink font-medium tracking-tight">{title}</div>
+          <div className="text-[10.5px] font-mono uppercase tracking-widest2 text-ink-muted mt-0.5">
+            {subtitle}
+          </div>
+        </div>
+        <div className="flex items-center gap-1.5">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+function SliderField({
+  label,
+  unit,
+  value,
+  min,
+  max,
+  step,
+  onChange,
+}: {
+  label: string;
+  unit: string;
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <div>
+      <div className="flex justify-between items-baseline mb-1.5">
+        <span className="section-label">{label}</span>
+        <span className="metric text-[12px] text-ink">
+          {value}
+          <span className="text-ink-muted ml-1 text-[10px]">{unit}</span>
+        </span>
+      </div>
+      <input
+        type="range"
+        className="slider-clinical"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+      />
+    </div>
   );
 }

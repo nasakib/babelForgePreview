@@ -1,3 +1,11 @@
 terraform.tfvars
 .terraform/
 *.tfstate*
+
+# scratch / legacy references (kept locally only)
+_legacy_ref/
+
+# frontend build artifacts
+frontend/.next/
+frontend/out/
+frontend/node_modules/

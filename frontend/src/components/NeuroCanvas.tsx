@@ -1,323 +1,280 @@
-"use client";
+﻿"use client";
 
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useAI } from "@/context/AIContext";
+import {
+  composeTopology,
+  REGION_COLOR,
+  type ComposedTopology,
+  type Pathology,
+} from "@/lib/engine/topology";
+import {
+  initKuramoto,
+  stepKuramoto,
+  effectiveCoupling,
+  effectiveNoise,
+} from "@/lib/engine/kuramoto";
 
-export default function NeuroCanvas({ activeStack = [], vectors = { arousal: 0, dampening: 0, chaos: 0, repair: 0 }, customTopology = null }: any) {
-  const aiContext = useAI();
-  const viewPerspective = aiContext?.viewPerspective || 'topology';
-  
-  // Generate baseline nodes identically to the legacy init3D()
-  const numNodes = 120;
-  const a = 40, b = 30, c = 50;
-  
-  const nodes = useMemo(() => {
-    if (customTopology && customTopology.nodes) {
-        return customTopology.nodes.map((n: any) => {
-            let baseColor = 0x8b5cf6;
-            if (n.region === 'Visual') baseColor = 0xf43f5e;
-            else if (n.region === 'SomatoMotor') baseColor = 0x10b981;
-            else if (n.region === 'Limbic') baseColor = 0xf59e0b;
-            else if (n.region === 'Control') baseColor = 0x818cf8;
-            return {
-                id: n.id,
-                position: new THREE.Vector3(n.x, n.y, n.z),
-                baseColor,
-                region: n.region || 'Default',
-                hubness: n.hubness || 0
-            };
-        });
-    }
+interface NeuroCanvasProps {
+  activeStack?: any[];
+  vectors?: { arousal: number; dampening: number; chaos: number; repair: number };
+  pathologies?: Pathology[];
+  /** Optional precomputed topology (avoids recomputation across siblings). */
+  topology?: ComposedTopology;
+  /** Push live R(t) up to the parent (e.g. dashboard live integrity gauge). */
+  onCoherence?: (R: number) => void;
+}
 
-    const tempNodes = [];
-    for (let i = 0; i < numNodes; i++) {
-      let x, y, z;
-      while (true) {
-        x = (Math.random() - 0.5) * 2 * a;
-        y = (Math.random() - 0.5) * 2 * b;
-        z = (Math.random() - 0.5) * 2 * c;
-        if ((x / a) ** 2 + (y / b) ** 2 + (z / c) ** 2 <= 1 && Math.abs(x) > 3) break;
-      }
+export default function NeuroCanvas({
+  activeStack = [],
+  vectors = { arousal: 0, dampening: 0, chaos: 0, repair: 0 },
+  pathologies = [],
+  topology,
+  onCoherence,
+}: NeuroCanvasProps) {
+  const { viewPerspective } = useAI();
 
-      let baseColor = 0x8b5cf6; // Default (Purple)
-      let regionStr = 'Default';
-      if (z < -20) { baseColor = 0xf43f5e; regionStr = 'Visual'; }
-      else if (y > 15 && z >= -20 && z <= 20) { baseColor = 0x10b981; regionStr = 'SomatoMotor'; }
-      else if (y < 0 && z >= -20 && z <= 20) { baseColor = 0xf59e0b; regionStr = 'Limbic'; }
-      else if (z > 20) { baseColor = 0x818cf8; regionStr = 'Control'; }
-
-      tempNodes.push({
-        id: i,
-        position: new THREE.Vector3(x, y, z),
-        baseColor,
-        region: regionStr,
-        hubness: 0
-      });
-    }
-    return tempNodes;
-  }, [customTopology]);
-
-  const edges = useMemo(() => {
-    if (customTopology && customTopology.edges) {
-        return customTopology.edges.map((e: any) => {
-            const sourceNode = nodes.find((n: any) => n.id === e.source);
-            const targetNode = nodes.find((n: any) => n.id === e.target);
-            if (sourceNode && targetNode) {
-                return [sourceNode.position, targetNode.position];
-            }
-            return null;
-        }).filter(Boolean);
-    }
-
-    const tempEdges: THREE.Vector3[][] = [];
-    for (let i = 0; i < nodes.length; i++) {
-      for (let j = i + 1; j < nodes.length; j++) {
-        if (nodes[i].position.distanceTo(nodes[j].position) < 15 && Math.random() > 0.3) {
-          tempEdges.push([nodes[i].position, nodes[j].position]);
-        }
-      }
-    }
-    return tempEdges;
-  }, [nodes, customTopology]);
-
-  const activeTargetRegions = useMemo(() => {
-    const regions = new Set<string>();
-    activeStack.forEach((mol: any) => {
-        if (mol.currentIntensity > 0) {
-            if (mol.class === 'stimulant') { regions.add('Control'); regions.add('SomatoMotor'); }
-            else if (mol.class === 'depressant' || mol.id === 'keta') { regions.add('Default'); regions.add('Limbic'); }
-            else if (mol.class === 'ssri') { regions.add('Default'); regions.add('Limbic'); }
-            else if (mol.id === 'zb01' || mol.id === 'nx44') { regions.add('Control'); regions.add('SomatoMotor'); regions.add('Limbic'); regions.add('Default'); regions.add('Visual'); }
-            else if (mol.id === 'ss20') regions.add('Control');
-            else if (mol.id === 'dr02') regions.add('SomatoMotor');
-            else regions.add('Default');
-        }
-    });
-    return regions;
-  }, [activeStack]);
-
-  const totalDose = activeStack.reduce((sum: number, m: any) => sum + m.currentIntensity, 0) / 2;
+  const topo = useMemo<ComposedTopology>(
+    () => topology ?? composeTopology(pathologies),
+    [topology, pathologies.join("|")]
+  );
 
   return (
-    <div className="w-full h-full bg-[#030008] rounded-xl overflow-hidden relative">
-      <Canvas camera={{ position: [0, 80, 200], fov: 50 }}>
-        <fogExp2 attach="fog" color="#030008" density={0.001} />
-        <ambientLight color={0x150830} />
-        <pointLight color={0x8b5cf6} intensity={2} position={[50, 100, 100]} distance={500} />
-        
-        <OrbitControls enableDamping autoRotate autoRotateSpeed={0.5} />
-        
-        <group>
-          {viewPerspective === 'anatomy' && <LiveBrainShell vectors={vectors} a={a} b={b} c={c} />}
-          
-          {(viewPerspective === 'topology' || viewPerspective === 'physics') && (
-            <NetworkEdges edges={edges} viewPerspective={viewPerspective} vectors={vectors} />
-          )}
+    <div className="w-full h-full bg-canvas overflow-hidden relative">
+      <div className="absolute inset-0 grid-bg opacity-30 pointer-events-none" />
+      <Canvas camera={{ position: [0, 60, 220], fov: 45 }} dpr={[1, 2]}>
+        <fogExp2 attach="fog" color="#03050b" density={0.0015} />
+        <ambientLight intensity={0.35} color={0x4d6e9a} />
+        <pointLight intensity={1.4} position={[80, 100, 120]} distance={600} color={0x6aa6ff} />
+        <pointLight intensity={0.7} position={[-100, -40, -80]} distance={500} color={0x06b6d4} />
 
-          {nodes.map((node) => (
-            <BrainNode 
-              key={node.id} 
-              data={node} 
-              vectors={vectors} 
-              isTargeted={activeTargetRegions.has(node.region)} 
-              totalDose={totalDose} 
-              viewPerspective={viewPerspective}
-            />
-          ))}
-        </group>
+        <OrbitControls
+          enableDamping
+          dampingFactor={0.08}
+          autoRotate
+          autoRotateSpeed={0.4}
+          minDistance={120}
+          maxDistance={420}
+        />
+
+        <BrainScene
+          topo={topo}
+          vectors={vectors}
+          viewPerspective={viewPerspective}
+          activeStack={activeStack}
+          onCoherence={onCoherence}
+        />
       </Canvas>
+
+      {/* HUD overlay */}
+      <div className="absolute top-3 left-3 pointer-events-none flex items-center gap-3 text-[10px] font-mono uppercase tracking-widest2 text-ink-muted">
+        <span className="status-dot ok" /> Real-time Kuramoto Â· N={topo.N} Â· view: {viewPerspective}
+      </div>
+      <div className="absolute top-3 right-3 pointer-events-none flex flex-col items-end gap-1 text-[10px] font-mono uppercase tracking-widest2 text-ink-muted">
+        <div>edges +{topo.edgeStats.added} / âˆ’{topo.edgeStats.removed}</div>
+        <div>cliques {topo.cliques.length}</div>
+      </div>
+      <div className="absolute bottom-3 left-3 right-3 flex flex-wrap gap-2 text-[9.5px] font-mono uppercase tracking-widest2 text-ink-muted pointer-events-none">
+        {(Object.keys(REGION_COLOR) as (keyof typeof REGION_COLOR)[]).map((r) => (
+          <span key={r} className="inline-flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-sm" style={{ background: REGION_COLOR[r] }} />
+            {r}
+          </span>
+        ))}
+      </div>
     </div>
   );
 }
 
-function LiveBrainShell({ vectors, a, b, c }: { vectors: any, a: number, b: number, c: number }) {
-  const pointsRef = useRef<THREE.Points>(null);
-  const particlesCount = 4000;
-  
+// ---------------------------------------------------------------------------
+// Scene with Kuramoto integrator
+// ---------------------------------------------------------------------------
+function BrainScene({
+  topo,
+  vectors,
+  viewPerspective,
+  activeStack,
+  onCoherence,
+}: {
+  topo: ComposedTopology;
+  vectors: NonNullable<NeuroCanvasProps["vectors"]>;
+  viewPerspective: string;
+  activeStack: any[];
+  onCoherence?: (R: number) => void;
+}) {
+  // Pre-build node positions, colors, edge geometry
   const positions = useMemo(() => {
-    const pos = new Float32Array(particlesCount * 3);
-    for (let i = 0; i < particlesCount; i++) {
-      const u = Math.random();
-      const v = Math.random();
-      const theta = u * 2.0 * Math.PI;
-      const phi = Math.acos(2.0 * v - 1.0);
-      
-      const x = (a + 5) * Math.sin(phi) * Math.cos(theta);
-      const y = (b + 5) * Math.sin(phi) * Math.sin(theta);
-      const z = (c + 5) * Math.cos(phi);
-      
-      pos[i * 3] = x;
-      pos[i * 3 + 1] = y;
-      pos[i * 3 + 2] = z;
+    const arr = new Float32Array(topo.N * 3);
+    for (let i = 0; i < topo.N; i++) {
+      const n = topo.nodes[i];
+      arr[i * 3] = n.x;
+      arr[i * 3 + 1] = n.y;
+      arr[i * 3 + 2] = n.z;
     }
-    return pos;
-  }, [a, b, c]);
+    return arr;
+  }, [topo]);
 
-  useFrame(({ clock }) => {
-    if (!pointsRef.current) return;
-    const time = clock.getElapsedTime();
-    pointsRef.current.rotation.y = Math.sin(time * 0.1) * 0.1;
-    
-    // Apply babelForge capabilities: structural warping based on chaos/repair
-    if (vectors.chaos > 0) {
-      pointsRef.current.position.x = (Math.random() - 0.5) * vectors.chaos * 2;
-      pointsRef.current.position.y = (Math.random() - 0.5) * vectors.chaos * 2;
-    } else {
-      pointsRef.current.position.lerp(new THREE.Vector3(0, 0, 0), 0.1);
+  const colors = useMemo(() => {
+    const arr = new Float32Array(topo.N * 3);
+    const c = new THREE.Color();
+    for (let i = 0; i < topo.N; i++) {
+      c.set(REGION_COLOR[topo.nodes[i].region]);
+      arr[i * 3] = c.r;
+      arr[i * 3 + 1] = c.g;
+      arr[i * 3 + 2] = c.b;
     }
-  });
+    return arr;
+  }, [topo]);
 
-  return (
-    <points ref={pointsRef}>
-      <bufferGeometry>
-        <bufferAttribute attach="attributes-position" count={particlesCount} array={positions} itemSize={3} />
-      </bufferGeometry>
-      <pointsMaterial 
-        size={0.6} 
-        color={vectors.repair > 0.5 ? 0xfcd34d : 0x818cf8} 
-        transparent 
-        opacity={0.15} 
-        blending={THREE.AdditiveBlending} 
-        depthWrite={false} 
-      />
-    </points>
-  );
-}
+  // Sample edges to keep render budget reasonable (cap ~1200)
+  const sampledEdges = useMemo(() => {
+    const max = 1200;
+    const stride = Math.max(1, Math.floor(topo.edges.length / max));
+    const out: [number, number][] = [];
+    for (let i = 0; i < topo.edges.length; i += stride) out.push(topo.edges[i]);
+    return out;
+  }, [topo]);
 
-function NetworkEdges({ edges, viewPerspective, vectors }: { edges: THREE.Vector3[][], viewPerspective: string, vectors: any }) {
-  const lineRef = useRef<THREE.LineSegments>(null);
-  
-  const lineGeo = useMemo(() => {
+  const edgeGeo = useMemo(() => {
     const geo = new THREE.BufferGeometry();
-    const positions = new Float32Array(edges.length * 6);
-    edges.forEach((edge, i) => {
-      positions[i * 6] = edge[0].x;
-      positions[i * 6 + 1] = edge[0].y;
-      positions[i * 6 + 2] = edge[0].z;
-      positions[i * 6 + 3] = edge[1].x;
-      positions[i * 6 + 4] = edge[1].y;
-      positions[i * 6 + 5] = edge[1].z;
+    const arr = new Float32Array(sampledEdges.length * 6);
+    sampledEdges.forEach(([u, v], i) => {
+      arr[i * 6] = topo.nodes[u].x;
+      arr[i * 6 + 1] = topo.nodes[u].y;
+      arr[i * 6 + 2] = topo.nodes[u].z;
+      arr[i * 6 + 3] = topo.nodes[v].x;
+      arr[i * 6 + 4] = topo.nodes[v].y;
+      arr[i * 6 + 5] = topo.nodes[v].z;
     });
-    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geo.setAttribute("position", new THREE.BufferAttribute(arr, 3));
     return geo;
-  }, [edges]);
+  }, [sampledEdges, topo]);
 
-  useFrame(({ clock }) => {
-    if (!lineRef.current) return;
-    const time = clock.getElapsedTime();
-    
-    // Kuramoto phase-locking visualizer for Physics mode
-    const mat = lineRef.current.material as THREE.LineBasicMaterial;
-    if (viewPerspective === 'physics') {
-       mat.opacity = 0.1 + (Math.sin(time * 2 + vectors.arousal) * 0.1) + (vectors.repair * 0.2);
-       if (vectors.chaos > 0.5) mat.color.setHex(0xef4444);
-       else mat.color.setHex(0x38bdf8);
-    } else {
-       mat.opacity = 0.15;
-       mat.color.setHex(0x6366f1);
+  // Kuramoto integrator (mutated each frame)
+  const kuramoto = useMemo(() => {
+    return initKuramoto({
+      N: topo.N,
+      adjacency: topo.adjacency,
+      omegas: Float32Array.from(topo.nodes.map((n) => n.omega)),
+      K: 1.0,
+      noise: 0.06,
+      seed: 21,
+    });
+    // re-init when topology changes
+  }, [topo]);
+
+  // Update K & noise when vectors change
+  useEffect(() => {
+    kuramoto.K = effectiveCoupling(vectors);
+    kuramoto.noise = effectiveNoise(vectors);
+  }, [vectors.arousal, vectors.dampening, vectors.chaos, vectors.repair, kuramoto]);
+
+  // Refs to point-cloud-like instanced spheres (we use InstancedMesh)
+  const instRef = useRef<THREE.InstancedMesh>(null);
+  const tmpObj = useRef(new THREE.Object3D());
+  const tmpColor = useRef(new THREE.Color());
+  const lineMatRef = useRef<THREE.LineBasicMaterial>(null);
+
+  // Push coherence to parent on a throttle
+  const coherenceFrame = useRef(0);
+
+  useFrame((_, dt) => {
+    // Sub-step Kuramoto for numerical stability with large adjacency
+    const steps = 1;
+    const sdt = Math.min(0.05, dt) / steps;
+    for (let s = 0; s < steps; s++) stepKuramoto(kuramoto, sdt);
+
+    if (onCoherence) {
+      coherenceFrame.current++;
+      if (coherenceFrame.current % 12 === 0) onCoherence(kuramoto.R);
+    }
+
+    // Render instanced spheres
+    const inst = instRef.current;
+    if (!inst) return;
+    const N = topo.N;
+    for (let i = 0; i < N; i++) {
+      const phase = kuramoto.theta[i];
+      const amp = 0.5 + 0.5 * Math.cos(phase);
+      // Per-node scaling combines hubness, phase amplitude, and pharma vectors
+      const hub = 1 + Math.min(2.5, topo.nodes[i].hubness * 0.08);
+      const pharmScale = 1 + vectors.repair * 0.15 - vectors.dampening * 0.25;
+      const scale = 1.4 * hub * (0.7 + amp * 0.9) * Math.max(0.3, pharmScale);
+
+      // Pharma chaos jitter
+      const jit = vectors.chaos > 0 ? vectors.chaos * 0.6 : 0;
+      tmpObj.current.position.set(
+        topo.nodes[i].x + (Math.random() - 0.5) * jit,
+        topo.nodes[i].y + (Math.random() - 0.5) * jit,
+        topo.nodes[i].z + (Math.random() - 0.5) * jit
+      );
+      tmpObj.current.scale.setScalar(scale);
+      tmpObj.current.updateMatrix();
+      inst.setMatrixAt(i, tmpObj.current.matrix);
+
+      // Color: region tint mixed with phase-driven warm/cool shift
+      let baseHex = REGION_COLOR[topo.nodes[i].region];
+      if (viewPerspective === "physics") {
+        // Pure phase chromatic
+        tmpColor.current.setHSL((phase / (Math.PI * 2) + 1) % 1, 0.75, 0.4 + 0.25 * amp);
+      } else if (viewPerspective === "pharma") {
+        // Highlight nodes whose region is targeted by the stack vectors
+        const cls = topo.nodes[i].region;
+        const targeted =
+          (vectors.arousal > 0.3 && (cls === "Control" || cls === "SomatoMotor")) ||
+          (vectors.dampening > 0.3 && (cls === "Default" || cls === "Limbic")) ||
+          (vectors.repair > 0.3);
+        tmpColor.current.set(targeted ? "#1f6dff" : "#1b2230");
+        if (targeted) tmpColor.current.multiplyScalar(0.6 + amp * 0.8);
+      } else if (viewPerspective === "anatomy") {
+        tmpColor.current.set(baseHex).multiplyScalar(0.5 + 0.4 * amp);
+      } else {
+        // topology
+        tmpColor.current.set(baseHex).multiplyScalar(0.55 + 0.55 * amp);
+      }
+      inst.setColorAt(i, tmpColor.current);
+    }
+    inst.instanceMatrix.needsUpdate = true;
+    if (inst.instanceColor) inst.instanceColor.needsUpdate = true;
+
+    // Edge opacity pulses with global coherence
+    if (lineMatRef.current) {
+      const baseOp = viewPerspective === "physics" ? 0.05 : 0.08;
+      lineMatRef.current.opacity = baseOp + kuramoto.R * 0.35;
+      lineMatRef.current.color.set(viewPerspective === "physics" ? "#1f6dff" : "#4d8dff");
     }
   });
 
   return (
-    <lineSegments ref={lineRef} geometry={lineGeo}>
-      <lineBasicMaterial color={0x6366f1} transparent opacity={0.15} blending={THREE.AdditiveBlending} depthWrite={false} />
-    </lineSegments>
-  );
-}
+    <group>
+      <instancedMesh
+        ref={instRef}
+        args={[undefined, undefined, topo.N]}
+        frustumCulled={false}
+      >
+        <sphereGeometry args={[1, 14, 14]} />
+        <meshStandardMaterial
+          vertexColors
+          emissive={new THREE.Color("#0a0d14")}
+          roughness={0.4}
+          metalness={0.05}
+          toneMapped={false}
+        />
+      </instancedMesh>
 
-function BrainNode({ data, vectors, isTargeted, totalDose, viewPerspective }: { data: any, vectors: any, isTargeted: boolean, totalDose: number, viewPerspective: string }) {
-  const meshRef = useRef<THREE.Mesh>(null);
-  
-  useFrame(({ clock }) => {
-    if (!meshRef.current) return;
-    const time = clock.getElapsedTime();
-    const dist = data.position.length();
-    
-    // Phase dynamics
-    const phaseOffset = (data.position.x + data.position.y) * 0.05;
-    // Synchronized wave for Physics mode, chaotic for high chaos
-    const waveFreq = viewPerspective === 'physics' ? (2 + vectors.arousal) : 3;
-    const wave = Math.sin(dist * 0.05 - time * waveFreq + (vectors.chaos > 0 ? Math.random() : phaseOffset));
-    
-    let jitter = 0;
-    if (vectors.chaos > 0) jitter = vectors.chaos * 2.5; 
-    if (totalDose > 2.5) jitter += 2.0;
-
-    if (jitter > 0) {
-        meshRef.current.position.x = data.position.x + (Math.random() - 0.5) * jitter;
-        meshRef.current.position.y = data.position.y + (Math.random() - 0.5) * jitter;
-        meshRef.current.position.z = data.position.z + (Math.random() - 0.5) * jitter;
-    } else {
-        meshRef.current.position.lerp(data.position, 0.1);
-    }
-    
-    const material = meshRef.current.material as THREE.MeshPhongMaterial;
-    if (material) {
-        let targetColor = new THREE.Color(data.baseColor);
-        let baseSize = 3;
-        let emissiveInt = 0.3;
-        
-        // Mode-specific visuals
-        if (viewPerspective === 'pharma') {
-            if (isTargeted) {
-                targetColor.setHex(0xe11d48); // Glowing Rose
-                baseSize = 5 + wave * 1.5;
-                emissiveInt = 1.0 + wave * 0.5;
-                material.opacity = 1.0;
-            } else {
-                targetColor.setHex(0x1e293b); // Dimmed slate
-                baseSize = 1.5;
-                emissiveInt = 0.1;
-                material.opacity = 0.2;
-            }
-        } else if (viewPerspective === 'anatomy') {
-            baseSize = 1.5 + wave * 0.2;
-            emissiveInt = 0.5;
-            material.opacity = 0.5;
-        } else if (viewPerspective === 'physics') {
-            baseSize = 2.5 + Math.max(0, wave * 2);
-            targetColor.setHSL((time * 0.1 + phaseOffset) % 1, 0.8, 0.5); // Chromatic shifting based on phase
-            emissiveInt = 0.8 + wave * 0.5;
-            material.opacity = 0.9;
-        } else {
-            // Topology (Default)
-            const scaleBase = Math.max(0.1, 1.0 + vectors.arousal * 0.2 - vectors.dampening * 0.4 + vectors.repair * 0.3);
-            baseSize = Math.max(0.1, scaleBase * 3 + wave * 0.2);
-            
-            if (isTargeted) targetColor.setHex(0xe11d48);
-            else if (vectors.repair > 0.5 && vectors.chaos <= 0) targetColor.setHex(0xfcd34d);
-            else if (vectors.dampening > 1.0) targetColor.setHex(0x475569);
-            else if (vectors.chaos > 0.5 || vectors.arousal > 2.0) targetColor.setHex(0xef4444);
-
-            if (isTargeted) {
-                emissiveInt = 0.8 + wave * 0.4;
-            } else {
-                if (vectors.repair > 0) emissiveInt = 0.6;
-                if (vectors.dampening > 1) emissiveInt = 0.1;
-                if (vectors.chaos > 1) emissiveInt = 1.5;
-            }
-            material.opacity = 0.9;
-        }
-
-        meshRef.current.scale.setScalar(baseSize);
-        material.color.lerp(targetColor, 0.1);
-        material.emissiveIntensity = emissiveInt;
-    }
-  });
-
-  return (
-    <mesh ref={meshRef} position={data.position}>
-      <sphereGeometry args={[1, 12, 12]} />
-      <meshPhongMaterial 
-        color={data.baseColor} 
-        emissive={data.baseColor} 
-        transparent 
-        opacity={0.9} 
-        shininess={100} 
-      />
-    </mesh>
+      <lineSegments geometry={edgeGeo} renderOrder={-1}>
+        <lineBasicMaterial
+          ref={lineMatRef}
+          color="#4d8dff"
+          transparent
+          opacity={0.12}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+        />
+      </lineSegments>
+    </group>
   );
 }

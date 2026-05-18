@@ -154,20 +154,20 @@ export default function StackSimulator() {
   return (
     <div className="flex-1 flex flex-col lg:flex-row overflow-hidden w-full h-[calc(100vh-3.5rem)]">
       {/* Left Sidebar: Stack Builder */}
-      <div id="left-sidebar" className="w-full lg:w-[350px] bg-slate-50 border-r border-slate-200 flex-none overflow-y-auto custom-scrollbar z-20 flex flex-col p-4 shadow-sm shrink-0">
-        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex-none mb-4">
-          <div className="inline-block px-2 py-1 bg-indigo-50 text-indigo-700 rounded text-[9px] font-bold uppercase tracking-widest mb-3">Database Connected</div>
-          <h2 className="text-xl font-bold text-slate-900 mb-1">NeuroStack Builder</h2>
-          <p className="text-xs text-slate-500 mb-5">Simulate interactions across indexed compounds.</p>
+      <div id="left-sidebar" className="w-full lg:w-[350px] bg-surface-0 border-r border-line flex-none overflow-y-auto custom-scrollbar z-20 flex flex-col p-4 shadow-sm shrink-0">
+        <div className="clinical-card p-4 flex-none mb-4">
+          <div className="inline-block px-2 py-1 bg-accent-500/10 text-accent-400 rounded text-[9px] font-bold uppercase tracking-widest mb-3">Database Connected</div>
+          <h2 className="text-xl font-bold text-ink mb-1">NeuroStack Builder</h2>
+          <p className="text-xs text-ink-muted mb-5">Simulate interactions across indexed compounds.</p>
           
           <div className="space-y-4">
             <div>
-              <label className="text-[10px] uppercase font-bold text-slate-400 block mb-2 tracking-widest">Search</label>
-              <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Type to search..." className="w-full bg-slate-50 border border-slate-200 text-sm font-semibold text-slate-700 rounded-lg p-2.5 focus:outline-none focus:border-indigo-500" />
+              <label className="text-[10px] uppercase font-bold text-ink-muted block mb-2 tracking-widest">Search</label>
+              <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Type to search..." className="w-full bg-surface-0 border border-line text-sm font-semibold text-ink-subtle rounded-clinical p-2.5 focus:outline-none focus:border-accent-500" />
             </div>
             <div>
-              <label className="text-[10px] uppercase font-bold text-slate-400 block mb-2 tracking-widest">Compound Class</label>
-              <select value={classFilter} onChange={(e) => setClassFilter(e.target.value)} className="w-full bg-slate-50 border border-slate-200 text-sm font-semibold text-slate-700 rounded-lg p-2.5 focus:outline-none focus:border-indigo-500">
+              <label className="text-[10px] uppercase font-bold text-ink-muted block mb-2 tracking-widest">Compound Class</label>
+              <select value={classFilter} onChange={(e) => setClassFilter(e.target.value)} className="w-full bg-surface-0 border border-line text-sm font-semibold text-ink-subtle rounded-clinical p-2.5 focus:outline-none focus:border-accent-500">
                 <option value="all">All Classes</option>
                 <option value="novel">Novel Therapeutics (Precision)</option>
                 <option value="ssri">SSRIs / SNRIs</option>
@@ -179,65 +179,65 @@ export default function StackSimulator() {
             </div>
             
             <div>
-              <label className="text-[10px] uppercase font-bold text-slate-400 block mb-2 tracking-widest">Select Molecule</label>
-              <select value={selectedMolId} onChange={(e) => setSelectedMolId(e.target.value)} className="w-full bg-slate-50 border border-slate-200 text-sm font-semibold text-slate-700 rounded-lg p-2.5 focus:outline-none focus:border-indigo-500">
+              <label className="text-[10px] uppercase font-bold text-ink-muted block mb-2 tracking-widest">Select Molecule</label>
+              <select value={selectedMolId} onChange={(e) => setSelectedMolId(e.target.value)} className="w-full bg-surface-0 border border-line text-sm font-semibold text-ink-subtle rounded-clinical p-2.5 focus:outline-none focus:border-accent-500">
                 {filteredMolecules.map(m => (
                   <option key={m.id} value={m.id}>{m.name}</option>
                 ))}
               </select>
             </div>
             
-            <button onClick={addToStack} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold uppercase tracking-widest py-3 rounded-lg transition-colors shadow-md shadow-indigo-200">
+            <button onClick={addToStack} className="w-full btn-primary text-ink text-xs font-bold uppercase tracking-widest py-3 rounded-clinical transition-colors shadow-md shadow-accent-500/20">
                 + Add to Stack
             </button>
           </div>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex-grow flex flex-col overflow-hidden">
+        <div className="clinical-card p-4 flex-grow flex flex-col overflow-hidden">
           <div className="flex justify-between items-center mb-4 flex-none">
-              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-widest">Active Stack</h3>
-              <span className="bg-slate-100 text-slate-500 text-[10px] font-bold px-2 py-0.5 rounded-full">{stack.length}/10</span>
+              <h3 className="text-sm font-bold text-ink uppercase tracking-widest">Active Stack</h3>
+              <span className="bg-surface-100 text-ink-muted text-[10px] font-bold px-2 py-0.5 rounded-full">{stack.length}/10</span>
           </div>
           
           <div className="flex-grow overflow-y-auto space-y-3 pr-1">
             {stack.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center opacity-50">
-                  <p className="text-xs font-medium text-slate-500">Stack is empty.</p>
+                  <p className="text-xs font-medium text-ink-muted">Stack is empty.</p>
               </div>
             ) : (
               stack.map(mol => {
                 const isBabel = mol.isBabelForge;
                 const isBlue = mol.isBlue;
                 const isNovel = mol.class === 'novel' && !isBabel && !isBlue;
-                const colorClass = isBabel ? 'text-purple-600' : (isBlue ? 'text-blue-600' : (isNovel ? 'text-indigo-600' : 'text-slate-600'));
-                const bgClass = isBabel ? 'bg-purple-50 border-purple-200' : (isBlue ? 'bg-blue-50 border-blue-200' : (isNovel ? 'bg-indigo-50 border-indigo-200' : 'bg-white border-slate-200'));
+                const colorClass = isBabel ? 'text-info' : (isBlue ? 'text-accent-500' : (isNovel ? 'text-accent-500' : 'text-ink-subtle'));
+                const bgClass = isBabel ? 'bg-info/10 border-info/30' : (isBlue ? 'bg-accent-500/10 border-accent-500/30' : (isNovel ? 'bg-accent-500/10 border-accent-500/30' : 'bg-surface-50 border-line'));
                 const themeColor = isBabel ? 'purple' : (isBlue ? 'blue' : 'indigo');
-                const badge = isBabel ? <span className="bg-purple-100 text-purple-700 text-[8px] font-extrabold px-1.5 py-0.5 rounded ml-2 align-middle">babelForge</span> : null;
+                const badge = isBabel ? <span className="bg-info/20 text-info text-[8px] font-extrabold px-1.5 py-0.5 rounded ml-2 align-middle">babelForge</span> : null;
 
                 return (
-                  <div key={mol.id} className={`stack-item flex flex-col p-3 rounded-xl border ${bgClass} shadow-sm gap-2`}>
+                  <div key={mol.id} className={`stack-item flex flex-col p-3 rounded-clinical border ${bgClass} shadow-sm gap-2`}>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className={`w-10 h-10 flex-none opacity-80 ${colorClass}`} dangerouslySetInnerHTML={{ __html: mol.svg }} />
                             <div>
-                                <h4 className="font-bold text-xs text-slate-900">{mol.name}</h4>
+                                <h4 className="font-bold text-xs text-ink">{mol.name}</h4>
                                 <p className={`text-[9px] uppercase tracking-widest font-bold ${colorClass}`}>{mol.classLabel}{badge}</p>
                             </div>
                         </div>
-                        <button onClick={() => removeFromStack(mol.id)} className="text-slate-400 hover:text-red-500 p-1 self-start">
-                            ✕
+                        <button onClick={() => removeFromStack(mol.id)} className="text-ink-muted hover:text-crit p-1 self-start">
+                            âœ•
                         </button>
                     </div>
-                    <div className="flex flex-col gap-2 w-full px-1 mt-1 border-t border-slate-100 pt-2">
+                    <div className="flex flex-col gap-2 w-full px-1 mt-1 border-t border-line pt-2">
                         <div className="flex items-center gap-3 w-full">
-                            <span className="text-[9px] font-bold text-slate-400 uppercase w-12">Dose</span>
-                            <input type="range" min="0" max="3" step="1" value={mol.currentIntensity} onChange={(e) => updateMolAttr(mol.id, 'currentIntensity', parseInt(e.target.value))} className={`flex-grow h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-${themeColor}-500`} />
-                            <span className="text-[10px] font-mono font-bold text-slate-600 w-8 text-right">{['0', '1', '2', '3'][mol.currentIntensity]}</span>
+                            <span className="text-[9px] font-bold text-ink-muted uppercase w-12">Dose</span>
+                            <input type="range" min="0" max="3" step="1" value={mol.currentIntensity} onChange={(e) => updateMolAttr(mol.id, 'currentIntensity', parseInt(e.target.value))} className={`flex-grow h-1.5 bg-surface-200 rounded-clinical appearance-none cursor-pointer accent-${themeColor}-500`} />
+                            <span className="text-[10px] font-mono font-bold text-ink-subtle w-8 text-right">{['0', '1', '2', '3'][mol.currentIntensity]}</span>
                         </div>
                         <div className="flex items-center gap-3 w-full">
-                            <span className="text-[9px] font-bold text-slate-400 uppercase w-12">Tol (Mo)</span>
-                            <input type="range" min="0" max="120" step="1" value={mol.toleranceMonths} onChange={(e) => updateMolAttr(mol.id, 'toleranceMonths', parseInt(e.target.value))} className={`flex-grow h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-${themeColor}-400`} />
-                            <span className="text-[10px] font-mono font-bold text-slate-600 w-8 text-right">{mol.toleranceMonths}</span>
+                            <span className="text-[9px] font-bold text-ink-muted uppercase w-12">Tol (Mo)</span>
+                            <input type="range" min="0" max="120" step="1" value={mol.toleranceMonths} onChange={(e) => updateMolAttr(mol.id, 'toleranceMonths', parseInt(e.target.value))} className={`flex-grow h-1 bg-surface-200 rounded-clinical appearance-none cursor-pointer accent-${themeColor}-400`} />
+                            <span className="text-[10px] font-mono font-bold text-ink-subtle w-8 text-right">{mol.toleranceMonths}</span>
                         </div>
                     </div>
                   </div>
@@ -246,49 +246,49 @@ export default function StackSimulator() {
             )}
           </div>
 
-          <div className="mt-4 pt-4 border-t border-slate-100 flex-none">
-              <div className="text-[9px] uppercase font-bold text-slate-400 mb-3 tracking-widest">Net Pharmacological Vectors</div>
+          <div className="mt-4 pt-4 border-t border-line flex-none">
+              <div className="text-[9px] uppercase font-bold text-ink-muted mb-3 tracking-widest">Net Pharmacological Vectors</div>
               <div className="grid grid-cols-2 gap-2 text-xs font-mono">
-                  <div className="flex justify-between bg-slate-50 p-2 rounded"><span className="text-slate-500">Arousal</span><span className="font-bold text-slate-900">{(simulationState.net.arousal > 0 ? '+' : '') + simulationState.net.arousal.toFixed(1)}</span></div>
-                  <div className="flex justify-between bg-slate-50 p-2 rounded"><span className="text-slate-500">Dampening</span><span className="font-bold text-slate-900">{(simulationState.net.dampening > 0 ? '+' : '') + simulationState.net.dampening.toFixed(1)}</span></div>
-                  <div className="flex justify-between bg-slate-50 p-2 rounded"><span className="text-slate-500">Chaos</span><span className="font-bold text-slate-900">{(simulationState.net.chaos > 0 ? '+' : '') + simulationState.net.chaos.toFixed(1)}</span></div>
-                  <div className="flex justify-between bg-slate-50 p-2 rounded"><span className="text-slate-500">Repair</span><span className="font-bold text-slate-900">{(simulationState.net.repair > 0 ? '+' : '') + simulationState.net.repair.toFixed(1)}</span></div>
+                  <div className="flex justify-between bg-surface-0 p-2 rounded"><span className="text-ink-muted">Arousal</span><span className="font-bold text-ink">{(simulationState.net.arousal > 0 ? '+' : '') + simulationState.net.arousal.toFixed(1)}</span></div>
+                  <div className="flex justify-between bg-surface-0 p-2 rounded"><span className="text-ink-muted">Dampening</span><span className="font-bold text-ink">{(simulationState.net.dampening > 0 ? '+' : '') + simulationState.net.dampening.toFixed(1)}</span></div>
+                  <div className="flex justify-between bg-surface-0 p-2 rounded"><span className="text-ink-muted">Chaos</span><span className="font-bold text-ink">{(simulationState.net.chaos > 0 ? '+' : '') + simulationState.net.chaos.toFixed(1)}</span></div>
+                  <div className="flex justify-between bg-surface-0 p-2 rounded"><span className="text-ink-muted">Repair</span><span className="font-bold text-ink">{(simulationState.net.repair > 0 ? '+' : '') + simulationState.net.repair.toFixed(1)}</span></div>
               </div>
           </div>
         </div>
       </div>
 
       {/* Right Panel: 3D Visualization */}
-      <div className="flex-grow bg-white border border-slate-200 rounded-2xl m-4 p-1 shadow-sm flex flex-col relative min-h-[500px] lg:min-h-full">
+      <div className="flex-grow clinical-card m-4 p-1 shadow-sm flex flex-col relative min-h-[500px] lg:min-h-full">
         <NeuroCanvas activeStack={stack} vectors={simulationState.net} />
         
         {/* Overlay Info */}
         <div className="absolute top-6 left-6 pointer-events-none z-10">
           <div className="flex items-center gap-2 mb-1">
-            <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></div>
-            <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">React Three Fiber Engine</span>
+            <div className="w-2 h-2 rounded-full bg-accent-500/100 animate-pulse"></div>
+            <span className="text-[10px] font-bold text-accent-400 uppercase tracking-widest">React Three Fiber Engine</span>
           </div>
-          <h4 className="text-xl font-bold text-white drop-shadow-md">{simulationState.label}</h4>
-          <p className="text-xs text-slate-300 mt-1 max-w-sm leading-relaxed drop-shadow">{simulationState.desc}</p>
-          <div className="mt-2 pt-2 border-t border-indigo-500/30 max-w-sm">
-              <span className="text-[9px] uppercase font-bold text-rose-400 block mb-1">Projected Subjective Experience</span>
-              <p className="text-xs text-slate-300 italic leading-relaxed drop-shadow">{simulationState.subj}</p>
+          <h4 className="text-xl font-bold text-ink font-semibold">{simulationState.label}</h4>
+          <p className="text-xs text-ink-subtle mt-1 max-w-sm leading-relaxed drop-shadow">{simulationState.desc}</p>
+          <div className="mt-2 pt-2 border-t border-accent-500/30 max-w-sm">
+              <span className="text-[9px] uppercase font-bold text-crit block mb-1">Projected Subjective Experience</span>
+              <p className="text-xs text-ink-subtle italic leading-relaxed drop-shadow">{simulationState.subj}</p>
           </div>
-          <button onClick={() => triggerAIAnalysis("Analyze the pharmacological interactions in my current stack.")} className="mt-4 bg-indigo-600/80 hover:bg-indigo-500 text-white text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-md transition-all border border-indigo-400/50 backdrop-blur-md shadow-lg flex items-center gap-2 pointer-events-auto">
+          <button onClick={() => triggerAIAnalysis("Analyze the pharmacological interactions in my current stack.")} className="mt-4 bg-accent-500/80 hover:bg-accent-500/100 text-ink text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-md transition-all border border-accent-400/50 backdrop-blur-md shadow-lg flex items-center gap-2 pointer-events-auto">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
               Ask babelAI
           </button>
         </div>
 
-        <div className="absolute bottom-6 right-6 p-4 bg-slate-900/90 border border-slate-700 rounded-xl backdrop-blur-xl min-w-[200px] shadow-2xl z-10 flex flex-col gap-3">
+        <div className="absolute bottom-6 right-6 p-4 bg-surface-50 border border-line-strong rounded-clinical backdrop-blur-xl min-w-[200px] shadow-2xl z-10 flex flex-col gap-3">
             <div>
-                <div className="text-[9px] uppercase font-bold text-indigo-400 mb-2 tracking-widest">Baseline Alignment (Healthy)</div>
+                <div className="text-[9px] uppercase font-bold text-accent-400 mb-2 tracking-widest">Baseline Alignment (Healthy)</div>
                 <div className="flex justify-between items-end mb-1">
-                    <span className="text-xs font-bold text-slate-400">Order (r)</span>
-                    <span className="text-lg text-emerald-400 font-mono font-bold">{simulationState.sync.toFixed(2)}</span>
+                    <span className="text-xs font-bold text-ink-muted">Order (r)</span>
+                    <span className="text-lg text-ok font-mono font-bold">{simulationState.sync.toFixed(2)}</span>
                 </div>
-                <div className="w-full bg-slate-800 rounded-full h-1 mt-2 overflow-hidden">
-                    <div className="h-full bg-emerald-500 transition-all duration-300" style={{width: `${simulationState.sync * 100}%`}}></div>
+                <div className="w-full bg-surface-100 rounded-full h-1 mt-2 overflow-hidden">
+                    <div className="h-full bg-ok transition-all duration-300" style={{width: `${simulationState.sync * 100}%`}}></div>
                 </div>
             </div>
         </div>

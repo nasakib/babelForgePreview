@@ -1,15 +1,26 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Inter_Tight, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
 import Navbar from '@/components/Navbar'
 import { AIProvider } from '@/context/AIContext'
 import AIAssistant from '@/components/AIAssistant'
 
-const inter = Inter({ subsets: ['latin'] })
+const interTight = Inter_Tight({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-sans',
+})
+
+const jetbrains = JetBrains_Mono({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-mono',
+})
 
 export const metadata: Metadata = {
   title: 'babelForge | Precision Neuroscience Engine',
-  description: 'Computational Topology and Pharmacopeia Engine',
+  description:
+    'Computational topology + Kuramoto phase dynamics + precision-compound optimization for clinical neuroscience research.',
 }
 
 export default function RootLayout({
@@ -18,13 +29,13 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body className={`${inter.className} antialiased selection:bg-indigo-500/40 selection:text-slate-900 min-h-screen flex flex-col overflow-hidden font-sans`}>
+    <html lang="en" className={`${interTight.variable} ${jetbrains.variable}`}>
+      <body className="font-sans antialiased min-h-screen flex flex-col overflow-hidden bg-canvas text-ink">
         <AIProvider>
           <Navbar />
-          <div className="flex-1 flex flex-col overflow-y-auto lg:overflow-hidden relative bg-slate-50">
+          <main className="flex-1 flex flex-col overflow-y-auto lg:overflow-hidden relative bg-void">
             {children}
-          </div>
+          </main>
           <AIAssistant />
         </AIProvider>
       </body>
