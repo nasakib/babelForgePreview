@@ -1,6 +1,7 @@
 "use client";
 
 import { useAI } from "@/context/AIContext";
+import { citationUrl, wisdomForPrompt } from "@/lib/wisdom/select";
 import { useEffect, useRef, useState } from "react";
 
 interface Msg { role: 'ai' | 'user' | 'sys'; content: string }
@@ -13,6 +14,7 @@ export default function AIAssistant() {
     activePathologies,
     activeStack,
     integrityScore,
+    wisdom,
   } = useAI();
   const [messages, setMessages] = useState<Msg[]>([
     { role: 'sys', content: 'babelAI initialised · Gemini 1.5 + local engine fallback.' },
@@ -53,6 +55,12 @@ export default function AIAssistant() {
       pathologies: activePathologies,
       stack: (activeStack as any[]).map((s: any) => ({ name: s.name, dose: s.dose ?? s.currentIntensity })),
       integrityScore,
+      // Grounding evidence — a compact, citation-anchored serialization of
+      // the top-ranked corpus entries for the current state. The backend
+      // injects this into the model's system prompt so responses cite
+      // real sources instead of confabulating.
+      grounding: wisdomForPrompt(wisdom),
+      wisdomIds: wisdom.map((w) => w.id),
     };
 
     try {
@@ -88,6 +96,47 @@ export default function AIAssistant() {
       </div>
 
       <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-2.5 bg-canvas">
+        {wisdom.length > 0 && (
+          <div className="mb-2 border border-line rounded-clinical bg-surface-0/60 p-2 space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-mono uppercase tracking-widest2 text-ink-muted">
+                Wisdom · grounded evidence
+              </span>
+              <span className="text-[10px] font-mono text-ink-dim">
+                {wisdom.length} hit{wisdom.length === 1 ? "" : "s"}
+              </span>
+            </div>
+            {wisdom.slice(0, 3).map((w) => (
+              <div key={w.id} className="text-[11px] leading-snug text-ink-subtle">
+                <span className="text-accent-400 mr-1">·</span>
+                {w.claim}
+                <span className="ml-1 text-ink-dim">
+                  [{w.evidence}]{" "}
+                  {w.citations.map((c, i) => {
+                    const href = citationUrl(c);
+                    return href ? (
+                      <a
+                        key={c.id}
+                        href={href}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="underline decoration-dotted hover:text-accent-400"
+                      >
+                        {c.label}
+                        {i < w.citations.length - 1 ? "; " : ""}
+                      </a>
+                    ) : (
+                      <span key={c.id}>
+                        {c.label}
+                        {i < w.citations.length - 1 ? "; " : ""}
+                      </span>
+                    );
+                  })}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
         {messages.map((m, i) => (
           <div key={i} className={m.role === 'user' ? 'flex justify-end' : 'flex justify-start'}>
             {m.role === 'sys' ? (
@@ -139,11 +188,12 @@ function localFallback(q: string, ctx: any): string {
   const pathTxt = ctx.pathologies?.length
     ? `Active states: ${ctx.pathologies.join(', ')}.`
     : 'No pathological state composed.';
+  const groundTxt = ctx.grounding ? `\n\n${ctx.grounding}` : '';
   if (lower.includes('integrity') || lower.includes('score'))
-    return `Topological integrity Φ = ${ctx.integrityScore}%. This is the ratio of the steady-state Kuramoto order parameter R to a healthy baseline. ${stackTxt}`;
+    return `Topological integrity Φ = ${ctx.integrityScore}%. This is the ratio of the steady-state Kuramoto order parameter R to a healthy baseline. ${stackTxt}${groundTxt}`;
   if (lower.includes('kuramoto') || lower.includes('phase'))
-    return `The Kuramoto integrator on the Schaefer-200 connectome is evolving in real time. Coupling K* is derived from the active stack's repair/chaos vectors; noise σ scales with chaos. ${pathTxt}`;
-  if (lower.includes('explain') || lower.includes('what'))
-    return `babelForge composes pathological topology additively over a healthy connectome, then evolves a Kuramoto phase system on the composed graph. Drugs perturb coupling and noise. ${pathTxt} ${stackTxt}`;
-  return `Local fallback (backend unreachable). ${pathTxt} ${stackTxt} Try the "Calculate Now" or "Auto-Optimize" buttons in the Console.`;
+    return `The Kuramoto integrator on the Schaefer-200 connectome is evolving in real time. Coupling K* is derived from the active stack's repair/chaos vectors; noise σ scales with chaos. ${pathTxt}${groundTxt}`;
+  if (lower.includes('explain') || lower.includes('what') || lower.includes('cite') || lower.includes('evidence'))
+    return `babelForge composes pathological topology additively over a healthy connectome, then evolves a Kuramoto phase system on the composed graph. Drugs perturb coupling and noise. ${pathTxt} ${stackTxt}${groundTxt}`;
+  return `Local fallback (backend unreachable). ${pathTxt} ${stackTxt}${groundTxt}`;
 }

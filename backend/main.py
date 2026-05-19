@@ -266,13 +266,35 @@ def chat_endpoint(req: ChatRequest):
     
     try:
         model = genai.GenerativeModel('gemini-1.5-flash')
-        
-        system_instruction = "You are babelAI, a clinical computational neuroscience assistant. You explain everything and answer questions based on the proprietary science of babelForge (including algebraic topology, multi-dimensional cliques, and Kuramoto phase-locking for neuromodulation) and the most accurate and latest scientific literature. You help users analyze 3D brain network topologies, pharmacological stacks, and psychiatric comorbidities. Be concise, clinical, and precise. Analyze the user's current context provided below."
-        
-        prompt = f"{system_instruction}\n\nSystem Context:\nModule: {req.context.get('module', 'None')}\nPathologies: {req.context.get('pathologies', [])}\nStack: {req.context.get('stack', [])}\nBaseline Alignment Score: {req.context.get('integrityScore', 'N/A')}%\n\nUser Query: {req.message}"
-        
+
+        system_instruction = (
+            "You are babelAI, a clinical computational neuroscience assistant. "
+            "You explain and answer based on the proprietary science of babelForge "
+            "(algebraic topology, multi-dimensional cliques, Kuramoto phase-locking) "
+            "and the latest peer-reviewed literature. Be concise, clinical, precise. "
+            "When grounding evidence is provided below, CITE the listed sources by "
+            "their labels in your response and DO NOT invent citations. If a claim "
+            "is not supported by the grounding or by widely accepted clinical "
+            "consensus, explicitly mark it as a model inference rather than fact."
+        )
+
+        ctx = req.context or {}
+        grounding = ctx.get("grounding", "")
+        grounding_block = f"\n\n{grounding}\n" if grounding else ""
+
+        prompt = (
+            f"{system_instruction}\n\n"
+            f"System Context:\n"
+            f"Module: {ctx.get('module', 'None')}\n"
+            f"Pathologies: {ctx.get('pathologies', [])}\n"
+            f"Stack: {ctx.get('stack', [])}\n"
+            f"Baseline Alignment Score: {ctx.get('integrityScore', 'N/A')}%"
+            f"{grounding_block}\n"
+            f"User Query: {req.message}"
+        )
+
         response = model.generate_content(prompt)
-        
+
         return {"response": response.text}
     except Exception as e:
         return {"response": f"Error communicating with AI: {str(e)}"}
