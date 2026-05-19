@@ -52,6 +52,17 @@ export default function ElevenDProjection() {
         </div>
 
         <div className="p-4 border-b border-line space-y-3">
+          <div className="section-label mb-1">Dimensionality Breakdown</div>
+          <div className="text-2xs text-ink-subtle leading-relaxed space-y-2">
+            <p><span className="text-ink font-bold">0D (Nodes):</span> Individual parcellated brain regions or distinct neuron clusters. The fundamental anchor points.</p>
+            <p><span className="text-ink font-bold">1D (Edges):</span> Pairwise functional connections between two nodes. Synaptic pathways.</p>
+            <p><span className="text-ink font-bold">2D (Triangles):</span> Three nodes fully connected, forming a closed loop. Localized functional triads.</p>
+            <p><span className="text-ink font-bold">3D (Tetrahedrons):</span> Four interconnected nodes enclosing a volume. Complex local processing motifs.</p>
+            <p><span className="text-ink font-bold">4D-11D (k-Simplices):</span> Higher-order geometric structures representing profound levels of neural synchrony and multidimensional information integration. An 11D clique means 12 neurons/regions are entirely interconnected, processing complex, abstract subjective experiences simultaneously.</p>
+          </div>
+        </div>
+
+        <div className="p-4 border-b border-line space-y-3">
           <div className="section-label mb-1">Aggregate Invariants</div>
           <div className="grid grid-cols-2 gap-2 text-2xs font-mono">
             <div className="flex flex-col p-2 border border-line bg-surface-50">

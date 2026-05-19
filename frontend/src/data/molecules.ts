@@ -92,5 +92,15 @@ export const molecules = [
     { id: 'methadone', name: 'Methadone', class: 'depressant', classLabel: 'Mu-Opioid Agonist', svg: svgTricyclic, halfLife: 'long', addictionPotential: 0.5, isCure: true, targetAddiction: 'depressant', effects: { arousal: -0.5, dampening: 1.5, chaos: -0.8, repair: 0.5 } },
     { id: 'buprenorphine', name: 'Buprenorphine', class: 'depressant', classLabel: 'Partial Opioid Agonist', svg: svgTricyclic, halfLife: 'long', addictionPotential: 0.3, isCure: true, targetAddiction: 'depressant', effects: { arousal: -0.2, dampening: 1.0, chaos: -1.0, repair: 0.8 } },
     { id: 'clonidine', name: 'Clonidine', class: 'depressant', classLabel: 'Alpha-2 Agonist', svg: svgPhen, halfLife: 'medium', isCure: true, targetAddiction: 'stimulant', effects: { arousal: -0.8, dampening: 0.9, chaos: -0.6, repair: 0.1 } },
-    { id: 'acamprosate', name: 'Acamprosate', class: 'depressant', classLabel: 'GABA/Glu Modulator', svg: svgPhen, halfLife: 'medium', isCure: true, targetAddiction: 'depressant', effects: { arousal: -0.1, dampening: 0.4, chaos: -0.8, repair: 0.3 } }
+    { id: 'acamprosate', name: 'Acamprosate', class: 'depressant', classLabel: 'GABA/Glu Modulator', svg: svgPhen, halfLife: 'medium', isCure: true, targetAddiction: 'depressant', effects: { arousal: -0.1, dampening: 0.4, chaos: -0.8, repair: 0.3 } },
+
+    // Lifestyle & Vanilla Interventions (Holistic & Physical Health)
+    { id: 'z2cardio', name: 'Zone 2 Cardio', class: 'lifestyle', classLabel: 'Aerobic Exercise', isLifestyle: true, svg: svgPhen, halfLife: 'medium', effects: { arousal: 0.4, dampening: -0.2, chaos: -0.4, repair: 0.8 } },
+    { id: 'hiit', name: 'HIIT', class: 'lifestyle', classLabel: 'Anaerobic Exercise', isLifestyle: true, svg: svgPhen, halfLife: 'short', effects: { arousal: 1.2, dampening: -0.1, chaos: 0.2, repair: 0.5 } },
+    { id: 'meditation', name: 'Mindfulness Meditation', class: 'lifestyle', classLabel: 'Contemplative Practice', isLifestyle: true, svg: svgIndole, halfLife: 'short', effects: { arousal: -0.3, dampening: 0.5, chaos: -0.6, repair: 0.7 } },
+    { id: 'cbt', name: 'CBT / Talk Therapy', class: 'lifestyle', classLabel: 'Psychotherapy', isLifestyle: true, svg: svgTricyclic, halfLife: 'long', effects: { arousal: 0.1, dampening: 0.1, chaos: -0.9, repair: 1.2 } },
+    { id: 'keto', name: 'Ketogenic Diet', class: 'lifestyle', classLabel: 'Metabolic Therapy', isLifestyle: true, svg: svgPhen, halfLife: 'long', effects: { arousal: 0.2, dampening: 0.3, chaos: -0.3, repair: 0.6 } },
+    { id: 'sleep', name: 'Optimized Sleep (8hr+)', class: 'lifestyle', classLabel: 'Circadian Rhythm', isLifestyle: true, svg: svgIndole, halfLife: 'long', effects: { arousal: -0.2, dampening: 0.4, chaos: -1.0, repair: 1.8 } },
+    { id: 'omega3', name: 'Omega-3 (EPA/DHA)', class: 'lifestyle', classLabel: 'Nutritional Support', isLifestyle: true, svg: svgPhen, halfLife: 'long', effects: { arousal: 0.1, dampening: 0.1, chaos: -0.2, repair: 0.4 } },
+    { id: 'sauna', name: 'Sauna / Heat Therapy', class: 'lifestyle', classLabel: 'Thermal Stress', isLifestyle: true, svg: svgTricyclic, halfLife: 'short', effects: { arousal: 0.3, dampening: 0.4, chaos: -0.1, repair: 0.6 } },
 ];

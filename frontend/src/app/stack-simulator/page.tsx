@@ -14,6 +14,7 @@ export default function StackSimulator() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [classFilter, setClassFilter] = useState("all");
+  const [interventionMode, setInterventionMode] = useState<"pharma" | "vanilla" | "holistic">("holistic");
   const [selectedMolId, setSelectedMolId] = useState(molecules[0]?.id || "");
   const [stack, setStack] = useState<any[]>([]);
 
@@ -24,13 +25,17 @@ export default function StackSimulator() {
   // Computed Properties
   const filteredMolecules = useMemo(() => {
     return molecules.filter((m) => {
+      // Filter by intervention mode
+      if (interventionMode === "pharma" && m.class === "lifestyle") return false;
+      if (interventionMode === "vanilla" && m.class !== "lifestyle") return false;
+
       const matchClass = classFilter === "all" || m.class === classFilter;
       const matchSearch =
         m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         m.classLabel.toLowerCase().includes(searchQuery.toLowerCase());
       return matchClass && matchSearch;
     });
-  }, [searchQuery, classFilter]);
+  }, [searchQuery, classFilter, interventionMode]);
 
   const selectedMol = useMemo(() => molecules.find(m => m.id === selectedMolId), [selectedMolId]);
 
@@ -194,29 +199,46 @@ export default function StackSimulator() {
       <aside id="left-sidebar" className="w-full lg:w-[350px] lg:absolute lg:left-4 lg:top-4 lg:bottom-4 z-10 border-b lg:border border-line bg-surface-0/80 backdrop-blur-xl lg:rounded-clinical flex flex-col overflow-y-auto custom-scrollbar shadow-2xl pointer-events-auto">
         <div className="clinical-card p-4 flex-none border-b border-line bg-surface-50">
           <div className="inline-block px-2 py-1 bg-accent-500/10 text-accent-400 rounded text-[9px] font-bold uppercase tracking-widest mb-3">Database Connected</div>
-          <h2 className="text-xl font-bold text-ink mb-1">NeuroStack Builder</h2>
-          <p className="text-xs text-ink-muted mb-5">Simulate interactions across indexed compounds.</p>
+          <h2 className="text-xl font-bold text-ink mb-1">Intervention Builder</h2>
+          <p className="text-xs text-ink-muted mb-5">Simulate interventions and regimens.</p>
 
           <div className="space-y-4">
+            <div className="flex gap-2 p-1 bg-surface-100 rounded-clinical">
+              {(["holistic", "pharma", "vanilla"] as const).map((m) => (
+                <button
+                  key={m}
+                  onClick={() => setInterventionMode(m)}
+                  className={`flex-1 py-1.5 text-[9px] font-bold uppercase tracking-widest rounded transition-colors ${interventionMode === m ? 'bg-surface-0 text-accent-400 shadow-sm' : 'text-ink-muted hover:text-ink'}`}
+                >
+                  {m === "vanilla" ? "Lifestyle" : m}
+                </button>
+              ))}
+            </div>
+
             <div>
               <label className="text-[10px] uppercase font-bold text-ink-muted block mb-2 tracking-widest">Search</label>
               <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Type to search..." className="w-full bg-surface-0 border border-line text-sm font-semibold text-ink-subtle rounded-clinical p-2.5 focus:outline-none focus:border-accent-500" />
             </div>
             <div>
-              <label className="text-[10px] uppercase font-bold text-ink-muted block mb-2 tracking-widest">Compound Class</label>
+              <label className="text-[10px] uppercase font-bold text-ink-muted block mb-2 tracking-widest">Category Filter</label>
               <select value={classFilter} onChange={(e) => setClassFilter(e.target.value)} className="w-full bg-surface-0 border border-line text-sm font-semibold text-ink-subtle rounded-clinical p-2.5 focus:outline-none focus:border-accent-500">
                 <option value="all">All Classes</option>
-                <option value="novel">Novel Therapeutics (Precision)</option>
-                <option value="ssri">SSRIs / SNRIs</option>
-                <option value="stimulant">Stimulants (Amphetamines)</option>
-                <option value="antipsychotic">Antipsychotics</option>
-                <option value="cannabinoid">Cannabinoids</option>
-                <option value="depressant">Depressants / Benzos</option>
+                {interventionMode !== "pharma" && <option value="lifestyle">Lifestyle / Physical</option>}
+                {interventionMode !== "vanilla" && (
+                  <>
+                    <option value="novel">Novel Therapeutics (Precision)</option>
+                    <option value="ssri">SSRIs / SNRIs</option>
+                    <option value="stimulant">Stimulants (Amphetamines)</option>
+                    <option value="antipsychotic">Antipsychotics</option>
+                    <option value="cannabinoid">Cannabinoids</option>
+                    <option value="depressant">Depressants / Benzos</option>
+                  </>
+                )}
               </select>
             </div>
             
             <div>
-              <label className="text-[10px] uppercase font-bold text-ink-muted block mb-2 tracking-widest">Select Molecule</label>
+              <label className="text-[10px] uppercase font-bold text-ink-muted block mb-2 tracking-widest">Select Intervention</label>
               <select value={selectedMolId} onChange={(e) => setSelectedMolId(e.target.value)} className="w-full bg-surface-0 border border-line text-sm font-semibold text-ink-subtle rounded-clinical p-2.5 focus:outline-none focus:border-accent-500">
                 {filteredMolecules.map(m => (
                   <option key={m.id} value={m.id}>{m.name}</option>

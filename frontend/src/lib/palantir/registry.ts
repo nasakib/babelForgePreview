@@ -109,6 +109,14 @@ export const APP_ROUTES: AppRoute[] = [
     description: "API reference, clinical workflow, methodology.",
     icon: "M6 4h9l5 5v11a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2zm9 0v5h5",
   },
+  {
+    href: "/resources",
+    label: "Resources",
+    kind: "docs",
+    shortcut: "F12",
+    description: "Global mental and physical health resources and crisis lines.",
+    icon: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-2h2v2zm0-4h-2V7h2v6z",
+  },
 ];
 
 export interface Command {

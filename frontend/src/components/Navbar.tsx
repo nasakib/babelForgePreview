@@ -16,6 +16,7 @@ const NAV_ITEMS: { href: string; label: string; code: string }[] = [
   { href: '/studies',           label: 'Validation',      code: 'F9' },
   { href: '/fourier',           label: 'Fourier',         code: 'F10' },
   { href: '/procedures',        label: 'Procedures',      code: 'F11' },
+  { href: '/resources',         label: 'Resources',       code: 'F12' },
 ];
 
 export default function Navbar() {
