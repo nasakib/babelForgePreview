@@ -17,7 +17,7 @@ export default function DocsPage() {
   const [tab, setTab] = useState<"overview" | "api" | "workflow">("overview");
 
   return (
-    <div className="flex-1 flex flex-col w-full h-app-mobile lg:h-[calc(100vh-3rem)] overflow-y-auto bg-canvas">
+    <div className="flex-1 flex flex-col w-full overflow-y-auto bg-canvas">
       <header className="border-b border-line bg-surface-0 px-6 py-5 flex flex-col gap-3">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>

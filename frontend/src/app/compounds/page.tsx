@@ -21,9 +21,9 @@ export default function CompoundsDirectory() {
   const selectedMol = useMemo(() => molecules.find((m) => m.id === selectedMolId), [selectedMolId]);
 
   return (
-    <div className="flex-grow max-w-[1200px] w-full mx-auto p-4 md:p-8 flex flex-col md:flex-row gap-6 md:h-[calc(100vh-3.5rem)]">
+    <div className="flex-1 flex flex-col md:flex-row relative overflow-hidden bg-canvas w-full max-w-[1200px] mx-auto p-4 md:p-8 gap-6">
       {/* Sidebar: Search and Filter */}
-      <div className="w-full md:w-1/3 lg:w-1/4 flex-none flex flex-col space-y-4 md:min-h-0">
+      <div className="w-full md:w-1/3 lg:w-1/4 flex-none flex flex-col space-y-4 min-h-0">
         <div className="clinical-card p-4">
           <h2 className="text-xl font-bold text-ink mb-1">Compound Directory</h2>
           <p className="text-xs text-ink-muted mb-5">Search and inspect detailed pharmacological properties.</p>

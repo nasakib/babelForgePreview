@@ -77,7 +77,7 @@ const STUDIES = [
 
 export default function EvidencePage() {
   return (
-    <div className="flex-1 overflow-y-auto custom-scrollbar bg-canvas h-[calc(100vh-3rem)]">
+    <div className="flex-1 overflow-y-auto custom-scrollbar bg-canvas">
       <div className="max-w-5xl mx-auto px-6 py-8">
         <div className="flex items-center gap-2 mb-1">
           <div className="w-1.5 h-1.5 rounded-full bg-accent-500" />

@@ -10,7 +10,7 @@ import Link from "next/link";
  */
 export default function WelcomePage() {
   return (
-    <div className="lg:flex-1 lg:min-h-0 lg:overflow-y-auto bg-void">
+    <div className="flex-1 overflow-y-auto custom-scrollbar bg-void">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-8 sm:space-y-10">
         <header className="space-y-3">
           <div className="text-[10px] uppercase tracking-widest text-ink-muted">

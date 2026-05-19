@@ -61,22 +61,25 @@ export default function AnomalyScanPage() {
     set("psychometric", { ...profile.psychometric, ...patch });
 
   return (
-    <main className="min-h-screen bg-canvas pt-2 pb-12 px-4 sm:px-6">
-      <header className="max-w-7xl mx-auto py-4 mb-4 border-b border-line">
-        <span className="text-[10px] font-bold uppercase tracking-widest text-accent-500">
-          Clinical · heads-up scanner
-        </span>
-        <h1 className="text-2xl font-bold text-ink mt-1">Anomaly Scan</h1>
-        <p className="text-sm text-ink-muted mt-1 max-w-3xl">
-          Enter what you know — vitals, labs, lifestyle, meds. babelForge cross-checks against
-          published thresholds (Verified) and adds pattern hints (Novice). Not a diagnosis;
-          designed to surface things worth talking through with a clinician.
-        </p>
-      </header>
+    <div className="flex-1 flex flex-col relative overflow-hidden bg-void lg:block">
+      <div className="absolute inset-0 grid-bg opacity-30 pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-5">
-        {/* ─── Form ─── */}
-        <aside className="space-y-4">
+      {/* Left Sidebar: Data Entry */}
+      <aside className="w-full lg:w-[420px] lg:absolute lg:left-4 lg:top-4 lg:bottom-4 z-10 border-b lg:border border-line bg-surface-0/80 backdrop-blur-xl lg:rounded-clinical flex flex-col overflow-y-auto custom-scrollbar shadow-2xl pointer-events-auto">
+        <div className="clinical-card-header flex-none">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-accent-500">
+            Clinical · heads-up scanner
+          </span>
+          <h1 className="text-xl font-bold text-ink mt-1">Anomaly Scan</h1>
+        </div>
+
+        <div className="p-4 border-b border-line flex-none">
+          <p className="text-xs text-ink-muted leading-relaxed">
+            Enter what you know — vitals, labs, lifestyle, meds. babelForge cross-checks against published thresholds (Verified) and adds pattern hints (Novice).
+          </p>
+        </div>
+
+        <div className="p-4 flex-1 overflow-y-auto space-y-4">
           <Section title="Demographics">
             <NumInput label="Age (yr)" v={profile.demographics.ageYears} onChange={(v) => setDemo({ ageYears: v })} />
             <SelectInput
@@ -146,34 +149,43 @@ export default function AnomalyScanPage() {
           >
             Clear all
           </button>
+          </div>
         </aside>
 
         {/* ─── Scanner output ─── */}
-        <section className="space-y-3">
-          <AnomalyScanner profile={profile} />
-
-          <div className="clinical-card">
-            <div className="clinical-card-header">
-              <span className="section-label-strong">Derived metrics</span>
-            </div>
-            <dl className="p-3 grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-[11.5px]">
-              <Stat label="BMI" v={derived.bmi} suffix={derived.bmiCategory ? ` · ${derived.bmiCategory}` : ""} />
-              <Stat label="BSA (m²)" v={derived.bsa} />
-              <Stat label="MAP" v={derived.map} suffix=" mmHg" />
-              <Stat label="Pulse pressure" v={derived.pulsePressure} suffix=" mmHg" />
-              <Stat label="eGFR" v={derived.egfr} suffix={derived.egfrStage ? ` · ${derived.egfrStage}` : ""} />
-              <Stat label="Est. mean glucose" v={derived.meanGlucoseFromA1c} suffix=" mg/dL" />
-              <Stat label="LDL (Friedewald)" v={derived.ldlCalc} />
-              <Stat label="HRV band" v={derived.hrvCategory} />
-              <Stat label="Allostatic load" v={derived.allostaticLoad} suffix=" /10" />
-              <Stat label="Body integrity" v={derived.bodyIntegrity} suffix=" /100" />
-              <Stat label="Met. syndrome?" v={derived.metSyndrome === true ? "yes" : derived.metSyndrome === false ? "no" : undefined} />
-              <Stat label="CKD risk" v={derived.ckdRisk} />
-            </dl>
+        <aside className="w-full lg:w-[480px] lg:absolute lg:right-4 lg:top-4 lg:bottom-4 z-10 border-t lg:border border-line bg-surface-0/80 backdrop-blur-xl lg:rounded-clinical flex flex-col overflow-y-auto custom-scrollbar shadow-2xl pointer-events-auto">
+          <div className="clinical-card-header flex-none">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-accent-500">
+              Live Analysis
+            </span>
+            <h1 className="text-xl font-bold text-ink mt-1">Scanner Output</h1>
           </div>
-        </section>
-      </div>
-    </main>
+          
+          <div className="p-4 flex-1 overflow-y-auto space-y-4">
+            <AnomalyScanner profile={profile} />
+
+            <div className="clinical-card">
+              <div className="clinical-card-header">
+                <span className="section-label-strong">Derived metrics</span>
+              </div>
+              <dl className="p-3 grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-[11.5px]">
+                <Stat label="BMI" v={derived.bmi} suffix={derived.bmiCategory ? ` · ${derived.bmiCategory}` : ""} />
+                <Stat label="BSA (m²)" v={derived.bsa} />
+                <Stat label="MAP" v={derived.map} suffix=" mmHg" />
+                <Stat label="Pulse pressure" v={derived.pulsePressure} suffix=" mmHg" />
+                <Stat label="eGFR" v={derived.egfr} suffix={derived.egfrStage ? ` · ${derived.egfrStage}` : ""} />
+                <Stat label="Est. mean glucose" v={derived.meanGlucoseFromA1c} suffix=" mg/dL" />
+                <Stat label="LDL (Friedewald)" v={derived.ldlCalc} />
+                <Stat label="HRV band" v={derived.hrvCategory} />
+                <Stat label="Allostatic load" v={derived.allostaticLoad} suffix=" /10" />
+                <Stat label="Body integrity" v={derived.bodyIntegrity} suffix=" /100" />
+                <Stat label="Met. syndrome?" v={derived.metSyndrome === true ? "yes" : derived.metSyndrome === false ? "no" : undefined} />
+                <Stat label="CKD risk" v={derived.ckdRisk} />
+              </dl>
+            </div>
+          </div>
+        </aside>
+    </div>
   );
 }
 

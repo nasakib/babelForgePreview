@@ -51,11 +51,11 @@ export default function RootLayout({
             tokens the TS/Tailwind layers do. Single source of truth. */}
         <style id="forge-theme" dangerouslySetInnerHTML={{ __html: cssVarBlock() }} />
       </head>
-      <body className="font-sans antialiased min-h-screen-dvh flex flex-col lg:overflow-hidden bg-canvas text-ink">
+      <body className="font-sans antialiased h-screen-dvh flex flex-col overflow-hidden bg-canvas text-ink">
         <UserModeProvider>
           <AIProvider>
             <Navbar />
-            <main className="flex-1 flex flex-col lg:overflow-hidden relative bg-void">
+            <main className="flex-1 flex flex-col overflow-hidden relative bg-void">
               {children}
             </main>
             <StatusBar />
