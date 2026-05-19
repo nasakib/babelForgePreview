@@ -1,6 +1,8 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+
+const STORAGE_KEY = "babelforge:state:v1";
 
 // The AI Context acts as a central nervous system for the app.
 // It tracks what the user is currently doing (active states, molecules, UI focus)
@@ -35,6 +37,39 @@ export function AIProvider({ children }: { children: ReactNode }) {
   const [integrityScore, setIntegrityScore] = useState<number>(100);
   const [isAssistantOpen, setIsAssistantOpen] = useState<boolean>(false);
   const [viewPerspective, setViewPerspective] = useState<'topology' | 'anatomy' | 'pharma' | 'physics'>('topology');
+  const [hydrated, setHydrated] = useState(false);
+
+  // Hydrate persisted state from localStorage on mount
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = window.localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const v = JSON.parse(raw);
+        if (Array.isArray(v.activePathologies)) setActivePathologies(v.activePathologies);
+        if (Array.isArray(v.activeStack)) setActiveStack(v.activeStack);
+        if (typeof v.integrityScore === "number") setIntegrityScore(v.integrityScore);
+        if (v.viewPerspective) setViewPerspective(v.viewPerspective);
+      }
+    } catch {
+      /* ignore corrupt persisted state */
+    } finally {
+      setHydrated(true);
+    }
+  }, []);
+
+  // Persist on change
+  useEffect(() => {
+    if (!hydrated || typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ activePathologies, activeStack, integrityScore, viewPerspective })
+      );
+    } catch {
+      /* quota / privacy mode — ignore */
+    }
+  }, [activePathologies, activeStack, integrityScore, viewPerspective, hydrated]);
 
   const triggerAIAnalysis = (customPrompt?: string) => {
     setIsAssistantOpen(true);

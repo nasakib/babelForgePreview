@@ -227,7 +227,7 @@ export default function ConsolePage() {
       </aside>
 
       {/* MIDDLE */}
-      <section className="flex-1 relative min-h-[50vh] lg:min-h-0 border-r border-line">
+      <section className="flex-1 relative min-h-[60vh] lg:min-h-0 border-r border-line">
         <NeuroCanvas
           topology={topo}
           vectors={vectors}

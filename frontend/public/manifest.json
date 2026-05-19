@@ -1,0 +1,16 @@
+{
+  "name": "BabelForge",
+  "short_name": "BabelForge",
+  "description": "Research-grade visualizer for brain rhythms, network coherence, and pharmacological interventions.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b0d11",
+  "theme_color": "#1f6dff",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "any",
+      "type": "image/x-icon"
+    }
+  ]
+}

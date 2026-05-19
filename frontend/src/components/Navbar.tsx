@@ -13,6 +13,7 @@ const NAV_ITEMS: { href: string; label: string; code: string }[] = [
   { href: '/11d-projection',    label: '11D Topology',    code: 'F6' },
   { href: '/pharma-projection', label: 'Pharma Projection',code: 'F7'},
   { href: '/studies',           label: 'Validation',      code: 'F8' },
+  { href: '/fourier',           label: 'Fourier',         code: 'F9' },
 ];
 
 export default function Navbar() {

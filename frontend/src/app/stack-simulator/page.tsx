@@ -152,7 +152,7 @@ export default function StackSimulator() {
   };
 
   return (
-    <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden w-full lg:h-[calc(100vh-3.5rem)]">
+    <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden w-full h-app-mobile lg:h-[calc(100vh-3rem)]">
       {/* Left Sidebar: Stack Builder */}
       <div id="left-sidebar" className="w-full lg:w-[350px] bg-surface-0 border-r border-line flex-none overflow-y-auto custom-scrollbar z-20 flex flex-col p-4 shadow-sm shrink-0">
         <div className="clinical-card p-4 flex-none mb-4">
@@ -211,7 +211,8 @@ export default function StackSimulator() {
                 const isNovel = mol.class === 'novel' && !isBabel && !isBlue;
                 const colorClass = isBabel ? 'text-info' : (isBlue ? 'text-accent-500' : (isNovel ? 'text-accent-500' : 'text-ink-subtle'));
                 const bgClass = isBabel ? 'bg-info/10 border-info/30' : (isBlue ? 'bg-accent-500/10 border-accent-500/30' : (isNovel ? 'bg-accent-500/10 border-accent-500/30' : 'bg-surface-50 border-line'));
-                const themeColor = isBabel ? 'purple' : (isBlue ? 'blue' : 'indigo');
+                // Use CSS accent-color (static -> not purged by Tailwind)
+                const accentHex = isBabel ? '#06b6d4' : (isBlue ? '#1f6dff' : (isNovel ? '#4d8dff' : '#6366f1'));
                 const badge = isBabel ? <span className="bg-info/20 text-info text-[8px] font-extrabold px-1.5 py-0.5 rounded ml-2 align-middle">babelForge</span> : null;
 
                 return (
@@ -224,19 +225,19 @@ export default function StackSimulator() {
                                 <p className={`text-[9px] uppercase tracking-widest font-bold ${colorClass}`}>{mol.classLabel}{badge}</p>
                             </div>
                         </div>
-                        <button onClick={() => removeFromStack(mol.id)} className="text-ink-muted hover:text-crit p-1 self-start">
-                            âœ•
+                        <button onClick={() => removeFromStack(mol.id)} aria-label="Remove" className="text-ink-muted hover:text-crit p-1 self-start">
+                            ✕
                         </button>
                     </div>
                     <div className="flex flex-col gap-2 w-full px-1 mt-1 border-t border-line pt-2">
                         <div className="flex items-center gap-3 w-full">
                             <span className="text-[9px] font-bold text-ink-muted uppercase w-12">Dose</span>
-                            <input type="range" min="0" max="3" step="1" value={mol.currentIntensity} onChange={(e) => updateMolAttr(mol.id, 'currentIntensity', parseInt(e.target.value))} className={`flex-grow h-1.5 bg-surface-200 rounded-clinical appearance-none cursor-pointer accent-${themeColor}-500`} />
+                            <input type="range" min="0" max="3" step="1" value={mol.currentIntensity} onChange={(e) => updateMolAttr(mol.id, 'currentIntensity', parseInt(e.target.value))} style={{ accentColor: accentHex }} className="flex-grow h-1.5 bg-surface-200 rounded-clinical appearance-none cursor-pointer" />
                             <span className="text-[10px] font-mono font-bold text-ink-subtle w-8 text-right">{['0', '1', '2', '3'][mol.currentIntensity]}</span>
                         </div>
                         <div className="flex items-center gap-3 w-full">
                             <span className="text-[9px] font-bold text-ink-muted uppercase w-12">Tol (Mo)</span>
-                            <input type="range" min="0" max="120" step="1" value={mol.toleranceMonths} onChange={(e) => updateMolAttr(mol.id, 'toleranceMonths', parseInt(e.target.value))} className={`flex-grow h-1 bg-surface-200 rounded-clinical appearance-none cursor-pointer accent-${themeColor}-400`} />
+                            <input type="range" min="0" max="120" step="1" value={mol.toleranceMonths} onChange={(e) => updateMolAttr(mol.id, 'toleranceMonths', parseInt(e.target.value))} style={{ accentColor: accentHex, opacity: 0.8 }} className="flex-grow h-1 bg-surface-200 rounded-clinical appearance-none cursor-pointer" />
                             <span className="text-[10px] font-mono font-bold text-ink-subtle w-8 text-right">{mol.toleranceMonths}</span>
                         </div>
                     </div>
@@ -259,7 +260,7 @@ export default function StackSimulator() {
       </div>
 
       {/* Right Panel: 3D Visualization */}
-      <div className="flex-grow clinical-card m-4 p-1 shadow-sm flex flex-col relative min-h-[500px] lg:min-h-full">
+      <div className="flex-grow clinical-card m-3 lg:m-4 p-1 shadow-sm flex flex-col relative min-h-[60vh] lg:min-h-0">
         <NeuroCanvas activeStack={stack} vectors={simulationState.net} />
         
         {/* Overlay Info */}
