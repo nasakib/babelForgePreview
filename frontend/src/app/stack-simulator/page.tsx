@@ -246,11 +246,11 @@ export default function StackSimulator() {
                 const isBabel = mol.isBabelForge;
                 const isBlue = mol.isBlue;
                 const isNovel = mol.class === 'novel' && !isBabel && !isBlue;
-                const colorClass = isBabel ? 'text-info' : (isBlue ? 'text-accent-500' : (isNovel ? 'text-accent-500' : 'text-ink-subtle'));
-                const bgClass = isBabel ? 'bg-info/10 border-info/30' : (isBlue ? 'bg-accent-500/10 border-accent-500/30' : (isNovel ? 'bg-accent-500/10 border-accent-500/30' : 'bg-surface-50 border-line'));
+                const colorClass = isBabel ? 'text-accent-400' : (isBlue ? 'text-clinical-400' : (isNovel ? 'text-clinical-400' : 'text-ink-subtle'));
+                const bgClass = isBabel ? 'bg-accent-500/10 border-accent-500/30' : (isBlue ? 'bg-clinical-500/10 border-clinical-500/30' : (isNovel ? 'bg-clinical-500/10 border-clinical-500/30' : 'bg-surface-50 border-line'));
                 // Use CSS accent-color (static -> not purged by Tailwind)
-                const accentHex = isBabel ? '#06b6d4' : (isBlue ? '#1f6dff' : (isNovel ? '#4d8dff' : '#6366f1'));
-                const badge = isBabel ? <span className="bg-info/20 text-info text-[8px] font-extrabold px-1.5 py-0.5 rounded ml-2 align-middle">babelForge</span> : null;
+                const accentHex = isBabel ? '#a855f7' : (isBlue ? '#3b82f6' : (isNovel ? '#60a5fa' : '#6366f1'));
+                const badge = isBabel ? <span className="bg-accent-500/20 text-accent-400 text-[8px] font-extrabold px-1.5 py-0.5 rounded ml-2 align-middle border border-accent-500/30">babelForge</span> : null;
 
                 return (
                   <div key={mol.id} className={`stack-item flex flex-col p-3 rounded-clinical border ${bgClass} shadow-sm gap-2`}>

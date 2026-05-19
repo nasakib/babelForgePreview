@@ -94,6 +94,14 @@ export const APP_ROUTES: AppRoute[] = [
     icon: "M3 12c2 0 2-8 4-8s2 16 4 16 2-8 4-8 2 4 6 0",
   },
   {
+    href: "/procedures",
+    label: "Procedures",
+    kind: "library",
+    shortcut: "F11",
+    description: "Taxonomy of advanced neuromodulatory & pharmacological procedures.",
+    icon: "M4 6h16M4 12h8M4 18h16",
+  },
+  {
     href: "/docs",
     label: "Docs",
     kind: "docs",

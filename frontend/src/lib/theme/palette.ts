@@ -35,7 +35,8 @@ import { hexToHsl, hslToHex, ramp, type HSL } from "./color";
 const BASE = {
   canvas: hexToHsl("#0d1117"), // slate-navy, GitHub-dark adjacent
   ink: hexToHsl("#d4dae5"),    // warm off-white
-  accent: hexToHsl("#4d8dff"), // calm cobalt (220°)
+  accent: hexToHsl("#a855f7"), // babelForge purple (270°)
+  clinical: hexToHsl("#3b82f6"), // high-interest clinical blue
   ok: hexToHsl("#34c997"),     // sage teal
   warn: hexToHsl("#f0b154"),   // honey amber
   crit: hexToHsl("#ef5765"),   // soft coral
@@ -82,6 +83,7 @@ const line = {
 // ---------------------------------------------------------------------------
 
 const accent = ramp(BASE.accent, [50, 200, 400, 500, 600, 700]);
+const clinical = ramp(BASE.clinical, [50, 200, 400, 500, 600, 700]);
 
 // ---------------------------------------------------------------------------
 // EEG band palette — five hues stepped around the wheel so frequency
@@ -200,6 +202,7 @@ export const palette = {
   ink,
   line,
   accent,
+  clinical,
   ok: hslToHex(BASE.ok),
   warn: hslToHex(BASE.warn),
   crit: hslToHex(BASE.crit),
@@ -217,6 +220,7 @@ export const baseHsl: Record<keyof typeof BASE, HSL> = {
   canvas: BASE.canvas,
   ink: BASE.ink,
   accent: BASE.accent,
+  clinical: BASE.clinical,
   ok: BASE.ok,
   warn: BASE.warn,
   crit: BASE.crit,

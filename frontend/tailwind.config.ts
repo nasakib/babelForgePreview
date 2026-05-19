@@ -23,6 +23,7 @@ const config: Config = {
         ink: palette.ink,
         line: palette.line,
         accent: palette.accent,
+        clinical: palette.clinical,
         ok: palette.ok,
         warn: palette.warn,
         crit: palette.crit,

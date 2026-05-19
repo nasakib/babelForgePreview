@@ -67,7 +67,7 @@ export default function CompoundsDirectory() {
               const isBabel = mol.isBabelForge;
               const isBlue = mol.isBlue;
               const isNovel = mol.class === 'novel' && !isBabel && !isBlue;
-              const colorClass = isBabel ? 'text-info' : (isBlue ? 'text-accent-500' : (isNovel ? 'text-accent-500' : 'text-ink-subtle'));
+              const colorClass = isBabel ? 'text-accent-400' : (isBlue ? 'text-clinical-400' : (isNovel ? 'text-clinical-400' : 'text-ink-subtle'));
               
               return (
                 <button 
@@ -84,7 +84,7 @@ export default function CompoundsDirectory() {
                       <h4 className="font-bold text-sm text-ink transition-colors">{mol.name}</h4>
                       <p className={`text-[10px] uppercase tracking-widest font-bold ${colorClass}`}>
                         {mol.classLabel}
-                        {isBabel && <span className="bg-info/20 text-info text-[8px] font-extrabold px-1.5 py-0.5 rounded ml-2 align-middle">babelForge</span>}
+                        {isBabel && <span className="bg-accent-500/20 text-accent-400 text-[8px] font-extrabold px-1.5 py-0.5 rounded ml-2 align-middle border border-accent-500/30">babelForge</span>}
                       </p>
                     </div>
                   </div>
@@ -111,19 +111,19 @@ export default function CompoundsDirectory() {
             <div className="p-6 md:p-8 border-b border-line flex flex-col md:flex-row items-center md:items-start gap-6 bg-surface-0">
               <div 
                 className={`w-32 h-32 flex-none opacity-80 drop-shadow-sm ${
-                  selectedMol.isBabelForge ? 'text-info' : (selectedMol.isBlue ? 'text-accent-500' : (selectedMol.class === 'novel' ? 'text-accent-500' : 'text-ink-subtle'))
+                  selectedMol.isBabelForge ? 'text-accent-400' : (selectedMol.isBlue ? 'text-clinical-400' : (selectedMol.class === 'novel' ? 'text-clinical-400' : 'text-ink-subtle'))
                 }`}
                 dangerouslySetInnerHTML={{ __html: selectedMol.svg }}
               />
               <div className="flex-grow text-center md:text-left">
                 <h2 className="text-3xl font-bold text-ink mb-1">{selectedMol.name}</h2>
                 <span className={`text-xs uppercase tracking-widest font-bold px-3 py-1 rounded-full border ${
-                  selectedMol.isBabelForge ? 'border-info/30 bg-info/10 text-info' : 
-                  (selectedMol.isBlue ? 'border-accent-500/30 bg-accent-500/10 text-accent-500' : 
-                  (selectedMol.class === 'novel' ? 'border-accent-500/30 bg-accent-500/10 text-accent-500' : 'border-line bg-surface-0 text-ink-subtle'))
+                  selectedMol.isBabelForge ? 'border-accent-500/30 bg-accent-500/10 text-accent-400' : 
+                  (selectedMol.isBlue ? 'border-clinical-500/30 bg-clinical-500/10 text-clinical-400' : 
+                  (selectedMol.class === 'novel' ? 'border-clinical-500/30 bg-clinical-500/10 text-clinical-400' : 'border-line bg-surface-0 text-ink-subtle'))
                 }`}>
                   {selectedMol.classLabel}
-                  {selectedMol.isBabelForge && <span className="bg-info text-ink text-[9px] font-bold px-2 py-0.5 rounded ml-2 align-middle border border-info shadow-sm">babelForge</span>}
+                  {selectedMol.isBabelForge && <span className="bg-accent-500/20 text-accent-400 text-[9px] font-bold px-2 py-0.5 rounded ml-2 align-middle border border-accent-500/30 shadow-sm">babelForge</span>}
                 </span>
                 
                 <div className="flex flex-wrap justify-center md:justify-start gap-4 mt-6">
