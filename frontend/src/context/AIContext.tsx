@@ -33,8 +33,8 @@ interface AIContextProps {
   // Visualization State
   viewPerspective: 'topology' | 'anatomy' | 'pharma' | 'physics';
   setViewPerspective: (mode: 'topology' | 'anatomy' | 'pharma' | 'physics') => void;
-  selectedNodeId: number | null;
-  setSelectedNodeId: (id: number | null) => void;
+  selectedNodeIds: number[];
+  setSelectedNodeIds: (ids: number[]) => void;
   
   targetedOperations: TargetedOperation[];
   setTargetedOperations: (ops: TargetedOperation[]) => void;
@@ -67,7 +67,7 @@ export function AIProvider({ children }: { children: ReactNode }) {
   const [integrityScore, setIntegrityScore] = useState<number>(100);
   const [isAssistantOpen, setIsAssistantOpen] = useState<boolean>(false);
   const [viewPerspective, setViewPerspective] = useState<'topology' | 'anatomy' | 'pharma' | 'physics'>('topology');
-  const [selectedNodeId, setSelectedNodeId] = useState<number | null>(null);
+  const [selectedNodeIds, setSelectedNodeIds] = useState<number[]>([]);
   const [targetedOperations, setTargetedOperations] = useState<TargetedOperation[]>([]);
   const [fmriDataset, setFmriDataset] = useState<FmriDataset | null>(null);
   const [hydrated, setHydrated] = useState(false);
@@ -77,7 +77,7 @@ export function AIProvider({ children }: { children: ReactNode }) {
     setActiveStack([]);
     setIntegrityScore(100);
     setViewPerspective('topology');
-    setSelectedNodeId(null);
+    setSelectedNodeIds([]);
     setTargetedOperations([]);
     setFmriDataset(null);
   };
@@ -157,7 +157,7 @@ export function AIProvider({ children }: { children: ReactNode }) {
       isAssistantOpen, setIsAssistantOpen,
       triggerAIAnalysis,
       viewPerspective, setViewPerspective,
-      selectedNodeId, setSelectedNodeId,
+      selectedNodeIds, setSelectedNodeIds,
       targetedOperations, setTargetedOperations,
       wisdom,
       fmriDataset, setFmriDataset,

@@ -49,8 +49,8 @@ export default function NeuroCanvas({
     activeStack: ctxStack,
     activePathologies: ctxPathologies,
     setIntegrityScore,
-    selectedNodeId,
-    setSelectedNodeId,
+    selectedNodeIds,
+    setSelectedNodeIds,
     targetedOperations,
     setTargetedOperations,
   } = useAI();
@@ -95,11 +95,25 @@ export default function NeuroCanvas({
       }
       const r1 = n.region.charAt(0).toUpperCase();
       const r2 = nearestIdx >= 0 ? topo.nodes[nearestIdx].region.charAt(0).toUpperCase() : 'X';
-      return `${r1}${n.id}${r2}`;
+      
+      // Node strength visual mapping (hubness logic)
+      const hubness = n.hubness;
+      let strengthColor = "#64748b"; // dim gray (weak)
+      if (hubness > 15) strengthColor = "#ffffff"; // intense white
+      else if (hubness > 8) strengthColor = "#c084fc"; // bright purple
+      else if (hubness > 4) strengthColor = "#94a3b8"; // lighter gray
+      
+      return {
+        r1,
+        idStr: String(n.id),
+        r2,
+        strengthColor,
+        full: `${r1}${n.id}${r2}`
+      };
     });
   }, [topo]);
 
-  const selectedNode = selectedNodeId !== null ? topo.nodes[selectedNodeId] : null;
+  const selectedNodes = selectedNodeIds.map(id => topo.nodes[id]);
 
   useEffect(() => {
     const timer = setInterval(() => setSimTime((t) => t + 1), 1000);
@@ -107,8 +121,9 @@ export default function NeuroCanvas({
   }, []);
 
   const handleOperation = (type: 'ablate' | 'stimulate' | 'inhibit') => {
-    if (selectedNodeId === null) return;
-    setTargetedOperations([...targetedOperations, { nodeId: selectedNodeId, type }]);
+    if (selectedNodeIds.length === 0) return;
+    const newOps = selectedNodeIds.map(nodeId => ({ nodeId, type }));
+    setTargetedOperations([...targetedOperations, ...newOps]);
   };
 
   const prognosis = useMemo(() => {
@@ -195,20 +210,62 @@ export default function NeuroCanvas({
         </div>
         
         {/* Dynamic Node Info Panel */}
-        {selectedNode && (
-          <div className="mt-2 w-64 bg-surface-0/90 backdrop-blur-xl border border-accent-500/50 p-3 rounded-clinical shadow-2xl pointer-events-auto animate-fade-in-up">
+        {selectedNodes.length > 0 && (
+          <div className="mt-2 w-72 bg-surface-0/90 backdrop-blur-xl border border-accent-500/50 p-3 rounded-clinical shadow-2xl pointer-events-auto animate-fade-in-up custom-scrollbar max-h-[60vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-2 border-b border-line pb-1">
-              <span className="text-[10px] font-bold text-accent-400 uppercase tracking-widest">Node {selectedNode.id}</span>
-              <button className="text-ink-subtle hover:text-white" onClick={() => setSelectedNodeId(null)}>✕</button>
-            </div>
-            <div className="flex flex-col gap-1.5 text-[10px] font-mono tracking-widest2 text-ink">
-              <div className="flex justify-between"><span className="text-ink-muted">Region</span> <span style={{ color: REGION_COLOR[selectedNode.region as keyof typeof REGION_COLOR] }}>{selectedNode.region}</span></div>
-              <div className="flex justify-between"><span className="text-ink-muted">Hubness</span> <span>{selectedNode.hubness.toFixed(2)}</span></div>
-              <div className="flex justify-between"><span className="text-ink-muted">ω (Intrinsic)</span> <span>{selectedNode.omega.toFixed(2)}Hz</span></div>
-              <div className="flex justify-between"><span className="text-ink-muted">Coords</span> <span>{selectedNode.x.toFixed(0)}, {selectedNode.y.toFixed(0)}, {selectedNode.z.toFixed(0)}</span></div>
+              <span className="text-[10px] font-bold text-accent-400 uppercase tracking-widest">Isolated Assemblies ({selectedNodes.length})</span>
+              <button className="text-ink-subtle hover:text-white" onClick={() => setSelectedNodeIds([])}>✕</button>
             </div>
             
-            <div className="mt-3 pt-2 border-t border-line">
+            <div className="flex flex-col gap-1.5 text-[10px] font-mono tracking-widest2 text-ink mb-3">
+              <div className="flex justify-between"><span className="text-ink-muted">Avg Hubness</span> <span>{(selectedNodes.reduce((a, b) => a + b.hubness, 0) / selectedNodes.length).toFixed(2)}</span></div>
+              <div className="flex justify-between"><span className="text-ink-muted">Avg ω (Intrinsic)</span> <span>{(selectedNodes.reduce((a, b) => a + b.omega, 0) / selectedNodes.length).toFixed(2)}Hz</span></div>
+              <div className="flex justify-between items-start">
+                <span className="text-ink-muted mt-0.5">Regions</span> 
+                <div className="flex flex-col items-end">
+                  {Array.from(new Set(selectedNodes.map(n => n.region))).map(r => (
+                    <span key={r} style={{ color: REGION_COLOR[r as keyof typeof REGION_COLOR] }}>{r}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
+            
+            {/* Show active targeted operations on selected nodes */}
+            {targetedOperations.filter(op => selectedNodeIds.includes(op.nodeId)).length > 0 && (
+              <div className="mb-3 pt-2 border-t border-line">
+                <div className="flex justify-between items-center mb-1.5">
+                  <span className="text-[9px] uppercase font-bold text-accent-400 tracking-widest">Active Operations</span>
+                  <button onClick={() => setTargetedOperations(targetedOperations.filter(op => !selectedNodeIds.includes(op.nodeId)))} className="text-[9px] font-mono text-ink-subtle hover:text-crit transition-colors">Clear</button>
+                </div>
+                <div className="flex flex-col gap-1">
+                  {targetedOperations.filter(op => selectedNodeIds.includes(op.nodeId)).map((op, idx) => (
+                    <div key={idx} className="flex justify-between text-[9px] font-mono text-ink-subtle">
+                      <span>Node {op.nodeId}</span>
+                      <span className={op.type === 'ablate' ? 'text-crit' : op.type === 'stimulate' ? 'text-ok' : 'text-warn'}>
+                        {op.type.toUpperCase()}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="mb-3 pt-2 border-t border-line">
+              <div className="text-[9px] uppercase font-bold text-accent-400 tracking-widest mb-1.5">Micro-Phenomenological Projection</div>
+              <p className="text-xs text-ink-subtle leading-relaxed italic">
+                {Array.from(new Set(selectedNodes.map(n => n.region))).map(r => {
+                  if (r === 'Default') return "Perturbing self-referential processing, autobiographical memory, and mind-wandering matrices.";
+                  if (r === 'Limbic') return "Modulating affective valence, fear-conditioning, and emotional salience detection.";
+                  if (r === 'Control') return "Shifting executive function, goal-directed task switching, and working memory buffers.";
+                  if (r === 'SomatoMotor') return "Altering sensorimotor integration and action-execution pathways.";
+                  if (r === 'Visual') return "Adjusting bottom-up sensory integration and visual processing density.";
+                  if (r === 'VentAttn') return "Recalibrating bottom-up attention reorienting and external salience networks.";
+                  return "";
+                }).join(" ")}
+              </p>
+            </div>
+            
+            <div className="pt-2 border-t border-line">
               <div className="text-[9px] uppercase font-bold text-ink-muted tracking-widest mb-1.5">Targeted Operations</div>
               <div className="flex flex-col gap-1.5">
                 <button onClick={() => handleOperation('stimulate')} className="w-full text-left px-2 py-1.5 bg-surface-50 hover:bg-surface-100 border border-line rounded text-[9px] font-mono text-ink transition-colors flex justify-between">
@@ -316,11 +373,11 @@ function BrainScene({
   vectors: NonNullable<NeuroCanvasProps["vectors"]>;
   viewPerspective: string;
   activeStack: any[];
-  nodeLabels: string[];
+  nodeLabels: { r1: string; idStr: string; r2: string; strengthColor: string; full: string }[];
   activeLayers: Record<string, boolean>;
   onCoherence?: (R: number) => void;
 }) {
-  const { selectedNodeId, setSelectedNodeId } = useAI();
+  const { selectedNodeIds, setSelectedNodeIds } = useAI();
   // Pre-build node positions, colors, edge geometry
   const positions = useMemo(() => {
     const arr = new Float32Array(topo.N * 3);
@@ -462,7 +519,13 @@ function BrainScene({
 
       // Color: region base, with phase/pharma adjustments
       let baseHex = REGION_COLOR[topo.nodes[i].region as keyof typeof REGION_COLOR] || "#ffffff";
-      if (viewPerspective === "physics") {
+      
+      const isSelected = selectedNodeIds.includes(i);
+      
+      if (isSelected) {
+        tmpColor.current.set("#4c1d95"); // Dark purple for isolated node
+        tmpColor.current.multiplyScalar(1.2 + 0.3 * amp);
+      } else if (viewPerspective === "physics") {
         // Pure phase chromatic for physics
         tmpColor.current.setHSL((phase / (Math.PI * 2) + 1) % 1, 0.85, 0.5 + 0.3 * amp);
       } else if (viewPerspective === "pharma") {
@@ -492,6 +555,14 @@ function BrainScene({
     }
   });
 
+  const toggleSelection = (id: number) => {
+    if (selectedNodeIds.includes(id)) {
+      setSelectedNodeIds(selectedNodeIds.filter(x => x !== id));
+    } else {
+      setSelectedNodeIds([...selectedNodeIds, id]);
+    }
+  };
+
   return (
     <group>
       <BrainHull />
@@ -502,12 +573,12 @@ function BrainScene({
         onClick={(e) => {
           e.stopPropagation();
           if (e.instanceId !== undefined) {
-            setSelectedNodeId(e.instanceId);
+            toggleSelection(e.instanceId);
           }
         }}
         onPointerMissed={(e) => {
           if (e.type === 'click') {
-            setSelectedNodeId(null);
+            setSelectedNodeIds([]);
           }
         }}
       >
@@ -534,7 +605,22 @@ function BrainScene({
       </lineSegments>
 
       {/* Render Naming Convention Tags on Nodes */}
-      {viewPerspective !== "anatomy" && nodeLabels.map((label, i) => (
+      {viewPerspective !== "anatomy" && nodeLabels.map((label, i) => {
+        // Find the color of the nearest neighbor's region for r2
+        let r2Color = "#ffffff";
+        let nearestDist = Infinity;
+        for (let j = 0; j < topo.N; j++) {
+          if (i !== j && topo.adjacency[i * topo.N + j]) {
+            const nj = topo.nodes[j];
+            const dist = (topo.nodes[i].x - nj.x) ** 2 + (topo.nodes[i].y - nj.y) ** 2 + (topo.nodes[i].z - nj.z) ** 2;
+            if (dist < nearestDist) {
+              nearestDist = dist;
+              r2Color = REGION_COLOR[nj.region as keyof typeof REGION_COLOR] || "#ffffff";
+            }
+          }
+        }
+
+        return (
         <Html
           key={`lbl-${i}`}
           position={[topo.nodes[i].x, topo.nodes[i].y + 1.8, topo.nodes[i].z]}
@@ -543,7 +629,6 @@ function BrainScene({
         >
           <div
             style={{
-              color: REGION_COLOR[topo.nodes[i].region as keyof typeof REGION_COLOR],
               fontSize: '8px',
               fontFamily: 'JetBrains Mono, monospace',
               fontWeight: 'bold',
@@ -553,10 +638,12 @@ function BrainScene({
               opacity: 0.8
             }}
           >
-            {label}
+            <span style={{ color: REGION_COLOR[topo.nodes[i].region as keyof typeof REGION_COLOR] }}>{label.r1}</span>
+            <span style={{ color: label.strengthColor }}>{label.idStr}</span>
+            <span style={{ color: r2Color }}>{label.r2}</span>
           </div>
         </Html>
-      ))}
+      )})}
     </group>
   );
 }
