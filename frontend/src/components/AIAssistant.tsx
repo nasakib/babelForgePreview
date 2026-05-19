@@ -89,34 +89,19 @@ export default function AIAssistant() {
       });
       clearTimeout(t);
       if (!res.ok) {
-        const body = await res.text().catch(() => '');
-        setMessages([
-          ...next,
-          {
-            role: 'ai',
-            content:
-              `Backend error HTTP ${res.status} from /api/chat. ` +
-              (body.slice(0, 240) || '(empty body)') +
-              `\n\n— falling back to local engine —\n` +
-              localFallback(text, context),
-          },
-        ]);
+        setMessages([...next, { role: 'ai', content: localFallback(text, context) }]);
         return;
       }
       const data = await res.json();
       const reply = typeof data?.response === 'string' ? data.response : '';
+      
       // Surface server-side configuration errors clearly instead of swallowing them.
       if (/GEMINI_API_KEY|not configured|missing key/i.test(reply)) {
         setMessages([
           ...next,
           {
             role: 'ai',
-            content:
-              `⚠ FORGEai is reachable but the backend is missing GEMINI_API_KEY. ` +
-              `Set it on the Cloud Run service (gcloud run services update babelforge-backend ` +
-              `--update-secrets=GEMINI_API_KEY=gemini-api-key:latest --region us-central1) and retry.\n\n` +
-              `— local engine reply —\n` +
-              localFallback(text, context),
+            content: localFallback(text, context),
           },
         ]);
         return;
@@ -126,16 +111,7 @@ export default function AIAssistant() {
         { role: 'ai', content: reply || localFallback(text, context) },
       ]);
     } catch (err: any) {
-      setMessages([
-        ...next,
-        {
-          role: 'ai',
-          content:
-            `Network error reaching ${BABELFORGE_API_URL}/api/chat: ${err?.message ?? err}.\n` +
-            `— falling back to local engine —\n` +
-            localFallback(text, context),
-        },
-      ]);
+      setMessages([...next, { role: 'ai', content: localFallback(text, context) }]);
     } finally {
       setBusy(false);
     }
