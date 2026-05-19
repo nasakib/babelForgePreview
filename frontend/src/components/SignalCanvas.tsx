@@ -246,12 +246,34 @@ export default function SignalCanvas({
   }, [stimulus, mode, onTick]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      className="w-full h-full block touch-none"
-      aria-label={`EEG signal visualization — ${mode} mode`}
-      role="img"
-      style={{ opacity: ready ? 1 : 0, transition: "opacity 0.3s" }}
-    />
+    <div className="w-full h-full relative group">
+      <canvas
+        ref={canvasRef}
+        className="w-full h-full block touch-none"
+        aria-label={`EEG signal visualization — ${mode} mode`}
+        role="img"
+        style={{ opacity: ready ? 1 : 0, transition: "opacity 0.3s" }}
+      />
+      
+      {/* Mathematical overlay */}
+      <div className="absolute top-2 right-2 pointer-events-none opacity-40 group-hover:opacity-100 transition-opacity duration-300 text-right">
+        {stimulus && (
+          <div className="text-[10px] font-mono font-bold text-[#c084fc] uppercase tracking-widest bg-[#c084fc]/10 border border-[#c084fc]/30 px-2 py-0.5 rounded shadow-[0_0_8px_rgba(192,132,252,0.5)] mb-2 animate-pulse">
+            [babelForgeIntervention]
+          </div>
+        )}
+        <div className="text-[9px] font-mono text-ink-subtle bg-surface-0/60 p-2 rounded backdrop-blur-sm border border-line shadow-sm text-left">
+          <div className="mb-1 text-ink">Oscillatory Superposition:</div>
+          <div><code className="text-accent-300">V(t) = Σ Aᵢ(t) · sin(ωᵢt + φᵢ)</code></div>
+          {stimulus && (
+            <div className="mt-1 pt-1 border-t border-line-strong">
+              <div className="text-ink">Intervention Applied:</div>
+              <div><code className="text-[#c084fc]">A&apos;ᵢ = Aᵢ · G_amp(f)</code></div>
+              <div><code className="text-[#c084fc]">ω&apos;ᵢ = ωᵢ · G_freq(f)</code></div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }

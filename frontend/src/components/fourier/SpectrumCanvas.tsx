@@ -176,20 +176,43 @@ export default function SpectrumCanvas({
       ctx.textAlign = "center";
       ctx.fillText(xAxisLabel, padL + plotW / 2, H - 2);
 
-      // Spectrum line.
-      ctx.strokeStyle = "#06b6d4";
-      ctx.lineWidth = 1.5;
-      ctx.shadowColor = "rgba(6,182,212,0.4)";
-      ctx.shadowBlur = 4;
+      // Gradient fill under the spectrum
+      const grad = ctx.createLinearGradient(0, padT, 0, padT + plotH);
+      grad.addColorStop(0, "rgba(168, 85, 247, 0.4)"); // accent-500
+      grad.addColorStop(1, "rgba(168, 85, 247, 0.0)");
+
+      // Spectrum line & fill
       ctx.beginPath();
       let started = false;
+      const points: {x: number, y: number}[] = [];
       for (let i = 1; i < power.length; i++) {
         const hz = binToHz(i, sampleRate, Npad);
         if (hz < lo) continue;
         if (hz > hi) break;
         const x = xOf(hz);
         const y = yOf(Math.max(power[i], pMin));
+        points.push({x, y});
         if (!started) { ctx.moveTo(x, y); started = true; } else { ctx.lineTo(x, y); }
+      }
+      
+      // Complete the path for filling
+      if (points.length > 0) {
+        ctx.lineTo(points[points.length - 1].x, padT + plotH);
+        ctx.lineTo(points[0].x, padT + plotH);
+        ctx.closePath();
+        ctx.fillStyle = grad;
+        ctx.fill();
+      }
+
+      // Draw the actual line
+      ctx.strokeStyle = "#c084fc"; // accent-400
+      ctx.lineWidth = 1.5;
+      ctx.shadowColor = "rgba(168, 85, 247, 0.6)"; // accent-500
+      ctx.shadowBlur = 6;
+      ctx.beginPath();
+      for (let i = 0; i < points.length; i++) {
+        if (i === 0) ctx.moveTo(points[i].x, points[i].y);
+        else ctx.lineTo(points[i].x, points[i].y);
       }
       ctx.stroke();
       ctx.shadowBlur = 0;
@@ -199,22 +222,28 @@ export default function SpectrumCanvas({
       if (peakHz >= lo && peakHz <= hi) {
         const px = xOf(peakHz);
         const py = yOf(peakBin.p);
-        ctx.fillStyle = "#1f6dff";
+        ctx.fillStyle = "#c084fc"; // accent-400
         ctx.beginPath();
         ctx.arc(px, py, 3, 0, Math.PI * 2);
         ctx.fill();
-        ctx.strokeStyle = "rgba(31,109,255,0.6)";
+        ctx.strokeStyle = "rgba(192, 132, 252, 0.4)";
         ctx.beginPath();
         ctx.moveTo(px, padT);
         ctx.lineTo(px, padT + plotH);
         ctx.stroke();
-        ctx.fillStyle = "#cfd6e4";
-        ctx.font = "10.5px JetBrains Mono, monospace";
+        ctx.fillStyle = "#d4dae5"; // ink
+        ctx.font = "bold 10.5px JetBrains Mono, monospace";
         ctx.textAlign = "left";
         ctx.fillText(
           `peak: ${peakHz < 1 ? peakHz.toFixed(3) : peakHz.toFixed(2)} Hz`,
           Math.min(px + 6, W - 80),
           padT + 12
+        );
+        ctx.fillStyle = "#c084fc";
+        ctx.fillText(
+          `[babelForgeIntervention]`,
+          Math.min(px + 6, W - 140),
+          padT + 26
         );
       }
       if (onPeak) onPeak(peakHz, peakBin.p);
