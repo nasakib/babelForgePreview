@@ -56,6 +56,12 @@ export default function NeuroCanvas({
   } = useAI();
   const [simTime, setSimTime] = useState(0);
   const [liveR, setLiveR] = useState(0);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [activeLayers, setActiveLayers] = useState<Record<string, boolean>>({
+    Cortical: true,
+    Subcortical: true,
+    Deep: true
+  });
 
   // Single source of truth: props override AIContext. Defaulting to the
   // context means a bare <NeuroCanvas /> mount anywhere in the app stays
@@ -115,7 +121,7 @@ export default function NeuroCanvas({
   }, [vectors, pathologies]);
 
   return (
-    <div className="absolute inset-0 bg-canvas overflow-hidden">
+    <div className={`${isFullscreen ? 'fixed inset-0 z-[100] bg-canvas' : 'absolute inset-0 bg-canvas'} overflow-hidden transition-all duration-500`}>
       <div className="absolute inset-0 grid-bg opacity-30 pointer-events-none" />
       <Canvas camera={{ position: [0, 60, 220], fov: 45 }} dpr={[1, 2]}>
         <fogExp2 attach="fog" color="#03050b" density={0.0015} />
@@ -149,19 +155,34 @@ export default function NeuroCanvas({
           viewPerspective={viewPerspective}
           activeStack={activeStack}
           nodeLabels={nodeLabels}
+          activeLayers={activeLayers}
           onCoherence={(R) => {
             setLiveR(R);
             if (onCoherence) {
               onCoherence(R);
             } else {
-              // No external listener — drive the global integrity score so
-              // the chrome, AI assistant, and wisdom ranker all reflect the
-              // brain's live coherence.
               setIntegrityScore(Math.round(R * 100));
             }
           }}
         />
       </Canvas>
+
+      {/* Layer Controls & Fullscreen */}
+      <div className="absolute top-4 right-1/2 translate-x-1/2 pointer-events-auto flex items-center gap-2 bg-surface-0/60 p-2 rounded backdrop-blur-sm border border-line z-20">
+        <button onClick={() => setIsFullscreen(!isFullscreen)} className="px-2 py-1 bg-surface-100 hover:bg-surface-200 border border-line rounded text-[9px] font-mono text-ink transition-colors">
+          {isFullscreen ? 'Exit Fullscreen' : 'Fullscreen Isolate'}
+        </button>
+        <span className="w-px h-4 bg-line mx-1" />
+        {["Cortical", "Subcortical", "Deep"].map((layer) => (
+          <button
+            key={layer}
+            onClick={() => setActiveLayers(prev => ({ ...prev, [layer]: !prev[layer] }))}
+            className={`px-2 py-1 border rounded text-[9px] font-mono transition-colors ${activeLayers[layer] ? 'bg-accent-500/20 border-accent-500/50 text-accent-400' : 'bg-surface-50 border-line text-ink-muted'}`}
+          >
+            {layer}
+          </button>
+        ))}
+      </div>
 
       {/* HUD overlay */}
       <div className="absolute top-4 left-4 pointer-events-none flex flex-col gap-2 z-10">
@@ -288,6 +309,7 @@ function BrainScene({
   viewPerspective,
   activeStack,
   nodeLabels,
+  activeLayers,
   onCoherence,
 }: {
   topo: ComposedTopology;
@@ -295,6 +317,7 @@ function BrainScene({
   viewPerspective: string;
   activeStack: any[];
   nodeLabels: string[];
+  activeLayers: Record<string, boolean>;
   onCoherence?: (R: number) => void;
 }) {
   const { selectedNodeId, setSelectedNodeId } = useAI();
@@ -327,9 +350,16 @@ function BrainScene({
     const max = 1200;
     const stride = Math.max(1, Math.floor(topo.edges.length / max));
     const out: [number, number][] = [];
-    for (let i = 0; i < topo.edges.length; i += stride) out.push(topo.edges[i]);
+    for (let i = 0; i < topo.edges.length; i += stride) {
+      const e = topo.edges[i];
+      const nu = topo.nodes[e[0]];
+      const nv = topo.nodes[e[1]];
+      if (activeLayers[nu.layer] && activeLayers[nv.layer]) {
+        out.push(e);
+      }
+    }
     return out;
-  }, [topo]);
+  }, [topo, activeLayers]);
 
   const edgeGeo = useMemo(() => {
     const geo = new THREE.BufferGeometry();
@@ -409,12 +439,15 @@ function BrainScene({
     if (!inst) return;
     const N = topo.N;
     for (let i = 0; i < N; i++) {
+      const nodeLayer = topo.nodes[i].layer;
+      const isActiveLayer = activeLayers[nodeLayer];
+
       const phase = kuramoto.theta[i];
       const amp = 0.5 + 0.5 * Math.cos(phase);
       // Per-node scaling combines hubness, phase amplitude, and pharma vectors
       const hub = 1 + Math.min(2.5, topo.nodes[i].hubness * 0.08);
       const pharmScale = 1 + vectors.repair * 0.15 - vectors.dampening * 0.25;
-      const scale = 1.4 * hub * (0.7 + amp * 0.9) * Math.max(0.3, pharmScale);
+      const scale = isActiveLayer ? 1.4 * hub * (0.7 + amp * 0.9) * Math.max(0.3, pharmScale) : 0;
 
       // Pharma chaos jitter
       const jit = vectors.chaos > 0 ? vectors.chaos * 0.6 : 0;
@@ -445,6 +478,8 @@ function BrainScene({
         // Region colors for anatomy/topology - true to legend with very subtle pulse
         tmpColor.current.set(baseHex).multiplyScalar(0.85 + 0.15 * amp + hub * 0.05);
       }
+      
+      if (!isActiveLayer) tmpColor.current.set("#000000"); // Make it completely dark if not hiding scale entirely
       inst.setColorAt(i, tmpColor.current);
     }
     inst.instanceMatrix.needsUpdate = true;

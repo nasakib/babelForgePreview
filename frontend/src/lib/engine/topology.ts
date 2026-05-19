@@ -24,10 +24,13 @@ export type Region =
   | "SomatoMotor"
   | "VentAttn";
 
+export type BrainLayer = "Cortical" | "Subcortical" | "Deep";
+
 export interface ForgeNode {
   id: number;
   hemi: "LH" | "RH";
   region: Region;
+  layer: BrainLayer;
   x: number;
   y: number;
   z: number;
@@ -191,10 +194,18 @@ export function getBaselineTopology(): Topology {
       if ((x / a) ** 2 + (y / b) ** 2 + (z / c) ** 2 <= 1 && Math.abs(x) > 4)
         break;
     }
+    
+    // Assign Brain Layer based on relative distance from core
+    const dist = Math.sqrt(x*x + y*y + z*z);
+    let layer: BrainLayer = "Cortical";
+    if (dist < 22) layer = "Deep";
+    else if (dist < 35) layer = "Subcortical";
+
     nodes.push({
       id: i,
       hemi: x > 0 ? "RH" : "LH",
       region: classifyRegion(x, y, z),
+      layer,
       x: +x.toFixed(2),
       y: +y.toFixed(2),
       z: +z.toFixed(2),
