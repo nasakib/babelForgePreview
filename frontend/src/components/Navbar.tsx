@@ -17,6 +17,7 @@ const NAV_ITEMS: { href: string; label: string; code: string }[] = [
   { href: '/fourier',           label: 'Fourier',         code: 'F10' },
   { href: '/procedures',        label: 'Procedures',      code: 'F11' },
   { href: '/resources',         label: 'Resources',       code: 'F12' },
+  { href: '/experience-simulator', label: 'Reaction Sim', code: 'F13' },
 ];
 
 export default function Navbar() {

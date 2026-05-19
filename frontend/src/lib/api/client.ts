@@ -82,6 +82,17 @@ export const BABELFORGE_ENDPOINTS: ApiEndpointDoc[] = [
     responseShape:
       '{ filename, status, diagnostic_profile: string[], topology: { nodes, edges, stats } }',
   },
+  {
+    method: "POST",
+    path: "/api/simulate",
+    title: "Experience Simulator",
+    description:
+      "Accepts natural language text describing a subjective experience, intervention, or state, and maps it to the engine's 4D pharmacological/topological vector space (arousal, dampening, chaos, repair). Uses Gemini 1.5 Flash.",
+    requestExample:
+      'POST /api/simulate\n{\n  "experience": "I just ran 5 miles and then meditated",\n  "context": { "pathologies": [] }\n}',
+    responseShape: '{ "arousal": float, "dampening": float, "chaos": float, "repair": float, "label": string, "desc": string, "subj": string }',
+    requiresSecret: true,
+  },
 ];
 
 export class ApiError extends Error {
@@ -141,6 +152,13 @@ export const babelforgeApi = {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ message, context }),
+    }),
+
+  simulate: (experience: string, context: ChatContext = {}) =>
+    request<any>("/api/simulate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ experience, context }),
     }),
 
   fmri: async (file: File) => {

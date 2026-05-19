@@ -45,6 +45,9 @@ interface AIContextProps {
    */
   fmriDataset: FmriDataset | null;
   setFmriDataset: (d: FmriDataset | null) => void;
+
+  /** Reset all simulation states */
+  resetEngine: () => void;
 }
 
 const AIContext = createContext<AIContextProps | undefined>(undefined);
@@ -59,6 +62,15 @@ export function AIProvider({ children }: { children: ReactNode }) {
   const [selectedNodeId, setSelectedNodeId] = useState<number | null>(null);
   const [fmriDataset, setFmriDataset] = useState<FmriDataset | null>(null);
   const [hydrated, setHydrated] = useState(false);
+
+  const resetEngine = () => {
+    setActivePathologies([]);
+    setActiveStack([]);
+    setIntegrityScore(100);
+    setViewPerspective('topology');
+    setSelectedNodeId(null);
+    setFmriDataset(null);
+  };
 
   // Hydrate persisted state from localStorage on mount
   useEffect(() => {
@@ -137,7 +149,8 @@ export function AIProvider({ children }: { children: ReactNode }) {
       viewPerspective, setViewPerspective,
       selectedNodeId, setSelectedNodeId,
       wisdom,
-      fmriDataset, setFmriDataset
+      fmriDataset, setFmriDataset,
+      resetEngine
     }}>
       {children}
     </AIContext.Provider>

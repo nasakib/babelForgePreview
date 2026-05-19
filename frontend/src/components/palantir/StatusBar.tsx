@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { babelforgeApi } from "@/lib/api/client";
 import { routeForPath, KIND_LABEL } from "@/lib/palantir/registry";
+import { useAI } from "@/context/AIContext";
 
 /**
  * Bottom status bar — Palantir/Foundry-style: env, build hash, latency,
@@ -13,6 +14,7 @@ import { routeForPath, KIND_LABEL } from "@/lib/palantir/registry";
 export default function StatusBar() {
   const pathname = usePathname();
   const route = routeForPath(pathname);
+  const { resetEngine } = useAI();
   const [clock, setClock] = useState("--:--:--Z");
   const [latencyMs, setLatencyMs] = useState<number | null>(null);
   const [apiState, setApiState] = useState<"ok" | "warn" | "crit" | "unknown">("unknown");
@@ -87,15 +89,20 @@ export default function StatusBar() {
         <span className="k">role</span>
         <span className="v">viewer</span>
       </span>
-      <span className="sep ml-auto" />
+      <span className="sep" />
       <span className="seg">
         <span className="k">utc</span>
         <span className="v">{clock}</span>
       </span>
       <span className="sep" />
+      <span className="seg cursor-pointer hover:bg-surface-200 transition-colors" onClick={resetEngine}>
+        <span className="k text-crit">reset</span>
+        <span className="v">sys</span>
+      </span>
+      <span className="sep" />
       <span className="seg">
         <kbd>⌘K</kbd>
       </span>
-    </footer>
+      </footer>
   );
 }
