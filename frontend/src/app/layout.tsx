@@ -4,6 +4,8 @@ import './globals.css'
 import Navbar from '@/components/Navbar'
 import { AIProvider } from '@/context/AIContext'
 import AIAssistant from '@/components/AIAssistant'
+import { palette } from '@/lib/theme/palette'
+import { cssVarBlock } from '@/lib/theme/cssVars'
 
 const interTight = Inter_Tight({
   subsets: ['latin'],
@@ -29,7 +31,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 5,
   viewportFit: 'cover',
-  themeColor: '#05070d',
+  themeColor: palette.canvas,
 }
 
 export default function RootLayout({
@@ -39,6 +41,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${interTight.variable} ${jetbrains.variable}`}>
+      <head>
+        {/* Color engine: inject palette as CSS custom properties so any
+            stylesheet, inline style, or third-party CSS reads the same
+            tokens the TS/Tailwind layers do. Single source of truth. */}
+        <style id="forge-theme" dangerouslySetInnerHTML={{ __html: cssVarBlock() }} />
+      </head>
       <body className="font-sans antialiased min-h-screen-dvh flex flex-col lg:overflow-hidden bg-canvas text-ink">
         <AIProvider>
           <Navbar />

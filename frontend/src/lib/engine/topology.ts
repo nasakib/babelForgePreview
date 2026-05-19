@@ -50,14 +50,12 @@ export interface Topology {
   N: number;
 }
 
-export const REGION_COLOR: Record<Region, string> = {
-  Default: "#818cf8", // indigo-400
-  Control: "#2dd4bf", // teal-400
-  Limbic: "#fbbf24", // amber-400
-  Visual: "#c084fc", // purple-400
-  SomatoMotor: "#34d399", // emerald-400
-  VentAttn: "#fb7185", // rose-400
-};
+// Yeo brain network palette — sourced from the color engine so swatches
+// match Tailwind's `bg-region-*` classes and CSS vars exposed by
+// lib/theme/cssVars.ts. Re-tune in lib/theme/palette.ts.
+import { palette as themePalette } from "../theme/palette";
+
+export const REGION_COLOR: Record<Region, string> = themePalette.regions;
 
 export const PATHOLOGIES = [
   "DEPRESSION",

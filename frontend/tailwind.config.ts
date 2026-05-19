@@ -1,8 +1,12 @@
 import type { Config } from 'tailwindcss'
+import { palette } from './src/lib/theme/palette'
 
 // ---------------------------------------------------------------------------
 // babelForge Clinical Design System
-// Inspired by IBM Carbon, Philips IntelliVue, Bloomberg Terminal.
+// Colors are NOT defined here — they're computed by the color engine in
+// src/lib/theme/palette.ts. Single source of truth shared with CSS vars
+// (cssVars.ts), EEG bands (lib/signal/bands.ts), and brain network legend
+// (lib/engine/topology.ts).
 // ---------------------------------------------------------------------------
 
 const config: Config = {
@@ -14,38 +18,17 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        canvas: '#05070d',
-        surface: {
-          0: '#0a0d14',
-          50: '#0e1219',
-          100: '#141923',
-          200: '#1b2230',
-          300: '#252d3d',
-          400: '#323b4d',
-          500: '#4a5468',
-        },
-        ink: {
-          DEFAULT: '#e6eaf2',
-          subtle: '#aab1c0',
-          muted: '#6a7286',
-          dim: '#454c5d',
-        },
-        line: {
-          DEFAULT: '#1f2735',
-          strong: '#2c3548',
-        },
-        accent: {
-          50: '#e6f0ff',
-          200: '#9cc0ff',
-          400: '#4d8dff',
-          500: '#1f6dff',
-          600: '#0058e6',
-          700: '#0045b4',
-        },
-        ok: '#10b981',
-        warn: '#f59e0b',
-        crit: '#ef4444',
-        info: '#06b6d4',
+        canvas: palette.canvas,
+        surface: palette.surface,
+        ink: palette.ink,
+        line: palette.line,
+        accent: palette.accent,
+        ok: palette.ok,
+        warn: palette.warn,
+        crit: palette.crit,
+        info: palette.info,
+        band: palette.bands,
+        region: palette.regions,
       },
       fontFamily: {
         sans: ['var(--font-sans)', 'Inter Tight', 'system-ui', 'sans-serif'],

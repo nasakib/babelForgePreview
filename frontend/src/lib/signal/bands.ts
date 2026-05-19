@@ -1,10 +1,13 @@
 /**
  * Shared EEG band model.
  *
- * Single source of truth for clinical band definitions, palette, and the
- * stimulus → per-band response model. Consumed by SignalCanvas, BandLegend,
- * SignalExplainer, and any other module that visualises oscillatory activity.
+ * Single source of truth for clinical band definitions and the stimulus →
+ * per-band response model. Band colors are sourced from the color engine
+ * (lib/theme/palette.ts) so the swatches stay synchronized with the rest
+ * of the UI when the palette is re-tuned.
  */
+
+import { palette } from "../theme/palette";
 
 export type BandKey = "delta" | "theta" | "alpha" | "beta" | "gamma";
 
@@ -29,7 +32,7 @@ export const BANDS: BandDef[] = [
     symbol: "δ",
     hzLabel: "1–4 Hz",
     freq: 0.012,
-    color: "#a855f7",
+    color: palette.bands.delta,
     role: "Deep sleep / restorative",
     explain:
       "Slow-wave activity dominant during NREM stage 3. Elevated delta in waking states suggests sedation, hypoxia, or cortical injury.",
@@ -40,7 +43,7 @@ export const BANDS: BandDef[] = [
     symbol: "θ",
     hzLabel: "4–8 Hz",
     freq: 0.030,
-    color: "#6366f1",
+    color: palette.bands.theta,
     role: "Drowsy / memory consolidation",
     explain:
       "Hippocampal-cortical coupling band. Linked to spatial navigation and episodic encoding; pathological when frontal-dominant in alert subjects.",
@@ -51,7 +54,7 @@ export const BANDS: BandDef[] = [
     symbol: "α",
     hzLabel: "8–13 Hz",
     freq: 0.065,
-    color: "#06b6d4",
+    color: palette.bands.alpha,
     role: "Relaxed wakefulness",
     explain:
       "Posterior-dominant rhythm when eyes are closed. Acts as a cortical 'idling' inhibitor; suppression marks attention engagement.",
@@ -62,7 +65,7 @@ export const BANDS: BandDef[] = [
     symbol: "β",
     hzLabel: "13–30 Hz",
     freq: 0.130,
-    color: "#10b981",
+    color: palette.bands.beta,
     role: "Active cognition / motor",
     explain:
       "Sensorimotor and prefrontal activity during alert problem-solving. Elevated under stimulants, anxiety, or motor planning.",
@@ -73,7 +76,7 @@ export const BANDS: BandDef[] = [
     symbol: "γ",
     hzLabel: "30–80 Hz",
     freq: 0.260,
-    color: "#f59e0b",
+    color: palette.bands.gamma,
     role: "Binding / conscious access",
     explain:
       "High-frequency feature binding across cortical assemblies. Implicated in attention, perception, and conscious access.",
