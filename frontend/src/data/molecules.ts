@@ -2,7 +2,7 @@
 const svgIndole = `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" class="w-full h-full"><path d="M30 70 L30 40 L55 25 L80 40 L80 70 L55 85 Z"/><path d="M30 40 L10 25 L10 50 Z"/><circle cx="55" cy="55" r="10"/></svg>`;
 const svgPhen = `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" class="w-full h-full"><path d="M20 50 L40 20 L70 20 L90 50 L70 80 L40 80 Z"/><line x1="20" y1="50" x2="5" y2="50"/><line x1="40" y1="80" x2="30" y2="95"/></svg>`;
 const svgTricyclic = `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" class="w-full h-full"><path d="M10 50 L30 20 L60 20 L80 50 L60 80 L30 80 Z"/><path d="M60 20 L80 10 L100 30 L80 50"/><circle cx="45" cy="50" r="12"/></svg>`;
-const svgCannabinoid = `<svg viewBox="0 0 100 50" class="h-full w-auto stroke-current fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="30,25 40,10 55,10 65,25 55,40 40,40" /><polygon points="65,25 75,10 90,10 100,25 90,40 75,40" /><path d="M55,10 L75,10" /><path d="M20,15 L30,25 L20,35" /><circle cx="65" cy="25" r="2" fill="currentColor" /></svg>`;
+const svgCannabinoid = `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" class="w-full h-full"><polygon points="30,35 40,20 55,20 65,35 55,50 40,50" /><polygon points="65,35 75,20 90,20 100,35 90,50 75,50" /><path d="M55,20 L75,20" /><path d="M20,25 L30,35 L20,45" /><circle cx="65" cy="35" r="5" /></svg>`;
 
 export const molecules = [
     // Novel Therapeutics
