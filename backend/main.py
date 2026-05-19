@@ -1,11 +1,13 @@
 import random
 import math
 import os
+import io
+import csv
 import google.generativeai as genai
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import List, Optional, Any, Dict
+from typing import List, Optional, Any, Dict, Tuple
 
 app = FastAPI(title="babelForge API", description="Backend Engine for Computational Topology and Pharmacopeia")
 
@@ -281,6 +283,16 @@ def chat_endpoint(req: ChatRequest):
         ctx = req.context or {}
         grounding = ctx.get("grounding", "")
         grounding_block = f"\n\n{grounding}\n" if grounding else ""
+        brain_tokens = ctx.get("brainTokens", "")
+        tokens_block = f"\n\n{brain_tokens}\n" if brain_tokens else ""
+        has_dataset = bool(ctx.get("hasDataset"))
+        dataset_block = (
+            "\nAn uploaded fMRI dataset is loaded. When the user asks about regions, "
+            "FC, networks, or scale-equivalents, reference the brain tokens above by "
+            "their canonical handles (e.g. R:HPC, M:5HT, X:meanFC).\n"
+            if has_dataset
+            else ""
+        )
 
         prompt = (
             f"{system_instruction}\n\n"
@@ -289,7 +301,9 @@ def chat_endpoint(req: ChatRequest):
             f"Pathologies: {ctx.get('pathologies', [])}\n"
             f"Stack: {ctx.get('stack', [])}\n"
             f"Baseline Alignment Score: {ctx.get('integrityScore', 'N/A')}%"
-            f"{grounding_block}\n"
+            f"{grounding_block}"
+            f"{tokens_block}"
+            f"{dataset_block}\n"
             f"User Query: {req.message}"
         )
 
@@ -301,84 +315,375 @@ def chat_endpoint(req: ChatRequest):
 
 @app.post("/api/fmri/analyze")
 async def analyze_fmri(file: UploadFile = File(...)):
-    # Simulate processing of an fMRI BOLD signal file
-    # In a real scenario, this would use nibabel/nilearn to extract time series
-    # and compute functional connectivity matrices, then apply algebraic topology.
-    
-    # Simulate a processing delay
+    """
+    Accept an fMRI upload and return a structured dataset the frontend
+    engines can apply functions to.
+
+    Real-data path: if the upload is a CSV with shape (n_regions x n_TR)
+    or (n_TR x n_regions), we parse it directly as a BOLD matrix.
+    Otherwise we synthesize a physiologically plausible BOLD dataset via
+    coupled-oscillator dynamics + HRF convolution biased by detected
+    pathologies. Either way, the returned payload includes:
+
+      - parcels        : list of parcel metadata (id, name, network, MNI,
+                         dominant frequency, hemi).
+      - tr             : repetition time in seconds.
+      - time_series    : float matrix [n_parcels][n_TR] (downsampled to
+                         keep the JSON payload reasonable).
+      - fc_matrix      : Pearson functional connectivity [n][n].
+      - topology       : legacy node/edge structure for NeuroCanvas.
+      - diagnostic_profile : pathology labels for AIContext routing.
+
+    All numerical work uses only the Python stdlib so the Cloud Run image
+    stays minimal; upgrade to numpy/nilearn when real .nii.gz support is
+    needed.
+    """
     import asyncio
-    await asyncio.sleep(2)
-    
-    # Generate a patient-specific topological model based on the "fMRI"
-    num_nodes = 150
-    nodes = []
-    a, b, c = 48, 38, 58
-    
-    for i in range(num_nodes):
-        while True:
-            x = random.uniform(-a, a)
-            y = random.uniform(-b, b)
-            z = random.uniform(-c, c)
-            if (x/a)**2 + (y/b)**2 + (z/c)**2 <= 1:
-                if abs(x) < 4: continue
-                break
-                
-        hemi = "RH" if x > 0 else "LH"
-        if z < -25: cluster = "Visual"
-        elif y > 18 and -25 <= z <= 20: cluster = "SomatoMotor"
-        elif z > 25 and y > 5: cluster = "Control"
-        elif z > 25 and y <= 5: cluster = "Limbic"
-        elif y < -5 and -25 <= z <= 20: cluster = "VentAttn"
-        else: cluster = "Default"
-            
+    await asyncio.sleep(1.0)
+
+    raw = await file.read()
+
+    # ----- Parse CSV if applicable ------------------------------------------
+    parsed_bold: Optional[List[List[float]]] = None
+    if file.filename and file.filename.lower().endswith(".csv"):
+        try:
+            text = raw.decode("utf-8", errors="replace")
+            reader = csv.reader(io.StringIO(text))
+            rows: List[List[float]] = []
+            for row in reader:
+                vals: List[float] = []
+                for cell in row:
+                    cell = cell.strip()
+                    if not cell:
+                        continue
+                    try:
+                        vals.append(float(cell))
+                    except ValueError:
+                        vals = []
+                        break
+                if vals:
+                    rows.append(vals)
+            if rows and len(rows) >= 2 and len(rows[0]) >= 2:
+                # Heuristic: if rows are short and many, assume (TR x regions)
+                # and transpose so we always end up (regions x TR).
+                n_rows = len(rows)
+                n_cols = len(rows[0])
+                if n_cols > n_rows:
+                    parsed_bold = rows  # already (regions x TR)
+                else:
+                    parsed_bold = [[rows[t][r] for t in range(n_rows)] for r in range(n_cols)]
+        except Exception:
+            parsed_bold = None
+
+    # ----- Parcels (real Yeo-7 inspired layout, 32 ROIs) ---------------------
+    parcels = _build_parcels()
+    n_parcels = len(parcels)
+
+    # ----- Decide pathologies ------------------------------------------------
+    detected_pathologies = random.sample(
+        ["depression", "anxiety", "adhd", "ptsd", "ocd", "addiction"],
+        random.randint(1, 2),
+    )
+
+    # ----- Build BOLD time series -------------------------------------------
+    tr = 2.0
+    n_tr = 150
+    if parsed_bold is not None:
+        # Reshape parsed BOLD to n_parcels x n_tr using simple averaging /
+        # truncation. This is a placeholder until real parcel-level
+        # extraction (nilearn NiftiLabelsMasker) lands.
+        src = parsed_bold
+        src_n_regions = len(src)
+        src_n_tr = len(src[0])
+        time_series: List[List[float]] = []
+        for p in range(n_parcels):
+            src_idx = int(p * src_n_regions / n_parcels)
+            row = src[src_idx][:n_tr]
+            if len(row) < n_tr:
+                row = row + [row[-1]] * (n_tr - len(row))
+            time_series.append(row)
+    else:
+        time_series = _synthesize_bold(parcels, n_tr, tr, detected_pathologies)
+
+    # ----- Functional connectivity (Pearson) --------------------------------
+    fc_matrix = _pearson_fc(time_series)
+
+    # ----- Legacy node/edge topology for NeuroCanvas ------------------------
+    edge_threshold = 0.35
+    nodes: List[Dict[str, Any]] = []
+    for i, p in enumerate(parcels):
         nodes.append({
             "id": i,
-            "name": f"{hemi}_{cluster}_{i}",
-            "region": cluster,
-            "hemi": hemi,
-            "x": round(x, 2),
-            "y": round(y, 2),
-            "z": round(z, 2),
+            "name": p["name"],
+            "region": p["network"],
+            "hemi": p["hemi"],
+            "x": p["mni"][0],
+            "y": p["mni"][1],
+            "z": p["mni"][2],
             "cliques": 0,
-            "hubness": 0
+            "hubness": 0,
         })
-
-    # Generate custom patient edges
-    patient_edges = []
-    k_neighbors = random.randint(2, 4)
-    for i in range(num_nodes):
-        distances = [(j, (nodes[j]["x"]-nodes[i]["x"])**2 + (nodes[j]["y"]-nodes[i]["y"])**2 + (nodes[j]["z"]-nodes[i]["z"])**2) for j in range(num_nodes) if i != j]
-        distances.sort(key=lambda item: item[1])
-        for j, dist in distances[:k_neighbors]:
-            pair = tuple(sorted((i, j)))
-            patient_edges.append(pair)
-            
-    # Simulate finding specific pathology based on the file contents
-    # We'll just randomly assign one for the simulation
-    detected_pathologies = random.sample(["DEPRESSION", "ADHD", "PTSD", "TOURETTES"], random.randint(1, 2))
-    
-    # Introduce topological artifacts based on pathology
-    if "DEPRESSION" in detected_pathologies:
-        # Hyper-stable DMN
-        dmn_nodes = [n["id"] for n in nodes if n["region"] == "Default"]
-        if dmn_nodes:
-            for _ in range(20):
-                u, v = random.sample(dmn_nodes, 2)
-                patient_edges.append(tuple(sorted((u, v))))
-
-    patient_edges = list(set(patient_edges))
-    edges_formatted = [{"source": u, "target": v} for u, v in patient_edges]
+    edges: List[Dict[str, Any]] = []
+    for i in range(n_parcels):
+        for j in range(i + 1, n_parcels):
+            r = fc_matrix[i][j]
+            if r >= edge_threshold:
+                edges.append({"source": i, "target": j, "weight": round(r, 3)})
 
     return {
         "filename": file.filename,
         "status": "success",
+        "source": "csv" if parsed_bold is not None else "synthesized",
         "diagnostic_profile": detected_pathologies,
+        "parcels": parcels,
+        "tr": tr,
+        "time_series": time_series,
+        "fc_matrix": fc_matrix,
         "topology": {
             "nodes": nodes,
-            "edges": edges_formatted,
+            "edges": edges,
             "stats": {
-                "total_edges": len(edges_formatted),
-                "estimated_entropy": random.uniform(0.3, 0.8)
-            }
-        }
+                "total_edges": len(edges),
+                "mean_fc": _mean_off_diag(fc_matrix),
+                "estimated_entropy": _entropy_estimate(fc_matrix),
+            },
+        },
     }
+
+
+# ----------------------------------------------------------------------------
+# fMRI helpers (stdlib only)
+# ----------------------------------------------------------------------------
+
+def _build_parcels() -> List[Dict[str, Any]]:
+    """Curated 32-parcel set covering Yeo-7 networks bilaterally.
+
+    Centroids are MNI-approximate. Each parcel carries the dominant EEG
+    band frequency the frontend uses to set its motion / animation Hz.
+    """
+    base = [
+        # (id, name, network, x, y, z, freqHz)
+        ("L_V1",   "L Primary Visual",      "Visual",       -10, -85,   0, 45),
+        ("R_V1",   "R Primary Visual",      "Visual",        10, -85,   0, 45),
+        ("L_V2",   "L Extrastriate",        "Visual",       -20, -75,   5, 45),
+        ("R_V2",   "R Extrastriate",        "Visual",        20, -75,   5, 45),
+        ("L_M1",   "L Primary Motor",       "SomatoMotor",  -40, -20,  55, 20),
+        ("R_M1",   "R Primary Motor",       "SomatoMotor",   40, -20,  55, 20),
+        ("L_S1",   "L Primary Sensory",     "SomatoMotor",  -40, -30,  55, 20),
+        ("R_S1",   "R Primary Sensory",     "SomatoMotor",   40, -30,  55, 20),
+        ("L_A1",   "L Primary Auditory",    "SomatoMotor",  -50, -22,   8, 45),
+        ("R_A1",   "R Primary Auditory",    "SomatoMotor",   50, -22,   8, 45),
+        ("L_DAN",  "L Dorsal Attn (IPS)",   "DorsalAttn",   -30, -55,  50, 20),
+        ("R_DAN",  "R Dorsal Attn (IPS)",   "DorsalAttn",    30, -55,  50, 20),
+        ("L_FEF",  "L Frontal Eye Field",   "DorsalAttn",   -28,  -5,  55, 20),
+        ("R_FEF",  "R Frontal Eye Field",   "DorsalAttn",    28,  -5,  55, 20),
+        ("L_INS",  "L Anterior Insula",     "VentAttn",     -40,  10,   0, 20),
+        ("R_INS",  "R Anterior Insula",     "VentAttn",      40,  10,   0, 20),
+        ("L_ACC",  "L Anterior Cingulate",  "VentAttn",      -5,  30,  20,  6),
+        ("R_ACC",  "R Anterior Cingulate",  "VentAttn",       5,  30,  20,  6),
+        ("L_OFC",  "L Orbitofrontal",       "Limbic",       -20,  35, -18, 10),
+        ("R_OFC",  "R Orbitofrontal",       "Limbic",        20,  35, -18, 10),
+        ("L_HPC",  "L Hippocampus",         "Limbic",       -28, -22, -15,  6),
+        ("R_HPC",  "R Hippocampus",         "Limbic",        28, -22, -15,  6),
+        ("L_AMY",  "L Amygdala",            "Limbic",       -25,  -5, -20, 45),
+        ("R_AMY",  "R Amygdala",            "Limbic",        25,  -5, -20, 45),
+        ("L_DLPFC","L DLPFC",               "Control",      -40,  35,  35, 20),
+        ("R_DLPFC","R DLPFC",               "Control",       40,  35,  35, 20),
+        ("L_IPL",  "L Inferior Parietal",   "Control",      -45, -55,  50, 20),
+        ("R_IPL",  "R Inferior Parietal",   "Control",       45, -55,  50, 20),
+        ("L_VMPFC","L VMPFC",               "Default",       -5,  45, -15, 10),
+        ("R_VMPFC","R VMPFC",               "Default",        5,  45, -15, 10),
+        ("L_PCC",  "L Posterior Cingulate", "Default",       -5, -50,  30, 10),
+        ("R_PCC",  "R Posterior Cingulate", "Default",        5, -50,  30, 10),
+    ]
+    parcels = []
+    for i, (pid, name, network, x, y, z, freq) in enumerate(base):
+        parcels.append({
+            "index": i,
+            "id": pid,
+            "name": name,
+            "network": network,
+            "hemi": "LH" if pid.startswith("L_") else "RH",
+            "mni": [x, y, z],
+            "freqHz": freq,
+        })
+    return parcels
+
+
+def _synthesize_bold(
+    parcels: List[Dict[str, Any]],
+    n_tr: int,
+    tr: float,
+    pathologies: List[str],
+) -> List[List[float]]:
+    """Coupled-oscillator + HRF-shaped BOLD generator.
+
+    The neural signal at each parcel is a phase oscillator at the parcel's
+    dominant frequency, coupled to other parcels in the same Yeo network.
+    Pathology biases the coupling matrix: depression boosts DMN coupling,
+    anxiety boosts amygdala-DMN, ADHD weakens control coupling, etc. The
+    raw oscillator output is convolved with a canonical HRF (gamma
+    difference) to produce BOLD.
+    """
+    n = len(parcels)
+    rng = random.Random(sum(ord(c) for c in "".join(pathologies)) or 42)
+
+    # Coupling matrix
+    K = [[0.0] * n for _ in range(n)]
+    for i in range(n):
+        for j in range(n):
+            if i == j:
+                continue
+            same_net = parcels[i]["network"] == parcels[j]["network"]
+            K[i][j] = 0.4 if same_net else 0.05
+
+    def _boost(idxs: List[int], factor: float) -> None:
+        for a in idxs:
+            for b in idxs:
+                if a != b:
+                    K[a][b] *= factor
+
+    def _idx(net: str) -> List[int]:
+        return [p["index"] for p in parcels if p["network"] == net]
+
+    def _by_id_prefix(prefix: str) -> List[int]:
+        return [p["index"] for p in parcels if prefix in p["id"]]
+
+    if "depression" in pathologies:
+        _boost(_idx("Default"), 1.6)
+        _boost(_idx("Control"), 0.6)
+    if "anxiety" in pathologies:
+        _boost(_by_id_prefix("AMY") + _idx("Default"), 1.4)
+    if "ptsd" in pathologies:
+        _boost(_by_id_prefix("AMY") + _by_id_prefix("HPC"), 1.7)
+    if "adhd" in pathologies:
+        _boost(_idx("Control") + _idx("DorsalAttn"), 0.5)
+    if "ocd" in pathologies:
+        _boost(_by_id_prefix("ACC") + _by_id_prefix("OFC"), 1.6)
+    if "addiction" in pathologies:
+        _boost(_by_id_prefix("INS") + _by_id_prefix("OFC"), 1.5)
+
+    # Simulate a fast neural signal at 100 Hz, downsample to BOLD
+    fast_dt = 0.01
+    fast_steps_per_tr = int(round(tr / fast_dt))
+    total_fast = n_tr * fast_steps_per_tr
+
+    # Phase oscillators at each parcel's neural frequency
+    phases = [rng.uniform(0, 2 * math.pi) for _ in range(n)]
+    omegas = [2 * math.pi * p["freqHz"] for p in parcels]
+
+    neural: List[List[float]] = [[] for _ in range(n)]
+    for t in range(total_fast):
+        new_phases = []
+        for i in range(n):
+            coupling = 0.0
+            for j in range(n):
+                if i == j:
+                    continue
+                coupling += K[i][j] * math.sin(phases[j] - phases[i])
+            dphi = omegas[i] + coupling + rng.gauss(0, 0.3)
+            new_phases.append(phases[i] + fast_dt * dphi)
+        phases = new_phases
+        for i in range(n):
+            neural[i].append(math.sin(phases[i]))
+
+    # Canonical HRF (difference of two gammas, Glover 1999 simplification)
+    hrf_t = [k * fast_dt for k in range(int(round(20.0 / fast_dt)))]
+    def _gamma(t: float, a: float, b: float) -> float:
+        if t <= 0:
+            return 0.0
+        return (t ** (a - 1)) * math.exp(-t / b) / (b ** a)
+
+    hrf = [_gamma(t, 6, 0.9) - 0.35 * _gamma(t, 16, 0.9) for t in hrf_t]
+    norm = max(abs(v) for v in hrf) or 1.0
+    hrf = [v / norm for v in hrf]
+
+    # Convolve neural with HRF then downsample to TR
+    bold: List[List[float]] = []
+    for i in range(n):
+        s = neural[i]
+        # Truncated convolution
+        conv = [0.0] * len(s)
+        for t in range(len(s)):
+            acc = 0.0
+            kmax = min(len(hrf), t + 1)
+            for k in range(kmax):
+                acc += hrf[k] * s[t - k]
+            conv[t] = acc
+        # Downsample to TR
+        ds = [conv[k * fast_steps_per_tr] for k in range(n_tr) if k * fast_steps_per_tr < len(conv)]
+        if len(ds) < n_tr:
+            ds = ds + [ds[-1]] * (n_tr - len(ds))
+        # z-score
+        mu = sum(ds) / len(ds)
+        var = sum((v - mu) ** 2 for v in ds) / len(ds)
+        sd = math.sqrt(var) if var > 0 else 1.0
+        bold.append([round((v - mu) / sd, 4) for v in ds])
+    return bold
+
+
+def _pearson_fc(ts: List[List[float]]) -> List[List[float]]:
+    n = len(ts)
+    T = len(ts[0])
+    means = [sum(row) / T for row in ts]
+    stds = []
+    for i in range(n):
+        var = sum((v - means[i]) ** 2 for v in ts[i]) / T
+        stds.append(math.sqrt(var) if var > 0 else 1.0)
+    fc = [[0.0] * n for _ in range(n)]
+    for i in range(n):
+        for j in range(i, n):
+            if i == j:
+                fc[i][j] = 1.0
+                continue
+            cov = 0.0
+            for t in range(T):
+                cov += (ts[i][t] - means[i]) * (ts[j][t] - means[j])
+            cov /= T
+            r = cov / (stds[i] * stds[j])
+            fc[i][j] = round(r, 4)
+            fc[j][i] = fc[i][j]
+    return fc
+
+
+def _mean_off_diag(m: List[List[float]]) -> float:
+    n = len(m)
+    if n < 2:
+        return 0.0
+    acc = 0.0
+    cnt = 0
+    for i in range(n):
+        for j in range(n):
+            if i != j:
+                acc += m[i][j]
+                cnt += 1
+    return round(acc / cnt, 4) if cnt else 0.0
+
+
+def _entropy_estimate(m: List[List[float]]) -> float:
+    # Shannon entropy of the histogram of off-diagonal FC values.
+    vals: List[float] = []
+    n = len(m)
+    for i in range(n):
+        for j in range(i + 1, n):
+            vals.append(m[i][j])
+    if not vals:
+        return 0.0
+    bins = 20
+    lo = min(vals)
+    hi = max(vals)
+    if hi - lo < 1e-9:
+        return 0.0
+    width = (hi - lo) / bins
+    counts = [0] * bins
+    for v in vals:
+        idx = min(bins - 1, int((v - lo) / width))
+        counts[idx] += 1
+    total = sum(counts)
+    h = 0.0
+    for c in counts:
+        if c == 0:
+            continue
+        p = c / total
+        h -= p * math.log(p)
+    return round(h / math.log(bins), 4)

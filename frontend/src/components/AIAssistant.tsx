@@ -2,6 +2,7 @@
 
 import { useAI } from "@/context/AIContext";
 import { citationUrl, wisdomForPrompt } from "@/lib/wisdom/select";
+import { tokenize, tokensForPrompt } from "@/lib/brain/tokens";
 import { useEffect, useRef, useState } from "react";
 
 interface Msg { role: 'ai' | 'user' | 'sys'; content: string }
@@ -15,6 +16,7 @@ export default function AIAssistant() {
     activeStack,
     integrityScore,
     wisdom,
+    fmriDataset,
   } = useAI();
   const [messages, setMessages] = useState<Msg[]>([
     { role: 'sys', content: 'babelAI initialised · Gemini 1.5 + local engine fallback.' },
@@ -50,6 +52,13 @@ export default function AIAssistant() {
     setInput("");
     setBusy(true);
 
+    const tokens = tokenize({
+      pathologies: activePathologies,
+      stack: activeStack as any[],
+      dataset: fmriDataset,
+      integrity: integrityScore,
+    });
+
     const context = {
       module: currentModule,
       pathologies: activePathologies,
@@ -61,6 +70,11 @@ export default function AIAssistant() {
       // real sources instead of confabulating.
       grounding: wisdomForPrompt(wisdom),
       wisdomIds: wisdom.map((w) => w.id),
+      // Brain tokens — compressed color/motion/frequency-coded handles
+      // so the model can name regions, modulators, and live metrics in a
+      // canonical vocabulary the rest of the app shares.
+      brainTokens: tokensForPrompt(tokens),
+      hasDataset: !!fmriDataset,
     };
 
     try {

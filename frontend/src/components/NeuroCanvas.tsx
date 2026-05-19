@@ -8,6 +8,7 @@ import { useAI } from "@/context/AIContext";
 import {
   composeTopology,
   REGION_COLOR,
+  PATHOLOGY_META,
   type ComposedTopology,
   type Pathology,
 } from "@/lib/engine/topology";
@@ -17,26 +18,50 @@ import {
   effectiveCoupling,
   effectiveNoise,
 } from "@/lib/engine/kuramoto";
+import { computeStackVectors, type PharmaVectors } from "@/lib/engine/stackVectors";
 
 interface NeuroCanvasProps {
+  /** Overrides AIContext.activeStack when provided. */
   activeStack?: any[];
-  vectors?: { arousal: number; dampening: number; chaos: number; repair: number };
+  /** Overrides derived stack vectors when provided. */
+  vectors?: PharmaVectors;
+  /** Overrides AIContext.activePathologies when provided. */
   pathologies?: Pathology[];
   /** Optional precomputed topology (avoids recomputation across siblings). */
   topology?: ComposedTopology;
-  /** Push live R(t) up to the parent (e.g. dashboard live integrity gauge). */
+  /**
+   * Push live R(t) up to the parent (e.g. dashboard live integrity gauge).
+   * If omitted, NeuroCanvas drives the global integrityScore directly so
+   * the brain becomes the canonical source of the live coherence metric.
+   */
   onCoherence?: (R: number) => void;
 }
 
 export default function NeuroCanvas({
-  activeStack = [],
-  vectors = { arousal: 0, dampening: 0, chaos: 0, repair: 0 },
-  pathologies = [],
+  activeStack: stackProp,
+  vectors: vectorsProp,
+  pathologies: pathProp,
   topology,
   onCoherence,
 }: NeuroCanvasProps) {
-  const { viewPerspective } = useAI();
+  const {
+    viewPerspective,
+    activeStack: ctxStack,
+    activePathologies: ctxPathologies,
+    setIntegrityScore,
+  } = useAI();
   const [simTime, setSimTime] = useState(0);
+  const [liveR, setLiveR] = useState(0);
+
+  // Single source of truth: props override AIContext. Defaulting to the
+  // context means a bare <NeuroCanvas /> mount anywhere in the app stays
+  // synchronized with the user's active pathologies and stack.
+  const activeStack = stackProp ?? ctxStack ?? [];
+  const pathologies = (pathProp ?? (ctxPathologies as Pathology[])) ?? [];
+  const vectors = useMemo<PharmaVectors>(
+    () => vectorsProp ?? computeStackVectors(activeStack),
+    [vectorsProp, activeStack],
+  );
 
   const topo = useMemo<ComposedTopology>(
     () => topology ?? composeTopology(pathologies),
@@ -91,7 +116,17 @@ export default function NeuroCanvas({
           vectors={vectors}
           viewPerspective={viewPerspective}
           activeStack={activeStack}
-          onCoherence={onCoherence}
+          onCoherence={(R) => {
+            setLiveR(R);
+            if (onCoherence) {
+              onCoherence(R);
+            } else {
+              // No external listener — drive the global integrity score so
+              // the chrome, AI assistant, and wisdom ranker all reflect the
+              // brain's live coherence.
+              setIntegrityScore(Math.round(R * 100));
+            }
+          }}
         />
       </Canvas>
 
@@ -111,7 +146,25 @@ export default function NeuroCanvas({
           <div>nodes: {topo.N}</div>
           <div>edges +{topo.edgeStats.added} / −{topo.edgeStats.removed}</div>
           <div>cliques {topo.cliques.length}</div>
+          <div className="text-accent-400">R(t): {liveR.toFixed(3)}</div>
+          <div>stack: {activeStack.length}</div>
         </div>
+        {pathologies.length > 0 && (
+          <div className="flex flex-wrap justify-end gap-1 max-w-[280px] text-[9px] font-mono uppercase tracking-widest2">
+            {pathologies.map((p) => {
+              const meta = (PATHOLOGY_META as any)[p];
+              return (
+                <span
+                  key={p}
+                  className="px-1.5 py-0.5 rounded border border-crit/40 bg-crit/10 text-crit"
+                  title={meta?.subjective ?? p}
+                >
+                  {meta?.label ?? p}
+                </span>
+              );
+            })}
+          </div>
+        )}
         <div className={`text-[10px] font-mono uppercase font-bold tracking-widest2 p-2 rounded backdrop-blur-sm border ${prognosis.includes('CRITICAL') || prognosis.includes('RISK') ? 'bg-crit/10 text-crit border-crit/30' : prognosis.includes('STABILIZATION') || prognosis.includes('HEALTHY') ? 'bg-ok/10 text-ok border-ok/30' : 'bg-warn/10 text-warn border-warn/30'}`}>
           PROGNOSIS: {prognosis}
         </div>

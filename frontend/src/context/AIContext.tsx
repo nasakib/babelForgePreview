@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useMemo, ReactNode } from "react";
 import { selectInsights, type RankedInsight } from "@/lib/wisdom/select";
+import type { FmriDataset } from "@/lib/fmri/dataset";
 
 const STORAGE_KEY = "babelforge:state:v1";
 
@@ -35,6 +36,13 @@ interface AIContextProps {
    * that want to surface evidence contextually.
    */
   wisdom: RankedInsight[];
+
+  /**
+   * Uploaded fMRI dataset (or last analyzed one). Engines, NeuroCanvas,
+   * and the AI grounding all read from this when present.
+   */
+  fmriDataset: FmriDataset | null;
+  setFmriDataset: (d: FmriDataset | null) => void;
 }
 
 const AIContext = createContext<AIContextProps | undefined>(undefined);
@@ -46,6 +54,7 @@ export function AIProvider({ children }: { children: ReactNode }) {
   const [integrityScore, setIntegrityScore] = useState<number>(100);
   const [isAssistantOpen, setIsAssistantOpen] = useState<boolean>(false);
   const [viewPerspective, setViewPerspective] = useState<'topology' | 'anatomy' | 'pharma' | 'physics'>('topology');
+  const [fmriDataset, setFmriDataset] = useState<FmriDataset | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
   // Hydrate persisted state from localStorage on mount
@@ -124,6 +133,7 @@ export function AIProvider({ children }: { children: ReactNode }) {
       triggerAIAnalysis,
       viewPerspective, setViewPerspective,
       wisdom,
+      fmriDataset, setFmriDataset,
     }}>
       {children}
     </AIContext.Provider>
