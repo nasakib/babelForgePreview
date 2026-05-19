@@ -2,7 +2,7 @@
 
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { useAI } from "@/context/AIContext";
 import {
@@ -36,11 +36,26 @@ export default function NeuroCanvas({
   onCoherence,
 }: NeuroCanvasProps) {
   const { viewPerspective } = useAI();
+  const [simTime, setSimTime] = useState(0);
 
   const topo = useMemo<ComposedTopology>(
     () => topology ?? composeTopology(pathologies),
     [topology, pathologies]
   );
+
+  useEffect(() => {
+    const timer = setInterval(() => setSimTime((t) => t + 1), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const prognosis = useMemo(() => {
+    if (vectors.chaos > 1.5 && vectors.repair < 0.5) return "CRITICAL DEGRADATION EXPECTED (High Chaos)";
+    if (vectors.repair > 1.0) return "STABILIZATION TRAJECTORY (High Repair)";
+    if (vectors.arousal > 1.5) return "HYPERAROUSAL RISK (Potential Manic Shift)";
+    if (vectors.dampening > 1.5) return "APATHY / BLUNTING RISK (Excessive Dampening)";
+    if (pathologies.length > 0) return "PATHOLOGICAL MAINTENANCE (Intervention Required)";
+    return "MAINTAINING HEALTHY BASELINE";
+  }, [vectors, pathologies]);
 
   return (
     <div className="absolute inset-0 bg-canvas overflow-hidden">
@@ -81,13 +96,27 @@ export default function NeuroCanvas({
       </Canvas>
 
       {/* HUD overlay */}
-      <div className="absolute top-4 left-4 pointer-events-none flex items-center gap-3 text-[11px] font-mono uppercase tracking-widest2 text-ink drop-shadow-md">
-        <span className="status-dot ok shadow-[0_0_8px_rgba(16,185,129,0.8)]" /> Real-time Kuramoto · N={topo.N} · view: {viewPerspective}
+      <div className="absolute top-4 left-4 pointer-events-none flex flex-col gap-2 z-10">
+        <div className="flex items-center gap-3 text-[11px] font-mono uppercase tracking-widest2 text-ink drop-shadow-md bg-surface-0/60 p-2 rounded backdrop-blur-sm border border-line">
+          <span className="status-dot ok shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse" /> 
+          Real-time Kuramoto · view: {viewPerspective}
+        </div>
+        <div className="text-[10px] font-mono uppercase tracking-widest2 text-accent-400 bg-surface-0/60 p-2 rounded backdrop-blur-sm border border-line">
+          T+ {Math.floor(simTime / 60).toString().padStart(2, '0')}:{(simTime % 60).toString().padStart(2, '0')} (SIMULATED DURATION)
+        </div>
       </div>
-      <div className="absolute top-4 right-4 pointer-events-none flex flex-col items-end gap-1 text-[11px] font-mono uppercase tracking-widest2 text-ink drop-shadow-md">
-        <div>edges +{topo.edgeStats.added} / −{topo.edgeStats.removed}</div>
-        <div>cliques {topo.cliques.length}</div>
+      
+      <div className="absolute top-4 right-4 pointer-events-none flex flex-col items-end gap-2 z-10">
+        <div className="flex flex-col items-end gap-1 text-[11px] font-mono uppercase tracking-widest2 text-ink drop-shadow-md bg-surface-0/60 p-2 rounded backdrop-blur-sm border border-line">
+          <div>nodes: {topo.N}</div>
+          <div>edges +{topo.edgeStats.added} / −{topo.edgeStats.removed}</div>
+          <div>cliques {topo.cliques.length}</div>
+        </div>
+        <div className={`text-[10px] font-mono uppercase font-bold tracking-widest2 p-2 rounded backdrop-blur-sm border ${prognosis.includes('CRITICAL') || prognosis.includes('RISK') ? 'bg-crit/10 text-crit border-crit/30' : prognosis.includes('STABILIZATION') || prognosis.includes('HEALTHY') ? 'bg-ok/10 text-ok border-ok/30' : 'bg-warn/10 text-warn border-warn/30'}`}>
+          PROGNOSIS: {prognosis}
+        </div>
       </div>
+
       <div className="absolute bottom-4 left-4 right-4 flex flex-wrap gap-4 text-[11px] font-mono uppercase tracking-widest2 text-ink bg-surface-0/95 p-4 rounded-clinical backdrop-blur-xl border border-line-strong pointer-events-auto shadow-2xl z-20">
         <div className="w-full text-ink-subtle mb-2 border-b border-line-strong pb-2 font-bold tracking-widest">Anatomical Region Legend & Color Coding</div>
         {(Object.keys(REGION_COLOR) as (keyof typeof REGION_COLOR)[]).map((r) => (
@@ -297,9 +326,9 @@ function BrainScene({
         args={[undefined, undefined, topo.N]}
         frustumCulled={false}
       >
-        <instancedBufferAttribute attach="instanceColor" args={[new Float32Array(topo.N * 3), 3]} />
         <sphereGeometry args={[1, 14, 14]} />
         <meshStandardMaterial
+          color="#ffffff"
           emissive={new THREE.Color("#05070d")}
           roughness={0.4}
           metalness={0.1}
