@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { Canvas, useFrame } from "@react-three/fiber";
-import { OrbitControls } from "@react-three/drei";
+import { OrbitControls, Html } from "@react-three/drei";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { useAI } from "@/context/AIContext";
@@ -72,6 +72,27 @@ export default function NeuroCanvas({
     [topology, pathologies, targetedOperations]
   );
 
+  // Precalculate labels: [FirstLetterRegion][NodeID][FirstLetterNearestNodeRegion]
+  const nodeLabels = useMemo(() => {
+    return topo.nodes.map((n, i) => {
+      let nearestDist = Infinity;
+      let nearestIdx = -1;
+      for (let j = 0; j < topo.N; j++) {
+        if (i !== j && topo.adjacency[i * topo.N + j]) {
+          const nj = topo.nodes[j];
+          const dist = (n.x - nj.x) ** 2 + (n.y - nj.y) ** 2 + (n.z - nj.z) ** 2;
+          if (dist < nearestDist) {
+            nearestDist = dist;
+            nearestIdx = j;
+          }
+        }
+      }
+      const r1 = n.region.charAt(0).toUpperCase();
+      const r2 = nearestIdx >= 0 ? topo.nodes[nearestIdx].region.charAt(0).toUpperCase() : 'X';
+      return `${r1}${n.id}${r2}`;
+    });
+  }, [topo]);
+
   const selectedNode = selectedNodeId !== null ? topo.nodes[selectedNodeId] : null;
 
   useEffect(() => {
@@ -127,6 +148,7 @@ export default function NeuroCanvas({
           vectors={vectors}
           viewPerspective={viewPerspective}
           activeStack={activeStack}
+          nodeLabels={nodeLabels}
           onCoherence={(R) => {
             setLiveR(R);
             if (onCoherence) {
@@ -265,12 +287,14 @@ function BrainScene({
   vectors,
   viewPerspective,
   activeStack,
+  nodeLabels,
   onCoherence,
 }: {
   topo: ComposedTopology;
   vectors: NonNullable<NeuroCanvasProps["vectors"]>;
   viewPerspective: string;
   activeStack: any[];
+  nodeLabels: string[];
   onCoherence?: (R: number) => void;
 }) {
   const { selectedNodeId, setSelectedNodeId } = useAI();
@@ -416,10 +440,10 @@ function BrainScene({
           (vectors.dampening > 0.3 && (cls === "Default" || cls === "Limbic")) ||
           (vectors.repair > 0.3);
         tmpColor.current.set(targeted ? baseHex : "#2a3441");
-        if (targeted) tmpColor.current.multiplyScalar(0.8 + amp * 0.4 + hub * 0.2);
+        if (targeted) tmpColor.current.multiplyScalar(0.85 + 0.15 * amp + hub * 0.1);
       } else {
-        // Region colors for anatomy/topology
-        tmpColor.current.set(baseHex).multiplyScalar(0.6 + 0.4 * amp + hub * 0.15);
+        // Region colors for anatomy/topology - true to legend with very subtle pulse
+        tmpColor.current.set(baseHex).multiplyScalar(0.85 + 0.15 * amp + hub * 0.05);
       }
       inst.setColorAt(i, tmpColor.current);
     }
@@ -428,7 +452,7 @@ function BrainScene({
 
     // Edge opacity pulses with global coherence
     if (lineMatRef.current) {
-      const baseOp = viewPerspective === "physics" ? 0.08 : 0.15;
+      const baseOp = viewPerspective === "physics" ? 0.15 : 0.35;
       lineMatRef.current.opacity = baseOp + kuramoto.R * 0.25;
     }
   });
@@ -468,11 +492,36 @@ function BrainScene({
           ref={lineMatRef}
           vertexColors
           transparent
-          opacity={0.15}
+          opacity={0.35}
           depthWrite={false}
-          blending={THREE.AdditiveBlending}
+          blending={THREE.NormalBlending}
         />
       </lineSegments>
+
+      {/* Render Naming Convention Tags on Nodes */}
+      {viewPerspective !== "anatomy" && nodeLabels.map((label, i) => (
+        <Html
+          key={`lbl-${i}`}
+          position={[topo.nodes[i].x, topo.nodes[i].y + 1.8, topo.nodes[i].z]}
+          center
+          zIndexRange={[10, 0]}
+        >
+          <div
+            style={{
+              color: REGION_COLOR[topo.nodes[i].region as keyof typeof REGION_COLOR],
+              fontSize: '8px',
+              fontFamily: 'JetBrains Mono, monospace',
+              fontWeight: 'bold',
+              textShadow: '0 0 2px #05070d, 0 0 4px #05070d, 0 0 6px #05070d',
+              pointerEvents: 'none',
+              userSelect: 'none',
+              opacity: 0.8
+            }}
+          >
+            {label}
+          </div>
+        </Html>
+      ))}
     </group>
   );
 }
