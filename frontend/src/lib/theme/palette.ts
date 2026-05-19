@@ -126,6 +126,71 @@ const regions: Record<keyof typeof regionHue, string> = {
 };
 
 // ---------------------------------------------------------------------------
+// Medical discipline palette — one color per council specialty. Hues are
+// distributed around the wheel so neighboring specialists in any layout
+// stay perceptually distinct, with saturation/lightness held constant so
+// no chip dominates.
+// ---------------------------------------------------------------------------
+
+const disciplineHue = {
+  Psychiatry: 282,
+  Neurology: 260,
+  Cardiology: 0,
+  Pulmonology: 200,
+  Endocrinology: 38,
+  Gastroenterology: 70,
+  Nephrology: 220,
+  Hepatology: 30,
+  Hematology: 350,
+  Immunology: 130,
+  Pharmacology: 195,
+  InternalMedicine: 215,
+  SleepMedicine: 248,
+  Nutrition: 90,
+  SportsMedicine: 145,
+  Toxicology: 15,
+  Functional: 165,
+  PainMedicine: 5,
+  Geriatrics: 45,
+  WomensHealth: 320,
+} as const;
+const DISC_S = 0.55;
+const DISC_L = 0.62;
+const disciplines = Object.fromEntries(
+  Object.entries(disciplineHue).map(([k, h]) => [
+    k,
+    hslToHex({ h, s: DISC_S, l: DISC_L }),
+  ]),
+) as Record<keyof typeof disciplineHue, string>;
+
+// ---------------------------------------------------------------------------
+// Body-system palette — one color per organ system, used by the Full Body
+// Context panel + the engines to tag derived metrics with provenance.
+// ---------------------------------------------------------------------------
+
+const bodyHue = {
+  Cardiovascular: 0,
+  Respiratory: 200,
+  Neurological: 270,
+  Endocrine: 38,
+  Renal: 220,
+  Hepatic: 30,
+  Hematologic: 350,
+  Immune: 130,
+  Gastrointestinal: 70,
+  Musculoskeletal: 25,
+  Integumentary: 320,
+  Reproductive: 305,
+  Metabolic: 50,
+  Autonomic: 175,
+} as const;
+const BODY_S = 0.50;
+const BODY_L = 0.60;
+const bodySystems = Object.fromEntries(
+  Object.entries(bodyHue).map(([k, h]) => [k, hslToHex({ h, s: BODY_S, l: BODY_L })]),
+) as Record<keyof typeof bodyHue, string>;
+
+// ---------------------------------------------------------------------------
 // Frozen palette object — the public API.
 // ---------------------------------------------------------------------------
 
@@ -141,6 +206,8 @@ export const palette = {
   info: hslToHex(BASE.info),
   bands,
   regions,
+  disciplines,
+  bodySystems,
 } as const;
 
 export type Palette = typeof palette;

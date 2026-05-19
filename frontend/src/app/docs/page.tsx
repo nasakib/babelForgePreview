@@ -87,7 +87,7 @@ function Overview() {
             <h3 className="text-sm font-bold text-ink mt-1">babelForge</h3>
             <p className="text-xs mt-2">
               FastAPI service that hosts the topology generator, pharmacopeia
-              projection, the babelAI chat layer (Gemini 1.5 Flash), and the
+              projection, the FORGEai chat layer (Gemini 1.5 Flash), and the
               fMRI ingest pipeline. Deployed to Google Cloud Run.
             </p>
             <p className="text-[10px] font-mono text-ink-muted mt-3 break-all">
@@ -102,7 +102,7 @@ function Overview() {
             <p className="text-xs mt-2">
               Next.js 14 / React 18 / Tailwind app. Hosts the clinical canvas,
               the 3D Kuramoto visualizer, the stack simulator, the signal
-              analyzer, and embeds babelAI as a docked assistant.
+              analyzer, and embeds FORGEai as a docked assistant.
             </p>
             <p className="text-[10px] font-mono text-ink-muted mt-3">
               env: NEXT_PUBLIC_API_URL → backend
@@ -214,7 +214,7 @@ function Workflow() {
       d: "fMRI Ingest (F5) uploads a BOLD file to /api/fmri/analyze. The returned topology + diagnostic profile replaces the synthetic baseline for personalised exploration.",
     },
     {
-      t: "5. Ask babelAI",
+      t: "5. Ask FORGEai",
       d: "Open the docked assistant (bottom right). Every query is POSTed to /api/chat with the current module, pathologies, regimen and integrity score so answers are context-aware.",
     },
   ];

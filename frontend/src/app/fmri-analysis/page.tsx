@@ -216,7 +216,7 @@ export default function FMRIAnalysis() {
             }
             className="mt-4 w-full bg-accent-500/10 hover:bg-accent-500/15 text-accent-400 text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-md transition-all border border-accent-500/30"
           >
-            Consult babelAI
+            Consult FORGEai
           </button>
         )}
       </div>

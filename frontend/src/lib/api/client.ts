@@ -64,7 +64,7 @@ export const BABELFORGE_ENDPOINTS: ApiEndpointDoc[] = [
   {
     method: "POST",
     path: "/api/chat",
-    title: "babelAI clinical assistant",
+    title: "FORGEai clinical assistant",
     description:
       "Forwards a free-text query plus the current UI context (module, pathologies, stack, integrity score) to a Gemini 1.5 Flash model with a babelForge-tuned system prompt. Returns a single textual response. Falls back to a local heuristic responder if the backend or secret is unavailable.",
     requestExample:

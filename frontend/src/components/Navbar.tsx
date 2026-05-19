@@ -180,7 +180,7 @@ function TutorialModal({ onClose }: { onClose: () => void }) {
     },
     {
       title: "Step 4: AI & Auto-Optimization",
-      content: "Use the 'babelAI' chat bubble in the bottom right for instant clinical context and explanations. Alternatively, click 'Auto-Optimize' in the console to have the engine automatically discover the mathematically ideal pharmacological stack to reverse the current pathology."
+      content: "Use the 'FORGEai' chat bubble in the bottom right for instant clinical context and explanations. Alternatively, click 'Auto-Optimize' in the console to have the engine automatically discover the mathematically ideal pharmacological stack to reverse the current pathology."
     }
   ];
 

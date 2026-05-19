@@ -3,6 +3,7 @@
 import { useAI } from "@/context/AIContext";
 import { citationUrl, wisdomForPrompt } from "@/lib/wisdom/select";
 import { tokenize, tokensForPrompt } from "@/lib/brain/tokens";
+import { BABELFORGE_API_URL } from "@/lib/api/client";
 import { useEffect, useRef, useState } from "react";
 
 interface Msg { role: 'ai' | 'user' | 'sys'; content: string }
@@ -19,7 +20,7 @@ export default function AIAssistant() {
     fmriDataset,
   } = useAI();
   const [messages, setMessages] = useState<Msg[]>([
-    { role: 'sys', content: 'babelAI initialised · Gemini 1.5 + local engine fallback.' },
+    { role: 'sys', content: 'FORGEai initialised · Gemini 1.5 + local engine fallback.' },
     { role: 'ai',  content: 'Standing by. Ask about the active topology, regimen, or any compound mechanism.' },
   ]);
   const [input, setInput] = useState("");
@@ -32,11 +33,11 @@ export default function AIAssistant() {
     return (
       <button
         onClick={() => setIsAssistantOpen(true)}
-        aria-label="Open babelAI"
+        aria-label="Open FORGEai"
         className="fixed bottom-4 right-4 sm:bottom-5 sm:right-5 z-40 bg-surface-100 border border-line-strong hover:border-accent-500 text-ink p-3 rounded-clinical shadow-lg flex items-center gap-2 transition min-h-[44px] min-w-[44px]"
       >
         <span className="status-dot ok" />
-        <span className="text-[11px] font-mono uppercase tracking-widest2 text-ink-subtle">babelAI</span>
+        <span className="text-[11px] font-mono uppercase tracking-widest2 text-ink-subtle">FORGEai</span>
         <svg className="w-3.5 h-3.5 text-accent-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
         </svg>
@@ -78,20 +79,63 @@ export default function AIAssistant() {
     };
 
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_API_URL || "https://babelforge-backend-pkynzfr2dq-uc.a.run.app";
       const ctrl = new AbortController();
-      const t = setTimeout(() => ctrl.abort(), 8000);
-      const res = await fetch(`${backendUrl}/api/chat`, {
+      const t = setTimeout(() => ctrl.abort(), 30000);
+      const res = await fetch(`${BABELFORGE_API_URL}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: text, context }),
         signal: ctrl.signal,
       });
       clearTimeout(t);
+      if (!res.ok) {
+        const body = await res.text().catch(() => '');
+        setMessages([
+          ...next,
+          {
+            role: 'ai',
+            content:
+              `Backend error HTTP ${res.status} from /api/chat. ` +
+              (body.slice(0, 240) || '(empty body)') +
+              `\n\n— falling back to local engine —\n` +
+              localFallback(text, context),
+          },
+        ]);
+        return;
+      }
       const data = await res.json();
-      setMessages([...next, { role: 'ai', content: data.response ?? localFallback(text, context) }]);
-    } catch {
-      setMessages([...next, { role: 'ai', content: localFallback(text, context) }]);
+      const reply = typeof data?.response === 'string' ? data.response : '';
+      // Surface server-side configuration errors clearly instead of swallowing them.
+      if (/GEMINI_API_KEY|not configured|missing key/i.test(reply)) {
+        setMessages([
+          ...next,
+          {
+            role: 'ai',
+            content:
+              `⚠ FORGEai is reachable but the backend is missing GEMINI_API_KEY. ` +
+              `Set it on the Cloud Run service (gcloud run services update babelforge-backend ` +
+              `--update-secrets=GEMINI_API_KEY=gemini-api-key:latest --region us-central1) and retry.\n\n` +
+              `— local engine reply —\n` +
+              localFallback(text, context),
+          },
+        ]);
+        return;
+      }
+      setMessages([
+        ...next,
+        { role: 'ai', content: reply || localFallback(text, context) },
+      ]);
+    } catch (err: any) {
+      setMessages([
+        ...next,
+        {
+          role: 'ai',
+          content:
+            `Network error reaching ${BABELFORGE_API_URL}/api/chat: ${err?.message ?? err}.\n` +
+            `— falling back to local engine —\n` +
+            localFallback(text, context),
+        },
+      ]);
     } finally {
       setBusy(false);
     }
@@ -102,7 +146,7 @@ export default function AIAssistant() {
       <div className="clinical-card-header">
         <div className="flex items-center gap-2">
           <span className="status-dot ok" />
-          <span className="section-label-strong">babelAI · Context: {currentModule}</span>
+          <span className="section-label-strong">FORGEai · Context: {currentModule}</span>
         </div>
         <button onClick={() => setIsAssistantOpen(false)} className="text-ink-muted hover:text-ink text-[14px] leading-none">
           ✕
@@ -170,7 +214,7 @@ export default function AIAssistant() {
         ))}
         {busy && (
           <div className="text-[10px] font-mono uppercase tracking-widest2 text-ink-muted live-caret">
-            babelAI thinking
+            FORGEai thinking
           </div>
         )}
         <div ref={endRef} />
