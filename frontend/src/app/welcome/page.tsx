@@ -10,16 +10,16 @@ import Link from "next/link";
  */
 export default function WelcomePage() {
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto bg-void">
-      <div className="max-w-4xl mx-auto px-6 py-12 space-y-10">
+    <div className="lg:flex-1 lg:min-h-0 lg:overflow-y-auto bg-void">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-8 sm:space-y-10">
         <header className="space-y-3">
           <div className="text-[10px] uppercase tracking-widest text-ink-muted">
             babelforge / welcome
           </div>
-          <h1 className="text-4xl font-bold text-ink">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-ink leading-tight">
             Make sense of how the brain works — and how interventions change it.
           </h1>
-          <p className="text-base text-ink-subtle leading-relaxed">
+          <p className="text-sm sm:text-base text-ink-subtle leading-relaxed">
             BabelForge is a research-grade visualizer. You can explore it freely,
             without an account. Nothing you do here is stored on a server.
           </p>

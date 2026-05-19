@@ -6,12 +6,12 @@ import Link from "next/link";
  */
 export default function NotFound() {
   return (
-    <div className="flex-1 min-h-0 flex items-center justify-center bg-void">
-      <div className="max-w-xl w-full px-6 py-10 text-center">
+    <div className="flex-1 flex items-center justify-center bg-void min-h-[60vh]">
+      <div className="max-w-xl w-full px-4 sm:px-6 py-10 text-center">
         <div className="text-[10px] uppercase tracking-widest text-ink-muted">
           babelforge / not-found
         </div>
-        <h1 className="text-6xl font-bold text-ink mt-2 mb-2">404</h1>
+        <h1 className="text-5xl sm:text-6xl font-bold text-ink mt-2 mb-2">404</h1>
         <p className="text-sm text-ink-subtle mb-6">
           No object with that identifier exists in the workspace.
         </p>

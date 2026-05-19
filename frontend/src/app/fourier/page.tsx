@@ -61,8 +61,8 @@ export default function FourierPage() {
   const cat = categoryByKey(category);
 
   return (
-    <div className="flex flex-col h-full min-h-0 bg-void">
-      <div className="px-6 pt-4">
+    <div className="flex flex-col lg:h-full lg:min-h-0 bg-void">
+      <div className="px-4 sm:px-6 pt-4">
         <Breadcrumbs trail={[{ label: cat.label }]} />
         <EntityHeader
           kind="analyzer"
@@ -75,9 +75,9 @@ export default function FourierPage() {
         />
       </div>
 
-      <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[260px_1fr_300px] gap-4 px-6 pb-6 pt-3">
+      <div className="lg:flex-1 lg:min-h-0 grid grid-cols-1 lg:grid-cols-[260px_1fr_300px] gap-4 px-4 sm:px-6 pb-6 pt-3">
         {/* Left: stimulus + categories */}
-        <aside className="flex flex-col gap-4 min-h-0 overflow-y-auto pr-1">
+        <aside className="flex flex-col gap-4 lg:min-h-0 lg:overflow-y-auto lg:pr-1">
           <section>
             <h3 className="text-[10px] uppercase tracking-widest text-ink-muted mb-2">
               Category
@@ -93,22 +93,22 @@ export default function FourierPage() {
         </aside>
 
         {/* Center: spectrum */}
-        <section className="flex flex-col min-h-0 rounded-clinical border border-line bg-surface-50">
-          <header className="flex items-center justify-between px-4 py-2.5 border-b border-line">
+        <section className="flex flex-col lg:min-h-0 rounded-clinical border border-line bg-surface-50">
+          <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 px-4 py-2.5 border-b border-line">
             <div>
               <div className="text-[10px] uppercase tracking-widest text-ink-muted">
                 {meta.group}
               </div>
               <h2 className="text-sm font-bold text-ink">{meta.label}</h2>
             </div>
-            <div className="text-[11px] font-mono text-ink-subtle">
+            <div className="text-[10px] sm:text-[11px] font-mono text-ink-subtle break-all sm:break-normal">
               fs = {sampleRate} Hz · N = {samples.length} · peak ≈{" "}
               <span className="text-accent-300">
                 {peakHz < 1 ? peakHz.toFixed(3) : peakHz.toFixed(2)} Hz
               </span>
             </div>
           </header>
-          <div className="flex-1 min-h-0 p-3">
+          <div className="h-[300px] sm:h-[380px] lg:h-auto lg:flex-1 lg:min-h-0 p-3">
             <SpectrumCanvas
               samples={samples}
               sampleRate={sampleRate}
@@ -123,7 +123,7 @@ export default function FourierPage() {
         </section>
 
         {/* Right: meta */}
-        <aside className="flex flex-col gap-4 min-h-0 overflow-y-auto">
+        <aside className="flex flex-col gap-4 lg:min-h-0 lg:overflow-y-auto">
           <section>
             <h3 className="text-[10px] uppercase tracking-widest text-ink-muted mb-2">Acquisition</h3>
             <MetaGrid
