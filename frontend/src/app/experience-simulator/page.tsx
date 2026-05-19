@@ -4,12 +4,14 @@ import { useState } from "react";
 import { useAI } from "@/context/AIContext";
 import NeuroCanvas from "@/components/NeuroCanvas";
 import { babelforgeApi } from "@/lib/api/client";
+import PanelHeader from "@/components/palantir/PanelHeader";
 
 export default function ExperienceSimulator() {
   const { activePathologies, setViewPerspective } = useAI();
   const [experience, setExperience] = useState("");
   const [isSimulating, setIsSimulating] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const [leftMinimized, setLeftMinimized] = useState(false);
 
   const handleSimulate = async () => {
     if (!experience.trim()) return;
@@ -43,12 +45,16 @@ export default function ExperienceSimulator() {
       </div>
 
       {/* Left Sidebar: Simulator Input */}
-      <aside className="w-full lg:w-[380px] lg:absolute lg:left-4 lg:top-4 lg:bottom-4 z-10 border-b lg:border border-line bg-surface-0/80 backdrop-blur-xl lg:rounded-clinical flex flex-col overflow-y-auto custom-scrollbar shadow-2xl pointer-events-auto">
-        <div className="clinical-card-header">
-          <span className="section-label-strong">SUBJECTIVE REACTION ENGINE</span>
-          <span className="text-micro text-ink-muted font-mono">LLM-Physics Bridge</span>
-        </div>
+      <aside className={`w-full lg:absolute lg:left-4 lg:top-4 z-10 border-b lg:border border-line bg-surface-0/80 backdrop-blur-xl lg:rounded-clinical flex flex-col custom-scrollbar shadow-2xl pointer-events-auto transition-all duration-300 ${leftMinimized ? 'lg:w-auto h-auto' : 'lg:w-[380px] lg:bottom-4 overflow-y-auto'}`}>
+        <PanelHeader 
+          title="Subjective Reaction Engine" 
+          subtitle={leftMinimized ? "" : "LLM-Physics Bridge"}
+          onToggle={() => setLeftMinimized(!leftMinimized)}
+          minimized={leftMinimized}
+        />
 
+        {!leftMinimized && (
+          <>
         <div className="p-4 flex flex-col gap-4 border-b border-line flex-none">
           <p className="text-xs text-ink-subtle leading-relaxed">
             Describe a subjective experience, intervention, or state in natural language. The engine will parse your description and map it onto the brain&apos;s topological physics engine in real-time.
@@ -126,6 +132,8 @@ export default function ExperienceSimulator() {
             <div className="text-[10px] text-ink-muted font-mono">Awaiting linguistic input.</div>
           )}
         </div>
+        </>
+        )}
       </aside>
     </div>
   );

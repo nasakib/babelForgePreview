@@ -16,6 +16,8 @@ import { useAI } from "@/context/AIContext";
 import type { Pathology } from "@/lib/engine/topology";
 import { PATHOLOGIES } from "@/lib/engine/topology";
 import { parseBackendResponse, validateDataset, type FmriDataset } from "@/lib/fmri/dataset";
+import PanelHeader from "@/components/palantir/PanelHeader";
+
 import {
   computePSD,
   computeHurst,
@@ -56,6 +58,7 @@ export default function FMRIAnalysis() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [tab, setTab] = useState<TabKey>("topology");
   const [results, setResults] = useState<EngineResults>({});
+  const [leftMinimized, setLeftMinimized] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -153,11 +156,57 @@ export default function FMRIAnalysis() {
   };
 
   return (
-    <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden w-full lg:h-[calc(100vh-3.5rem)]">
+    <div className="flex-1 flex flex-col relative overflow-hidden bg-canvas lg:block">
+      {/* Background Canvas / Main Display */}
+      <div className="lg:absolute lg:inset-0 z-0 min-h-[50vh] lg:min-h-0 relative bg-canvas">
+        {!fmriDataset && (
+          <div className="absolute inset-0 flex items-center justify-center text-ink-muted">
+            <div className="text-center">
+              <p className="text-xs uppercase tracking-widest2 mb-2">Awaiting fMRI Upload</p>
+              <p className="text-[10px] text-ink-subtle">
+                Drop a file on the left to bring the engines online.
+              </p>
+            </div>
+          </div>
+        )}
+        
+        {/* Floating View Controls on top right */}
+        {fmriDataset && (
+          <div className="absolute top-4 right-4 z-20">
+            <WorkbenchTabs tab={tab} setTab={setTab} hasDataset={!!fmriDataset} />
+          </div>
+        )}
+
+        {fmriDataset && tab === "topology" && <NeuroCanvas />}
+        {fmriDataset && tab === "bold" && <BoldViewer ds={fmriDataset} />}
+        {fmriDataset && tab === "fc" && <FCHeatmap ds={fmriDataset} />}
+        {fmriDataset && tab === "engines" && (
+          <div className="absolute inset-0 pt-20 overflow-y-auto px-4 custom-scrollbar">
+            <div className="max-w-4xl mx-auto">
+              <EngineConsole
+                ds={fmriDataset}
+                results={results}
+                runEngine={runEngine}
+                hasStack={(activeStack as any[]).length > 0}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Left Sidebar: Upload + headline metrics */}
-      <div className="w-full lg:w-[360px] bg-surface-0 border-r border-line flex-none overflow-y-auto custom-scrollbar p-6 shadow-sm shrink-0 flex flex-col">
-        <h2 className="text-xl font-bold text-ink mb-1">fMRI Workbench</h2>
-        <p className="text-xs text-ink-muted mb-6 leading-relaxed">
+      <aside className={`w-full lg:absolute lg:left-4 lg:top-4 z-10 border-b lg:border border-line bg-surface-0/80 backdrop-blur-xl lg:rounded-clinical flex flex-col custom-scrollbar shadow-2xl pointer-events-auto transition-all duration-300 ${leftMinimized ? 'lg:w-auto h-auto' : 'lg:w-[360px] lg:bottom-4 overflow-y-auto'}`}>
+        <PanelHeader 
+          title="fMRI Workbench" 
+          subtitle={leftMinimized ? "" : "Data Ingestion & Extraction"}
+          onToggle={() => setLeftMinimized(!leftMinimized)}
+          minimized={leftMinimized}
+        />
+
+        {!leftMinimized && (
+          <>
+          <div className="p-4 flex-none">
+          <p className="text-xs text-ink-muted mb-6 leading-relaxed">
           Upload a CSV BOLD matrix (parcels × TR or TR × parcels) or any file to trigger
           physiologically plausible synthesis. Then apply the babelForge engines.
         </p>
@@ -220,36 +269,9 @@ export default function FMRIAnalysis() {
           </button>
         )}
       </div>
-
-      {/* Right: tabbed workbench */}
-      <div className="flex-grow bg-canvas m-3 rounded-clinical flex flex-col overflow-hidden relative border border-line-strong min-h-[500px] lg:min-h-0">
-        <WorkbenchTabs tab={tab} setTab={setTab} hasDataset={!!fmriDataset} />
-
-        <div className="flex-1 w-full relative">
-          {!fmriDataset && (
-            <div className="absolute inset-0 flex items-center justify-center text-ink-muted">
-              <div className="text-center">
-                <p className="text-xs uppercase tracking-widest2 mb-2">Awaiting fMRI Upload</p>
-                <p className="text-[10px] text-ink-subtle">
-                  Drop a file on the left to bring the engines online.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {fmriDataset && tab === "topology" && <NeuroCanvas />}
-          {fmriDataset && tab === "bold" && <BoldViewer ds={fmriDataset} />}
-          {fmriDataset && tab === "fc" && <FCHeatmap ds={fmriDataset} />}
-          {fmriDataset && tab === "engines" && (
-            <EngineConsole
-              ds={fmriDataset}
-              results={results}
-              runEngine={runEngine}
-              hasStack={(activeStack as any[]).length > 0}
-            />
-          )}
-        </div>
-      </div>
+      </>
+      )}
+      </aside>
     </div>
   );
 }

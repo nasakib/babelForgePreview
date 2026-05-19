@@ -9,6 +9,7 @@ import SignalExplainer from "@/components/signal/SignalExplainer";
 import SignalMetricsBar from "@/components/signal/SignalMetricsBar";
 import type { Stimulus, BandKey } from "@/lib/signal/bands";
 import { useAI } from "@/context/AIContext";
+import PanelHeader from "@/components/palantir/PanelHeader";
 
 const STORAGE_KEY = "babelforge:signal-analyzer:v1";
 
@@ -27,6 +28,7 @@ export default function SignalAnalyzer() {
     rms: 0,
   });
   const [hydrated, setHydrated] = useState(false);
+  const [leftMinimized, setLeftMinimized] = useState(false);
 
   useEffect(() => {
     setCurrentModule("signal-analyzer");
@@ -57,24 +59,10 @@ export default function SignalAnalyzer() {
   }, [stimulus, mode, hydrated]);
 
   return (
-    <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden w-full h-app-mobile lg:h-[calc(100vh-3rem)]">
-      <aside className="w-full lg:w-[350px] bg-surface-0 border-r border-line flex-none overflow-y-auto custom-scrollbar p-6 shadow-sm shrink-0 flex flex-col gap-6">
-        <div>
-          <h2 className="text-xl font-bold text-ink mb-1">Stimulus Application</h2>
-          <p className="text-xs text-ink-muted leading-relaxed">
-            Inject a stimulus into the simulated cortex and watch the
-            oscillatory response across all five EEG bands. Use{" "}
-            <strong className="text-accent-300">Compress</strong> to fuse the
-            bands into a single dominant-coloured trace.
-          </p>
-        </div>
-
-        <StimulusSelector active={stimulus} onSelect={setStimulus} />
-        <SignalControls mode={mode} onChange={setMode} />
-      </aside>
-
-      <section className="flex-grow bg-canvas m-3 rounded-clinical flex flex-col overflow-hidden relative border border-line-strong min-h-[520px] lg:min-h-0">
-        <header className="z-10 p-4 lg:p-6 border-b border-line-strong bg-surface-0/70 backdrop-blur flex flex-wrap items-start gap-3 justify-between">
+    <div className="flex-1 flex flex-col relative overflow-hidden bg-canvas lg:block">
+      {/* Background Canvas / Main Display */}
+      <div className="lg:absolute lg:inset-0 z-0 min-h-[50vh] lg:min-h-0 relative flex flex-col bg-canvas">
+        <header className="z-10 p-4 lg:p-6 lg:pl-[400px] border-b border-line-strong bg-surface-0/70 backdrop-blur flex flex-wrap items-start gap-3 justify-between">
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className="w-2 h-2 rounded-full bg-ok animate-pulse" />
@@ -96,7 +84,7 @@ export default function SignalAnalyzer() {
           <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(to_bottom,transparent_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px] opacity-20" />
         </div>
 
-        <div className="p-3 lg:p-4 border-t border-line-strong bg-surface-0/70 backdrop-blur grid lg:grid-cols-[1fr_360px] gap-3">
+        <div className="p-3 lg:p-4 lg:pl-[400px] border-t border-line-strong bg-surface-0/70 backdrop-blur grid lg:grid-cols-[1fr_360px] gap-3 z-10">
           <SignalMetricsBar
             stimulus={stimulus}
             dominantBand={tick.dominantBand}
@@ -109,7 +97,32 @@ export default function SignalAnalyzer() {
             mode={mode}
           />
         </div>
-      </section>
+      </div>
+
+      <aside className={`w-full lg:absolute lg:left-4 lg:top-4 z-20 border-b lg:border border-line bg-surface-0/80 backdrop-blur-xl lg:rounded-clinical flex flex-col custom-scrollbar shadow-2xl pointer-events-auto transition-all duration-300 ${leftMinimized ? 'lg:w-auto h-auto' : 'lg:w-[350px] lg:bottom-4 overflow-y-auto'}`}>
+        <PanelHeader 
+          title="Stimulus Application" 
+          subtitle={leftMinimized ? "" : "Inject synthetic cortex stimuli"}
+          onToggle={() => setLeftMinimized(!leftMinimized)}
+          minimized={leftMinimized}
+        />
+
+        {!leftMinimized && (
+          <>
+          <div className="p-4 flex flex-col gap-6">
+            <p className="text-xs text-ink-muted leading-relaxed">
+              Inject a stimulus into the simulated cortex and watch the
+              oscillatory response across all five EEG bands. Use{" "}
+              <strong className="text-accent-300">Compress</strong> to fuse the
+              bands into a single dominant-coloured trace.
+            </p>
+
+            <StimulusSelector active={stimulus} onSelect={setStimulus} />
+            <SignalControls mode={mode} onChange={setMode} />
+          </div>
+          </>
+        )}
+      </aside>
     </div>
   );
 }

@@ -4,9 +4,11 @@ import { useState, useMemo, useEffect } from "react";
 import NeuroCanvas from "@/components/NeuroCanvas";
 import { molecules } from "@/data/molecules";
 import { useAI } from "@/context/AIContext";
+import PanelHeader from "@/components/palantir/PanelHeader";
 
 export default function StackSimulator() {
   const { setCurrentModule, setActiveStack, setIntegrityScore, triggerAIAnalysis, viewPerspective, setViewPerspective } = useAI();
+  const [leftMinimized, setLeftMinimized] = useState(false);
 
   useEffect(() => {
     setCurrentModule("stack-simulator");
@@ -196,12 +198,23 @@ export default function StackSimulator() {
       </div>
 
       {/* Left Sidebar: Stack Builder */}
-      <aside id="left-sidebar" className="w-full lg:w-[350px] lg:absolute lg:left-4 lg:top-4 lg:bottom-4 z-10 border-b lg:border border-line bg-surface-0/80 backdrop-blur-xl lg:rounded-clinical flex flex-col overflow-y-auto custom-scrollbar shadow-2xl pointer-events-auto">
-        <div className="clinical-card p-4 flex-none border-b border-line bg-surface-50">
-          <div className="inline-block px-2 py-1 bg-accent-500/10 text-accent-400 rounded text-[9px] font-bold uppercase tracking-widest mb-3">Database Connected</div>
-          <h2 className="text-xl font-bold text-ink mb-1">Intervention Builder</h2>
-          <p className="text-xs text-ink-muted mb-5">Simulate interventions and regimens.</p>
+      <aside id="left-sidebar" className={`w-full lg:absolute lg:left-4 lg:top-4 z-10 border-b lg:border border-line bg-surface-0/80 backdrop-blur-xl lg:rounded-clinical flex flex-col custom-scrollbar shadow-2xl pointer-events-auto transition-all duration-300 ${leftMinimized ? 'lg:w-auto h-auto' : 'lg:w-[350px] lg:bottom-4 overflow-y-auto'}`}>
+        <PanelHeader 
+          title="Intervention Builder" 
+          subtitle={leftMinimized ? "" : "Simulate interventions and regimens"}
+          onToggle={() => setLeftMinimized(!leftMinimized)}
+          minimized={leftMinimized}
+        >
+          {!leftMinimized && (
+            <>
+              <div className="inline-block px-2 py-1 bg-accent-500/10 text-accent-400 rounded text-[9px] font-bold uppercase tracking-widest">DB Connected</div>
+            </>
+          )}
+        </PanelHeader>
 
+        {!leftMinimized && (
+          <>
+          <div className="clinical-card p-4 flex-none border-b border-line bg-surface-50">
           <div className="space-y-4">
             <div className="flex gap-2 p-1 bg-surface-100 rounded-clinical">
               {(["holistic", "pharma", "vanilla"] as const).map((m) => (
@@ -316,6 +329,8 @@ export default function StackSimulator() {
               </div>
           </div>
         </div>
+          </>
+        )}
       </aside>
     </div>
   );
