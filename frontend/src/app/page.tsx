@@ -62,6 +62,9 @@ export default function ConsolePage() {
   const [log, setLog] = useState<string[]>([]);
   const [liveR, setLiveR] = useState<number | null>(null);
 
+  const [leftMinimized, setLeftMinimized] = useState(false);
+  const [rightMinimized, setRightMinimized] = useState(false);
+
   useEffect(() => {
     setCurrentModule("dashboard");
   }, [setCurrentModule]);
@@ -145,13 +148,24 @@ export default function ConsolePage() {
       </div>
 
       {/* LEFT PANEL */}
-      <aside className="w-full lg:w-[320px] lg:absolute lg:left-4 lg:top-4 lg:bottom-4 z-10 border-b lg:border border-line bg-surface-0/80 backdrop-blur-xl lg:rounded-clinical flex flex-col overflow-y-auto custom-scrollbar shadow-2xl pointer-events-auto">
-        <PanelHeader title="Patient State Modifiers" subtitle="Compose pathological networks">
-          <span className="status-dot ok" />
-          <span className="section-label">Engine Online</span>
+      <aside className={`w-full lg:absolute lg:left-4 lg:top-4 z-10 border-b lg:border border-line bg-surface-0/80 backdrop-blur-xl lg:rounded-clinical flex flex-col custom-scrollbar shadow-2xl pointer-events-auto transition-all duration-300 ${leftMinimized ? 'lg:w-auto h-auto' : 'lg:w-[320px] lg:bottom-4 overflow-y-auto'}`}>
+        <PanelHeader 
+          title="Patient State Modifiers" 
+          subtitle={leftMinimized ? "" : "Compose pathological networks"}
+          onToggle={() => setLeftMinimized(!leftMinimized)}
+          minimized={leftMinimized}
+        >
+          {!leftMinimized && (
+            <>
+              <span className="status-dot ok" />
+              <span className="section-label">Engine Online</span>
+            </>
+          )}
         </PanelHeader>
 
-        <div className="p-4 border-b border-line space-y-2.5">
+        {!leftMinimized && (
+          <>
+            <div className="p-4 border-b border-line space-y-2.5">
           {PATHOLOGIES.map((p) => {
             const meta = PATHOLOGY_META[p];
             const active = activePathologies.includes(p);
@@ -235,15 +249,28 @@ export default function ConsolePage() {
             {liveR !== null && <span className="text-accent-400">live {liveR.toFixed(2)}</span>}
           </div>
         </div>
+          </>
+        )}
       </aside>
 
       {/* RIGHT PANEL */}
-      <aside className="w-full lg:w-[380px] lg:absolute lg:right-4 lg:top-4 lg:bottom-4 z-10 border-t lg:border border-line bg-surface-0/80 backdrop-blur-xl lg:rounded-clinical flex flex-col overflow-y-auto custom-scrollbar shadow-2xl pointer-events-auto">
-        <PanelHeader title="Diagnostic AI" subtitle="Topology + Pharmacology Analyzer">
-          <span className={`status-dot ${computing ? "warn" : "ok"}`} />
-          <span className="section-label">{computing ? "Computing" : "Idle"}</span>
+      <aside className={`w-full lg:absolute lg:right-4 lg:top-4 z-10 border-t lg:border border-line bg-surface-0/80 backdrop-blur-xl lg:rounded-clinical flex flex-col custom-scrollbar shadow-2xl pointer-events-auto transition-all duration-300 ${rightMinimized ? 'lg:w-auto h-auto' : 'lg:w-[380px] lg:bottom-4 overflow-y-auto'}`}>
+        <PanelHeader 
+          title="Diagnostic AI" 
+          subtitle={rightMinimized ? "" : "Topology + Pharmacology Analyzer"}
+          onToggle={() => setRightMinimized(!rightMinimized)}
+          minimized={rightMinimized}
+        >
+          {!rightMinimized && (
+            <>
+              <span className={`status-dot ${computing ? "warn" : "ok"}`} />
+              <span className="section-label">{computing ? "Computing" : "Idle"}</span>
+            </>
+          )}
         </PanelHeader>
 
+        {!rightMinimized && (
+          <>
         <div className="p-4 border-b border-line grid grid-cols-2 gap-2">
           <button className="btn-primary" onClick={() => runReport()} disabled={computing}>
             Calculate Now
@@ -327,6 +354,8 @@ export default function ConsolePage() {
             ))}
           </div>
         </div>
+          </>
+        )}
       </aside>
     </div>
   );
@@ -352,19 +381,30 @@ function PanelHeader({
   title,
   subtitle,
   children,
+  onToggle,
+  minimized,
 }: {
   title: string;
   subtitle: string;
   children?: React.ReactNode;
+  onToggle?: () => void;
+  minimized?: boolean;
 }) {
   return (
-    <div className="px-4 py-3 border-b border-line bg-surface-50">
+    <div className={`px-4 py-3 border-b border-line bg-surface-50 ${onToggle ? 'cursor-pointer hover:bg-surface-100 transition-colors' : ''}`} onClick={onToggle}>
       <div className="flex items-center justify-between">
         <div>
-          <div className="text-[14px] text-ink font-medium tracking-tight">{title}</div>
-          <div className="text-[10.5px] font-mono uppercase tracking-widest2 text-ink-muted mt-0.5">
-            {subtitle}
+          <div className="text-[14px] text-ink font-medium tracking-tight flex items-center gap-2">
+            {title}
+            {onToggle && (
+              <svg className={`w-4 h-4 text-ink-subtle transition-transform ${minimized ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+            )}
           </div>
+          {subtitle && (
+            <div className="text-[10.5px] font-mono uppercase tracking-widest2 text-ink-muted mt-0.5">
+              {subtitle}
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-1.5">{children}</div>
       </div>

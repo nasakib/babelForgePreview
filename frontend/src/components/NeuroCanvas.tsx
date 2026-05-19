@@ -49,6 +49,8 @@ export default function NeuroCanvas({
     activeStack: ctxStack,
     activePathologies: ctxPathologies,
     setIntegrityScore,
+    selectedNodeId,
+    setSelectedNodeId,
   } = useAI();
   const [simTime, setSimTime] = useState(0);
   const [liveR, setLiveR] = useState(0);
@@ -67,6 +69,8 @@ export default function NeuroCanvas({
     () => topology ?? composeTopology(pathologies),
     [topology, pathologies]
   );
+
+  const selectedNode = selectedNodeId !== null ? topo.nodes[selectedNodeId] : null;
 
   useEffect(() => {
     const timer = setInterval(() => setSimTime((t) => t + 1), 1000);
@@ -139,6 +143,22 @@ export default function NeuroCanvas({
         <div className="text-[10px] font-mono uppercase tracking-widest2 text-accent-400 bg-surface-0/60 p-2 rounded backdrop-blur-sm border border-line">
           T+ {Math.floor(simTime / 60).toString().padStart(2, '0')}:{(simTime % 60).toString().padStart(2, '0')} (SIMULATED DURATION)
         </div>
+        
+        {/* Dynamic Node Info Panel */}
+        {selectedNode && (
+          <div className="mt-2 w-64 bg-surface-0/90 backdrop-blur-xl border border-accent-500/50 p-3 rounded-clinical shadow-2xl pointer-events-auto animate-fade-in-up">
+            <div className="flex justify-between items-center mb-2 border-b border-line pb-1">
+              <span className="text-[10px] font-bold text-accent-400 uppercase tracking-widest">Node {selectedNode.id}</span>
+              <button className="text-ink-subtle hover:text-white" onClick={() => setSelectedNodeId(null)}>✕</button>
+            </div>
+            <div className="flex flex-col gap-1.5 text-[10px] font-mono tracking-widest2 text-ink">
+              <div className="flex justify-between"><span className="text-ink-muted">Region</span> <span style={{ color: REGION_COLOR[selectedNode.region as keyof typeof REGION_COLOR] }}>{selectedNode.region}</span></div>
+              <div className="flex justify-between"><span className="text-ink-muted">Hubness</span> <span>{selectedNode.hubness.toFixed(2)}</span></div>
+              <div className="flex justify-between"><span className="text-ink-muted">ω (Intrinsic)</span> <span>{selectedNode.omega.toFixed(2)}Hz</span></div>
+              <div className="flex justify-between"><span className="text-ink-muted">Coords</span> <span>{selectedNode.x.toFixed(0)}, {selectedNode.y.toFixed(0)}, {selectedNode.z.toFixed(0)}</span></div>
+            </div>
+          </div>
+        )}
       </div>
       
       <div className="absolute top-4 right-4 pointer-events-none flex flex-col items-end gap-2 z-10">
@@ -231,6 +251,7 @@ function BrainScene({
   activeStack: any[];
   onCoherence?: (R: number) => void;
 }) {
+  const { selectedNodeId, setSelectedNodeId } = useAI();
   // Pre-build node positions, colors, edge geometry
   const positions = useMemo(() => {
     const arr = new Float32Array(topo.N * 3);
@@ -397,6 +418,17 @@ function BrainScene({
         ref={instRef}
         args={[undefined, undefined, topo.N]}
         frustumCulled={false}
+        onClick={(e) => {
+          e.stopPropagation();
+          if (e.instanceId !== undefined) {
+            setSelectedNodeId(e.instanceId);
+          }
+        }}
+        onPointerMissed={(e) => {
+          if (e.type === 'click') {
+            setSelectedNodeId(null);
+          }
+        }}
       >
         <instancedBufferAttribute attach="instanceColor" args={[new Float32Array(topo.N * 3), 3]} />
         <sphereGeometry args={[1, 14, 14]} />

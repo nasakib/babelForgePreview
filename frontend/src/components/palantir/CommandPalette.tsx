@@ -43,12 +43,15 @@ export default function CommandPalette() {
       if (e.key === "Enter") {
         e.preventDefault();
         const cmd = filtered[cursor];
-        if (cmd) runCommand(cmd);
+        if (cmd) {
+          setOpen(false);
+          cmd.run({ push: (href) => router.push(href) });
+        }
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, filtered, cursor]);
+  }, [open, filtered, cursor, router]);
 
   useEffect(() => {
     if (open) {

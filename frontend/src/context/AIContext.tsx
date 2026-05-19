@@ -28,6 +28,8 @@ interface AIContextProps {
   // Visualization State
   viewPerspective: 'topology' | 'anatomy' | 'pharma' | 'physics';
   setViewPerspective: (mode: 'topology' | 'anatomy' | 'pharma' | 'physics') => void;
+  selectedNodeId: number | null;
+  setSelectedNodeId: (id: number | null) => void;
 
   /**
    * Wisdom — top-ranked, citation-grounded insights derived from the
@@ -54,6 +56,7 @@ export function AIProvider({ children }: { children: ReactNode }) {
   const [integrityScore, setIntegrityScore] = useState<number>(100);
   const [isAssistantOpen, setIsAssistantOpen] = useState<boolean>(false);
   const [viewPerspective, setViewPerspective] = useState<'topology' | 'anatomy' | 'pharma' | 'physics'>('topology');
+  const [selectedNodeId, setSelectedNodeId] = useState<number | null>(null);
   const [fmriDataset, setFmriDataset] = useState<FmriDataset | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
@@ -132,8 +135,9 @@ export function AIProvider({ children }: { children: ReactNode }) {
       isAssistantOpen, setIsAssistantOpen,
       triggerAIAnalysis,
       viewPerspective, setViewPerspective,
+      selectedNodeId, setSelectedNodeId,
       wisdom,
-      fmriDataset, setFmriDataset,
+      fmriDataset, setFmriDataset
     }}>
       {children}
     </AIContext.Provider>
