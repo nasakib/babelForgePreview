@@ -10,6 +10,11 @@ const STORAGE_KEY = "babelforge:state:v1";
 // It tracks what the user is currently doing (active states, molecules, UI focus)
 // so the AI can provide hyper-contextual insights.
 
+export interface TargetedOperation {
+  nodeId: number;
+  type: 'ablate' | 'stimulate' | 'inhibit';
+}
+
 interface AIContextProps {
   currentModule: string; // e.g., 'dashboard', 'stack-simulator'
   setCurrentModule: (module: string) => void;
@@ -30,6 +35,9 @@ interface AIContextProps {
   setViewPerspective: (mode: 'topology' | 'anatomy' | 'pharma' | 'physics') => void;
   selectedNodeId: number | null;
   setSelectedNodeId: (id: number | null) => void;
+  
+  targetedOperations: TargetedOperation[];
+  setTargetedOperations: (ops: TargetedOperation[]) => void;
 
   /**
    * Wisdom — top-ranked, citation-grounded insights derived from the
@@ -60,6 +68,7 @@ export function AIProvider({ children }: { children: ReactNode }) {
   const [isAssistantOpen, setIsAssistantOpen] = useState<boolean>(false);
   const [viewPerspective, setViewPerspective] = useState<'topology' | 'anatomy' | 'pharma' | 'physics'>('topology');
   const [selectedNodeId, setSelectedNodeId] = useState<number | null>(null);
+  const [targetedOperations, setTargetedOperations] = useState<TargetedOperation[]>([]);
   const [fmriDataset, setFmriDataset] = useState<FmriDataset | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
@@ -69,6 +78,7 @@ export function AIProvider({ children }: { children: ReactNode }) {
     setIntegrityScore(100);
     setViewPerspective('topology');
     setSelectedNodeId(null);
+    setTargetedOperations([]);
     setFmriDataset(null);
   };
 
@@ -148,6 +158,7 @@ export function AIProvider({ children }: { children: ReactNode }) {
       triggerAIAnalysis,
       viewPerspective, setViewPerspective,
       selectedNodeId, setSelectedNodeId,
+      targetedOperations, setTargetedOperations,
       wisdom,
       fmriDataset, setFmriDataset,
       resetEngine

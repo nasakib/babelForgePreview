@@ -63,6 +63,12 @@ export const PATHOLOGIES = [
   "ADHD",
   "TOURETTES",
   "WITHDRAWAL_OPIOID",
+  "SCHIZOPHRENIA",
+  "BIPOLAR",
+  "OCD",
+  "GAD",
+  "AUTISM",
+  "ADDICTION"
 ] as const;
 export type Pathology = (typeof PATHOLOGIES)[number];
 
@@ -105,6 +111,48 @@ export const PATHOLOGY_META: Record<
     subjective:
       "Anhedonia, autonomic storm, dysphoria, locus coeruleus hyperactivity.",
   },
+  SCHIZOPHRENIA: {
+    label: "Schizophrenia",
+    region: "Control",
+    tone: "Global Dysconnectivity",
+    subjective:
+      "Disorganized thought vectors, reality fracturing, salient misattribution.",
+  },
+  BIPOLAR: {
+    label: "Bipolar Disorder (Type I/II)",
+    region: "Limbic",
+    tone: "Cyclic Phase-Locking",
+    subjective:
+      "Rapid cycling between expansive hyperarousal (mania) and profound DMN collapse (depression).",
+  },
+  OCD: {
+    label: "Obsessive-Compulsive Disorder",
+    region: "SomatoMotor",
+    tone: "CSTC Loop Hyperactivity",
+    subjective:
+      "Intrusive persistent thoughts triggering ritualistic motor discharge to relieve tension.",
+  },
+  GAD: {
+    label: "Generalized Anxiety Disorder",
+    region: "VentAttn",
+    tone: "Ventral Attention Hyper-vigilance",
+    subjective:
+      "Constant hum of threat detection, inability to downregulate autonomic arousal.",
+  },
+  AUTISM: {
+    label: "Autism Spectrum",
+    region: "Visual",
+    tone: "Local Hyperconnectivity",
+    subjective:
+      "Intense local sensory processing at the cost of global integration, high bottom-up data density.",
+  },
+  ADDICTION: {
+    label: "Substance Use Disorder",
+    region: "Limbic",
+    tone: "Dopaminergic Hijacking",
+    subjective:
+      "Salience network strictly locked to substance-seeking, massive attenuation of baseline rewards.",
+  }
 };
 
 // ----------------------------------------------------------------------------
@@ -256,6 +304,42 @@ export const MODIFIERS: Record<Pathology, ModifierSpec> = {
     maxAddedDim: 5,
     biasRegion: "Limbic",
   },
+  SCHIZOPHRENIA: {
+    removeCliques: 25,
+    addCliques: 5,
+    maxAddedDim: 4,
+    biasRegion: "Control",
+  },
+  BIPOLAR: {
+    removeCliques: 15,
+    addCliques: 20,
+    maxAddedDim: 7,
+    biasRegion: "Limbic",
+  },
+  OCD: {
+    removeCliques: 5,
+    addCliques: 30,
+    maxAddedDim: 10,
+    biasRegion: "SomatoMotor",
+  },
+  GAD: {
+    removeCliques: 10,
+    addCliques: 15,
+    maxAddedDim: 6,
+    biasRegion: "VentAttn",
+  },
+  AUTISM: {
+    removeCliques: 20,
+    addCliques: 25,
+    maxAddedDim: 8,
+    biasRegion: "Visual",
+  },
+  ADDICTION: {
+    removeCliques: 15,
+    addCliques: 15,
+    maxAddedDim: 6,
+    biasRegion: "Limbic",
+  }
 };
 
 export interface ComposedTopology extends Topology {
@@ -265,7 +349,7 @@ export interface ComposedTopology extends Topology {
   edgeStats: { added: number; removed: number; total: number };
 }
 
-export function composeTopology(states: Pathology[]): ComposedTopology {
+export function composeTopology(states: Pathology[], targetedOperations: { nodeId: number, type: string }[] = []): ComposedTopology {
   const base = getBaselineTopology();
   // Deep-clone adjacency only (cheap O(N²)).
   const adjacency = new Uint8Array(base.adjacency);
@@ -334,6 +418,27 @@ export function composeTopology(states: Pathology[]): ComposedTopology {
             edgesAdded += 1;
           }
         }
+    }
+  }
+
+  // 3. Apply Targeted Operations (Micro-level)
+  for (const op of targetedOperations) {
+    if (op.nodeId >= 0 && op.nodeId < N) {
+      if (op.type === 'ablate') {
+        // Sever all edges to this node
+        for (let i = 0; i < N; i++) {
+          if (adjacency[op.nodeId * N + i]) {
+             adjacency[op.nodeId * N + i] = 0;
+             adjacency[i * N + op.nodeId] = 0;
+             edgesRemoved++;
+          }
+        }
+        nodes[op.nodeId].omega = 0.01; // Effectively silenced
+      } else if (op.type === 'stimulate') {
+        nodes[op.nodeId].omega *= 2.0; // Boost intrinsic frequency
+      } else if (op.type === 'inhibit') {
+        nodes[op.nodeId].omega *= 0.5; // Dampen intrinsic frequency
+      }
     }
   }
 

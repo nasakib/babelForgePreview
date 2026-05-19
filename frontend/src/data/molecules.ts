@@ -103,4 +103,11 @@ export const molecules = [
     { id: 'sleep', name: 'Optimized Sleep (8hr+)', class: 'lifestyle', classLabel: 'Circadian Rhythm', isLifestyle: true, svg: svgIndole, halfLife: 'long', effects: { arousal: -0.2, dampening: 0.4, chaos: -1.0, repair: 1.8 } },
     { id: 'omega3', name: 'Omega-3 (EPA/DHA)', class: 'lifestyle', classLabel: 'Nutritional Support', isLifestyle: true, svg: svgPhen, halfLife: 'long', effects: { arousal: 0.1, dampening: 0.1, chaos: -0.2, repair: 0.4 } },
     { id: 'sauna', name: 'Sauna / Heat Therapy', class: 'lifestyle', classLabel: 'Thermal Stress', isLifestyle: true, svg: svgTricyclic, halfLife: 'short', effects: { arousal: 0.3, dampening: 0.4, chaos: -0.1, repair: 0.6 } },
+
+    // Surgical & Neuromodulatory Procedures
+    { id: 'tms', name: 'Transcranial Magnetic Stimulation', class: 'novel', classLabel: 'Neuromodulation', isBlue: true, svg: svgPhen, halfLife: 'long', effects: { arousal: 0.8, dampening: -0.1, chaos: -0.5, repair: 1.5 } },
+    { id: 'dbs', name: 'Deep Brain Stimulation (DBS)', class: 'novel', classLabel: 'Surgical Implant', isBlue: true, svg: svgTricyclic, halfLife: 'long', effects: { arousal: 1.0, dampening: 1.2, chaos: -1.0, repair: 0.5 } },
+    { id: 'vns', name: 'Vagus Nerve Stimulation (VNS)', class: 'novel', classLabel: 'Surgical Implant', isBlue: true, svg: svgIndole, halfLife: 'long', effects: { arousal: -0.2, dampening: 0.6, chaos: -0.8, repair: 0.8 } },
+    { id: 'ect', name: 'Electroconvulsive Therapy (ECT)', class: 'novel', classLabel: 'Neuromodulation', svg: svgPhen, halfLife: 'medium', effects: { arousal: -0.5, dampening: 1.5, chaos: 1.0, repair: 2.0 } },
+    { id: 'tcca', name: 'Targeted Cliques-Complex Ablation', class: 'novel', classLabel: 'HIFU Ablation', isBabelForge: true, svg: svgIndole, halfLife: 'long', effects: { arousal: -1.5, dampening: 1.5, chaos: -2.0, repair: 0.0 } },
 ];

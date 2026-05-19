@@ -41,6 +41,7 @@ export default function ConsolePage() {
 
   const [weight, setWeight] = useState(70);
   const [tolerance, setTolerance] = useState(0);
+  const [age, setAge] = useState(35);
 
   const topo = useMemo(() => composeTopology(activePathologies as Pathology[]), [activePathologies]);
 
@@ -77,6 +78,7 @@ export default function ConsolePage() {
         const r = runDiagnosis(activePathologies as Pathology[], vectors, {
           weightKg: weight,
           toleranceMonths: tolerance,
+          ageYears: age,
         });
         setReport(r);
         setIntegrityScore(r.integrity);
@@ -92,7 +94,7 @@ export default function ConsolePage() {
       }, 16);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [activePathologies, vectors, weight, tolerance, setIntegrityScore]
+    [activePathologies, vectors, weight, tolerance, age, setIntegrityScore]
   );
 
   useEffect(() => {
@@ -109,6 +111,7 @@ export default function ConsolePage() {
       const result = autoOptimize(activePathologies as Pathology[], {
         weightKg: weight,
         toleranceMonths: tolerance,
+        ageYears: age,
       });
       setActiveStack(result.regimen);
       setLog((l) =>
@@ -121,7 +124,7 @@ export default function ConsolePage() {
       setComputing(false);
     }, 30);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activePathologies, weight, tolerance, setActiveStack]);
+  }, [activePathologies, weight, tolerance, age, setActiveStack]);
 
   const togglePathology = (p: Pathology) => {
     const next = activePathologies.includes(p)
@@ -203,6 +206,7 @@ export default function ConsolePage() {
         </div>
 
         <div className="p-4 border-b border-line space-y-4">
+          <SliderField label="Patient Age" unit="yr" value={age} min={18} max={100} step={1} onChange={setAge} />
           <SliderField label="Patient Mass" unit="kg" value={weight} min={40} max={140} step={1} onChange={setWeight} />
           <SliderField label="Tolerance" unit="mo" value={tolerance} min={0} max={48} step={1} onChange={setTolerance} />
         </div>

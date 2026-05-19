@@ -51,6 +51,8 @@ export default function NeuroCanvas({
     setIntegrityScore,
     selectedNodeId,
     setSelectedNodeId,
+    targetedOperations,
+    setTargetedOperations,
   } = useAI();
   const [simTime, setSimTime] = useState(0);
   const [liveR, setLiveR] = useState(0);
@@ -66,8 +68,8 @@ export default function NeuroCanvas({
   );
 
   const topo = useMemo<ComposedTopology>(
-    () => topology ?? composeTopology(pathologies),
-    [topology, pathologies]
+    () => topology ?? composeTopology(pathologies, targetedOperations),
+    [topology, pathologies, targetedOperations]
   );
 
   const selectedNode = selectedNodeId !== null ? topo.nodes[selectedNodeId] : null;
@@ -76,6 +78,11 @@ export default function NeuroCanvas({
     const timer = setInterval(() => setSimTime((t) => t + 1), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  const handleOperation = (type: 'ablate' | 'stimulate' | 'inhibit') => {
+    if (selectedNodeId === null) return;
+    setTargetedOperations([...targetedOperations, { nodeId: selectedNodeId, type }]);
+  };
 
   const prognosis = useMemo(() => {
     if (vectors.chaos > 1.5 && vectors.repair < 0.5) return "CRITICAL DEGRADATION EXPECTED (High Chaos)";
@@ -156,6 +163,21 @@ export default function NeuroCanvas({
               <div className="flex justify-between"><span className="text-ink-muted">Hubness</span> <span>{selectedNode.hubness.toFixed(2)}</span></div>
               <div className="flex justify-between"><span className="text-ink-muted">ω (Intrinsic)</span> <span>{selectedNode.omega.toFixed(2)}Hz</span></div>
               <div className="flex justify-between"><span className="text-ink-muted">Coords</span> <span>{selectedNode.x.toFixed(0)}, {selectedNode.y.toFixed(0)}, {selectedNode.z.toFixed(0)}</span></div>
+            </div>
+            
+            <div className="mt-3 pt-2 border-t border-line">
+              <div className="text-[9px] uppercase font-bold text-ink-muted tracking-widest mb-1.5">Targeted Operations</div>
+              <div className="flex flex-col gap-1.5">
+                <button onClick={() => handleOperation('stimulate')} className="w-full text-left px-2 py-1.5 bg-surface-50 hover:bg-surface-100 border border-line rounded text-[9px] font-mono text-ink transition-colors flex justify-between">
+                  <span>Stimulate (TMS)</span> <span className="text-ok">+ω</span>
+                </button>
+                <button onClick={() => handleOperation('inhibit')} className="w-full text-left px-2 py-1.5 bg-surface-50 hover:bg-surface-100 border border-line rounded text-[9px] font-mono text-ink transition-colors flex justify-between">
+                  <span>Inhibit (DBS)</span> <span className="text-warn">-ω</span>
+                </button>
+                <button onClick={() => handleOperation('ablate')} className="w-full text-left px-2 py-1.5 bg-crit/10 hover:bg-crit/20 border border-crit/30 rounded text-[9px] font-mono text-crit transition-colors flex justify-between">
+                  <span>Ablate (TCCA)</span> <span>Sever Edges</span>
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -394,10 +416,10 @@ function BrainScene({
           (vectors.dampening > 0.3 && (cls === "Default" || cls === "Limbic")) ||
           (vectors.repair > 0.3);
         tmpColor.current.set(targeted ? baseHex : "#2a3441");
-        if (targeted) tmpColor.current.multiplyScalar(0.8 + amp * 0.4);
+        if (targeted) tmpColor.current.multiplyScalar(0.8 + amp * 0.4 + hub * 0.2);
       } else {
         // Region colors for anatomy/topology
-        tmpColor.current.set(baseHex).multiplyScalar(0.6 + 0.4 * amp);
+        tmpColor.current.set(baseHex).multiplyScalar(0.6 + 0.4 * amp + hub * 0.15);
       }
       inst.setColorAt(i, tmpColor.current);
     }

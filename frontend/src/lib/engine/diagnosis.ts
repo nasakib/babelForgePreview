@@ -32,6 +32,7 @@ export interface PharmaVectors {
 export interface PatientParams {
   weightKg: number;
   toleranceMonths: number; // global, simplified
+  ageYears: number;
 }
 
 export interface DiagnosticReport {
@@ -59,11 +60,15 @@ export function runDiagnosis(
   const topo = composeTopology(states);
   const weightFactor = 70 / Math.max(40, patient.weightKg);
   const tolFactor = 1 / (1 + Math.log1p(patient.toleranceMonths * 0.08));
+  // Age factor: older age generally reduces neuroplasticity (repair efficacy) and increases sensitivity to dampening/chaos
+  const ageFactor = patient.ageYears > 60 ? (1 - (patient.ageYears - 60) * 0.015) : 1.0;
+  const ageSensitivity = patient.ageYears > 65 ? 1.2 : 1.0;
+
   const v: PharmaVectors = {
-    arousal: vectors.arousal * weightFactor * tolFactor,
-    dampening: vectors.dampening * weightFactor * tolFactor,
-    chaos: vectors.chaos * weightFactor * tolFactor,
-    repair: vectors.repair * weightFactor * tolFactor,
+    arousal: vectors.arousal * weightFactor * tolFactor * ageSensitivity,
+    dampening: vectors.dampening * weightFactor * tolFactor * ageSensitivity,
+    chaos: vectors.chaos * weightFactor * tolFactor * ageSensitivity,
+    repair: vectors.repair * weightFactor * tolFactor * Math.max(0.5, ageFactor),
   };
 
   const K = effectiveCoupling(v);
