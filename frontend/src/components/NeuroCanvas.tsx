@@ -56,8 +56,8 @@ export default function NeuroCanvas({
   // Single source of truth: props override AIContext. Defaulting to the
   // context means a bare <NeuroCanvas /> mount anywhere in the app stays
   // synchronized with the user's active pathologies and stack.
-  const activeStack = stackProp ?? ctxStack ?? [];
-  const pathologies = (pathProp ?? (ctxPathologies as Pathology[])) ?? [];
+  const activeStack = useMemo(() => stackProp ?? ctxStack ?? [], [stackProp, ctxStack]);
+  const pathologies = useMemo(() => (pathProp ?? (ctxPathologies as Pathology[])) ?? [], [pathProp, ctxPathologies]);
   const vectors = useMemo<PharmaVectors>(
     () => vectorsProp ?? computeStackVectors(activeStack),
     [vectorsProp, activeStack],
@@ -267,15 +267,34 @@ function BrainScene({
   const edgeGeo = useMemo(() => {
     const geo = new THREE.BufferGeometry();
     const arr = new Float32Array(sampledEdges.length * 6);
+    const colArr = new Float32Array(sampledEdges.length * 6);
+    const c1 = new THREE.Color();
+    const c2 = new THREE.Color();
+
     sampledEdges.forEach(([u, v], i) => {
-      arr[i * 6] = topo.nodes[u].x;
-      arr[i * 6 + 1] = topo.nodes[u].y;
-      arr[i * 6 + 2] = topo.nodes[u].z;
-      arr[i * 6 + 3] = topo.nodes[v].x;
-      arr[i * 6 + 4] = topo.nodes[v].y;
-      arr[i * 6 + 5] = topo.nodes[v].z;
+      const nu = topo.nodes[u];
+      const nv = topo.nodes[v];
+
+      arr[i * 6] = nu.x;
+      arr[i * 6 + 1] = nu.y;
+      arr[i * 6 + 2] = nu.z;
+      arr[i * 6 + 3] = nv.x;
+      arr[i * 6 + 4] = nv.y;
+      arr[i * 6 + 5] = nv.z;
+
+      // Color edges based on region
+      c1.set(REGION_COLOR[nu.region as keyof typeof REGION_COLOR] || "#ffffff");
+      c2.set(REGION_COLOR[nv.region as keyof typeof REGION_COLOR] || "#ffffff");
+
+      colArr[i * 6] = c1.r;
+      colArr[i * 6 + 1] = c1.g;
+      colArr[i * 6 + 2] = c1.b;
+      colArr[i * 6 + 3] = c2.r;
+      colArr[i * 6 + 4] = c2.g;
+      colArr[i * 6 + 5] = c2.b;
     });
     geo.setAttribute("position", new THREE.BufferAttribute(arr, 3));
+    geo.setAttribute("color", new THREE.BufferAttribute(colArr, 3));
     return geo;
   }, [sampledEdges, topo]);
 
@@ -379,6 +398,7 @@ function BrainScene({
         args={[undefined, undefined, topo.N]}
         frustumCulled={false}
       >
+        <instancedBufferAttribute attach="instanceColor" args={[new Float32Array(topo.N * 3), 3]} />
         <sphereGeometry args={[1, 14, 14]} />
         <meshStandardMaterial
           color="#ffffff"

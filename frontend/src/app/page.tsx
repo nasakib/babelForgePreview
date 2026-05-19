@@ -132,9 +132,20 @@ export default function ConsolePage() {
   };
 
   return (
-    <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden bg-canvas">
-      {/* LEFT */}
-      <aside className="w-full lg:w-[320px] shrink-0 border-r border-line bg-surface-0 flex flex-col overflow-y-auto custom-scrollbar">
+    <div className="flex-1 relative overflow-hidden bg-canvas flex flex-col lg:block">
+      {/* BACKGROUND CANVAS */}
+      <div className="lg:absolute lg:inset-0 z-0 min-h-[50vh] lg:min-h-0 relative">
+        <NeuroCanvas
+          topology={topo}
+          vectors={vectors}
+          pathologies={activePathologies as Pathology[]}
+          activeStack={activeStack}
+          onCoherence={setLiveR}
+        />
+      </div>
+
+      {/* LEFT PANEL */}
+      <aside className="w-full lg:w-[320px] lg:absolute lg:left-4 lg:top-4 lg:bottom-4 z-10 border-b lg:border border-line bg-surface-0/80 backdrop-blur-xl lg:rounded-clinical flex flex-col overflow-y-auto custom-scrollbar shadow-2xl pointer-events-auto">
         <PanelHeader title="Patient State Modifiers" subtitle="Compose pathological networks">
           <span className="status-dot ok" />
           <span className="section-label">Engine Online</span>
@@ -226,19 +237,8 @@ export default function ConsolePage() {
         </div>
       </aside>
 
-      {/* MIDDLE */}
-      <section className="flex-1 relative min-h-[60vh] lg:min-h-0 border-r border-line">
-        <NeuroCanvas
-          topology={topo}
-          vectors={vectors}
-          pathologies={activePathologies as Pathology[]}
-          activeStack={activeStack}
-          onCoherence={setLiveR}
-        />
-      </section>
-
-      {/* RIGHT */}
-      <aside className="w-full lg:w-[380px] shrink-0 border-l border-line bg-surface-0 flex flex-col overflow-y-auto custom-scrollbar">
+      {/* RIGHT PANEL */}
+      <aside className="w-full lg:w-[380px] lg:absolute lg:right-4 lg:top-4 lg:bottom-4 z-10 border-t lg:border border-line bg-surface-0/80 backdrop-blur-xl lg:rounded-clinical flex flex-col overflow-y-auto custom-scrollbar shadow-2xl pointer-events-auto">
         <PanelHeader title="Diagnostic AI" subtitle="Topology + Pharmacology Analyzer">
           <span className={`status-dot ${computing ? "warn" : "ok"}`} />
           <span className="section-label">{computing ? "Computing" : "Idle"}</span>

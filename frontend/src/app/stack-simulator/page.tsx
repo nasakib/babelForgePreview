@@ -152,14 +152,51 @@ export default function StackSimulator() {
   };
 
   return (
-    <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden w-full h-app-mobile lg:h-[calc(100vh-3rem)]">
+    <div className="flex-1 flex flex-col relative overflow-hidden bg-canvas lg:block">
+      {/* Background Canvas */}
+      <div className="lg:absolute lg:inset-0 z-0 relative min-h-[50vh] lg:min-h-0">
+        <NeuroCanvas activeStack={stack} vectors={simulationState.net} />
+
+        {/* Overlay Info (Centered/Top) */}
+        <div className="absolute top-6 left-6 pointer-events-none z-10 lg:left-[380px] lg:right-[320px] flex flex-col items-center text-center">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-2 h-2 rounded-full bg-accent-500/100 animate-pulse"></div>
+            <span className="text-[10px] font-bold text-accent-400 uppercase tracking-widest">React Three Fiber Engine</span>
+          </div>
+          <h4 className="text-xl font-bold text-ink font-semibold">{simulationState.label}</h4>
+          <p className="text-xs text-ink-subtle mt-1 max-w-sm leading-relaxed drop-shadow">{simulationState.desc}</p>
+          <div className="mt-2 pt-2 border-t border-accent-500/30 max-w-sm">
+              <span className="text-[9px] uppercase font-bold text-crit block mb-1">Projected Subjective Experience</span>
+              <p className="text-xs text-ink-subtle italic leading-relaxed drop-shadow">{simulationState.subj}</p>
+          </div>
+        </div>
+
+        {/* View Controls (Bottom Center) */}
+        <div className="absolute bottom-6 left-6 right-6 lg:left-[380px] lg:right-[320px] pointer-events-auto z-10 flex justify-center">
+          <div className="p-4 bg-surface-50/80 border border-line-strong rounded-clinical backdrop-blur-xl shadow-2xl flex flex-col gap-3 min-w-[250px] text-center">
+            <div className="text-[9px] uppercase font-bold text-accent-400 mb-1 tracking-widest">Baseline Alignment (Healthy)</div>
+            <div className="flex justify-between items-end mb-1 px-1">
+                <span className="text-xs font-bold text-ink-muted">Order (r)</span>
+                <span className="text-lg text-ok font-mono font-bold">{simulationState.sync.toFixed(2)}</span>
+            </div>
+            <div className="w-full bg-surface-100 rounded-full h-1 mt-1 overflow-hidden">
+                <div className="h-full bg-ok transition-all duration-300" style={{width: `${simulationState.sync * 100}%`}}></div>
+            </div>
+            <button onClick={() => triggerAIAnalysis("Analyze the pharmacological interactions in my current stack.")} className="mt-2 w-full bg-accent-500/80 hover:bg-accent-500/100 text-ink text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-md transition-all border border-accent-400/50 backdrop-blur-md shadow-lg flex items-center justify-center gap-2">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+              Ask babelAI
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Left Sidebar: Stack Builder */}
-      <div id="left-sidebar" className="w-full lg:w-[350px] bg-surface-0 border-r border-line flex-none overflow-y-auto custom-scrollbar z-20 flex flex-col p-4 shadow-sm shrink-0">
-        <div className="clinical-card p-4 flex-none mb-4">
+      <aside id="left-sidebar" className="w-full lg:w-[350px] lg:absolute lg:left-4 lg:top-4 lg:bottom-4 z-10 border-b lg:border border-line bg-surface-0/80 backdrop-blur-xl lg:rounded-clinical flex flex-col overflow-y-auto custom-scrollbar shadow-2xl pointer-events-auto">
+        <div className="clinical-card p-4 flex-none border-b border-line bg-surface-50">
           <div className="inline-block px-2 py-1 bg-accent-500/10 text-accent-400 rounded text-[9px] font-bold uppercase tracking-widest mb-3">Database Connected</div>
           <h2 className="text-xl font-bold text-ink mb-1">NeuroStack Builder</h2>
           <p className="text-xs text-ink-muted mb-5">Simulate interactions across indexed compounds.</p>
-          
+
           <div className="space-y-4">
             <div>
               <label className="text-[10px] uppercase font-bold text-ink-muted block mb-2 tracking-widest">Search</label>
@@ -257,43 +294,7 @@ export default function StackSimulator() {
               </div>
           </div>
         </div>
-      </div>
-
-      {/* Right Panel: 3D Visualization */}
-      <div className="flex-grow clinical-card m-3 lg:m-4 p-1 shadow-sm flex flex-col relative min-h-[60vh] lg:min-h-0">
-        <NeuroCanvas activeStack={stack} vectors={simulationState.net} />
-        
-        {/* Overlay Info */}
-        <div className="absolute top-6 left-6 pointer-events-none z-10">
-          <div className="flex items-center gap-2 mb-1">
-            <div className="w-2 h-2 rounded-full bg-accent-500/100 animate-pulse"></div>
-            <span className="text-[10px] font-bold text-accent-400 uppercase tracking-widest">React Three Fiber Engine</span>
-          </div>
-          <h4 className="text-xl font-bold text-ink font-semibold">{simulationState.label}</h4>
-          <p className="text-xs text-ink-subtle mt-1 max-w-sm leading-relaxed drop-shadow">{simulationState.desc}</p>
-          <div className="mt-2 pt-2 border-t border-accent-500/30 max-w-sm">
-              <span className="text-[9px] uppercase font-bold text-crit block mb-1">Projected Subjective Experience</span>
-              <p className="text-xs text-ink-subtle italic leading-relaxed drop-shadow">{simulationState.subj}</p>
-          </div>
-          <button onClick={() => triggerAIAnalysis("Analyze the pharmacological interactions in my current stack.")} className="mt-4 bg-accent-500/80 hover:bg-accent-500/100 text-ink text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-md transition-all border border-accent-400/50 backdrop-blur-md shadow-lg flex items-center gap-2 pointer-events-auto">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-              Ask FORGEai
-          </button>
-        </div>
-
-        <div className="absolute bottom-6 right-6 p-4 bg-surface-50 border border-line-strong rounded-clinical backdrop-blur-xl min-w-[200px] shadow-2xl z-10 flex flex-col gap-3">
-            <div>
-                <div className="text-[9px] uppercase font-bold text-accent-400 mb-2 tracking-widest">Baseline Alignment (Healthy)</div>
-                <div className="flex justify-between items-end mb-1">
-                    <span className="text-xs font-bold text-ink-muted">Order (r)</span>
-                    <span className="text-lg text-ok font-mono font-bold">{simulationState.sync.toFixed(2)}</span>
-                </div>
-                <div className="w-full bg-surface-100 rounded-full h-1 mt-2 overflow-hidden">
-                    <div className="h-full bg-ok transition-all duration-300" style={{width: `${simulationState.sync * 100}%`}}></div>
-                </div>
-            </div>
-        </div>
-      </div>
+      </aside>
     </div>
   );
 }
