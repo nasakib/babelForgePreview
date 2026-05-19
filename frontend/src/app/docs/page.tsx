@@ -120,6 +120,7 @@ function Overview() {
             ["Compound Library (/compounds)", "Reference cards for precision + conventional compounds."],
             ["Signal Analyzer (/signal-analyzer)", "Multi-band EEG with Stacked / Compress modes."],
             ["fMRI Ingest (/fmri-analysis)", "Upload BOLD → /api/fmri/analyze → patient topology."],
+            ["Anomaly Scan (/anomaly-scan)", "Guideline-anchored heads-up scanner over vitals, labs, lifestyle. Verified + Novice modes."],
             ["11D Topology (/11d-projection)", "Real-time Kuramoto on the Schaefer-200 connectome."],
             ["Pharma Projection (/pharma-projection)", "Pre/post-treatment network projection from /api/pharma."],
             ["Validation (/studies)", "Reference studies and benchmarks."],
@@ -136,7 +137,7 @@ function Overview() {
         <h2 className="text-base font-bold text-ink mb-2">Keyboard</h2>
         <p className="text-xs">
           <kbd className="font-mono text-accent-300">F1</kbd>–
-          <kbd className="font-mono text-accent-300">F8</kbd> jump between
+          <kbd className="font-mono text-accent-300">F10</kbd> jump between
           modules in the order shown above. Inputs and editable surfaces
           remain unaffected.
         </p>
@@ -214,7 +215,11 @@ function Workflow() {
       d: "fMRI Ingest (F5) uploads a BOLD file to /api/fmri/analyze. The returned topology + diagnostic profile replaces the synthetic baseline for personalised exploration.",
     },
     {
-      t: "5. Ask FORGEai",
+      t: "5. Run an anomaly scan",
+      d: "Anomaly Scan (F6) takes the patient's vitals, labs and lifestyle inputs and flags entries that cross guideline thresholds (Verified mode — ACC/AHA, ADA, KDIGO, NCEP ATP III, WHO, USPSTF) or looser self-report patterns (Novice mode). Pharmacology hits — DDIs, serotonin-syndrome risk, QT-prolongation, pregnancy and allergy matches — are folded into the same view. Not a diagnosis; a heads-up worth raising with a clinician.",
+    },
+    {
+      t: "6. Ask FORGEai",
       d: "Open the docked assistant (bottom right). Every query is POSTed to /api/chat with the current module, pathologies, regimen and integrity score so answers are context-aware.",
     },
   ];

@@ -10,10 +10,11 @@ const NAV_ITEMS: { href: string; label: string; code: string }[] = [
   { href: '/compounds',         label: 'Compound Library',code: 'F3' },
   { href: '/signal-analyzer',   label: 'Signal Analyzer', code: 'F4' },
   { href: '/fmri-analysis',     label: 'fMRI Ingest',     code: 'F5' },
-  { href: '/11d-projection',    label: '11D Topology',    code: 'F6' },
-  { href: '/pharma-projection', label: 'Pharma Projection',code: 'F7'},
-  { href: '/studies',           label: 'Validation',      code: 'F8' },
-  { href: '/fourier',           label: 'Fourier',         code: 'F9' },
+  { href: '/anomaly-scan',      label: 'Anomaly Scan',    code: 'F6' },
+  { href: '/11d-projection',    label: '11D Topology',    code: 'F7' },
+  { href: '/pharma-projection', label: 'Pharma Projection',code: 'F8'},
+  { href: '/studies',           label: 'Validation',      code: 'F9' },
+  { href: '/fourier',           label: 'Fourier',         code: 'F10' },
 ];
 
 export default function Navbar() {
