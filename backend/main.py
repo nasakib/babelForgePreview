@@ -258,6 +258,44 @@ def get_pharma_data():
         "drugs": drugs
     }
 
+class SimulateRequest(BaseModel):
+    experience: str
+    context: Dict[str, Any]
+
+@app.post("/api/simulate")
+def simulate_experience(req: SimulateRequest):
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        return {"error": "GEMINI_API_KEY not configured."}
+    
+    genai.configure(api_key=api_key)
+    try:
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        
+        prompt = (
+            "You are babelForge's simulation engine. The user has described a subjective experience, intervention, or state. "
+            "You must map this experience into exactly 4 pharmacological/topological vectors (arousal, dampening, chaos, repair) "
+            "each ranging from -2.0 to 3.0. "
+            "You must also provide a short 'label' (e.g. 'Acute Stress Response'), a 'desc' (objective topological description), "
+            "and a 'subj' (projected subjective feeling). "
+            f"User Experience: {req.experience}\n"
+            f"Current Baseline Pathologies: {req.context.get('pathologies', [])}\n"
+            "Return ONLY a valid JSON object with the following exact keys: "
+            '{"arousal": float, "dampening": float, "chaos": float, "repair": float, "label": "string", "desc": "string", "subj": "string"}'
+        )
+        
+        response = model.generate_content(prompt)
+        text = response.text.strip()
+        if text.startswith("```json"): text = text[7:]
+        if text.startswith("```"): text = text[3:]
+        if text.endswith("```"): text = text[:-3]
+        
+        import json
+        data = json.loads(text)
+        return data
+    except Exception as e:
+        return {"error": str(e)}
+
 @app.post("/api/chat")
 def chat_endpoint(req: ChatRequest):
     api_key = os.environ.get("GEMINI_API_KEY")
