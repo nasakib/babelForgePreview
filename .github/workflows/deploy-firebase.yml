@@ -8,7 +8,7 @@ on:
       - 'frontend/**'
       - 'firebase.json'
       - '.firebaserc'
-      - '.github/workflows/deploy-firebase.yml'
+      - '.github/workflows/**'
   workflow_dispatch:
 
 jobs:
