@@ -251,8 +251,8 @@ kbd {
 .status-bar {
   height: 22px;
   flex: none;
-  border-top: 1px solid var(--border);
-  background: #0a0e14;
+  border-top: 1px solid var(--border-line-strong);
+  background: var(--bg-surface-50);
   display: flex; align-items: center;
   padding: 0 0.5rem;
   font-family: var(--font-mono), 'JetBrains Mono', monospace;
@@ -262,6 +262,8 @@ kbd {
   gap: 0.75rem;
   overflow-x: auto;
   white-space: nowrap;
+  position: relative;
+  z-index: 50;
 }
 .status-bar .seg { display: inline-flex; align-items: center; gap: 0.4rem; }
 .status-bar .seg .k { color: var(--ink-muted); text-transform: uppercase; }

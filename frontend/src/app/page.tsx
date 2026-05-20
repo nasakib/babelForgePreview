@@ -313,11 +313,14 @@ export default function ConsolePage() {
               {(activeStack as RegimenItem[]).map((item) => (
                 <div
                   key={item.id}
-                  className="flex items-center justify-between border border-line rounded-sharp px-2.5 py-1.5"
+                  className={`flex items-center justify-between border rounded-sharp px-2.5 py-1.5 ${item.isBabelForge ? 'border-accent-500/40 bg-accent-500/10' : 'border-line'}`}
                 >
                   <div className="min-w-0">
-                    <div className="text-[12px] text-ink truncate">{item.name}</div>
-                    <div className="text-[9.5px] font-mono uppercase tracking-widest2 text-ink-muted">
+                    <div className={`text-[12px] truncate ${item.isBabelForge ? 'text-accent-400 font-bold' : 'text-ink'}`}>
+                      {item.name}
+                      {item.isBabelForge && <span className="ml-1.5 text-[8px] font-extrabold uppercase tracking-widest border border-accent-500/30 bg-accent-500/20 text-accent-400 px-1 py-0.5 rounded align-text-bottom">babelForge</span>}
+                    </div>
+                    <div className="text-[9.5px] font-mono uppercase tracking-widest2 text-ink-muted mt-0.5">
                       {item.classLabel}
                     </div>
                   </div>
