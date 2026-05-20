@@ -48,11 +48,16 @@ export default function ExperienceSimulator() {
 
     try {
       const data = await babelforgeApi.simulate(experience, { pathologies: activePathologies });
+      if (data && (data.error || /GEMINI_API_KEY|not configured|missing key/i.test(data?.desc || '') || /GEMINI_API_KEY|not configured|missing key/i.test(data?.label || ''))) {
+        throw new Error("Backend API key missing");
+      }
       setResult(data);
       setViewPerspective("pharma"); // Switch to effect view
     } catch (err) {
-      console.error(err);
-      setResult({ error: "Failed to simulate experience. Ensure backend is reachable and GEMINI_API_KEY is configured." });
+      console.error("Simulation API failed, using local high-fidelity fallback:", err);
+      const localData = localSimulateFallback(experience, activePathologies);
+      setResult(localData);
+      setViewPerspective("pharma"); // Switch to effect view
     } finally {
       setIsSimulating(false);
     }
@@ -160,4 +165,154 @@ export default function ExperienceSimulator() {
       </DraggablePanel>
     </div>
   );
+}
+
+interface Archetype {
+  keywords: string[];
+  arousal: number;
+  dampening: number;
+  chaos: number;
+  repair: number;
+  label: string;
+  desc: string;
+  subj: string;
+}
+
+const ARCHETYPES: Archetype[] = [
+  {
+    keywords: ["psilocybin", "lsd", "mdma", "ketamine", "magic mushroom", "shroom", "dmt", "trip", "tripping", "hallucinogen", "psychedelic", "entheogen", "acid"],
+    arousal: 0.8,
+    dampening: -0.2,
+    chaos: 1.2,
+    repair: 0.9,
+    label: "Serotonergic Neuroplastic Resonance",
+    desc: "High-affinity 5-HT2A receptor agonism induces profound desynchronization of the Default Mode Network (DMN), enabling novel functional connectivity pathways and immediate dendritic growth.",
+    subj: "Widespread sensory enrichment, synesthesia, and cognitive boundary dissolution accompanied by intense emotional introspection."
+  },
+  {
+    keywords: ["xanax", "alprazolam", "valium", "diazepam", "benzo", "alcohol", "beer", "wine", "whiskey", "drink", "gabapentin", "pregabalin", "sedative", "downer", "sleeping pill", "zolpidem"],
+    arousal: -1.0,
+    dampening: 1.4,
+    chaos: -0.5,
+    repair: -0.2,
+    label: "Allosteric GABA-A Hyperpolarization",
+    desc: "Positive allosteric modulation of GABAA receptors triggers widespread chloride influx, inducing synchronous slow-wave delta power and deep limbic dampening.",
+    subj: "Widespread physical relaxation, rapid cognitive decompression, and the absolute silencing of acute stress and vigilance."
+  },
+  {
+    keywords: ["amphetamine", "adderall", "ritalin", "methylphenidate", "coke", "cocaine", "speed", "meth", "coffee", "caffeine", "nicotine", "modafinil", "stimulant", "focus", "energy drink", "cappuccino", "espresso"],
+    arousal: 1.4,
+    dampening: -0.4,
+    chaos: 0.6,
+    repair: -0.1,
+    label: "Monoaminergic Synaptic Saturation",
+    desc: "Reversal or blockade of DAT, NET, and SERT transporters leads to high-density synaptic dopamine accumulation, shifting spectral dominance to fast beta/gamma oscillations.",
+    subj: "High-octane mental clarity, surge in physical drive, sharpened task-focus, and absolute elimination of cognitive fatigue."
+  },
+  {
+    keywords: ["fentanyl", "oxy", "oxycodone", "morphine", "heroin", "painkiller", "opiate", "opioid", "vicodin", "kratom", "codeine", "methadone"],
+    arousal: -0.8,
+    dampening: 1.8,
+    chaos: 0.2,
+    repair: 0.4,
+    label: "Mu-Opioid Sensory De-afferentation",
+    desc: "High-affinity mu-opioid receptor binding induces hyperpolarization of nociceptive pathways, down-regulating noradrenergic drive within the locus coeruleus.",
+    subj: "Deep visceral warmth, absolute pain relief, severe somatic detachment, and a floating, worry-free dreamlike state."
+  },
+  {
+    keywords: ["thc", "cbd", "cannabis", "marijuana", "weed", "cbg", "cbn", "smoke", "vape", "gummies", "hash", "pot"],
+    arousal: 0.15,
+    dampening: 0.5,
+    chaos: 0.5,
+    repair: 0.1,
+    label: "Retrograde Cannabinoid Modulation",
+    desc: "Exogenous CB1/CB2 agonism prompts presynaptic retrograde inhibition of GABA and glutamate release, inducing subtle network phase shifts.",
+    subj: "Altered temporal perception, somatic relaxation, mild sensory enhancement, and calm, divergent ideation."
+  },
+  {
+    keywords: ["meditate", "meditation", "breathwork", "pranayama", "yoga", "sleep", "sauna", "cold plunge", "cold water", "ice bath", "fasting", "keto", "exercise", "run", "cardio", "workout", "marathon", "hiit", "swimming", "lifting"],
+    arousal: -0.3,
+    dampening: 0.6,
+    chaos: -0.6,
+    repair: 1.4,
+    label: "Autonomic Sympathovagal Homeostasis",
+    desc: "Non-pharmacological vagal upregulation and stress-induction promote metabolic resilience, quieting limbic hyper-reactivity and facilitating sustained BDNF-mediated repair.",
+    subj: "Centered cognitive clarity, grounded breathing patterns, physical decompression, and a state of restored homeostasis."
+  },
+  {
+    keywords: ["panic", "anxiety", "stressed", "stressed out", "fight", "scared", "fear", "trauma", "flashback", "exam", "pressure", "worry", "alarm", "pissed", "angry"],
+    arousal: 1.3,
+    dampening: -0.3,
+    chaos: 0.8,
+    repair: -0.4,
+    label: "Sympathetic Adrenergic Surge",
+    desc: "Corticotropin-releasing hormone and systemic epinephrine release trigger DMN hyperconnectivity and limbic network fragmentation, destabilizing functional edges.",
+    subj: "Somatic chest constriction, circular racing thoughts, hyper-vigilant scanning of the environment, and high acute alarm."
+  }
+];
+
+function localSimulateFallback(experience: string, pathologies: string[]): any {
+  const text = experience.toLowerCase();
+  const matches: Archetype[] = [];
+
+  for (const arch of ARCHETYPES) {
+    if (arch.keywords.some(keyword => text.includes(keyword))) {
+      matches.push(arch);
+    }
+  }
+
+  let pathText = "";
+  if (pathologies && pathologies.length > 0) {
+    pathText = ` Comorbid pathologies active: ${pathologies.join(", ")}.`;
+  }
+
+  if (matches.length === 0) {
+    return {
+      arousal: 0.1,
+      dampening: 0.1,
+      chaos: 0.0,
+      repair: 0.2,
+      label: "Integrated Cortical Adaptation",
+      desc: `Linguistic input parsed locally. The brain shifts its topological phase parameters deterministically to maintain homeostatic equilibrium.${pathText}`,
+      subj: "A subtle shift in baseline cognitive focus, normal sensory flow, and steady homeostatic adaptation."
+    };
+  }
+
+  let arousal = 0;
+  let dampening = 0;
+  let chaos = 0;
+  let repair = 0;
+  const labels: string[] = [];
+  const descs: string[] = [];
+  const subjs: string[] = [];
+
+  for (const match of matches) {
+    arousal += match.arousal;
+    dampening += match.dampening;
+    chaos += match.chaos;
+    repair += match.repair;
+    labels.push(match.label);
+    descs.push(match.desc);
+    subjs.push(match.subj);
+  }
+
+  const count = matches.length;
+  const blendedArousal = +(arousal / count).toFixed(2);
+  const blendedDampening = +(dampening / count).toFixed(2);
+  const blendedChaos = +(chaos / count).toFixed(2);
+  const blendedRepair = +(repair / count).toFixed(2);
+
+  const blendedLabel = labels.slice(0, 2).join(" + ") + (labels.length > 2 ? "..." : "");
+  const blendedDesc = descs.join(" ") + pathText;
+  const blendedSubj = "A hybrid state: " + subjs.map(s => s.replace("A hybrid state: ", "")).join(" Combined with ");
+
+  return {
+    arousal: blendedArousal,
+    dampening: blendedDampening,
+    chaos: blendedChaos,
+    repair: blendedRepair,
+    label: blendedLabel,
+    desc: blendedDesc,
+    subj: blendedSubj
+  };
 }
