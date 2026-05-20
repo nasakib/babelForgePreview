@@ -32,7 +32,6 @@ export function WindowProvider({ children }: { children: ReactNode }) {
   const [windows, setWindows] = useState<Record<string, WindowState>>({});
   const [zenMode, setZenMode] = useState(false);
   const [ready, setReady] = useState(false);
-  const [maxZ, setMaxZ] = useState(10);
 
   // Hydrate from localStorage
   useEffect(() => {
@@ -43,13 +42,6 @@ export function WindowProvider({ children }: { children: ReactNode }) {
         const parsed = JSON.parse(raw);
         setWindows(parsed.windows || {});
         setZenMode(parsed.zenMode || false);
-        
-        // Find highest zIndex to continue from there
-        let highestZ = 10;
-        Object.values(parsed.windows || {}).forEach((w: any) => {
-          if (w.zIndex > highestZ) highestZ = w.zIndex;
-        });
-        setMaxZ(highestZ);
       }
     } catch {
       /* ignore */
@@ -83,6 +75,10 @@ export function WindowProvider({ children }: { children: ReactNode }) {
         }
         return prev;
       }
+      const currentHighestZ = Object.values(prev).reduce(
+        (max, w) => (w.zIndex > max ? w.zIndex : max),
+        10
+      );
       return {
         ...prev,
         [id]: {
@@ -93,12 +89,11 @@ export function WindowProvider({ children }: { children: ReactNode }) {
           width: defaultState.width ?? 400,
           height: defaultState.height ?? 500,
           minimized: defaultState.minimized ?? false,
-          zIndex: defaultState.zIndex ?? maxZ + 1,
+          zIndex: defaultState.zIndex ?? currentHighestZ + 1,
         },
       };
     });
-    setMaxZ((z) => z + 1);
-  }, [maxZ]);
+  }, []);
 
   const updateWindow = useCallback((id: string, updates: Partial<WindowState>) => {
     setWindows((prev) => {
@@ -115,13 +110,13 @@ export function WindowProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const bringToFront = useCallback((id: string) => {
-    setMaxZ((prevMax) => {
-      const nextMax = prevMax + 1;
-      setWindows((prev) => {
-        if (!prev[id]) return prev;
-        return { ...prev, [id]: { ...prev[id], zIndex: nextMax } };
-      });
-      return nextMax;
+    setWindows((prev) => {
+      if (!prev[id]) return prev;
+      const currentHighestZ = Object.values(prev).reduce(
+        (max, w) => (w.zIndex > max ? w.zIndex : max),
+        10
+      );
+      return { ...prev, [id]: { ...prev[id], zIndex: currentHighestZ + 1 } };
     });
   }, []);
 
