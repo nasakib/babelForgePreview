@@ -65,7 +65,7 @@ export default function DraggablePanel({
       bounds="window"
       dragHandleClassName="panel-drag-handle"
       className={`absolute flex flex-col bg-surface-0/80 backdrop-blur-xl border border-line rounded-clinical shadow-2xl overflow-hidden pointer-events-auto transition-shadow duration-200 ${className}`}
-      style={{ zIndex: win.zIndex, position: 'absolute' }}
+      style={{ zIndex: win.zIndex, position: 'absolute', display: win.minimized ? 'none' : 'flex' }}
       onDragStart={() => bringToFront(id)}
       onMouseDown={() => bringToFront(id)}
     >

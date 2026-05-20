@@ -1,10 +1,11 @@
 ﻿"use client";
 
 import { Canvas, useFrame } from "@react-three/fiber";
-import { OrbitControls, Text } from "@react-three/drei";
+import { OrbitControls, Html } from "@react-three/drei";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { useAI } from "@/context/AIContext";
+import DraggablePanel from "@/components/palantir/DraggablePanel";
 import {
   composeTopology,
   REGION_COLOR,
@@ -182,81 +183,91 @@ export default function NeuroCanvas({
         />
       </Canvas>
 
-      {/* Layer Controls & Fullscreen */}
-      <div className="absolute top-4 right-1/2 translate-x-1/2 pointer-events-auto flex items-center gap-2 bg-surface-0/60 p-2 rounded backdrop-blur-sm border border-line z-20">
-        <button onClick={() => setIsFullscreen(!isFullscreen)} className="px-2 py-1 bg-surface-100 hover:bg-surface-200 border border-line rounded text-[9px] font-mono text-ink transition-colors">
-          {isFullscreen ? 'Exit Fullscreen' : 'Fullscreen Isolate'}
-        </button>
-        <span className="w-px h-4 bg-line mx-1" />
-        {["Cortical", "Subcortical", "Deep"].map((layer) => (
-          <button
-            key={layer}
-            onClick={() => setActiveLayers(prev => ({ ...prev, [layer]: !prev[layer] }))}
-            className={`px-2 py-1 border rounded text-[9px] font-mono transition-colors ${activeLayers[layer] ? 'bg-accent-500/20 border-accent-500/50 text-accent-400' : 'bg-surface-50 border-line text-ink-muted'}`}
-          >
-            {layer}
+      <DraggablePanel
+        id="layer-controls"
+        title="View Controls"
+        defaultPosition={{ x: typeof window !== "undefined" ? window.innerWidth / 2 - 150 : 200, y: 20 }}
+        defaultSize={{ width: 300, height: 100 }}
+      >
+        <div className="p-4 flex flex-wrap items-center gap-2">
+          <button onClick={() => setIsFullscreen(!isFullscreen)} className="px-3 py-1.5 bg-surface-100 hover:bg-surface-200 border border-line rounded text-[10px] font-mono text-ink transition-colors">
+            {isFullscreen ? 'Exit Fullscreen' : 'Fullscreen Isolate'}
           </button>
-        ))}
-      </div>
+          <span className="w-px h-6 bg-line mx-1" />
+          {["Cortical", "Subcortical", "Deep"].map((layer) => (
+            <button
+              key={layer}
+              onClick={() => setActiveLayers(prev => ({ ...prev, [layer]: !prev[layer] }))}
+              className={`px-3 py-1.5 border rounded text-[10px] font-mono transition-colors ${activeLayers[layer] ? 'bg-accent-500/20 border-accent-500/50 text-accent-400' : 'bg-surface-50 border-line text-ink-muted'}`}
+            >
+              {layer}
+            </button>
+          ))}
+        </div>
+      </DraggablePanel>
 
-      {/* HUD overlay */}
-      <div className="absolute top-4 left-4 pointer-events-none flex flex-col gap-2 z-10">
-        <div className="flex items-center gap-3 text-[11px] font-mono uppercase tracking-widest2 text-ink drop-shadow-md bg-surface-0/60 p-2 rounded backdrop-blur-sm border border-line">
-          <span className="status-dot ok shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse" /> 
-          Real-time Kuramoto · view: {viewPerspective}
-        </div>
-        <div className="text-[10px] font-mono uppercase tracking-widest2 text-accent-400 bg-surface-0/60 p-2 rounded backdrop-blur-sm border border-line">
-          T+ {Math.floor(simTime / 60).toString().padStart(2, '0')}:{(simTime % 60).toString().padStart(2, '0')} (SIMULATED DURATION)
-        </div>
-        
-        {/* Dynamic Node Info Panel */}
-        {selectedNodes.length > 0 && (
-          <div className="mt-2 w-72 bg-surface-0/90 backdrop-blur-xl border border-accent-500/50 p-3 rounded-clinical shadow-2xl pointer-events-auto animate-fade-in-up custom-scrollbar max-h-[60vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-2 border-b border-line pb-1">
-              <span className="text-[10px] font-bold text-accent-400 uppercase tracking-widest">Isolated Assemblies ({selectedNodes.length})</span>
-              <button className="text-ink-subtle hover:text-white" onClick={() => setSelectedNodeIds([])}>✕</button>
-            </div>
-            
-            <div className="flex flex-col gap-1.5 text-[10px] font-mono tracking-widest2 text-ink mb-3">
-              <div className="flex justify-between"><span className="text-ink-muted">Avg Hubness</span> <span>{(selectedNodes.reduce((a, b) => a + b.hubness, 0) / selectedNodes.length).toFixed(2)}</span></div>
-              <div className="flex justify-between"><span className="text-ink-muted">Avg ω (Intrinsic)</span> <span>{(selectedNodes.reduce((a, b) => a + b.omega, 0) / selectedNodes.length).toFixed(2)}Hz</span></div>
-              <div className="flex justify-between items-start">
-                <span className="text-ink-muted mt-0.5">Regions</span> 
-                <div className="flex flex-col items-end">
-                  {Array.from(new Set(selectedNodes.map(n => n.region))).map(r => (
-                    <span key={r} style={{ color: REGION_COLOR[r as keyof typeof REGION_COLOR] }}>{r}</span>
-                  ))}
+      <DraggablePanel
+        id="realtime-kuramoto"
+        title="Kuramoto Diagnostics"
+        defaultPosition={{ x: 20, y: 20 }}
+        defaultSize={{ width: 300, height: selectedNodes.length > 0 ? 500 : 120 }}
+      >
+        <div className="p-4 flex flex-col gap-3">
+          <div className="flex items-center gap-3 text-[11px] font-mono uppercase tracking-widest2 text-ink">
+            <span className="status-dot ok shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse" /> 
+            view: {viewPerspective}
+          </div>
+          <div className="text-[10px] font-mono uppercase tracking-widest2 text-accent-400">
+            T+ {Math.floor(simTime / 60).toString().padStart(2, '0')}:{(simTime % 60).toString().padStart(2, '0')} (SIMULATED)
+          </div>
+          
+          {selectedNodes.length > 0 && (
+            <div className="mt-2 animate-fade-in-up">
+              <div className="flex justify-between items-center mb-2 border-b border-line pb-1">
+                <span className="text-[10px] font-bold text-accent-400 uppercase tracking-widest">Isolated Assemblies ({selectedNodes.length})</span>
+                <button className="text-ink-subtle hover:text-white" onClick={() => setSelectedNodeIds([])}>✕</button>
+              </div>
+              
+              <div className="flex flex-col gap-1.5 text-[10px] font-mono tracking-widest2 text-ink mb-3">
+                <div className="flex justify-between"><span className="text-ink-muted">Avg Hubness</span> <span>{(selectedNodes.reduce((a, b) => a + b.hubness, 0) / selectedNodes.length).toFixed(2)}</span></div>
+                <div className="flex justify-between"><span className="text-ink-muted">Avg ω (Intrinsic)</span> <span>{(selectedNodes.reduce((a, b) => a + b.omega, 0) / selectedNodes.length).toFixed(2)}Hz</span></div>
+                <div className="flex justify-between items-start">
+                  <span className="text-ink-muted mt-0.5">Regions</span> 
+                  <div className="flex flex-col items-end">
+                    {Array.from(new Set(selectedNodes.map(n => n.region))).map(r => (
+                      <span key={r} style={{ color: REGION_COLOR[r as keyof typeof REGION_COLOR] }}>{r}</span>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
-            
-            {/* Show active targeted operations on selected nodes */}
-            {targetedOperations.filter(op => selectedNodeIds.includes(op.nodeId)).length > 0 && (
+              
+              {/* Show active targeted operations on selected nodes */}
+              {targetedOperations.filter(op => selectedNodeIds.includes(op.nodeId)).length > 0 && (
+                <div className="mb-3 pt-2 border-t border-line">
+                  <div className="flex justify-between items-center mb-1.5">
+                    <span className="text-[9px] uppercase font-bold text-accent-400 tracking-widest">Active Operations</span>
+                    <button onClick={() => setTargetedOperations(targetedOperations.filter(op => !selectedNodeIds.includes(op.nodeId)))} className="text-[9px] font-mono text-ink-subtle hover:text-crit transition-colors">Clear</button>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    {targetedOperations.filter(op => selectedNodeIds.includes(op.nodeId)).map((op, idx) => (
+                      <div key={idx} className="flex justify-between text-[9px] font-mono text-ink-subtle">
+                        <span>Node {op.nodeId}</span>
+                        <span className={op.type === 'ablate' ? 'text-crit' : op.type === 'stimulate' ? 'text-ok' : 'text-warn'}>
+                          {op.type.toUpperCase()}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="mb-3 pt-2 border-t border-line">
-                <div className="flex justify-between items-center mb-1.5">
-                  <span className="text-[9px] uppercase font-bold text-accent-400 tracking-widest">Active Operations</span>
-                  <button onClick={() => setTargetedOperations(targetedOperations.filter(op => !selectedNodeIds.includes(op.nodeId)))} className="text-[9px] font-mono text-ink-subtle hover:text-crit transition-colors">Clear</button>
-                </div>
-                <div className="flex flex-col gap-1">
-                  {targetedOperations.filter(op => selectedNodeIds.includes(op.nodeId)).map((op, idx) => (
-                    <div key={idx} className="flex justify-between text-[9px] font-mono text-ink-subtle">
-                      <span>Node {op.nodeId}</span>
-                      <span className={op.type === 'ablate' ? 'text-crit' : op.type === 'stimulate' ? 'text-ok' : 'text-warn'}>
-                        {op.type.toUpperCase()}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className="mb-3 pt-2 border-t border-line">
-              <div className="text-[9px] uppercase font-bold text-accent-400 tracking-widest mb-1.5">Micro-Phenomenological Projection</div>
-              <p className="text-xs text-ink-subtle leading-relaxed italic">
-                {Array.from(new Set(selectedNodes.map(n => n.region))).map(r => {
-                  if (r === 'Default') return "Perturbing self-referential processing, autobiographical memory, and mind-wandering matrices.";
-                  if (r === 'Limbic') return "Modulating affective valence, fear-conditioning, and emotional salience detection.";
-                  if (r === 'Control') return "Shifting executive function, goal-directed task switching, and working memory buffers.";
+                <div className="text-[9px] uppercase font-bold text-accent-400 tracking-widest mb-1.5">Micro-Phenomenological Projection</div>
+                <p className="text-xs text-ink-subtle leading-relaxed italic">
+                  {Array.from(new Set(selectedNodes.map(n => n.region))).map(r => {
+                    if (r === 'Default') return "Perturbing self-referential processing, autobiographical memory, and mind-wandering matrices.";
+                    if (r === 'Limbic') return "Modulating affective valence, fear-conditioning, and emotional salience detection.";
+                    if (r === 'Control') return "Shifting executive function, goal-directed task switching, and working memory buffers.";
                   if (r === 'SomatoMotor') return "Altering sensorimotor integration and action-execution pathways.";
                   if (r === 'Visual') return "Adjusting bottom-up sensory integration and visual processing density.";
                   if (r === 'VentAttn') return "Recalibrating bottom-up attention reorienting and external salience networks.";
@@ -279,48 +290,62 @@ export default function NeuroCanvas({
                 </button>
               </div>
             </div>
-          </div>
-        )}
-      </div>
+            </div>
+          )}
+        </div>
+      </DraggablePanel>
       
-      <div className="absolute top-4 right-4 pointer-events-none flex flex-col items-end gap-2 z-10">
-        <div className="flex flex-col items-end gap-1 text-[11px] font-mono uppercase tracking-widest2 text-ink drop-shadow-md bg-surface-0/60 p-2 rounded backdrop-blur-sm border border-line">
-          <div>nodes: {topo.N}</div>
-          <div>edges +{topo.edgeStats.added} / −{topo.edgeStats.removed}</div>
-          <div>cliques {topo.cliques.length}</div>
-          <div className="text-accent-400">R(t): {liveR.toFixed(3)}</div>
-          <div>stack: {activeStack.length}</div>
-        </div>
-        {pathologies.length > 0 && (
-          <div className="flex flex-wrap justify-end gap-1 max-w-[280px] text-[9px] font-mono uppercase tracking-widest2">
-            {pathologies.map((p) => {
-              const meta = (PATHOLOGY_META as any)[p];
-              return (
-                <span
-                  key={p}
-                  className="px-1.5 py-0.5 rounded border border-crit/40 bg-crit/10 text-crit"
-                  title={meta?.subjective ?? p}
-                >
-                  {meta?.label ?? p}
-                </span>
-              );
-            })}
+      <DraggablePanel
+        id="network-topography"
+        title="Network Topography"
+        defaultPosition={{ x: typeof window !== "undefined" ? window.innerWidth - 320 : 800, y: 20 }}
+        defaultSize={{ width: 280, height: pathologies.length > 0 ? 220 : 160 }}
+      >
+        <div className="p-4 flex flex-col gap-3">
+          <div className="flex flex-col items-end gap-1 text-[11px] font-mono uppercase tracking-widest2 text-ink drop-shadow-md bg-surface-0/60 p-2 rounded backdrop-blur-sm border border-line">
+            <div className="w-full flex justify-between"><span>nodes:</span> <span>{topo.N}</span></div>
+            <div className="w-full flex justify-between"><span>edges:</span> <span>+{topo.edgeStats.added} / −{topo.edgeStats.removed}</span></div>
+            <div className="w-full flex justify-between"><span>cliques:</span> <span>{topo.cliques.length}</span></div>
+            <div className="w-full flex justify-between text-accent-400"><span>R(t):</span> <span>{liveR.toFixed(3)}</span></div>
+            <div className="w-full flex justify-between"><span>stack:</span> <span>{activeStack.length}</span></div>
           </div>
-        )}
-        <div className={`text-[10px] font-mono uppercase font-bold tracking-widest2 p-2 rounded backdrop-blur-sm border ${prognosis.includes('CRITICAL') || prognosis.includes('RISK') ? 'bg-crit/10 text-crit border-crit/30' : prognosis.includes('STABILIZATION') || prognosis.includes('HEALTHY') ? 'bg-ok/10 text-ok border-ok/30' : 'bg-warn/10 text-warn border-warn/30'}`}>
-          PROGNOSIS: {prognosis}
+          {pathologies.length > 0 && (
+            <div className="flex flex-wrap gap-1 text-[9px] font-mono uppercase tracking-widest2 w-full mt-1">
+              {pathologies.map((p) => {
+                const meta = (PATHOLOGY_META as any)[p];
+                return (
+                  <span
+                    key={p}
+                    className="px-1.5 py-0.5 rounded border border-crit/40 bg-crit/10 text-crit w-full text-right"
+                    title={meta?.subjective ?? p}
+                  >
+                    {meta?.label ?? p}
+                  </span>
+                );
+              })}
+            </div>
+          )}
+          <div className={`text-[10px] font-mono uppercase font-bold tracking-widest2 p-2 rounded backdrop-blur-sm border text-center ${prognosis.includes('CRITICAL') || prognosis.includes('RISK') ? 'bg-crit/10 text-crit border-crit/30' : prognosis.includes('STABILIZATION') || prognosis.includes('HEALTHY') ? 'bg-ok/10 text-ok border-ok/30' : 'bg-warn/10 text-warn border-warn/30'}`}>
+            {prognosis}
+          </div>
         </div>
-      </div>
+      </DraggablePanel>
 
-      <div className="absolute bottom-4 left-4 right-4 flex flex-wrap gap-4 text-[11px] font-mono uppercase tracking-widest2 text-ink bg-surface-0/95 p-4 rounded-clinical backdrop-blur-xl border border-line-strong pointer-events-auto shadow-2xl z-20">
-        <div className="w-full text-ink-subtle mb-2 border-b border-line-strong pb-2 font-bold tracking-widest">Anatomical Region Legend & Color Coding</div>
-        {(Object.keys(REGION_COLOR) as (keyof typeof REGION_COLOR)[]).map((r) => (
-          <span key={r} className="inline-flex items-center gap-2 hover:brightness-125 transition-all cursor-default font-semibold text-ink">
-            <span className="w-4 h-4 rounded shadow-[0_0_8px_currentColor]" style={{ background: REGION_COLOR[r], color: REGION_COLOR[r] }} />
-            {r}
-          </span>
-        ))}
-      </div>
+      <DraggablePanel
+        id="region-legend"
+        title="Anatomical Region Legend"
+        defaultPosition={{ x: typeof window !== "undefined" ? window.innerWidth / 2 - 250 : 200, y: typeof window !== "undefined" ? window.innerHeight - 150 : 800 }}
+        defaultSize={{ width: 500, height: 100 }}
+      >
+        <div className="p-4 flex flex-wrap gap-4 text-[11px] font-mono uppercase tracking-widest2 text-ink">
+          {(Object.keys(REGION_COLOR) as (keyof typeof REGION_COLOR)[]).map((r) => (
+            <span key={r} className="inline-flex items-center gap-2 hover:brightness-125 transition-all cursor-default font-semibold text-ink">
+              <span className="w-3 h-3 rounded shadow-[0_0_8px_currentColor]" style={{ background: REGION_COLOR[r], color: REGION_COLOR[r] }} />
+              {r}
+            </span>
+          ))}
+        </div>
+      </DraggablePanel>
     </div>
   );
 }
@@ -632,17 +657,16 @@ function BrainScene({
         }
 
         return (
-        <Text
+        <Html
           key={`lbl-${i}`}
           position={[topo.nodes[i].x, topo.nodes[i].y + 1.8, topo.nodes[i].z]}
-          fontSize={1.5}
-          color="#ffffff"
-          anchorX="center"
-          anchorY="middle"
-          depthOffset={-1}
+          center
+          style={{ pointerEvents: 'none' }}
         >
-          {`${label.r1}${label.idStr}${label.r2}`}
-        </Text>
+          <div className="text-[10px] font-mono font-bold text-white drop-shadow-md whitespace-nowrap">
+            {`${label.r1}${label.idStr}${label.r2}`}
+          </div>
+        </Html>
       )})}
     </group>
   );
