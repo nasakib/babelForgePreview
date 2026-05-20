@@ -96,7 +96,7 @@ export default function ConsolePage() {
           toleranceMonths: tolerance,
           ageYears: age,
           simulationTimeMonths: simulationTimeMonths,
-        });
+        }, activeStack);
         setReport(r);
         setIntegrityScore(r.integrity);
         setComputing(false);
@@ -111,7 +111,7 @@ export default function ConsolePage() {
       }, 16);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [activePathologies, vectors, weight, tolerance, age, simulationTimeMonths, setIntegrityScore]
+    [activePathologies, vectors, weight, tolerance, age, simulationTimeMonths, setIntegrityScore, activeStack]
   );
 
   useEffect(() => {
@@ -307,6 +307,70 @@ export default function ConsolePage() {
             <div className="text-[11px] text-ink-muted font-mono">Awaiting input…</div>
           )}
         </div>
+
+        {/* CONNECTOME RESTORATION ANALYTICS */}
+        {report && (
+          <div className="p-4 border-b border-line space-y-4 bg-surface-50/50 backdrop-blur-md">
+            <div className="flex items-center justify-between">
+              <div className="section-label">Connectome Restoration</div>
+              {report.holisticSynergyBonus > 1.0 && (
+                <span className="flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase bg-accent-500/10 text-accent-400 border border-accent-500/30 animate-pulse">
+                  <span className="w-1.5 h-1.5 rounded-full bg-accent-400" />
+                  {report.holisticSynergyBonus.toFixed(2)}x Synergy
+                </span>
+              )}
+            </div>
+            
+            <div className="space-y-2">
+              <div className="flex justify-between items-baseline">
+                <span className="text-[11.5px] text-ink-subtle">Baseline Convergence</span>
+                <span className="text-sm font-semibold font-mono text-clinical-400">
+                  {report.correctionConvergence}%
+                </span>
+              </div>
+              <div className="w-full h-2 bg-surface-100 rounded-full overflow-hidden border border-line/30">
+                <div 
+                  className="h-full bg-gradient-to-r from-clinical-500 to-accent-500 transition-all duration-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]" 
+                  style={{ width: `${report.correctionConvergence}%` }}
+                />
+              </div>
+              <div className="text-[10px] text-ink-muted leading-normal">
+                {activePathologies.length === 0 
+                  ? "Perfect homeostasis. Connectome fully aligned with template baselines." 
+                  : `Projected path to baseline restoration. Target: return all networks to baseline.`}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-ink-muted">Active Correction Vectors</div>
+              {report.activeCorrections.length === 0 ? (
+                <div className="text-[11px] text-ink-muted italic p-3 border border-line border-dashed rounded-clinical text-center">
+                  No active corrective interventions detected. Add holistic practices or corrective molecules.
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {report.activeCorrections.map((corr, idx) => (
+                    <div 
+                      key={idx} 
+                      className="border border-clinical-500/20 bg-clinical-500/[0.03] rounded-clinical p-2.5 space-y-1 transition-all hover:bg-clinical-500/[0.05]"
+                    >
+                      <div className="flex justify-between text-[11px] font-mono">
+                        <span className="text-clinical-400 font-bold uppercase tracking-wider">{corr.target}</span>
+                        <span className="text-accent-400 font-bold bg-accent-500/10 px-1 rounded">+{corr.value}% Reverser</span>
+                      </div>
+                      <div className="text-[10px] text-ink-muted">
+                        Intervention: <span className="text-ink font-semibold">{corr.factor}</span>
+                      </div>
+                      <div className="text-[10.5px] text-ink-subtle leading-relaxed mt-1 italic">
+                        &ldquo;{corr.description}&rdquo;
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         <div className="p-4 border-b border-line">
           <div className="section-label mb-2">Subjective Experience</div>

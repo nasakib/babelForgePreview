@@ -104,7 +104,8 @@ export default function StackSimulator() {
         toleranceMonths: 0,
         ageYears: startingAge,
         simulationTimeMonths: simulationTimeMonths,
-      }
+      },
+      stack
     );
 
     const sync = report.integrity / 100;
@@ -116,6 +117,9 @@ export default function StackSimulator() {
       subj: report.subjective.join(" · "),
       warnings: report.warnings,
       sync,
+      correctionConvergence: report.correctionConvergence,
+      holisticSynergyBonus: report.holisticSynergyBonus,
+      activeCorrections: report.activeCorrections,
     };
   }, [stack, activePathologies, startingAge, simulationTimeMonths]);
 
@@ -172,8 +176,9 @@ export default function StackSimulator() {
 
         {/* View Controls (Bottom Center) */}
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 pointer-events-auto z-10 flex justify-center">
-          <div className="p-4 bg-surface-50/80 border border-line-strong rounded-clinical backdrop-blur-xl shadow-2xl flex flex-col gap-3 min-w-[250px] text-center">
-            <div className="text-[9px] uppercase font-bold text-accent-400 mb-1 tracking-widest">Baseline Alignment (Healthy)</div>
+          <div className="p-4 bg-surface-50/80 border border-line-strong rounded-clinical backdrop-blur-xl shadow-2xl flex flex-col gap-3 min-w-[280px] text-center">
+            <div className="text-[9px] uppercase font-bold text-accent-400 mb-1 tracking-widest">Connectome Restoration Index</div>
+            
             <div className="flex justify-between items-end mb-1 px-1">
                 <span className="text-xs font-bold text-ink-muted">Order (r)</span>
                 <span className="text-lg text-ok font-mono font-bold">{simulationState.sync.toFixed(2)}</span>
@@ -181,7 +186,22 @@ export default function StackSimulator() {
             <div className="w-full bg-surface-100 rounded-full h-1 mt-1 overflow-hidden">
                 <div className="h-full bg-ok transition-all duration-300" style={{width: `${simulationState.sync * 100}%`}}></div>
             </div>
-            <button onClick={() => triggerAIAnalysis("Analyze the pharmacological interactions in my current stack.")} className="mt-2 w-full bg-accent-500/80 hover:bg-accent-500/100 text-ink text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-md transition-all border border-accent-400/50 backdrop-blur-md shadow-lg flex items-center justify-center gap-2">
+
+            <div className="flex justify-between items-end mb-1 px-1 mt-2">
+                <span className="text-xs font-bold text-ink-muted">Convergence</span>
+                <span className="text-lg text-clinical-400 font-mono font-bold">{simulationState.correctionConvergence}%</span>
+            </div>
+            <div className="w-full bg-surface-100 rounded-full h-1 mt-1 overflow-hidden border border-line/10">
+                <div className="h-full bg-gradient-to-r from-clinical-500 to-accent-500 transition-all duration-300 shadow-[0_0_8px_rgba(59,130,246,0.4)]" style={{width: `${simulationState.correctionConvergence}%`}}></div>
+            </div>
+
+            {simulationState.holisticSynergyBonus > 1.0 && (
+              <div className="text-[9px] font-bold text-accent-400 uppercase tracking-widest bg-accent-500/10 py-1.5 rounded border border-accent-500/20 animate-pulse mt-1">
+                ✨ {simulationState.holisticSynergyBonus.toFixed(2)}x Synergy Engaged
+              </div>
+            )}
+
+            <button onClick={() => triggerAIAnalysis("Analyze the pharmacological interactions and holistic synergies in my current stack.")} className="mt-2 w-full bg-accent-500/80 hover:bg-accent-500/100 text-ink text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-md transition-all border border-accent-400/50 backdrop-blur-md shadow-lg flex items-center justify-center gap-2">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
               Ask babelAI
             </button>
@@ -223,6 +243,7 @@ export default function StackSimulator() {
                 {interventionMode !== "vanilla" && (
                   <>
                     <option value="novel">Novel Therapeutics (Precision)</option>
+                    <option value="corrective">Corrective Molecules</option>
                     <option value="ssri">SSRIs / SNRIs</option>
                     <option value="stimulant">Stimulants (Amphetamines)</option>
                     <option value="antipsychotic">Antipsychotics</option>
@@ -285,14 +306,21 @@ export default function StackSimulator() {
               </div>
             ) : (
               stack.map(mol => {
+                const isCorrective = mol.class === 'corrective';
                 const isBabel = mol.isBabelForge;
                 const isBlue = mol.isBlue;
                 const isNovel = mol.class === 'novel' && !isBabel && !isBlue;
-                const colorClass = isBabel ? 'text-accent-400' : (isBlue ? 'text-clinical-400' : (isNovel ? 'text-clinical-400' : 'text-ink-subtle'));
-                const bgClass = isBabel ? 'bg-accent-500/10 border-accent-500/30' : (isBlue ? 'bg-clinical-500/10 border-clinical-500/30' : (isNovel ? 'bg-clinical-500/10 border-clinical-500/30' : 'bg-surface-50 border-line'));
+                const isPurpleAccent = isBabel || isCorrective;
+
+                const colorClass = isPurpleAccent ? 'text-accent-400' : ((isBlue || isNovel) ? 'text-clinical-400' : 'text-ink-subtle');
+                const bgClass = isPurpleAccent ? 'bg-accent-500/10 border-accent-500/30' : ((isBlue || isNovel) ? 'bg-clinical-500/10 border-clinical-500/30' : 'bg-surface-50 border-line');
                 // Use CSS accent-color (static -> not purged by Tailwind)
-                const accentHex = isBabel ? '#a855f7' : (isBlue ? '#3b82f6' : (isNovel ? '#60a5fa' : '#6366f1'));
-                const badge = isBabel ? <span className="bg-accent-500/20 text-accent-400 text-[8px] font-extrabold px-1.5 py-0.5 rounded ml-2 align-middle border border-accent-500/30">babelForge</span> : null;
+                const accentHex = isPurpleAccent ? '#a855f7' : ((isBlue || isNovel) ? '#3b82f6' : '#6366f1');
+                const badge = isBabel ? (
+                  <span className="bg-accent-500/20 text-accent-400 text-[8px] font-extrabold px-1.5 py-0.5 rounded ml-2 align-middle border border-accent-500/30">babelForge</span>
+                ) : (isCorrective ? (
+                  <span className="bg-accent-500/20 text-accent-400 text-[8px] font-extrabold px-1.5 py-0.5 rounded ml-2 align-middle border border-accent-500/30">corrective</span>
+                ) : null);
 
                 return (
                   <div key={mol.id} className={`stack-item flex flex-col p-3 rounded-clinical border ${bgClass} shadow-sm gap-2`}>

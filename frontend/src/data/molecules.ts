@@ -86,13 +86,17 @@ export const molecules = [
     { id: 'memantine', name: 'Memantine', class: 'depressant', classLabel: 'NMDA Antagonist', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.1, dampening: 0.3, chaos: -0.2, repair: 0.3 } },
     { id: 'dextro', name: 'Dextromethorphan (DXM)', class: 'depressant', classLabel: 'NMDA Antagonist', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: 0.1, dampening: 0.6, chaos: 0.9, repair: 0.1 } },
 
-    // Novel & Conventional Withdrawal Treatments
-    { id: 'sr17', name: 'SR17-018', class: 'novel', classLabel: 'Biased Opioid Agonist', isBlue: true, svg: svgIndole, halfLife: 'long', isCure: true, targetAddiction: 'depressant', effects: { arousal: 0.1, dampening: 0.2, chaos: -1.5, repair: 2.0 } },
-    { id: 'nrg01', name: 'NRG-01 (DopaRestore)', class: 'novel', classLabel: 'DA Plasticity Enhancer', isBabelForge: true, svg: svgPhen, halfLife: 'long', isCure: true, targetAddiction: 'stimulant', effects: { arousal: 0.4, dampening: 0.0, chaos: -0.5, repair: 2.2 } },
+    // Novel & Conventional Withdrawal & Corrective Treatments
+    { id: 'sr17', name: 'SR17-018', class: 'corrective', classLabel: 'Biased Opioid Agonist', isBlue: true, svg: svgIndole, halfLife: 'long', isCure: true, targetAddiction: 'depressant', reversesClass: 'depressant', reversalEfficacy: 0.9, effects: { arousal: 0.1, dampening: 0.2, chaos: -1.5, repair: 2.0 } },
+    { id: 'nrg01', name: 'NRG-01 (DopaRestore)', class: 'corrective', classLabel: 'DA Plasticity Enhancer', isBabelForge: true, svg: svgPhen, halfLife: 'long', isCure: true, targetAddiction: 'stimulant', reversesClass: 'stimulant', reversalEfficacy: 0.95, effects: { arousal: 0.4, dampening: 0.0, chaos: -0.5, repair: 2.2 } },
     { id: 'methadone', name: 'Methadone', class: 'depressant', classLabel: 'Mu-Opioid Agonist', svg: svgTricyclic, halfLife: 'long', addictionPotential: 0.5, isCure: true, targetAddiction: 'depressant', effects: { arousal: -0.5, dampening: 1.5, chaos: -0.8, repair: 0.5 } },
     { id: 'buprenorphine', name: 'Buprenorphine', class: 'depressant', classLabel: 'Partial Opioid Agonist', svg: svgTricyclic, halfLife: 'long', addictionPotential: 0.3, isCure: true, targetAddiction: 'depressant', effects: { arousal: -0.2, dampening: 1.0, chaos: -1.0, repair: 0.8 } },
-    { id: 'clonidine', name: 'Clonidine', class: 'depressant', classLabel: 'Alpha-2 Agonist', svg: svgPhen, halfLife: 'medium', isCure: true, targetAddiction: 'stimulant', effects: { arousal: -0.8, dampening: 0.9, chaos: -0.6, repair: 0.1 } },
-    { id: 'acamprosate', name: 'Acamprosate', class: 'depressant', classLabel: 'GABA/Glu Modulator', svg: svgPhen, halfLife: 'medium', isCure: true, targetAddiction: 'depressant', effects: { arousal: -0.1, dampening: 0.4, chaos: -0.8, repair: 0.3 } },
+    { id: 'clonidine', name: 'Clonidine', class: 'corrective', classLabel: 'Alpha-2 Agonist', svg: svgPhen, halfLife: 'medium', isCure: true, targetAddiction: 'stimulant', reversesClass: 'stimulant', reversalEfficacy: 0.75, effects: { arousal: -0.8, dampening: 0.9, chaos: -0.6, repair: 0.1 } },
+    { id: 'acamprosate', name: 'Acamprosate', class: 'corrective', classLabel: 'GABA/Glu Modulator', svg: svgPhen, halfLife: 'medium', isCure: true, targetAddiction: 'depressant', reversesClass: 'depressant', reversalEfficacy: 0.8, effects: { arousal: -0.1, dampening: 0.4, chaos: -0.8, repair: 0.3 } },
+    { id: 'flumazenil', name: 'Flumazenil', class: 'corrective', classLabel: 'GABA-A Antagonist', svg: svgTricyclic, halfLife: 'short', targetClass: 'depressant', reversesClass: 'depressant', reversalEfficacy: 0.8, effects: { arousal: 0.5, dampening: -0.4, chaos: 0.3, repair: 1.0 } },
+    { id: 'nac', name: 'N-Acetylcysteine (NAC)', class: 'corrective', classLabel: 'Glutamate Modulator', svg: svgPhen, halfLife: 'short', targetClass: 'multiple', reversesClass: 'multiple', reversalEfficacy: 0.6, effects: { arousal: 0.0, dampening: 0.2, chaos: -0.4, repair: 1.2 } },
+    { id: 'agmatine', name: 'Agmatine Sulfate', class: 'corrective', classLabel: 'NMDA Modulator / NOSI', svg: svgPhen, halfLife: 'medium', targetClass: 'multiple', reversesClass: 'multiple', reversalEfficacy: 0.7, effects: { arousal: -0.1, dampening: 0.3, chaos: -0.3, repair: 1.4 } },
+    { id: 'galantamine', name: 'Galantamine', class: 'corrective', classLabel: 'AChE Inhibitor / PAM', svg: svgTricyclic, halfLife: 'long', targetClass: 'cannabinoid', reversesClass: 'cannabinoid', reversalEfficacy: 0.75, effects: { arousal: 0.4, dampening: 0.0, chaos: -0.1, repair: 1.1 } },
 
     // Lifestyle & Vanilla Interventions (Holistic & Physical Health)
     { id: 'z2cardio', name: 'Zone 2 Cardio', class: 'lifestyle', classLabel: 'Aerobic Exercise', isLifestyle: true, svg: svgPhen, halfLife: 'medium', effects: { arousal: 0.4, dampening: -0.2, chaos: -0.4, repair: 0.8 } },
@@ -103,6 +107,10 @@ export const molecules = [
     { id: 'sleep', name: 'Optimized Sleep (8hr+)', class: 'lifestyle', classLabel: 'Circadian Rhythm', isLifestyle: true, svg: svgIndole, halfLife: 'long', effects: { arousal: -0.2, dampening: 0.4, chaos: -1.0, repair: 1.8 } },
     { id: 'omega3', name: 'Omega-3 (EPA/DHA)', class: 'lifestyle', classLabel: 'Nutritional Support', isLifestyle: true, svg: svgPhen, halfLife: 'long', effects: { arousal: 0.1, dampening: 0.1, chaos: -0.2, repair: 0.4 } },
     { id: 'sauna', name: 'Sauna / Heat Therapy', class: 'lifestyle', classLabel: 'Thermal Stress', isLifestyle: true, svg: svgTricyclic, halfLife: 'short', effects: { arousal: 0.3, dampening: 0.4, chaos: -0.1, repair: 0.6 } },
+    { id: 'hbot', name: 'Hyperbaric Oxygen (HBOT)', class: 'lifestyle', classLabel: 'Oxygen Therapy', isLifestyle: true, svg: svgTricyclic, halfLife: 'long', effects: { arousal: 0.1, dampening: 0.1, chaos: -0.5, repair: 1.6 } },
+    { id: 'coldplunge', name: 'Cold Plunge / Immersion', class: 'lifestyle', classLabel: 'Thermal Stress', isLifestyle: true, svg: svgPhen, halfLife: 'short', effects: { arousal: 0.8, dampening: -0.2, chaos: -0.3, repair: 0.9 } },
+    { id: 'breathwork', name: 'Somatic Breathwork', class: 'lifestyle', classLabel: 'Contemplative Practice', isLifestyle: true, svg: svgIndole, halfLife: 'short', effects: { arousal: -0.5, dampening: 0.8, chaos: -0.7, repair: 1.0 } },
+    { id: 'lionmane', name: 'Lion\'s Mane Mushroom', class: 'lifestyle', classLabel: 'Nutritional Support', isLifestyle: true, svg: svgIndole, halfLife: 'long', effects: { arousal: 0.2, dampening: 0.0, chaos: -0.2, repair: 1.4 } },
 
     // Surgical & Neuromodulatory Procedures
     { id: 'tms', name: 'Transcranial Magnetic Stimulation', class: 'novel', classLabel: 'Neuromodulation', isBlue: true, svg: svgPhen, halfLife: 'long', effects: { arousal: 0.8, dampening: -0.1, chaos: -0.5, repair: 1.5 } },

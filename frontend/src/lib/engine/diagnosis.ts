@@ -36,6 +36,13 @@ export interface PatientParams {
   simulationTimeMonths: number; // Time Engine
 }
 
+export interface RestorationMetric {
+  target: string;
+  factor: string;
+  value: number;
+  description: string;
+}
+
 export interface DiagnosticReport {
   integrity: number;        // 0..100
   R: number;                // Kuramoto order parameter
@@ -45,6 +52,9 @@ export interface DiagnosticReport {
   subjective: string[];
   warnings: string[];
   structuralPlasticityK: number; // delta to K based on time
+  correctionConvergence: number; // 0..100% convergence to healthy baseline
+  holisticSynergyBonus: number;  // synergistic amplifier (e.g. 1.0..1.5)
+  activeCorrections: RestorationMetric[];
 }
 
 export const ZERO_VECTORS: PharmaVectors = {
@@ -57,7 +67,8 @@ export const ZERO_VECTORS: PharmaVectors = {
 export function runDiagnosis(
   states: Pathology[],
   vectors: PharmaVectors,
-  patient: PatientParams
+  patient: PatientParams,
+  stack: any[] = []
 ): DiagnosticReport {
   const topo = composeTopology(states);
   
@@ -74,11 +85,156 @@ export function runDiagnosis(
   const ageFactor = effectiveAge > 60 ? (1 - (effectiveAge - 60) * 0.015) : 1.0;
   const ageSensitivity = effectiveAge > 65 ? 1.2 : 1.0;
 
+  // Scan the stack for active compounds to calculate synergy & direct counteractions
+  let hasCBT = false;
+  let hasBreathwork = false;
+  let hasMeditation = false;
+  let hasSleep = false;
+  let hasHBOT = false;
+  let hasColdPlunge = false;
+  let hasLionMane = false;
+  let hasNRG01 = false;
+  let hasNAC = false;
+  let hasNX44 = false;
+  let hasClonidine = false;
+  let hasSR17 = false;
+  
+  const activeMols = new Set<string>();
+  
+  if (stack && Array.isArray(stack)) {
+    for (const item of stack) {
+      const intensity = item.dose ?? item.currentIntensity ?? 0;
+      if (intensity > 0) {
+        activeMols.add(item.id);
+        if (item.id === 'cbt') hasCBT = true;
+        if (item.id === 'breathwork') hasBreathwork = true;
+        if (item.id === 'meditation') hasMeditation = true;
+        if (item.id === 'sleep') hasSleep = true;
+        if (item.id === 'hbot') hasHBOT = true;
+        if (item.id === 'coldplunge') hasColdPlunge = true;
+        if (item.id === 'lionmane') hasLionMane = true;
+        if (item.id === 'nrg01') hasNRG01 = true;
+        if (item.id === 'nac') hasNAC = true;
+        if (item.id === 'nx44') hasNX44 = true;
+        if (item.id === 'clonidine') hasClonidine = true;
+        if (item.id === 'sr17') hasSR17 = true;
+      }
+    }
+  }
+
+  let holisticSynergyBonus = 1.0;
+  const activeCorrections: RestorationMetric[] = [];
+  
+  // Dopaminergic Regeneration Synergy
+  if (hasNRG01 && hasColdPlunge) {
+    holisticSynergyBonus += 0.20;
+    activeCorrections.push({
+      target: "Dopamine Pathways",
+      factor: "NRG-01 + Cold Plunge",
+      value: 20,
+      description: "Dopaminergic Regeneration engaged: Accelerated receptor resensitization."
+    });
+  }
+  
+  // Glutamatergic Stabilization Synergy
+  if (hasNAC && hasMeditation) {
+    holisticSynergyBonus += 0.15;
+    activeCorrections.push({
+      target: "Glutamatergic Synapses",
+      factor: "NAC + Meditation",
+      value: 15,
+      description: "Glutamatergic Stabilization engaged: Reduced excitotoxic baseline noise."
+    });
+  }
+  
+  // Axonal Growth / BDNF Synergy
+  if (hasNX44 && hasLionMane) {
+    holisticSynergyBonus += 0.30;
+    activeCorrections.push({
+      target: "Axonal Structure",
+      factor: "NX-44 + Lion's Mane",
+      value: 30,
+      description: "BDNF / Axonal Regrowth Synergy: Maximum structural repair projection."
+    });
+  }
+  
+  // Autonomic Rebalancing Synergy
+  if (hasClonidine && hasBreathwork) {
+    holisticSynergyBonus += 0.25;
+    activeCorrections.push({
+      target: "Autonomic Nervous System",
+      factor: "Clonidine + Breathwork",
+      value: 25,
+      description: "Autonomic Rebalancing: Deep down-regulation of adrenergic distress."
+    });
+  }
+
+  // Direct Pathological Counteractions
+  const hasDepression = states.includes("DEPRESSION");
+  const hasPTSD = states.includes("PTSD");
+  const hasAddiction = states.includes("ADDICTION") || states.includes("WITHDRAWAL_OPIOID");
+  
+  if (hasDepression && hasCBT) {
+    activeCorrections.push({
+      target: "Default Mode Network",
+      factor: "CBT / Talk Therapy",
+      value: 35,
+      description: "Direct DMN Down-regulation: Cognitively disrupting hyper-stable DMN connectivity."
+    });
+  }
+  
+  if (hasPTSD && (hasBreathwork || hasMeditation)) {
+    activeCorrections.push({
+      target: "Limbic Network",
+      factor: hasBreathwork && hasMeditation ? "Breathwork & Meditation" : (hasBreathwork ? "Somatic Breathwork" : "Mindfulness Meditation"),
+      value: 40,
+      description: "Limbic Dampening: Down-regulating hyper-sensitized amygdala responses."
+    });
+  }
+
+  if (hasAddiction) {
+    const activeCures: string[] = [];
+    if (activeMols.has("sr17")) activeCures.push("SR17-018");
+    if (activeMols.has("agmatine")) activeCures.push("Agmatine");
+    if (activeMols.has("acamprosate")) activeCures.push("Acamprosate");
+    if (activeMols.has("flumazenil")) activeCures.push("Flumazenil");
+    
+    if (activeCures.length > 0) {
+      activeCorrections.push({
+        target: "Reward Circuitry",
+        factor: activeCures.join(" + "),
+        value: 50,
+        description: "Connectome Correction: Actively returning receptor structures to baseline."
+      });
+    }
+  }
+
+  if (hasSleep || hasHBOT) {
+    activeCorrections.push({
+      target: "Structural Connectome",
+      factor: hasSleep && hasHBOT ? "Sleep + HBOT" : (hasSleep ? "Optimized Sleep" : "Hyperbaric Oxygen"),
+      value: 20,
+      description: "Axonal Rejuvenation: Reversing prolonged micro-structural decay and edge-loss."
+    });
+  }
+
+  // Synergy applies to repair and dampens chaos
+  let synergyRepairMultiplier = holisticSynergyBonus;
+  let synergyChaosMultiplier = 1.0;
+  
+  if (hasNRG01 && hasColdPlunge) {
+    synergyChaosMultiplier -= 0.15;
+  }
+  if (hasNAC && hasMeditation) {
+    synergyChaosMultiplier -= 0.20;
+  }
+  synergyChaosMultiplier = Math.max(0.4, synergyChaosMultiplier);
+
   const v: PharmaVectors = {
     arousal: vectors.arousal * weightFactor * tolFactor * ageSensitivity,
     dampening: vectors.dampening * weightFactor * tolFactor * ageSensitivity,
-    chaos: vectors.chaos * weightFactor * tolFactor * ageSensitivity,
-    repair: vectors.repair * weightFactor * tolFactor * Math.max(0.5, ageFactor),
+    chaos: vectors.chaos * weightFactor * tolFactor * ageSensitivity * synergyChaosMultiplier,
+    repair: vectors.repair * weightFactor * tolFactor * Math.max(0.5, ageFactor) * synergyRepairMultiplier,
   };
 
   // Structural neuroplasticity (Hebridean learning / BDNF increase via repair over time)
@@ -103,6 +259,15 @@ export function runDiagnosis(
   const Rbase = getBaselineR();
   const ratio = Rbase > 0 ? R / Rbase : 1;
   const integrity = Math.round(Math.max(0, Math.min(100, ratio * 100)));
+
+  // Calculate Correction Convergence to baseline
+  let correctionConvergence = 100;
+  if (states.length > 0) {
+    const baseConvergence = Math.max(20, 100 - (states.length * 30));
+    const totalRestorationValue = activeCorrections.reduce((sum, c) => sum + c.value, 0);
+    const convergenceIncrease = totalRestorationValue * 0.8;
+    correctionConvergence = Math.min(100, Math.round(baseConvergence + convergenceIncrease));
+  }
 
   // Label heuristic from vectors + states + time
   let label = states.length === 0 ? "Healthy Baseline" : "Pathological Baseline";
@@ -143,7 +308,19 @@ export function runDiagnosis(
   }
   if (subjective.length === 0) subjective.push("Baseline: a sense of 'flow', clear cognition, stable affect.");
 
-  return { integrity, R: +R.toFixed(3), K: +K.toFixed(2), label, description, subjective, warnings, structuralPlasticityK };
+  return { 
+    integrity, 
+    R: +R.toFixed(3), 
+    K: +K.toFixed(2), 
+    label, 
+    description, 
+    subjective, 
+    warnings, 
+    structuralPlasticityK,
+    correctionConvergence,
+    holisticSynergyBonus: +holisticSynergyBonus.toFixed(2),
+    activeCorrections
+  };
 }
 
 // Memoised baseline R so repeated diagnoses stay cheap.
