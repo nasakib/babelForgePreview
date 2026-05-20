@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>babelForge — Precision Neuroscience Engine</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+    <!-- Precalculated Data -->
+    <script src="data/topology_projection.js"></script>
+    <script src="data/pharma_projection.js"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'ui-monospace', 'monospace']
+                    }
+                }
+            }
+        };
+    </script>
+
+    <style>
+        body { background-color: #f8fafc; color: #0f172a; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .bg-void { background-color: #030008; }
+        .glass-panel { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); }
+        .chk-input:checked + div { background-color: #4f46e5; border-color: #4f46e5; }
+        .chk-input:checked + div svg { opacity: 1; }
+    </style>
+</head>
+<body class="h-screen w-screen overflow-hidden flex flex-col font-sans">
+
+    <!-- Top Navigation -->
+    <nav class="h-14 border-b border-slate-200 bg-white flex items-center justify-between px-6 shrink-0 z-50 relative">
+        <a href="index.html" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
+            <svg class="w-6 h-6 text-indigo-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            <span class="font-bold text-lg tracking-tight">babelForge <span class="text-indigo-600">Engine</span></span>
+        </a>
+        <div class="hidden lg:flex gap-4">
+            <button onclick="toggleMethodology()" class="text-xs font-bold text-slate-500 hover:text-indigo-600 uppercase tracking-widest transition-colors">Methodology & Validity</button>
+            <a href="11d-projection.html" class="text-xs font-bold text-slate-500 hover:text-indigo-600 uppercase tracking-widest transition-colors">11D Legacy</a>
+            <a href="pharma-projection.html" class="text-xs font-bold text-slate-500 hover:text-indigo-600 uppercase tracking-widest transition-colors">Stack Builder</a>
+            <a href="compounds.html" class="text-xs font-bold text-slate-500 hover:text-indigo-600 uppercase tracking-widest transition-colors">Compounds</a>
+        </div>
+        <!-- Mobile Menu Button -->
+        <div class="lg:hidden flex items-center">
+            <button class="text-slate-500 hover:text-indigo-600 focus:outline-none" onclick="document.getElementById('mobile-menu-index').classList.toggle('hidden')">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+            </button>
+        </div>
+        <!-- Mobile Nav -->
+        <div id="mobile-menu-index" class="hidden lg:hidden bg-white border-b border-slate-200 px-4 pt-2 pb-4 space-y-2 shadow-lg absolute w-full top-14 left-0">
+            <button onclick="toggleMethodology(); document.getElementById('mobile-menu-index').classList.add('hidden')" class="block w-full text-left px-3 py-2 rounded-md text-base font-semibold text-slate-700 hover:text-indigo-600 hover:bg-slate-50">Methodology & Validity</button>
+            <a href="11d-projection.html" class="block px-3 py-2 rounded-md text-base font-semibold text-slate-700 hover:text-indigo-600 hover:bg-slate-50">11D Legacy</a>
+            <a href="pharma-projection.html" class="block px-3 py-2 rounded-md text-base font-semibold text-slate-700 hover:text-indigo-600 hover:bg-slate-50">Stack Builder</a>
+            <a href="compounds.html" class="block px-3 py-2 rounded-md text-base font-semibold text-slate-700 hover:text-indigo-600 hover:bg-slate-50">Compounds</a>
+        </div>
+    </nav>
+
+    <!-- Three-Panel Dashboard -->
+    <main class="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden">
+        
+        <!-- Left Panel: Patient Setup (Filters) -->
+        <aside class="w-full lg:w-80 border-b lg:border-b-0 lg:border-r border-slate-200 bg-slate-50 flex flex-col shrink-0 lg:overflow-y-auto z-40 relative">
+            <div class="p-6 border-b border-slate-200">
+                <h2 class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-6">Patient State Modifiers</h2>
+                <p class="text-xs text-slate-500 mb-6 leading-relaxed">Overlap multiple pathological states to simulate complex psychiatric comorbidities. The topology engine mathematically merges the modifiers.</p>
+                
+                <div class="space-y-3 mb-6" id="state-filters">
+                    <!-- Checkboxes generated by JS -->
+                </div>
+
+                <h2 class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-4">Patient Parameters</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 block">Body Weight (kg)</label>
+                        <input type="number" id="patient-weight" value="70" min="40" max="150" class="w-full bg-white border border-slate-200 text-sm font-semibold text-slate-700 rounded p-2 focus:outline-none focus:border-indigo-500" onchange="updateSimulation()">
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block">Pharmacological Tolerance</label>
+                            <button onclick="document.getElementById('tolerance-list').classList.toggle('hidden')" class="text-[9px] text-indigo-500 font-bold hover:underline">Toggle List</button>
+                        </div>
+                        <p class="text-[9px] text-slate-400 mb-2">Duration of prior exposure (Months). Affects receptor downregulation decay.</p>
+                        <div id="tolerance-list" class="space-y-3 hidden max-h-56 overflow-y-auto pr-2 bg-white border border-slate-200 p-3 rounded-lg shadow-inner">
+                            <!-- Sliders injected by JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="p-6 mt-auto border-t border-slate-200 bg-white">
+                <div class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-3">Topological Integrity</div>
+                <div class="flex justify-between items-end mb-2">
+                    <span class="text-sm font-bold text-slate-700">Baseline Alignment (Healthy)</span>
+                    <span id="integrity-score" class="text-indigo-600 font-mono font-bold text-lg">100%</span>
+                </div>
+                <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                    <div id="integrity-bar" class="h-full bg-indigo-600 transition-all duration-700" style="width: 100%"></div>
+                </div>
+                <p class="text-[10px] text-slate-400 mt-3" id="state-summary-text">Healthy Baseline.</p>
+            </div>
+        </aside>
+
+        <!-- Middle Panel: 3D Visualizer -->
+        <section class="w-full h-[50vh] min-h-[400px] lg:min-h-0 lg:h-auto flex-1 relative bg-void overflow-hidden shrink-0" id="visualizer-container">
+            <div class="absolute top-4 left-4 z-10 pointer-events-none">
+                <h3 class="text-white/80 font-bold text-base md:text-lg" id="vis-title">Network Topology</h3>
+                <p class="text-white/50 text-[10px] md:text-xs font-mono" id="vis-stats">Loading...</p>
+            </div>
+            
+            <div class="absolute top-4 right-4 z-10 flex flex-wrap justify-end gap-2 pointer-events-none">
+                <div class="flex flex-wrap justify-end gap-2 pointer-events-auto max-w-[200px] md:max-w-none">
+                    <button onclick="const el = document.getElementById('color-keys'); el.style.display = el.style.display === 'flex' ? 'none' : 'flex';" class="bg-slate-900/80 hover:bg-slate-800 text-white border border-slate-700/50 px-2.5 py-1.5 rounded text-[9px] md:text-[10px] font-bold uppercase tracking-widest transition-all backdrop-blur-md">Legend</button>
+                    <button onclick="toggleComparison()" id="btn-comp" class="bg-white/10 hover:bg-white/20 text-white border border-white/20 px-2.5 py-1.5 rounded text-[9px] md:text-[10px] font-bold uppercase tracking-widest transition-all backdrop-blur-md">Overlay</button>
+                    <button onclick="toggleTutorial()" class="bg-indigo-600/80 hover:bg-indigo-500 text-white border border-indigo-400/50 px-2.5 py-1.5 rounded text-[9px] md:text-[10px] font-bold uppercase tracking-widest transition-all backdrop-blur-md">Tutorial</button>
+                </div>
+            </div>
+
+            <div class="absolute bottom-4 right-4 z-10 flex flex-col items-end gap-2 pointer-events-none">
+                <div id="color-keys" style="display: none;" class="flex-col gap-2 pointer-events-none max-w-[200px] sm:max-w-[240px] max-h-[40vh] overflow-y-auto custom-scrollbar pr-1">
+                    <div class="bg-slate-900/80 backdrop-blur-md p-3 rounded-lg border border-slate-700/50">
+                        <h4 class="text-[9px] uppercase font-bold text-slate-400 mb-2 border-b border-slate-700/50 pb-1">Physics & Movement</h4>
+                        <div class="grid grid-cols-1 gap-1.5 text-[9px] text-slate-300 font-mono">
+                            <div class="flex items-center gap-1.5">🌊 Smooth Wave: Healthy Phase-Locking</div>
+                            <div class="flex items-center gap-1.5">⚡ Jittering: Pathological Noise / Entropy</div>
+                            <div class="flex items-center gap-1.5">🛑 Frozen: Over-Dampened / Rigid</div>
+                        </div>
+                    </div>
+                    <div class="bg-slate-900/80 backdrop-blur-md p-3 rounded-lg border border-slate-700/50">
+                        <h4 class="text-[9px] uppercase font-bold text-slate-400 mb-2 border-b border-slate-700/50 pb-1">Anatomical Regions</h4>
+                        <div class="grid grid-cols-2 gap-x-2 gap-y-1.5 text-[9px] text-slate-300 font-mono">
+                            <div class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full shadow-[0_0_5px_#8b5cf6]" style="background:#8b5cf6"></div> Default</div>
+                            <div class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full shadow-[0_0_5px_#f43f5e]" style="background:#f43f5e"></div> Visual</div>
+                            <div class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full shadow-[0_0_5px_#10b981]" style="background:#10b981"></div> Motor</div>
+                            <div class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full shadow-[0_0_5px_#f59e0b]" style="background:#f59e0b"></div> Limbic</div>
+                            <div class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full shadow-[0_0_5px_#818cf8]" style="background:#818cf8"></div> Control</div>
+                            <div class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full shadow-[0_0_5px_#06b6d4]" style="background:#06b6d4"></div> V.Attn</div>
+                        </div>
+                    </div>
+                    <div class="bg-slate-900/80 backdrop-blur-md p-3 rounded-lg border border-slate-700/50">
+                        <h4 class="text-[9px] uppercase font-bold text-slate-400 mb-2 border-b border-slate-700/50 pb-1">State Altercations (On Click)</h4>
+                        <div class="grid grid-cols-1 gap-1.5 text-[9px] text-slate-300 font-mono">
+                            <div class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full shadow-[0_0_5px_#0ea5e9]" style="background:#0ea5e9"></div> Intervention / Stabilized</div>
+                            <div class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full shadow-[0_0_5px_#e11d48]" style="background:#e11d48"></div> PTSD Hyperarousal</div>
+                            <div class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full shadow-[0_0_5px_#64748b]" style="background:#64748b"></div> ADHD Hypo-connectivity</div>
+                            <div class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full shadow-[0_0_5px_#818cf8]" style="background:#818cf8"></div> MDD Hyper-stability</div>
+                            <div class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full shadow-[0_0_5px_#f59e0b]" style="background:#f59e0b"></div> Tourette's Rigidity</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="canvas-container" class="w-full h-full cursor-crosshair"></div>
+
+            <!-- Target Area Overlay -->
+            <div id="target-overlay" class="absolute bottom-4 right-4 z-10 bg-slate-900/80 border border-slate-700 rounded-xl p-3 backdrop-blur-md pointer-events-none w-64 hidden transition-opacity duration-300">
+                <div class="flex items-center gap-2 mb-2 border-b border-slate-700 pb-1">
+                    <div class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></div>
+                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Active Pharmacological Targets</span>
+                </div>
+                <div id="target-regions-list" class="space-y-1.5">
+                </div>
+            </div>
+
+            <!-- Node Inspector Overlay -->
+            <div id="node-inspector" class="absolute bottom-4 left-4 z-20 bg-slate-900/90 backdrop-blur-md border border-slate-700 p-3 rounded-xl shadow-2xl text-white w-[calc(100%-2rem)] sm:w-64 hidden transition-opacity duration-300">
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <h4 class="font-mono text-sm font-bold text-indigo-400" id="insp-name">Node_ID</h4>
+                        <span class="text-[10px] uppercase tracking-widest text-slate-400" id="insp-region">Region</span>
+                    </div>
+                    <button onclick="closeInspector()" class="text-slate-500 hover:text-white transition-colors">
+                        <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <div class="bg-slate-800 rounded p-2 text-center">
+                        <span class="block text-[9px] uppercase tracking-widest text-slate-400 mb-1">State</span>
+                        <span class="text-xs font-bold" id="insp-state">Active</span>
+                    </div>
+                    <div class="bg-slate-800 rounded p-2 text-center">
+                        <span class="block text-[9px] uppercase tracking-widest text-slate-400 mb-1">Hubness</span>
+                        <span class="text-xs font-mono font-bold text-emerald-400" id="insp-hub">0.0</span>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <span class="block text-[9px] uppercase tracking-widest text-slate-400 mb-1 border-b border-slate-700 pb-1">Topological Impact</span>
+                    <p class="text-[10px] text-slate-300 leading-relaxed mt-1" id="insp-desc">Impact description...</p>
+                </div>
+
+                <div>
+                    <span class="block text-[9px] uppercase tracking-widest text-slate-400 mb-1 border-b border-slate-700 pb-1">Active Edges (Top 3)</span>
+                    <ul class="text-[10px] text-slate-300 space-y-1 mt-1 font-mono" id="insp-conns">
+                        <li>None</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Right Panel: Pharmacy & AI Recommendations -->
+        <aside class="w-full lg:w-96 border-t lg:border-t-0 lg:border-l border-slate-200 bg-white flex flex-col shrink-0 lg:overflow-y-auto z-40 relative shadow-none lg:shadow-[-10px_0_15px_-3px_rgba(0,0,0,0.05)]">
+
+            <div class="p-6 border-b border-slate-100 bg-slate-50/50">
+                <h2 class="text-[10px] font-extrabold text-indigo-500 uppercase tracking-widest mb-4">Interventions</h2>
+
+                <!-- Brain Stimulation -->
+                <div class="mb-5">
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Neuromodulation</label>
+                    <select id="stim-select" class="w-full bg-white border border-slate-200 text-xs font-semibold text-slate-700 rounded p-2 focus:outline-none focus:border-indigo-500" onchange="handleStimChange()">
+                        <option value="NONE">None</option>
+                        <option value="TMS">TMS (High-Frequency Left DLPFC)</option>
+                        <option value="DBS">DBS (Deep Brain Stimulation - Motor)</option>
+                        <option value="TDCS">tDCS (Anodal Frontal)</option>
+                    </select>
+                </div>
+
+                <!-- Polypharmacy Stack -->
+                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Active Pharmacopeia</label>
+                <div class="flex gap-2 mb-4">
+                    <select id="molecule-select" class="flex-grow bg-white border-2 border-indigo-100 text-xs font-bold text-indigo-900 rounded p-2 focus:outline-none focus:border-indigo-500">
+                        <!-- Options generated by JS -->
+                    </select>
+                    <button onclick="addToRegimen()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-3 rounded shadow-sm">+</button>
+                </div>
+
+                <div id="regimen-list" class="space-y-3 mb-2 max-h-48 overflow-y-auto pr-1">
+                    <!-- Regimen items injected by JS -->
+                    <p class="text-xs text-slate-400 italic text-center py-2">No compounds active.</p>
+                </div>
+            </div>
+
+            <div class="p-6 flex-1 flex flex-col">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">AI Diagnostic Engine</h2>
+                    <button onclick="calculateAI(true)" class="bg-slate-800 hover:bg-slate-900 text-white text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded shadow-sm transition-colors">Calculate Now</button>
+                </div>
+
+                <div class="flex-1 flex flex-col gap-4" id="ai-diagnostics-container" style="display: none;">
+                    <!-- Current State Analysis -->
+                    <div class="bg-indigo-50/50 border border-indigo-100 p-4 rounded-xl">
+                        <span class="text-[9px] uppercase font-bold text-indigo-500 block mb-2 flex items-center gap-1">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path></svg>
+                            Simulation Analysis
+                        </span>
+                        <p class="text-[11px] text-slate-700 leading-relaxed mb-3" id="sim-analysis"></p>
+
+                        <span class="text-[9px] uppercase font-bold text-rose-400 block mb-1 border-t border-indigo-100/50 pt-2">Projected Subjective Experience</span>
+                        <p class="text-[10px] text-slate-600 leading-relaxed italic" id="sim-subjective"></p>
+                    </div>
+
+                    <!-- Recommendation & Auto-Optimize -->
+                    <div class="bg-emerald-50/50 border border-emerald-100 p-4 rounded-xl mt-auto">
+                        <div class="flex justify-between items-center mb-2 border-b border-emerald-200/50 pb-2">
+                            <span class="text-[9px] uppercase font-bold text-emerald-600 flex items-center gap-1">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                Optimization
+                            </span>
+                            <div class="flex items-center gap-2">
+                                <label class="flex items-center gap-1 text-[9px] font-bold text-emerald-700 cursor-pointer">
+                                    <input type="checkbox" id="allow-neuromod" class="accent-emerald-600" checked>
+                                    Allow Neuromod
+                                </label>
+                                <button onclick="autoOptimizeIntervention()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded shadow-sm transition-colors">Auto-Optimize</button>
+                            </div>
+                        </div>
+                        <div id="auto-optimize-log" class="text-[9px] font-mono text-emerald-700 mb-2 space-y-1 hidden">
+                            <!-- Logs injected here -->
+                        </div>
+                        <p class="text-[11px] text-slate-700 leading-relaxed" id="sim-recommendation"></p>
+                    </div>
+                </div>
+                <div id="ai-placeholder" class="flex-1 flex flex-col items-center justify-center text-center opacity-50">
+                     <p class="text-xs font-medium text-slate-500">Diagnostics Pending.</p>
+                     <p class="text-[10px] text-slate-400 mt-1 max-w-[200px]">Click 'Calculate Now' to evaluate the current topological state and regimen.</p>
+                </div>
+            </div>
+
+        </aside>
+    </main>
+
+    <!-- Methodology Modal -->
+    <div id="methodology-modal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onclick="toggleMethodology()"></div>
+        <div class="absolute inset-y-0 right-0 w-full max-w-2xl bg-white shadow-2xl flex flex-col transform transition-transform translate-x-full duration-300" id="methodology-panel">
+            <div class="p-6 border-b border-slate-200 flex justify-between items-center">
+                <h2 class="text-lg font-bold text-slate-900">Scientific & Medical Validity</h2>
+                <button onclick="toggleMethodology()" class="text-slate-400 hover:text-slate-600 transition-colors">
+                    <svg viewBox="0 0 24 24" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-1 space-y-8">
+                <section>
+                    <h3 class="text-sm font-extrabold text-indigo-500 uppercase tracking-widest mb-3">1. Mathematical Foundations</h3>
+                    <p class="text-sm text-slate-600 leading-relaxed mb-3">
+                        The babelForge engine leverages <strong>Algebraic Topology</strong> and <strong>Simplicial Complexes</strong> to model brain networks. Rather than simple pairwise connections (graph theory), the brain processes information in high-dimensional structures called "cliques" and "cavities." The Kuramoto Model governs phase-locking synchronization across these regions.
+                    </p>
+                    <p class="text-[11px] text-slate-500 leading-relaxed italic border-l-2 border-indigo-200 pl-3">
+                        <strong>Source:</strong> Giusti, C., Pastalkova, E., Curto, C., & Itskov, V. (2015). Clique topology reveals intrinsic geometric structure in neural correlations. <em>Proceedings of the National Academy of Sciences, 112(44), 13455-13460.</em>
+                    </p>
+                </section>
+                <section>
+                    <h3 class="text-sm font-extrabold text-indigo-500 uppercase tracking-widest mb-3">2. Network Neuroscience & Medicine</h3>
+                    <p class="text-sm text-slate-600 leading-relaxed mb-3">
+                        Pathologies are modeled as topological deviations. <strong>Major Depressive Disorder (MDD)</strong> is represented by hyper-stability in the <strong>Default Mode Network (DMN)</strong>, preventing fluid state transitions (experientially: rumination). <strong>ADHD</strong> is modeled as hypo-connectivity in the <strong>Frontoparietal Control Network</strong>, leading to insufficient "gain" to maintain high-dimensional cliques (experientially: attentional drift).
+                    </p>
+                    <p class="text-[11px] text-slate-500 leading-relaxed italic border-l-2 border-indigo-200 pl-3">
+                        <strong>Source:</strong> Bassett, D. S., & Sporns, O. (2017). Network neuroscience. <em>Nature Neuroscience, 20(3), 353-364.</em>
+                    </p>
+                </section>
+                <section>
+                    <h3 class="text-sm font-extrabold text-indigo-500 uppercase tracking-widest mb-3">3. Pharmacodynamics (Interference Mechanics)</h3>
+                    <p class="text-sm text-slate-600 leading-relaxed mb-3">
+                        Pharmacological interventions act as exogenous perturbations. <strong>Ketamine</strong> (an NMDA antagonist) rapidly disrupts DMN hyper-stability and induces synaptogenesis. The simulation models this as an interference pulse (cyan/gold) modifying edge density and resetting hubness constraints, overcoming the topological "rut" of depression far faster than conventional SSRIs.
+                    </p>
+                    <p class="text-[11px] text-slate-500 leading-relaxed italic border-l-2 border-indigo-200 pl-3">
+                        <strong>Source:</strong> Krystal, J. H., et al. (2013). Ketamine: A Paradigm Shift for Depression Research and Treatment. <em>Neuron, 79(6), 1170-1178.</em>
+                    </p>
+                </section>
+                <section>
+                    <h3 class="text-sm font-extrabold text-indigo-500 uppercase tracking-widest mb-3">4. Visual Dictionary (Physics & Color)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-slate-600 leading-relaxed">
+                        <div class="bg-slate-50 p-4 rounded border border-slate-100">
+                            <strong class="text-slate-800 block mb-1 border-b border-slate-200 pb-1">Movements (Physics)</strong>
+                            <ul class="list-disc pl-4 space-y-1 mt-2">
+                                <li><strong>Smooth Wave:</strong> Healthy baseline synchronization.</li>
+                                <li><strong>Jittering (Low Amplitude):</strong> Pathological noise; cliques struggling to form.</li>
+                                <li><strong>Chaotic Jitter (High Amplitude):</strong> Severe hyper-arousal or toxic fragmentation.</li>
+                                <li><strong>Frozen / Static:</strong> Severe dampening; rigid network locking.</li>
+                            </ul>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded border border-slate-100">
+                            <strong class="text-slate-800 block mb-1 border-b border-slate-200 pb-1">Colors (Anatomy & State)</strong>
+                            <ul class="list-disc pl-4 space-y-1 mt-2">
+                                <li><strong>Regional Base Colors:</strong> Indigo (Control), Amber (Limbic), Emerald (Motor). Indicates anatomical ground truth.</li>
+                                <li><strong>Cyan / Gold Glow:</strong> Precision intervention actively repairing topologies.</li>
+                                <li><strong>Rose / Red Flash:</strong> Pathological hyperarousal or signal breakdown.</li>
+                                <li><strong>Dull Grey:</strong> System-wide suppression or numbing (e.g., high-dose SSRI).</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+                <section class="bg-slate-50 p-5 rounded-xl border border-slate-200">
+                    <h3 class="text-sm font-extrabold text-emerald-600 uppercase tracking-widest mb-3">Interactive Experimental Flow</h3>
+                    <p class="text-sm text-slate-600 leading-relaxed mb-4">Validate the simulation logic by executing the following clinical trial flow:</p>
+                    <ol class="list-decimal list-inside text-sm text-slate-700 space-y-3 mb-6">
+                        <li><strong>Induce Pathology:</strong> Select <span class="font-bold text-slate-900">Depression (MDD)</span> from the Patient State Modifiers. Observe the topological "rut" in the 3D visualizer and the resulting Integrity Score drop.</li>
+                        <li><strong>Apply Conventional Therapy:</strong> Select <span class="font-bold text-slate-900">Fluoxetine (Conventional)</span> and increase the dosage to Mild (1.0). Notice the partial, global dampening effect with incomplete structural repair.</li>
+                        <li><strong>Apply Precision Therapy:</strong> Switch the compound to <span class="font-bold text-slate-900">LimbicLink (Precision)</span> or <span class="font-bold text-slate-900">Ketamine (Conventional)</span> at Mild dosage. Observe the dynamic disruption of DMN cliques (cyan/gold interference) and the subsequent recovery of the System Score.</li>
+                        <li><strong>Analyze Results:</strong> Review the AI Diagnostic Engine's readout to verify the mechanistic breakdown of the topological shift.</li>
+                    </ol>
+                    <button onclick="startExperimentFlow()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold uppercase tracking-widest py-3 rounded-lg transition-colors shadow-md">
+                        ▶ Start Guided Experiment
+                    </button>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tutorial Modal -->
+    <div id="tutorial-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="toggleTutorial()"></div>
+        <div class="relative bg-white shadow-2xl rounded-2xl flex flex-col overflow-hidden w-full max-w-lg mx-4 z-10 transform scale-95 transition-transform duration-300" id="tutorial-panel">
+            <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-indigo-50">
+                <h2 class="text-base font-extrabold text-indigo-900 uppercase tracking-widest">Dashboard Tutorial</h2>
+                <button onclick="toggleTutorial()" class="text-indigo-400 hover:text-indigo-700 transition-colors">
+                    <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto max-h-[70vh] space-y-5 text-sm text-slate-700 leading-relaxed">
+                <p>Welcome to <strong>babelForge</strong>, a precision neuroscience engine. Here is how to use the dashboard:</p>
+                <ol class="list-decimal list-inside space-y-4">
+                    <li><strong>Patient Setup (Left Panel):</strong> Begin by selecting one or more <em>Patient State Modifiers</em> (e.g., ADHD, PTSD). You can mix states to simulate comorbidities. Adjust <em>Body Weight</em> and <em>Tolerance</em> to personalize the simulation.</li>
+                    <li><strong>3D Visualizer (Center Panel):</strong> The brain model will dynamically warp to represent the selected pathologies. Click on any node to view detailed localized readouts in the <em>Node Inspector</em>. Use the <em>Legend</em> button for color coding.</li>
+                    <li><strong>Interventions (Right Panel):</strong> Build a polypharmacy regimen by adding compounds to your stack or selecting a neuromodulation device (e.g., TMS).</li>
+                    <li><strong>Diagnostics & Optimization (Right Panel):</strong> Click <strong>Calculate Now</strong> to run the AI Diagnostic Engine. It will output projected subjective experiences. Click <strong>Auto-Optimize</strong> to let the AI automatically find the perfect dose and molecule to repair the network.</li>
+                    <li><strong>Stack Builder (Top Nav):</strong> For deeper polypharmacy exploration and cross-state interference calculations, navigate to the <em>Stack Builder</em>.</li>
+                </ol>
+                <div class="mt-4 p-3 bg-slate-50 border border-slate-200 rounded text-xs text-center text-slate-500">
+                    Press "Tutorial" in the visualizer to view this again.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logic -->
+    <script>
+        function toggleTutorial() {
+            const modal = document.getElementById('tutorial-modal');
+            const panel = document.getElementById('tutorial-panel');
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                setTimeout(() => panel.classList.remove('scale-95'), 10);
+            } else {
+                panel.classList.add('scale-95');
+                setTimeout(() => modal.classList.add('hidden'), 300);
+            }
+        }
+
+        function toggleMethodology() {
+            const modal = document.getElementById('methodology-modal');
+            const panel = document.getElementById('methodology-panel');
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                setTimeout(() => panel.classList.remove('translate-x-full'), 10);
+            } else {
+                panel.classList.add('translate-x-full');
+                setTimeout(() => modal.classList.add('hidden'), 300);
+            }
+        }
+
+        function startExperimentFlow() {
+            toggleMethodology();
+            
+            // Reset active states
+            activeStates.clear();
+            document.querySelectorAll('.chk-input').forEach(chk => chk.checked = false);
+            
+            // Toggle Depression
+            const depChk = document.getElementById('chk-DEPRESSION');
+            if (depChk) {
+                depChk.checked = true;
+                activeStates.add('DEPRESSION');
+            }
+            
+            // Reset Drug
+            document.getElementById('molecule-select').value = 'NONE';
+            document.getElementById('dose-slider').value = 0;
+            updateDoseLabel(0); // Will update currentDrug, currentDose, and call updateSimulation()
+            
+            setTimeout(() => {
+                alert("Step 1 Complete: Depression (MDD) Pathology Induced.\n\nObserve the drop in Topological Integrity and read the AI Diagnosis.\n\nNext Step: Select 'Fluoxetine' and increase dosage, then compare the results with 'Ketamine'.");
+            }, 500);
+        }
+
+        // Global State
+        let topoData = null;
+        let activeStates = new Set();
+        let currentRegimen = []; // Array of {id: string, dose: number}
+        let currentStim = 'NONE';
+        let isComparing = false;
+        let patientTolerances = {};
+        let aiCalculated = false;
+
+        // UI Initialization
+        const stateDefinitions = {
+            "ADHD": "ADHD (Frontoparietal Hypo-connectivity)",
+            "PTSD": "PTSD (Limbic Hyperarousal)",
+            "DEPRESSION": "Depression (DMN Hyper-stability)",
+            "TOURETTES": "Tourette's (Motor Loop Rigidity)",
+            "WITHDRAWAL_OPIOID": "Opioid Withdrawal (Neurochemical Debt / Chaos)",
+            "WITHDRAWAL_STIMULANT": "Stimulant Withdrawal (Dopamine Depletion / Apathy)"
+        };
+
+        const drugDefinitions = {
+            "ZB-01": { name: "ZB-01 (Precision)", class: "Novel", isBabelForge: true, target: "Global Phase-Locking", mech: "Stabilizes chaos via Arnold Tongue phase-locking optimization.", toleranceRate: 0.05, indications: ["PTSD"] },
+            "LL-07": { name: "LimbicLink (Precision)", class: "Novel", isBabelForge: true, target: "DMN Fluidity", mech: "Macrocyclic plasticity modulator. Breaks rigid DMN cliques.", toleranceRate: 0.05, indications: ["DEPRESSION"] },
+            "SS-20": { name: "SynaptoStim (Precision)", class: "Novel", isBabelForge: true, target: "Frontal Upregulation", mech: "Targeted dopaminergic stimulation in executive control regions.", toleranceRate: 0.05, indications: ["ADHD"] },
+            "DR-02": { name: "DopaReg-D2 (Precision)", class: "Novel", isBabelForge: true, target: "Somatomotor Dampening", mech: "Precision D2 antagonism to selectively dampen hyper-connected motor loops.", toleranceRate: 0.05, indications: ["TOURETTES"] },
+            "NX-44": { name: "NeuroX (Precision)", class: "Novel", isBabelForge: true, target: "Global Synaptogenesis", mech: "BDNF modulator enhancing wide-scale topological repair.", toleranceRate: 0.02, indications: ["DEPRESSION", "PTSD"] },
+            "SR17": { name: "SR17-018 (Precision)", class: "Novel", isBlue: true, target: "Biased Opioid Agonism", mech: "Stabilizes opioid withdrawal without respiratory depression. Reverses chaotic debt.", toleranceRate: 0.02, indications: ["WITHDRAWAL_OPIOID"] },
+            "NRG01": { name: "NRG-01 (Precision)", class: "Novel", isBabelForge: true, target: "DA Plasticity", mech: "Reverses stimulant-induced dopaminergic crash without rebound.", toleranceRate: 0.02, indications: ["WITHDRAWAL_STIMULANT"] },
+            "KET": { name: "Ketamine (Conventional)", class: "Conventional", target: "NMDA Antagonism", mech: "Rapid glutamate burst inducing dissociative DMN disruption.", toleranceRate: 0.3, indications: ["DEPRESSION"] },
+            "FLX": { name: "Fluoxetine (Conventional)", class: "Conventional", target: "SSRI", mech: "Broad serotonin reuptake inhibition. Induces global dampening.", toleranceRate: 0.1, indications: ["DEPRESSION", "PTSD"] },
+            "AMP": { name: "Amphetamine (Conventional)", class: "Conventional", target: "Monoamine Release", mech: "Global stimulant. High risk of hyperarousal toxicity.", toleranceRate: 0.5, indications: ["ADHD"] },
+            "METHADONE": { name: "Methadone (Conventional)", class: "Conventional", target: "Mu-Opioid Agonism", mech: "Long-acting full agonist. Prevents acute withdrawal chaos but maintains high tolerance.", toleranceRate: 0.5, indications: ["WITHDRAWAL_OPIOID"] },
+            "BUPRE": { name: "Buprenorphine (Conventional)", class: "Conventional", target: "Partial Agonism", mech: "High-affinity partial agonist. Displaces full agonists, lowering withdrawal ceiling.", toleranceRate: 0.3, indications: ["WITHDRAWAL_OPIOID"] },
+            "CLON": { name: "Clonidine (Conventional)", class: "Conventional", target: "Alpha-2 Agonism", mech: "Dampens autonomic hyperactivity (noradrenergic storms) during acute withdrawal.", toleranceRate: 0.1, indications: ["WITHDRAWAL_OPIOID", "WITHDRAWAL_STIMULANT"] },
+            "ACAMP": { name: "Acamprosate (Conventional)", class: "Conventional", target: "GABA/Glu Modulator", mech: "Stabilizes hyper-glutamatergic state post-alcohol withdrawal.", toleranceRate: 0.1, indications: [] },
+            "THC": { name: "Delta-9-THC (Recreational)", class: "Recreational", target: "CB1 Agonism", mech: "Increases entropy in DMN, disrupts working memory cliques.", toleranceRate: 0.6, indications: [] },
+            "CBD": { name: "Cannabidiol (Functional)", class: "Functional", target: "CB Modulator", mech: "Soft dampening of limbic hyperarousal. Increases global stability.", toleranceRate: 0.05, indications: ["PTSD", "TOURETTES"] },
+            "NIC": { name: "Nicotine (Functional)", class: "Recreational", target: "nAChR Agonism", mech: "Transient sharp increase in Frontoparietal coupling.", toleranceRate: 0.8, indications: ["ADHD"] }
+        };
+
+        function initUI() {
+            const filterContainer = document.getElementById('state-filters');
+            Object.entries(stateDefinitions).forEach(([key, label]) => {
+                const id = `chk-${key}`;
+                filterContainer.innerHTML += `
+                    <label class="flex items-start gap-3 cursor-pointer group">
+                        <div class="relative flex items-center justify-center mt-0.5">
+                            <input type="checkbox" id="${id}" value="${key}" class="peer sr-only chk-input" onchange="toggleState('${key}')">
+                            <div class="w-4 h-4 border-2 border-slate-300 rounded peer-focus:ring-2 peer-focus:ring-indigo-500/30 transition-all flex items-center justify-center bg-white group-hover:border-indigo-400">
+                                <svg class="w-2.5 h-2.5 text-white opacity-0 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                            </div>
+                        </div>
+                        <span class="text-sm font-semibold text-slate-700 group-hover:text-indigo-700 transition-colors">${label}</span>
+                    </label>
+                `;
+            });
+
+            const select = document.getElementById('molecule-select');
+            const tolList = document.getElementById('tolerance-list');
+            
+            Object.entries(drugDefinitions).forEach(([key, def]) => {
+                select.innerHTML += `<option value="${key}">${def.name}</option>`;
+                
+                patientTolerances[key] = 0;
+                tolList.innerHTML += `
+                    <div>
+                        <div class="flex justify-between text-[9px] font-bold text-slate-600 mb-1">
+                            <span>${def.name.split(' ')[0]}</span>
+                            <span id="tol-val-${key}">0 mo</span>
+                        </div>
+                        <input type="range" id="tol-${key}" min="0" max="120" step="1" value="0" class="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-500" oninput="updateTolerance('${key}', this.value)">
+                    </div>
+                `;
+            });
+        }
+
+        function updateTolerance(key, val) {
+            patientTolerances[key] = parseFloat(val);
+            document.getElementById(`tol-val-${key}`).innerText = `${val} mo`;
+            
+            // Auto-recalculate if we are viewing diagnostics
+            if (document.getElementById('ai-diagnostics-container').style.display !== 'none') {
+                calculateAI();
+            }
+        }
+
+        function toggleState(state) {
+            if (activeStates.has(state)) activeStates.delete(state);
+            else activeStates.add(state);
+            updateSimulation();
+        }
+
+        function addToRegimen() {
+            const drugId = document.getElementById('molecule-select').value;
+            if (!currentRegimen.find(r => r.id === drugId)) {
+                currentRegimen.push({ id: drugId, dose: 1.0 });
+                const def = drugDefinitions[drugId];
+                if (def.isBabelForge) {
+                    showToast('Proprietary Synthesis', `${def.name} added to simulation vector.`, true);
+                }
+                renderRegimenList();
+                updateSimulation();
+            }
+        }
+
+        function removeFromRegimen(index) {
+            currentRegimen.splice(index, 1);
+            renderRegimenList();
+            updateSimulation();
+        }
+
+        function updateRegimenDose(index, val) {
+            currentRegimen[index].dose = parseFloat(val);
+            document.getElementById(`dose-val-${index}`).innerText = val;
+            updateSimulation();
+        }
+
+        function renderRegimenList() {
+            const list = document.getElementById('regimen-list');
+            if (currentRegimen.length === 0) {
+                list.innerHTML = '<p class="text-xs text-slate-400 italic text-center py-2">No compounds active.</p>';
+                return;
+            }
+
+            list.innerHTML = currentRegimen.map((r, idx) => {
+                const def = drugDefinitions[r.id];
+                const isBabel = def.isBabelForge;
+                const isBlue = def.isBlue;
+                const isNovel = def.class === 'Novel' && !isBabel && !isBlue;
+                const colorClass = isBabel ? 'text-purple-600' : (isBlue ? 'text-blue-600' : (isNovel ? 'text-indigo-600' : 'text-slate-600'));
+                const bgClass = isBabel ? 'bg-purple-50 border-purple-200' : (isBlue ? 'bg-blue-50 border-blue-200' : 'bg-white border-slate-200');
+                const themeColor = isBabel ? 'purple' : (isBlue ? 'blue' : 'indigo');
+                const badge = isBabel ? `<span class="bg-purple-600 text-white text-[8px] font-bold px-1.5 py-0.5 rounded ml-2 align-middle shadow-sm">babelForge</span>` : '';
+
+                return `
+                    <div class="${bgClass} p-3 rounded shadow-sm">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-[10px] font-bold text-slate-700">${def.name}${badge}</span>
+                            <button onclick="removeFromRegimen(${idx})" class="text-slate-400 hover:text-rose-500"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input type="range" min="0.1" max="3.0" step="0.1" value="${r.dose}" class="flex-grow h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-${themeColor}-600" oninput="updateRegimenDose(${idx}, this.value)">
+                            <span class="text-[10px] font-mono font-bold ${colorClass} w-6 text-right" id="dose-val-${idx}">${r.dose.toFixed(1)}</span>
+                        </div>
+                        <p class="text-[8px] text-slate-400 mt-1 leading-tight">${def.mech}</p>
+                    </div>
+                `;
+            }).join('');
+        }
+        function toggleComparison() {
+            isComparing = !isComparing;
+            document.getElementById('btn-comp').classList.toggle('bg-indigo-600', isComparing);
+            document.getElementById('btn-comp').classList.toggle('border-indigo-500', isComparing);
+            if (isComparing) renderGhost();
+            else if (ghostGroup) scene.remove(ghostGroup);
+        }
+
+        // --- Three.js Engine ---
+        let scene, camera, renderer, controls;
+        let lobeGroup, edgeGroup, cliqueGroup, ghostGroup;
+        let renderNodes = [], renderEdges = [], renderCliques = [];
+        let raycaster, mouse;
+        let hoveredNode = null, selectedNode = null;
+
+        function init3D() {
+            const container = document.getElementById('canvas-container');
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 1500);
+            camera.position.set(0, 100, 250);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(renderer.domElement);
+
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.autoRotate = true;
+            controls.autoRotateSpeed = 0.2;
+
+            lobeGroup = new THREE.Group();
+            edgeGroup = new THREE.Group();
+            cliqueGroup = new THREE.Group();
+            scene.add(lobeGroup, edgeGroup, cliqueGroup);
+
+            const ambientLight = new THREE.AmbientLight(0x201540);
+            scene.add(ambientLight);
+            const mainLight = new THREE.PointLight(0x8b5cf6, 3, 600);
+            mainLight.position.set(50, 100, 100);
+            scene.add(mainLight);
+
+            raycaster = new THREE.Raycaster();
+            mouse = new THREE.Vector2();
+
+            window.addEventListener('resize', () => {
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(container.clientWidth, container.clientHeight);
+            });
+
+            container.addEventListener('mousemove', (e) => {
+                const rect = container.getBoundingClientRect();
+                mouse.x = ((e.clientX - rect.left) / container.clientWidth) * 2 - 1;
+                mouse.y = -((e.clientY - rect.top) / container.clientHeight) * 2 + 1;
+            });
+
+            container.addEventListener('click', () => {
+                if (hoveredNode) {
+                    selectedNode = hoveredNode;
+                    updateNodeInspector(selectedNode);
+                } else {
+                    selectedNode = null;
+                    closeInspector();
+                }
+            });
+
+            animate();
+        }
+
+        function closeInspector() {
+            document.getElementById('node-inspector').classList.add('opacity-0', 'pointer-events-none');
+            setTimeout(() => {
+                document.getElementById('node-inspector').classList.add('hidden');
+            }, 300);
+        }
+
+        function updateNodeInspector(nodeMesh) {
+            const insp = document.getElementById('node-inspector');
+            insp.classList.remove('hidden');
+            // Force reflow
+            void insp.offsetWidth;
+            insp.classList.remove('opacity-0', 'pointer-events-none');
+
+            const data = nodeMesh.userData.nodeData;
+            document.getElementById('insp-name').innerText = data.name;
+            document.getElementById('insp-region').innerText = data.region;
+            
+            // Calculate state metrics
+            const isInterference = currentRegimen.length > 0 || currentStim !== 'NONE';
+            const isPathological = activeStates.size > 0;
+            
+            let stateText = 'Healthy Baseline';
+            let stateColor = 'text-indigo-400';
+            let impactDesc = 'Node is operating within optimal critical thresholds. High-D clique participation is stable.';
+
+            if (isInterference) {
+                const totalDose = currentRegimen.reduce((sum, r) => sum + r.dose, 0);
+                if (totalDose > 2.5) {
+                    stateText = 'Toxic/Hyper-Sync';
+                    stateColor = 'text-amber-400';
+                    impactDesc = `Excessive exogenous load is forcing rigid synchronization. Natural entropy is lost.`;
+                } else {
+                    stateText = 'Modulated (Active)';
+                    stateColor = 'text-cyan-400';
+                    impactDesc = `Compound(s) actively driving node behavior towards therapeutic targets.`;
+                }
+                if (currentStim !== 'NONE') {
+                    impactDesc += ` Enhanced by ${currentStim} neuromodulation.`;
+                }
+            } else if (isPathological) {
+                if (activeStates.has('PTSD') && data.region === 'Limbic') {
+                    stateText = 'Hyperaroused (PTSD)';
+                    stateColor = 'text-rose-500';
+                    impactDesc = 'Severe low-D edge density. Node is locked in a high-frequency trauma-recall loop.';
+                } else if (activeStates.has('WITHDRAWAL_OPIOID')) {
+                    stateText = 'Neurochemical Debt';
+                    stateColor = 'text-rose-600';
+                    impactDesc = 'Severe structural chaos due to rapid withdrawal of exogenous opioids.';
+                } else if (activeStates.has('WITHDRAWAL_STIMULANT') && (data.region === 'Control' || data.region === 'SomatoMotor')) {
+                    stateText = 'Dopaminergic Crash';
+                    stateColor = 'text-slate-500';
+                    impactDesc = 'Severe hypo-connectivity. Loss of motivation and structural drive.';
+                } else if (activeStates.has('ADHD') && data.region === 'Control') {
+                    stateText = 'Hypo-active (ADHD)';
+                    stateColor = 'text-slate-400';
+                    impactDesc = 'Insufficient gain. Node is dropping out of required high-D working memory cliques.';
+                } else if (activeStates.has('DEPRESSION') && data.region === 'Default') {
+                    stateText = 'Hyper-stable (MDD)';
+                    stateColor = 'text-indigo-300';
+                    impactDesc = 'Node is trapped in a rigid, repeating topological structure (rumination loop).';
+                } else if (activeStates.has('TOURETTES') && data.region === 'SomatoMotor') {
+                    stateText = 'Rigid Loop (Tic)';
+                    stateColor = 'text-emerald-500';
+                    impactDesc = 'Node is accumulating topological tension that discharges as involuntary motor tics.';
+                } else {
+                    stateText = 'Compensatory Strain';
+                    stateColor = 'text-amber-500';
+                    impactDesc = 'Node is attempting to compensate for structural failures in connected pathological regions.';
+                }
+            }
+
+            document.getElementById('insp-state').innerText = stateText;
+            document.getElementById('insp-state').className = `text-xs font-bold ${stateColor}`;
+            document.getElementById('insp-desc').innerText = impactDesc;
+            document.getElementById('insp-hub').innerText = data.hubness.toFixed(2);
+
+            // Find top connections in CURRENT renderEdges
+            const conns = renderEdges.filter(e => e.source === data.id || e.target === data.id);
+            const topConns = conns.slice(0, 3).map(e => {
+                const otherId = e.source === data.id ? e.target : e.source;
+                return renderNodes[otherId].name;
+            });
+            
+            const ul = document.getElementById('insp-conns');
+            ul.innerHTML = topConns.length ? topConns.map(name => `<li>→ ${name}</li>`).join('') : '<li class="text-slate-500">No active pathways</li>';
+        }
+
+        function composeTopology() {
+            if (!topoData || !topoData.baseline) return;
+            
+            // Deep copy baseline
+            renderNodes = JSON.parse(JSON.stringify(topoData.baseline.nodes));
+            let edgeSet = new Set(topoData.baseline.edges.map(e => `${e.source}-${e.target}`));
+            let cliqueList = JSON.parse(JSON.stringify(topoData.baseline.cliques));
+            
+            // Apply pathological modifiers (Filters)
+            activeStates.forEach(state => {
+                const mod = topoData.modifiers[state];
+                if (!mod) return;
+                
+                // Edges
+                mod.edges_added.forEach(e => edgeSet.add(`${e.source}-${e.target}`));
+                mod.edges_removed.forEach(e => edgeSet.delete(`${e.source}-${e.target}`));
+                
+                // Cliques
+                mod.cliques_added.forEach(c => cliqueList.push(c));
+                // simplified clique removal
+                cliqueList = cliqueList.slice(mod.cliques_removed.length); 
+            });
+
+            // Reconstruct final edge array
+            renderEdges = Array.from(edgeSet).map(str => {
+                const [s, t] = str.split('-');
+                return {source: parseInt(s), target: parseInt(t)};
+            });
+            renderCliques = cliqueList;
+            
+            rebuildScene();
+            calculateAI();
+        }
+
+        function rebuildScene() {
+            while(lobeGroup.children.length > 0) lobeGroup.remove(lobeGroup.children[0]);
+            while(edgeGroup.children.length > 0) edgeGroup.remove(edgeGroup.children[0]);
+            while(cliqueGroup.children.length > 0) cliqueGroup.remove(cliqueGroup.children[0]);
+
+            // Determine if network is in an "interference" state (medicated or stimulated)
+            const isInterference = currentRegimen.length > 0 || currentStim !== 'NONE';
+            const isPathological = activeStates.size > 0;
+
+            const lobeGeo = new THREE.SphereGeometry(1, 24, 24);
+            renderNodes.forEach(n => {
+                let baseColor = 0x8b5cf6;
+                if (n.region === "Visual") baseColor = 0xf43f5e;
+                else if (n.region === "SomatoMotor") baseColor = 0x10b981;
+                else if (n.region === "Limbic") baseColor = 0xf59e0b;
+                else if (n.region === "Control") baseColor = 0x818cf8;
+                else if (n.region === "VentAttn") baseColor = 0x06b6d4;
+
+                let stateColor = baseColor;
+                if (isInterference) stateColor = 0x0ea5e9; // Cyan for treatment
+                else if (isPathological) {
+                    if (activeStates.has("WITHDRAWAL_OPIOID")) stateColor = 0xe11d48;
+                    else if (activeStates.has("WITHDRAWAL_STIMULANT") && (n.region === "Control" || n.region === "SomatoMotor")) stateColor = 0x64748b;
+                    else if (activeStates.has("PTSD") && n.region === "Limbic") stateColor = 0xe11d48;
+                    else if (activeStates.has("ADHD") && n.region === "Control") stateColor = 0x64748b;
+                    else if (activeStates.has("DEPRESSION") && n.region === "Default") stateColor = 0x818cf8;
+                    else if (activeStates.has("TOURETTES") && n.region === "SomatoMotor") stateColor = 0xf59e0b;
+                }
+                
+                const mat = new THREE.MeshPhongMaterial({
+                    color: baseColor, emissive: baseColor, emissiveIntensity: 0.4,
+                    transparent: true, opacity: 0.9, shininess: 100
+                });
+                const mesh = new THREE.Mesh(lobeGeo, mat);
+                mesh.position.set(n.x, n.y, n.z);
+                
+                // Simulate hubness roughly by connections
+                const conns = renderEdges.filter(e => e.source === n.id || e.target === n.id).length;
+                n.hubness = conns * 0.1;
+                mesh.scale.setScalar(3 + n.hubness);
+                
+                mesh.userData = { origin: new THREE.Vector3(n.x, n.y, n.z), nodeData: n, baseColor: baseColor, stateColor: stateColor };
+                lobeGroup.add(mesh);
+            });
+
+            const edgeMat = new THREE.LineBasicMaterial({ color: isInterference ? 0x38bdf8 : (isPathological ? 0x9f1239 : 0x4c1d95), transparent: true, opacity: isInterference ? 0.3 : 0.15 });
+            renderEdges.forEach(e => {
+                const s = renderNodes[e.source], t = renderNodes[e.target];
+                if (!s || !t) return;
+                const points = [new THREE.Vector3(s.x, s.y, s.z), new THREE.Vector3(t.x, t.y, t.z)];
+                const geo = new THREE.BufferGeometry().setFromPoints(points);
+                edgeGroup.add(new THREE.Line(geo, edgeMat));
+            });
+
+            renderCliques.forEach(c => {
+                if (c.nodes.length >= 3) {
+                    const positions = [];
+                    for (let i = 1; i < c.nodes.length - 1; i++) {
+                        const n0 = renderNodes[c.nodes[0]], ni = renderNodes[c.nodes[i]], ni1 = renderNodes[c.nodes[i+1]];
+                        if (!n0 || !ni || !ni1) continue;
+                        positions.push(n0.x, n0.y, n0.z, ni.x, ni.y, ni.z, ni1.x, ni1.y, ni1.z);
+                    }
+                    const geo = new THREE.BufferGeometry();
+                    geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+                    geo.computeVertexNormals();
+                    const mat = new THREE.MeshPhongMaterial({ 
+                        color: isInterference ? 0xfcd34d : (isPathological ? 0xff0055 : 0x00ffcc), 
+                        transparent: true, opacity: 0.12, side: THREE.DoubleSide, blending: THREE.AdditiveBlending 
+                    });
+                    cliqueGroup.add(new THREE.Mesh(geo, mat));
+                }
+            });
+
+            document.getElementById('vis-stats').innerText = `Nodes: 200 | Edges: ${renderEdges.length} | Cliques: ${renderCliques.length}`;
+        }
+
+        function renderGhost() {
+            if (!topoData) return;
+            if (ghostGroup) scene.remove(ghostGroup);
+            
+            ghostGroup = new THREE.Group();
+            const healthyData = topoData.baseline;
+            const lobeGeo = new THREE.SphereGeometry(3, 12, 12);
+            const lobeMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.05, wireframe: true });
+            
+            healthyData.nodes.forEach(n => {
+                const node = new THREE.Mesh(lobeGeo, lobeMat);
+                node.position.set(n.x, n.y, n.z);
+                ghostGroup.add(node);
+            });
+            scene.add(ghostGroup);
+        }
+
+        function calculateAI(force = false) {
+            if (!force) return;
+            
+            document.getElementById('ai-placeholder').style.display = 'none';
+            document.getElementById('ai-diagnostics-container').style.display = 'flex';
+            aiCalculated = true;
+            document.getElementById('auto-optimize-log').classList.add('hidden');
+
+            let score = 100;
+            let analysis = "";
+            let recommendation = "";
+            let subjective = "";
+
+            const weight = parseFloat(document.getElementById('patient-weight').value) || 70;
+            const weightFactor = 70 / weight;
+            
+            let effectiveStackDose = 0;
+            let activeDrugIDs = [];
+            currentRegimen.forEach(r => {
+                const tolMonths = patientTolerances[r.id] || 0;
+                const tolRate = drugDefinitions[r.id].toleranceRate || 0.1;
+                const tolFactor = 1 / (1 + Math.log1p(tolMonths * tolRate));
+                effectiveStackDose += r.dose * weightFactor * tolFactor;
+                activeDrugIDs.push(r.id);
+            });
+
+            if (activeStates.size === 0) {
+                analysis = "The network is operating at baseline optimal synchronization. High-dimensional cliques form and dissolve in a fluid, critical state.";
+                subjective = "A sense of 'Flow.' Thoughts transition naturally; focus is easily directed and maintained. Emotional responses are congruent with the environment.";
+                if (effectiveStackDose > 0 || currentStim !== 'NONE') {
+                    score = 100 - (effectiveStackDose * 20);
+                    if (currentStim !== 'NONE') score -= 10;
+                    analysis += ` However, exogenous interventions are adding unnecessary entropy.`;
+                    subjective = "Slight unease or artificial stimulation. The natural flow is subtly disrupted by exogenous noise.";
+                    recommendation = "Cease intervention. Natural homeostasis is sufficient.";
+                } else {
+                    recommendation = "No intervention required. System is stable.";
+                }
+            } else {
+                score = 100 - (activeStates.size * 25);
+                analysis = `Detected overlapping pathologies: ${Array.from(activeStates).join(', ')}. `;
+                
+                let subExp = [];
+                if (activeStates.has("PTSD")) subExp.push("'Time collapse' and visceral trauma recall.");
+                if (activeStates.has("ADHD")) subExp.push("Effortful focus feeling like 'wading through static'.");
+                if (activeStates.has("DEPRESSION")) subExp.push("A profound 'Grey' loss of emotional contrast and heavy rumination.");
+                if (activeStates.has("TOURETTES")) subExp.push("A physical 'urge' or pressure requiring motor discharge.");
+                if (activeStates.has("WITHDRAWAL_OPIOID")) subExp.push("Extreme physical discomfort, dysautonomia, and severe anxiety (neurochemical debt).");
+                if (activeStates.has("WITHDRAWAL_STIMULANT")) subExp.push("Profound lethargy, anhedonia, and lack of drive (dopaminergic crash).");
+                subjective = "The patient is likely experiencing: " + subExp.join(" ");
+                
+                let targetScore = score;
+                
+                if (weight !== 70) analysis += `Calculations scaled for ${weight}kg patient weight. `;
+
+                if (effectiveStackDose > 0 || currentStim !== 'NONE') {
+                    
+                    if (activeDrugIDs.includes("ZB-01") && activeStates.has("PTSD")) { targetScore += 40 * (currentRegimen.find(r=>r.id==="ZB-01").dose * weightFactor); analysis += "ZB-01 actively stabilizing limbic hyperarousal. "; }
+                    if (activeDrugIDs.includes("SS-20") && activeStates.has("ADHD")) { targetScore += 45 * (currentRegimen.find(r=>r.id==="SS-20").dose * weightFactor); analysis += "SS-20 bridging Frontoparietal connectivity gap. "; }
+                    if (activeDrugIDs.includes("LL-07") && activeStates.has("DEPRESSION")) { targetScore += 40 * (currentRegimen.find(r=>r.id==="LL-07").dose * weightFactor); analysis += "LL-07 restoring reward circuit fluidity. "; }
+                    if (activeDrugIDs.includes("DR-02") && activeStates.has("TOURETTES")) { targetScore += 35 * (currentRegimen.find(r=>r.id==="DR-02").dose * weightFactor); analysis += "DR-02 dampening somatomotor loops. "; }
+                    if (activeDrugIDs.includes("SR17") && activeStates.has("WITHDRAWAL_OPIOID")) { targetScore += 50 * (currentRegimen.find(r=>r.id==="SR17").dose * weightFactor); analysis += "SR17-018 stabilizing opioid withdrawal debt without respiratory depression. "; }
+                    if (activeDrugIDs.includes("SS-20") && activeStates.has("WITHDRAWAL_STIMULANT")) { targetScore += 30 * (currentRegimen.find(r=>r.id==="SS-20").dose * weightFactor); analysis += "SS-20 slowly restoring dopaminergic drive. "; }
+                    
+                    if (currentStim === 'TMS' && activeStates.has("ADHD")) { 
+                        targetScore += 15; 
+                        analysis += "TMS augmenting Frontal control. "; 
+                        subjective += " A distinct, rhythmic tapping sensation accompanies a sharp clearing of mental static.";
+                    }
+                    if (currentStim === 'DBS' && activeStates.has("TOURETTES")) { 
+                        targetScore += 20; 
+                        analysis += "DBS forcefully breaking rigid motor cliques. "; 
+                        subjective += " A deep structural resetting feeling; the physical urge to tic is abruptly halted.";
+                    }
+                    if (currentStim === 'TDCS') {
+                        targetScore += 10;
+                        analysis += "tDCS elevating cortical excitability. ";
+                        subjective += " A mild tingling at the scalp corresponds with a gentle lift in energy and mood.";
+                    }
+                    
+                    if (targetScore > score + 20) {
+                        subjective = "Symptoms are receding. The topological structures are actively shifting towards a healthy configuration.";
+                    } else if (effectiveStackDose > 2.0) {
+                        subjective = "A confusing mix of physical lethargy paired with mental racing or anxiety ('tired but wired').";
+                        analysis += "Polypharmacy conflict detected. High generalized noise.";
+                        targetScore -= 10;
+                    }
+                }
+
+                const finalScore = Math.min(100, Math.max(0, targetScore));
+                score = finalScore;
+
+                if (score > 85) recommendation = "Current intervention strategy is highly effective. Maintain dosage and monitor.";
+                else if (score > 60) recommendation = "Partial stabilization achieved. Consider titrating dosage, adjusting neuromodulation, or reviewing precision alternatives.";
+                else {
+                    recommendation = `Critical network instability. Severe topological deviation. Immediate optimization recommended.`;
+                }
+            }
+
+            document.getElementById('sim-analysis').innerText = analysis;
+            const subjEl = document.getElementById('sim-subjective');
+            if(subjEl) subjEl.innerText = subjective;
+            document.getElementById('sim-recommendation').innerText = recommendation;
+            
+            const bar = document.getElementById('integrity-bar');
+            const scoreTxt = document.getElementById('integrity-score');
+            bar.style.width = `${Math.round(score)}%`;
+            scoreTxt.innerText = `${Math.round(score)}%`;
+            dashScore = score;
+            
+            if (score > 80) { bar.className = 'h-full bg-emerald-500 transition-all duration-500'; scoreTxt.className = 'text-emerald-500 font-mono font-bold text-lg'; }
+            else if (score > 50) { bar.className = 'h-full bg-amber-500 transition-all duration-500'; scoreTxt.className = 'text-amber-500 font-mono font-bold text-lg'; }
+            else { bar.className = 'h-full bg-rose-500 transition-all duration-500'; scoreTxt.className = 'text-rose-500 font-mono font-bold text-lg'; }
+        }
+
+        function autoOptimizeIntervention() {
+            if (isComparing) toggleComparison(); 
+            renderGhost(); 
+            isComparing = true;
+            document.getElementById('btn-comp').classList.add('bg-indigo-600');
+            document.getElementById('btn-comp').classList.add('border-indigo-500');
+
+            const logBox = document.getElementById('auto-optimize-log');
+            logBox.innerHTML = '';
+            logBox.classList.remove('hidden');
+
+            const addLog = (msg, delay) => {
+                setTimeout(() => {
+                    logBox.innerHTML += `<div>> ${msg}</div>`;
+                }, delay);
+            };
+
+            if (activeStates.size === 0) {
+                addLog("Analyzing baseline...", 100);
+                addLog("Result: Homeostasis detected. Clearing interventions.", 500);
+                setTimeout(() => {
+                    currentRegimen = [];
+                    currentStim = 'NONE';
+                    document.getElementById('stim-select').value = 'NONE';
+                    renderRegimenList();
+                    updateSimulation(true);
+                }, 800);
+                return;
+            }
+
+            let dominantState = Array.from(activeStates)[0];
+            if (activeStates.has("ADHD")) dominantState = "ADHD";
+            if (activeStates.has("DEPRESSION")) dominantState = "DEPRESSION";
+            if (activeStates.has("TOURETTES")) dominantState = "TOURETTES";
+            if (activeStates.has("PTSD")) dominantState = "PTSD";
+            if (activeStates.has("WITHDRAWAL_OPIOID")) dominantState = "WITHDRAWAL_OPIOID";
+            if (activeStates.has("WITHDRAWAL_STIMULANT")) dominantState = "WITHDRAWAL_STIMULANT";
+
+            const options = {
+                "ADHD": [ { id: "SS-20", mult: 45 }, { id: "AMP", mult: 30 }, { id: "NIC", mult: 15 } ],
+                "PTSD": [ { id: "ZB-01", mult: 40 }, { id: "FLX", mult: 20 }, { id: "CBD", mult: 15 } ],
+                "DEPRESSION": [ { id: "LL-07", mult: 40 }, { id: "KET", mult: 35 }, { id: "FLX", mult: 25 }, { id: "NX-44", mult: 45 } ],
+                "TOURETTES": [ { id: "DR-02", mult: 35 }, { id: "CBD", mult: 10 } ],
+                "WITHDRAWAL_OPIOID": [ { id: "SR17", mult: 55 }, { id: "BUPRE", mult: 40 }, { id: "METHADONE", mult: 35 }, { id: "CLON", mult: 25 }, { id: "CBD", mult: 15 } ],
+                "WITHDRAWAL_STIMULANT": [ { id: "NRG01", mult: 50 }, { id: "SS-20", mult: 35 }, { id: "CLON", mult: 20 }, { id: "AMP", mult: 15 } ]
+            };
+
+            addLog(`Detected dominant pathology: ${dominantState}`, 100);
+            const gap = activeStates.size * 25;
+            
+            const weight = parseFloat(document.getElementById('patient-weight').value) || 70;
+            const weightFactor = 70 / weight;
+            addLog(`Applying scalar for weight (${weight}kg)`, 400);
+
+            let bestDrug = "NONE";
+            let bestDose = Infinity;
+            const candidates = options[dominantState] || [];
+            
+            addLog(`Evaluating ${candidates.length} molecular pathways...`, 700);
+
+            for (let c of candidates) {
+                const tolMonths = patientTolerances[c.id] || 0;
+                const tolRate = drugDefinitions[c.id].toleranceRate;
+                const tolFactor = 1 / (1 + Math.log1p(tolMonths * tolRate));
+                
+                const requiredEffectiveDose = gap / c.mult;
+                let requiredBaseDose = requiredEffectiveDose / (weightFactor * tolFactor);
+                
+                if (requiredBaseDose < bestDose) {
+                    bestDose = requiredBaseDose;
+                    bestDrug = c.id;
+                }
+            }
+
+            if (bestDrug === "NONE" || bestDose > 3.0) {
+                bestDose = Math.min(3.0, bestDose);
+                if (bestDrug === "NONE") bestDrug = "ZB-01"; 
+            }
+
+            addLog(`Selected Optimal Molecule: ${bestDrug} at ${bestDose.toFixed(1)} mg`, 1100);
+            if (patientTolerances[bestDrug] > 0) {
+                 addLog(`Dosage adjusted up to counteract ${patientTolerances[bestDrug]}mo tolerance.`, 1300);
+            }
+            
+            const allowNeuromod = document.getElementById('allow-neuromod').checked;
+            let optimalStim = 'NONE';
+            if (allowNeuromod) {
+                if (activeStates.has("ADHD")) optimalStim = 'TMS';
+                if (activeStates.has("TOURETTES")) optimalStim = 'DBS';
+                if (activeStates.has("DEPRESSION") && bestDose > 1.5) optimalStim = 'TDCS';
+            }
+            
+            if (optimalStim !== 'NONE') addLog(`Adjunct Therapy: Assigned ${optimalStim} neuromodulation.`, 1500);
+
+            setTimeout(() => {
+                currentRegimen = [{ id: bestDrug, dose: parseFloat(bestDose.toFixed(1)) }];
+                currentStim = optimalStim;
+                document.getElementById('stim-select').value = optimalStim;
+                renderRegimenList();
+                updateSimulation(true);
+                
+                addLog(`<strong>Optimization Complete.</strong> Ghost overlay reveals un-optimized state transposition.`, 1900);
+            }, 1800);
+        }
+
+        let activeTargetRegions = new Set();
+        let activeTargetEffects = {};
+
+        function updateSimulation(skipAiReset = false) {
+            currentStim = document.getElementById('stim-select').value;
+            composeTopology();
+            const statesText = activeStates.size > 0 ? Array.from(activeStates).join(' + ') : 'Healthy Baseline';
+            document.getElementById('state-summary-text').innerText = `Active Modifiers: ${statesText}`;
+            
+            // --- Target Regions Logic ---
+            activeTargetRegions.clear();
+            activeTargetEffects = {};
+
+            currentRegimen.forEach(r => {
+                const def = drugDefinitions[r.id];
+                let regions = [];
+                if (def.class === 'Stimulant' || (def.class === 'Conventional' && r.id === 'AMP')) regions = ['Control', 'SomatoMotor'];
+                else if (def.class === 'Depressant' || def.target.includes('Opioid') || def.target.includes('GABA') || r.id === 'KET') regions = ['Default', 'Limbic'];
+                else if (def.class === 'SSRI' || def.class === 'SNRI') regions = ['Default', 'Limbic'];
+                else if (r.id === 'ZB-01' || r.id === 'NX-44' || def.target.includes('Global')) regions = ['Control', 'SomatoMotor', 'Limbic', 'Default', 'Visual'];
+                else if (r.id === 'SS-20') regions = ['Control'];
+                else if (r.id === 'DR-02') regions = ['SomatoMotor'];
+                else regions = ['Default'];
+                
+                regions.forEach(region => {
+                    activeTargetRegions.add(region);
+                    if (!activeTargetEffects[region]) activeTargetEffects[region] = [];
+                    activeTargetEffects[region].push(def);
+                });
+            });
+
+            if (currentStim === 'TMS') { activeTargetRegions.add('Control'); if(!activeTargetEffects['Control']) activeTargetEffects['Control'] = []; activeTargetEffects['Control'].push({name: 'TMS', mech: 'Neuromodulation targeting left DLPFC', isBlue: true}); }
+            if (currentStim === 'DBS') { activeTargetRegions.add('SomatoMotor'); if(!activeTargetEffects['SomatoMotor']) activeTargetEffects['SomatoMotor'] = []; activeTargetEffects['SomatoMotor'].push({name: 'DBS', mech: 'Neuromodulation targeting motor loops', isBlue: true}); }
+            if (currentStim === 'TDCS') { activeTargetRegions.add('Control'); if(!activeTargetEffects['Control']) activeTargetEffects['Control'] = []; activeTargetEffects['Control'].push({name: 'tDCS', mech: 'Neuromodulation via anodal frontal stimulation', isBlue: true}); }
+
+            const overlay = document.getElementById('target-overlay');
+            const list = document.getElementById('target-regions-list');
+            if (activeTargetRegions.size > 0) {
+                overlay.classList.remove('hidden');
+                list.innerHTML = Array.from(activeTargetRegions).map(region => {
+                    const fx = activeTargetEffects[region];
+                    let desc = fx.map(f => `<span class="text-[9px] text-${f.isBabelForge ? 'purple' : (f.isBlue ? 'blue' : 'indigo')}-400 font-bold">${f.name}</span>: <span class="italic opacity-80">${f.mech}</span>`).join('<br>');
+                    return `
+                        <div class="bg-slate-800/50 p-2 rounded border border-slate-700">
+                            <span class="block text-[10px] font-bold text-rose-400 uppercase tracking-widest mb-1">${region} Target</span>
+                            <p class="text-[9px] text-slate-300 leading-tight">${desc}</p>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                overlay.classList.add('hidden');
+            }
+            // --- End Target Regions Logic ---
+
+            if (!skipAiReset) {
+                document.getElementById('ai-diagnostics-container').style.display = 'none';
+                document.getElementById('ai-placeholder').style.display = 'flex';
+                aiCalculated = false;
+            } else {
+                calculateAI();
+            }
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            const time = Date.now() * 0.001;
+            
+            const totalDose = currentRegimen.reduce((sum, r) => sum + r.dose, 0);
+
+            // Raycaster
+            if (raycaster && mouse) {
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObjects(lobeGroup.children);
+                if (intersects.length > 0) {
+                    hoveredNode = intersects[0].object;
+                    document.body.style.cursor = 'pointer';
+                } else {
+                    hoveredNode = null;
+                    document.body.style.cursor = 'default';
+                }
+            }
+
+            lobeGroup.children.forEach(node => {
+                const dist = node.userData.origin.length();
+                const wave = Math.sin(dist * 0.05 - time * 3);
+                
+                // Add jitter if high dose or pathological
+                let jitter = 0;
+                if (activeStates.size > 0 && totalDose < 1) jitter = 1.0;
+                if (activeStates.has("WITHDRAWAL_OPIOID") && totalDose < 1) jitter = 2.5; // Severe withdrawal chaos
+                if (totalDose > 2.5) jitter = 2.0; // toxicity
+                if (currentStim === 'TMS' && node.userData.nodeData.region === 'Control') jitter += 0.5;
+                if (currentStim === 'DBS' && node.userData.nodeData.region === 'SomatoMotor') jitter += 0.8;
+                
+                if (jitter > 0) {
+                     node.position.x = node.userData.origin.x + (Math.random() - 0.5) * jitter;
+                     node.position.y = node.userData.origin.y + (Math.random() - 0.5) * jitter;
+                     node.position.z = node.userData.origin.z + (Math.random() - 0.5) * jitter;
+                } else {
+                     node.position.lerp(node.userData.origin, 0.1);
+                }
+
+                if (node === hoveredNode || node === selectedNode) {
+                    node.scale.setScalar(4 + node.userData.nodeData.hubness * 1.5);
+                    node.material.color.setHex(node.userData.stateColor);
+                    node.material.emissive.setHex(node.userData.stateColor);
+                    node.material.emissiveIntensity = 1.0;
+                } else {
+                    node.scale.setScalar(3 + node.userData.nodeData.hubness);
+                    node.material.color.setHex(node.userData.baseColor);
+                    
+                    if (activeTargetRegions.has(node.userData.nodeData.region)) {
+                         node.material.emissive.setHex(0xe11d48); // Rose highlight
+                         node.material.emissiveIntensity = 0.6 + wave * 0.4 + (totalDose * 0.1);
+                    } else {
+                         node.material.emissive.setHex(node.userData.baseColor);
+                         node.material.emissiveIntensity = 0.4 + wave * 0.3 + (totalDose * 0.2);
+                    }
+                }
+            });
+            renderer.render(scene, camera);
+        }
+
+        function handleStimChange() {
+            const stim = document.getElementById('stim-select').value;
+            if (stim !== 'NONE') {
+                showToast('Neuromodulation Active', `Initiating ${stim} targeting protocols...`, false);
+            }
+            updateSimulation();
+        }
+
+        function showToast(title, message, isBabelForge = false) {
+            let container = document.getElementById('toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toast-container';
+                container.className = 'fixed bottom-4 right-4 z-[100] flex flex-col gap-2 pointer-events-none';
+                document.body.appendChild(container);
+            }
+            
+            const toast = document.createElement('div');
+            const colorClass = isBabelForge ? 'bg-purple-600' : 'bg-indigo-600';
+            const badge = isBabelForge ? `<span class="ml-2 bg-white/20 px-1.5 py-0.5 rounded text-[8px] uppercase tracking-wider shadow-sm">babelForge Protocol</span>` : '';
+            
+            toast.className = `${colorClass} text-white px-4 py-3 rounded-xl shadow-lg transform transition-all duration-300 translate-y-4 opacity-0 flex flex-col gap-1 min-w-[250px]`;
+            toast.innerHTML = `
+                <div class="flex justify-between items-center">
+                    <span class="text-[10px] font-bold uppercase tracking-widest">${title}${badge}</span>
+                </div>
+                <span class="text-xs font-medium">${message}</span>
+            `;
+            
+            container.appendChild(toast);
+            
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-4', 'opacity-0');
+            });
+            
+            setTimeout(() => {
+                toast.classList.add('translate-y-4', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Boot
+        window.addEventListener('DOMContentLoaded', () => {
+            initUI();
+            init3D();
+            
+            if (window.precalculatedTopologyData) {
+                topoData = window.precalculatedTopologyData;
+                updateSimulation();
+            } else {
+                console.error("No precalculated topology data found. Run forge.py.");
+            }
+        });
+    </script>
+</body>
+</html>
