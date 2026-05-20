@@ -399,9 +399,9 @@ export default function ConsolePage() {
 
         <div className="p-4 border-b border-line space-y-3.5">
           <div className="flex items-center justify-between">
-            <div className="section-label">Subjective Experience</div>
+            <div className="section-label">Subjective Experience Engine (SEE)</div>
             <div className="text-[9px] font-mono text-accent-400 bg-accent-500/10 border border-accent-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider font-semibold animate-pulse">
-              Translating Qualia...
+              SEE Qualia Projection...
             </div>
           </div>
 
@@ -441,7 +441,7 @@ export default function ConsolePage() {
 
               {/* Cognitive Domains */}
               <div className="bg-surface-dark border border-line rounded-sharp p-3 space-y-2.5">
-                <div className="text-[10px] text-ink-muted uppercase font-bold tracking-wider">Cognitive Domain translation</div>
+                <div className="text-[10px] text-ink-muted uppercase font-bold tracking-wider">Cognitive Domain Projection (SEE)</div>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-2">
                   {/* Focus */}
                   <div className="space-y-1">

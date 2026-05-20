@@ -96,6 +96,76 @@ export default function AnomalyScanPage() {
             />
             <NumInput label="Height (cm)" v={profile.demographics.heightCm} onChange={(v) => setDemo({ heightCm: v })} />
             <NumInput label="Weight (kg)" v={profile.demographics.weightKg} onChange={(v) => setDemo({ weightKg: v })} />
+            <div className="col-span-2">
+              <SelectInput
+                label="Biogeographical Ancestry"
+                v={profile.demographics.ethnicity ?? ""}
+                options={[
+                  { v: "", l: "—" },
+                  { v: "european", l: "European Ancestry (CYP2D6 PM)" },
+                  { v: "east_asian", l: "East Asian Ancestry (CYP2C19 PM)" },
+                  { v: "mena", l: "Middle Eastern / North African (CYP2D6 UM)" },
+                  { v: "wildtype", l: "Normal / Wildtype Ancestry" },
+                ]}
+                onChange={(v) => {
+                  setDemo({ ethnicity: v || undefined });
+                  if (v === "european") {
+                    set("pgx", { ...profile.pgx, cyp2d6: "PM", cyp2c19: "NM", cyp3a4: "NM" });
+                  } else if (v === "east_asian") {
+                    set("pgx", { ...profile.pgx, cyp2d6: "NM", cyp2c19: "PM", cyp3a4: "NM" });
+                  } else if (v === "mena") {
+                    set("pgx", { ...profile.pgx, cyp2d6: "UM", cyp2c19: "NM", cyp3a4: "NM" });
+                  } else if (v === "wildtype") {
+                    set("pgx", { ...profile.pgx, cyp2d6: "NM", cyp2c19: "NM", cyp3a4: "NM" });
+                  }
+                }}
+              />
+            </div>
+          </Section>
+
+          <Section title="Pharmacogenomic Profiles">
+            <SelectInput
+              label="CYP2D6 Phenotype"
+              v={profile.pgx.cyp2d6 ?? ""}
+              options={[
+                { v: "", l: "—" },
+                { v: "PM", l: "Poor Metabolizer (PM)" },
+                { v: "IM", l: "Intermediate Metabolizer (IM)" },
+                { v: "NM", l: "Normal Metabolizer (NM)" },
+                { v: "UM", l: "Ultra-Rapid Metabolizer (UM)" },
+              ]}
+              onChange={(v) => set("pgx", { ...profile.pgx, cyp2d6: v as any })}
+            />
+            <SelectInput
+              label="CYP2C19 Phenotype"
+              v={profile.pgx.cyp2c19 ?? ""}
+              options={[
+                { v: "", l: "—" },
+                { v: "PM", l: "Poor Metabolizer (PM)" },
+                { v: "IM", l: "Intermediate Metabolizer (IM)" },
+                { v: "NM", l: "Normal Metabolizer (NM)" },
+                { v: "UM", l: "Ultra-Rapid Metabolizer (UM)" },
+              ]}
+              onChange={(v) => set("pgx", { ...profile.pgx, cyp2c19: v as any })}
+            />
+            
+            {profile.demographics.ethnicity && (
+              <div className="col-span-2 mt-2 p-2.5 rounded-clinical border border-line bg-surface-1 text-[11px] leading-relaxed text-ink-muted">
+                <span className="text-accent-500 font-bold block mb-1">Ancestry PGx Correlation Notes:</span>
+                {profile.demographics.ethnicity === "european" && (
+                  <span>European Ancestry presets <strong>CYP2D6 PM</strong> (~7-10% prevalence, slowing down metabolization of many stimulants, antidepressants, and antiarrhythmics, risking toxicity).</span>
+                )}
+                {profile.demographics.ethnicity === "east_asian" && (
+                  <span>East Asian Ancestry presets <strong>CYP2C19 PM</strong> (~15-22% prevalence, slowing clearance of escitalopram, sertraline, and diazepam, prolonging active drug lifetime).</span>
+                )}
+                {profile.demographics.ethnicity === "mena" && (
+                  <span>Middle Eastern / North African Ancestry presets <strong>CYP2D6 UM</strong> (up to 20-29% prevalence of ultra-rapid metabolization, clearing antidepressants and ADHD stimulants too rapidly for therapeutic effect).</span>
+                )}
+                {profile.demographics.ethnicity === "wildtype" && (
+                  <span>Wildtype presets normal metabolization rates across all target enzyme pathways.</span>
+                )}
+              </div>
+            )}
           </Section>
 
           <Section title="Vitals">

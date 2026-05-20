@@ -33,50 +33,13 @@ export interface PharmaVectors {
 
 const ZERO: PharmaVectors = { arousal: 0, dampening: 0, chaos: 0, repair: 0 };
 
+import { computePharmaChemVectors } from "./pharmaChemEngine";
+
 export function computeStackVectors(stack: StackItem[] | undefined | null): PharmaVectors {
   if (!stack || stack.length === 0) return { ...ZERO };
-  const net: PharmaVectors = { ...ZERO };
-
-  for (const mol of stack) {
-    const intensity = mol.currentIntensity ?? 0;
-    if (intensity <= 0) continue;
-
-    const tolMonths = mol.toleranceMonths ?? 0;
-    let tolRate = 0.1;
-    if (mol.class === "stimulant" || mol.class === "recreational") tolRate = 0.5;
-    if (mol.class === "novel") tolRate = 0.05;
-    if (mol.class === "cannabinoid") tolRate = 0.3;
-
-    const tolFactor = 1 / (1 + Math.log1p(tolMonths * tolRate));
-    const ratio = (intensity / 3.0) * tolFactor;
-    const capped = Math.min(1, ratio);
-    const overDose = Math.max(0, ratio - 1);
-
-    const e = mol.effects ?? {};
-    net.arousal += (e.arousal ?? 0) * capped;
-    net.dampening += (e.dampening ?? 0) * capped;
-    net.repair += (e.repair ?? 0) * capped;
-    net.chaos += (e.chaos ?? 0) * capped;
-
-    if (overDose > 0) {
-      if ((mol.class === "stimulant" || mol.class === "novel") && (e.arousal ?? 0) > 0) {
-        net.chaos += overDose * 1.5;
-        net.arousal += overDose * 0.5;
-        net.repair -= overDose * 0.5;
-      } else if (
-        mol.class === "antipsychotic" ||
-        mol.class === "depressant" ||
-        mol.class === "ssri"
-      ) {
-        net.dampening += overDose * 2.0;
-        net.chaos += overDose * 0.5;
-        net.repair -= overDose * 0.5;
-      } else {
-        net.chaos += overDose * 1.0;
-        net.repair -= overDose * 0.5;
-      }
-    }
-  }
-
-  return net;
+  
+  // Call computePharmaChemVectors with a default patient and 0 elapsed hours
+  const defaultPatient = { weightKg: 70, ageYears: 35 };
+  const res = computePharmaChemVectors(stack, defaultPatient, 0);
+  return res.vectors;
 }

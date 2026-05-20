@@ -10,6 +10,7 @@ import DraggablePanel from "@/components/palantir/DraggablePanel";
 import { runDiagnosis } from "@/lib/engine/diagnosis";
 import type { Pathology } from "@/lib/engine/topology";
 import { EMPTY_PROFILE, type PatientProfile } from "@/lib/patient/profile";
+import ReceptorOccupancy from "@/components/clinical/ReceptorOccupancy";
 
 const STORAGE_KEY = "babelforge:experience-simulator:v1";
 
@@ -19,6 +20,7 @@ export default function ExperienceSimulator() {
   const [experience, setExperience] = useState("");
   const [isSimulating, setIsSimulating] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const [elapsedHrs, setElapsedHrs] = useState(0);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
@@ -33,6 +35,7 @@ export default function ExperienceSimulator() {
         const parsed = JSON.parse(raw);
         if (parsed.experience) setExperience(parsed.experience);
         if (parsed.result) setResult(parsed.result);
+        if (parsed.elapsedHrs !== undefined) setElapsedHrs(parsed.elapsedHrs);
       }
     } catch {
       /* ignore */
@@ -44,20 +47,30 @@ export default function ExperienceSimulator() {
   useEffect(() => {
     if (!hydrated) return;
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ experience, result }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ experience, result, elapsedHrs }));
     } catch {
       /* ignore */
     }
-  }, [experience, result, hydrated]);
+  }, [experience, result, elapsedHrs, hydrated]);
+
+  // Dynamically update the simulation when demographic profile, active pathologies, or elapsed hours change
+  useEffect(() => {
+    if (!experience.trim() || !hydrated || !result) return;
+    try {
+      const localData = localSimulateFallback(experience, activePathologies, profile, elapsedHrs);
+      setResult(localData);
+    } catch (err) {
+      console.error("Dynamic simulation update failed:", err);
+    }
+  }, [elapsedHrs, activePathologies, profile, hydrated]);
 
   const handleSimulate = async () => {
     if (!experience.trim()) return;
     setIsSimulating(true);
-    setResult(null);
 
     try {
       // Local simulation incorporates clinical genetics, vitals, labs, and psychometrics, ensuring absolute data privacy and physical correctness
-      const localData = localSimulateFallback(experience, activePathologies, profile);
+      const localData = localSimulateFallback(experience, activePathologies, profile, elapsedHrs);
       setResult(localData);
       setViewPerspective("pharma"); // Switch to effect view
     } catch (err) {
@@ -84,7 +97,7 @@ export default function ExperienceSimulator() {
       {/* Left Sidebar: Simulator Input & Physical Vectors */}
       <DraggablePanel
         id="experience-simulator"
-        title="Subjective Reaction Engine"
+        title="Subjective Experience Engine (SEE)"
         subtitle="LLM-Physics Bridge"
         defaultPosition={{ x: 20, y: 20 }}
         defaultSize={{ width: 400, height: 620 }}
@@ -114,6 +127,29 @@ export default function ExperienceSimulator() {
                 "Simulate Experience"
               )}
             </button>
+
+            {/* Hours Elapsed range slider */}
+            {result && (
+              <div className="mt-2 bg-surface-0 border border-line p-3 rounded-clinical space-y-2 backdrop-blur-md">
+                <div className="flex justify-between items-baseline">
+                  <span className="text-[10px] font-bold text-ink-muted uppercase tracking-widest">Hours Elapsed</span>
+                  <span className="font-mono text-xs text-white font-semibold">{elapsedHrs} <span className="text-ink-muted text-[10px]">Hrs</span></span>
+                </div>
+                <input
+                  type="range"
+                  className="slider-clinical w-full cursor-pointer h-1.5 bg-surface-100 rounded-clinical appearance-none"
+                  min="0"
+                  max="48"
+                  step="0.5"
+                  value={elapsedHrs}
+                  onChange={(e) => setElapsedHrs(parseFloat(e.target.value))}
+                  style={{ accentColor: '#6366f1' }}
+                />
+                <p className="text-[9px] text-ink-muted font-mono leading-none text-right">
+                  PK/PD decay based on genotype/age clearance profiles
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -138,7 +174,7 @@ export default function ExperienceSimulator() {
                 </div>
                 
                 <div className="bg-surface-50 border border-line-strong rounded-clinical p-3">
-                  <span className="text-[9px] uppercase font-bold text-accent-400 block mb-1 tracking-widest">Projected Subjective State</span>
+                  <span className="text-[9px] uppercase font-bold text-accent-400 block mb-1 tracking-widest">SEE Projected Subjective State</span>
                   <p className="text-xs text-ink italic leading-relaxed">&ldquo;{result.subj}&rdquo;</p>
                 </div>
 
@@ -226,9 +262,16 @@ export default function ExperienceSimulator() {
               })}
             </div>
 
+            {/* Receptor Occupancy Widget */}
+            {result.occupancies && (
+              <div className="flex-none">
+                <ReceptorOccupancy occupancyData={result.occupancies} title="Somatic Receptor Binding" />
+              </div>
+            )}
+
             {/* Cognitive Domains */}
             <div className="bg-surface-50 border border-line rounded-clinical p-3 space-y-2.5 flex-none">
-              <div className="text-[10px] text-ink-subtle uppercase font-bold tracking-wider">Cognitive Domain translation</div>
+              <div className="text-[10px] text-ink-subtle uppercase font-bold tracking-wider">Cognitive Domain Projection (SEE)</div>
               <div className="grid grid-cols-2 gap-x-4 gap-y-2">
                 {/* Focus */}
                 <div className="space-y-1">
@@ -394,7 +437,7 @@ const ARCHETYPES: Archetype[] = [
   }
 ];
 
-function localSimulateFallback(experience: string, pathologies: string[], profile: PatientProfile): any {
+function localSimulateFallback(experience: string, pathologies: string[], profile: PatientProfile, elapsedHrs = 0): any {
   const text = experience.toLowerCase();
   const matches: Archetype[] = [];
 
@@ -486,16 +529,17 @@ function localSimulateFallback(experience: string, pathologies: string[], profil
     toleranceMonths: 0,
     ageYears: profile.demographics?.ageYears ?? 35,
     simulationTimeMonths: 0,
-    profile
+    profile,
+    elapsedHrs
   };
 
   const report = runDiagnosis(pathologies as Pathology[], vectors, patientParams, stack);
 
   return {
-    arousal: blendedArousal,
-    dampening: blendedDampening,
-    chaos: blendedChaos,
-    repair: blendedRepair,
+    arousal: report.vectors?.arousal ?? blendedArousal,
+    dampening: report.vectors?.dampening ?? blendedDampening,
+    chaos: report.vectors?.chaos ?? blendedChaos,
+    repair: report.vectors?.repair ?? blendedRepair,
     label: report.label || blendedLabel,
     desc: report.description || blendedDesc,
     subj: report.subjectiveProfile?.narrative || blendedSubj,
@@ -513,6 +557,7 @@ function localSimulateFallback(experience: string, pathologies: string[], profil
     },
     integrity: report.integrity,
     R: report.R,
-    K: report.K
+    K: report.K,
+    occupancies: report.occupancies
   };
 }

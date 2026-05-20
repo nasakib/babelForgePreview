@@ -23,6 +23,7 @@ import {
 } from "./kuramoto";
 import { translateSubjective, type SubjectiveProfile } from "./subjective";
 import type { PatientProfile } from "@/lib/patient/profile";
+import { computePharmaChemVectors, type OccupancyResult } from "./pharmaChemEngine";
 
 export interface PharmaVectors {
   arousal: number;
@@ -37,6 +38,7 @@ export interface PatientParams {
   ageYears: number;
   simulationTimeMonths: number; // Time Engine
   profile?: PatientProfile;
+  elapsedHrs?: number; // Added to capture real-time PK decay!
 }
 
 export interface RestorationMetric {
@@ -59,6 +61,8 @@ export interface DiagnosticReport {
   holisticSynergyBonus: number;  // synergistic amplifier (e.g. 1.0..1.5)
   activeCorrections: RestorationMetric[];
   subjectiveProfile?: SubjectiveProfile;
+  occupancies?: OccupancyResult; // Exposes physical receptor occupancy profiles
+  vectors?: PharmaVectors;      // Exposes decayed or modified vectors
 }
 
 export const ZERO_VECTORS: PharmaVectors = {
@@ -242,6 +246,21 @@ export function runDiagnosis(
     cypFactor = 0.65; // rapid metabolizers clear compounds too quickly
   }
 
+  // BDNF Val66Met genetic neuroplasticity capacity scaling
+  let bdnfFactor = 1.0;
+  const pgxData = patient.profile?.pgx as any;
+  if (pgxData?.bdnf === "Met/Met" || (patient.profile?.demographics?.ethnicity === "east_asian" && !pgxData?.bdnf)) {
+    bdnfFactor = 0.65; // Met/Met or East Asian preset has ~35% lower neuroplasticity capacity
+  } else if (pgxData?.bdnf === "Val/Met") {
+    bdnfFactor = 0.85; // intermediate neuroplasticity capacity
+  }
+
+  // COMT Val158Met baseline cortical phase noise under stress
+  let comtNoise = 0.0;
+  if (pgxData?.comt === "Met/Met" && (patient.profile?.lifestyle?.perceivedStress ?? 0) >= 6) {
+    comtNoise = 0.03; // low COMT activity -> dopamine flood under stress increases cortical phase noise ("worrier")
+  }
+
   let deficiencyRepairPenalty = 1.0;
   if (patient.profile) {
     const pVitD = patient.profile.labs?.vitD;
@@ -250,11 +269,29 @@ export function runDiagnosis(
     if (pVitB12 !== undefined && pVitB12 < 200) deficiencyRepairPenalty -= 0.20;
   }
 
+  // Resolve vectors using pharma-chem engine if stack is available, else fallback
+  let activeVectors = vectors;
+  let activeOccupancies: OccupancyResult | undefined = undefined;
+
+  if (stack && stack.length > 0) {
+    const res = computePharmaChemVectors(stack, patient, patient.elapsedHrs ?? 0);
+    activeVectors = res.vectors;
+    activeOccupancies = res.occupancies;
+  } else {
+    // Legacy fallback: apply weightFactor and cypFactor to input vectors
+    activeVectors = {
+      arousal: vectors.arousal * weightFactor * cypFactor,
+      dampening: vectors.dampening * weightFactor * cypFactor,
+      chaos: vectors.chaos * weightFactor * cypFactor,
+      repair: vectors.repair * weightFactor * (cypFactor > 1 ? 1.1 : cypFactor),
+    };
+  }
+
   const v: PharmaVectors = {
-    arousal: vectors.arousal * weightFactor * tolFactor * ageSensitivity * cypFactor,
-    dampening: vectors.dampening * weightFactor * tolFactor * ageSensitivity * cypFactor,
-    chaos: vectors.chaos * weightFactor * tolFactor * ageSensitivity * synergyChaosMultiplier * cypFactor,
-    repair: vectors.repair * weightFactor * tolFactor * Math.max(0.5, ageFactor) * synergyRepairMultiplier * (cypFactor > 1 ? 1.1 : cypFactor) * deficiencyRepairPenalty,
+    arousal: activeVectors.arousal * tolFactor * ageSensitivity,
+    dampening: activeVectors.dampening * tolFactor * ageSensitivity,
+    chaos: activeVectors.chaos * tolFactor * ageSensitivity * synergyChaosMultiplier,
+    repair: activeVectors.repair * tolFactor * Math.max(0.5, ageFactor) * synergyRepairMultiplier * deficiencyRepairPenalty * bdnfFactor,
   };
 
   // Structural neuroplasticity (Hebridean learning / BDNF increase via repair over time)
@@ -278,7 +315,7 @@ export function runDiagnosis(
 
   const baseK = effectiveCoupling(v);
   const K = Math.max(0.1, baseK + structuralPlasticityK);
-  const noise = Math.max(0.01, effectiveNoise(v) + temporalNoise + profileNoise);
+  const noise = Math.max(0.01, effectiveNoise(v) + temporalNoise + profileNoise + comtNoise);
   
   const R = estimateOrderParameter({
     N: topo.N,
@@ -335,7 +372,7 @@ export function runDiagnosis(
     }
   }
 
-  const subjectiveProfile = translateSubjective(states, vectors, patient, { R, K: baseK, noise, integrity }, stack);
+  const subjectiveProfile = translateSubjective(states, v, patient, { R, K: baseK, noise, integrity }, stack);
   
   const finalLabel = subjectiveProfile.qualiaClass;
   const finalDescription = subjectiveProfile.qualiaDescription;
@@ -354,7 +391,9 @@ export function runDiagnosis(
     correctionConvergence,
     holisticSynergyBonus: +holisticSynergyBonus.toFixed(2),
     activeCorrections,
-    subjectiveProfile
+    subjectiveProfile,
+    occupancies: activeOccupancies,
+    vectors: v
   };
 }
 

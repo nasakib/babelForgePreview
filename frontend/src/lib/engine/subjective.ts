@@ -40,7 +40,7 @@ export function translateSubjective(
   const vitals = profile?.vitals ?? {};
   const labs = profile?.labs ?? {};
   const lifestyle = profile?.lifestyle ?? {};
-  const pgx = profile?.pgx ?? {};
+  const pgx = (profile?.pgx ?? {}) as any;
   const psych = profile?.psychometric ?? {};
   const demo = profile?.demographics ?? {};
 
@@ -90,6 +90,15 @@ export function translateSubjective(
       focus += 4;
     }
   }
+
+  // COMT focus multiplier
+  let comtFocusMultiplier = 1.0;
+  if (pgx.comt === "Met/Met") {
+    comtFocusMultiplier = 1.15;
+  } else if (pgx.comt === "Val/Val") {
+    comtFocusMultiplier = 0.88;
+  }
+  focus = Math.round(focus * comtFocusMultiplier);
 
   // Focus penalty for extreme chaos (hallucination/delirium)
   if (vectors.chaos > 1.2) focus -= (vectors.chaos - 1.2) * 20;
@@ -333,6 +342,26 @@ export function translateSubjective(
     if (pgx.cyp2d6 === "PM" || pgx.cyp2c19 === "PM") {
       const cypLabel = pgx.cyp2d6 === "PM" ? "CYP2D6" : "CYP2C19";
       patientDetails.push(`Genotypic mapping identifies a ${cypLabel} Poor Metabolizer (PM) phenotype. This severely limits enzymatic clearance of associated agents, extending active compound half-lives and exacerbating receptor saturation kinetics.`);
+    }
+
+    if (pgx.bdnf === "Met/Met" || (demo.ethnicity === "east_asian" && !pgx.bdnf)) {
+      patientDetails.push("The patient's genotypic profile carries the BDNF Met/Met variant (or East Asian ancestral default), which severely limits activity-dependent BDNF secretion. This reduces long-term synaptic repair and limits synaptogenesis velocity by approximately 35%.");
+    } else if (pgx.bdnf === "Val/Met") {
+      patientDetails.push("The patient carries the heterozygous BDNF Val/Met variant, which imposes an intermediate restriction on neuroplastic repair and synaptogenesis capacity.");
+    }
+
+    if (pgx.comt === "Met/Met") {
+      patientDetails.push("Genotypic mapping of the COMT Val158Met allele reveals a Met/Met homozygous profile. While this low-activity enzyme enhances baseline executive focus due to higher prefrontal dopamine concentrations, it renders the patient highly vulnerable to stress-induced cognitive fragmentation and phase noise ('worrier' phenotype).");
+    } else if (pgx.comt === "Val/Val") {
+      patientDetails.push("The patient carries the COMT Val/Val homozygous variant. This high-activity enzyme results in accelerated prefrontal dopamine clearance, lowering baseline executive focus but providing high cognitive resilience under severe stress conditions.");
+    }
+
+    if (pgx.oprm1 === "G" || (demo.ethnicity === "east_asian" && !pgx.oprm1)) {
+      patientDetails.push("The patient carries the OPRM1 G-allele (or East Asian ancestral default), which represents the A118G variant of the Mu-Opioid Receptor. This genetic polymorphism reduces receptor sensitivity and agonist efficacy, requiring significantly higher concentrations of opioid ligands to achieve analgesic and subjective effects.");
+    }
+
+    if (pgx.htr2a === "hyper" || (demo.ethnicity === "european" && !pgx.htr2a)) {
+      patientDetails.push("Genetics indicate the HTR2A hyper-responsive variant (or European ancestral default), amplifying 5-HT2A receptor sensitivity and signaling efficacy. This leads to marked hyper-responsiveness to serotonergic agonists and psychedelics.");
     }
 
     // Demographics/Pregnancy

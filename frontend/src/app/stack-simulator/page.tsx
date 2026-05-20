@@ -12,6 +12,7 @@ import { computeStackVectors } from "@/lib/engine/stackVectors";
 import type { Pathology } from "@/lib/engine/topology";
 import { EMPTY_PROFILE, type PatientProfile } from "@/lib/patient/profile";
 import TimeEnginePanel from "@/components/palantir/TimeEnginePanel";
+import ReceptorOccupancy from "@/components/clinical/ReceptorOccupancy";
 
 const STORAGE_KEY = "babelforge:stack-simulator:v1";
 
@@ -133,6 +134,7 @@ export default function StackSimulator() {
       correctionConvergence: report.correctionConvergence,
       holisticSynergyBonus: report.holisticSynergyBonus,
       activeCorrections: report.activeCorrections,
+      occupancies: report.occupancies,
     };
   }, [stack, activePathologies, startingAge, simulationTimeMonths, profile]);
 
@@ -174,7 +176,7 @@ export default function StackSimulator() {
           <h4 className="text-xl font-bold text-ink font-semibold">{simulationState.label}</h4>
           <p className="text-xs text-ink-subtle mt-1 max-w-sm leading-relaxed drop-shadow">{simulationState.desc}</p>
           <div className="mt-2 pt-2 border-t border-accent-500/30 max-w-sm">
-              <span className="text-[9px] uppercase font-bold text-crit block mb-1">Projected Subjective Experience</span>
+              <span className="text-[9px] uppercase font-bold text-crit block mb-1">Projected Subjective Experience (SEE)</span>
               <p className="text-xs text-ink-subtle italic leading-relaxed drop-shadow">{simulationState.subj}</p>
           </div>
           {simulationState.warnings && simulationState.warnings.length > 0 && (
@@ -378,6 +380,21 @@ export default function StackSimulator() {
           </div>
         </div>
       </DraggablePanel>
+
+      {stack.length > 0 && (
+        <DraggablePanel
+          id="receptor-occupancy-panel"
+          title="Receptor Occupancy"
+          subtitle="Competitive PD Binding"
+          defaultPosition={{ x: 420, y: 20 }}
+          defaultSize={{ width: 360, height: 500 }}
+        >
+          <div className="p-4 h-full overflow-y-auto custom-scrollbar">
+            <ReceptorOccupancy occupancyData={simulationState.occupancies} />
+          </div>
+        </DraggablePanel>
+      )}
+
       <TimeEnginePanel />
     </div>
   );
