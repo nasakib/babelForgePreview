@@ -47,10 +47,11 @@ export default function StatusBar() {
     return () => { cancelled = true; clearInterval(id); };
   }, []);
 
-  const env =
-    typeof window !== "undefined" && window.location.hostname === "localhost"
-      ? "DEV"
-      : "PROD";
+  const [env, setEnv] = useState<string>("PROD");
+
+  useEffect(() => {
+    setEnv(window.location.hostname === "localhost" ? "DEV" : "PROD");
+  }, []);
 
   const build =
     process.env.NEXT_PUBLIC_BUILD_SHA?.substring(0, 7) || "preview";

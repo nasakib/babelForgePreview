@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import dynamic from "next/dynamic";
 const NeuroCanvas = dynamic(() => import("@/components/NeuroCanvas"), { ssr: false });
 import { composeTopology } from "@/lib/engine/topology";
+import DraggablePanel from "@/components/palantir/DraggablePanel";
 
 export default function ElevenDProjection() {
   const topo = useMemo(() => composeTopology([]), []);
@@ -21,12 +22,28 @@ export default function ElevenDProjection() {
   const eulerProxy = dimHist.reduce((acc, n, k) => acc + (k % 2 === 0 ? n : -n), 0);
 
   return (
-    <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden lg:h-[calc(100vh-3rem)] bg-canvas">
-      <aside className="w-full lg:w-[360px] shrink-0 border-b lg:border-b-0 lg:border-r border-line flex flex-col">
-        <div className="clinical-card-header">
-          <span className="section-label-strong">F6 · ALGEBRAIC TOPOLOGY</span>
-          <span className="text-micro text-ink-muted font-mono">N={topo.N}</span>
+    <div className="w-full h-full relative overflow-hidden bg-canvas">
+      <div className="absolute inset-0 z-0 pointer-events-auto">
+        <NeuroCanvas topology={topo} />
+        <div className="absolute top-4 left-4 z-10 pointer-events-none">
+          <div className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-accent-500" />
+            <span className="section-label-strong">11-DIMENSIONAL PROJECTION</span>
+          </div>
+          <h1 className="text-lg font-semibold text-ink mt-1">
+            Baseline Connectome — Maximal Clique Complex
+          </h1>
         </div>
+      </div>
+
+      <DraggablePanel
+        id="11d-projection-sidebar"
+        title="Algebraic Topology"
+        subtitle="Higher-Order Structures"
+        defaultPosition={{ x: 20, y: 20 }}
+        defaultSize={{ width: 360, height: 600 }}
+      >
+        <div className="flex flex-col h-full bg-surface-50/80">
 
         <div className="p-4 border-b border-line">
           <div className="section-label mb-2">Simplex Dimension Distribution</div>
@@ -107,20 +124,8 @@ export default function ElevenDProjection() {
             </li>
           </ul>
         </div>
-      </aside>
-
-      <main className="flex-1 relative min-h-[50vh] lg:min-h-0">
-        <NeuroCanvas topology={topo} />
-        <div className="absolute top-4 left-4 z-10 pointer-events-none">
-          <div className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-accent-500" />
-            <span className="section-label-strong">11-DIMENSIONAL PROJECTION</span>
-          </div>
-          <h1 className="text-lg font-semibold text-ink mt-1">
-            Baseline Connectome — Maximal Clique Complex
-          </h1>
         </div>
-      </main>
+      </DraggablePanel>
     </div>
   );
 }

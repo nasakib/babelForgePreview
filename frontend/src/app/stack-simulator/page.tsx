@@ -6,6 +6,7 @@ const NeuroCanvas = dynamic(() => import("@/components/NeuroCanvas"), { ssr: fal
 import { molecules } from "@/data/molecules";
 import { useAI } from "@/context/AIContext";
 import PanelHeader from "@/components/palantir/PanelHeader";
+import DraggablePanel from "@/components/palantir/DraggablePanel";
 
 export default function StackSimulator() {
   const { setCurrentModule, setActiveStack, setIntegrityScore, triggerAIAnalysis, viewPerspective, setViewPerspective } = useAI();
@@ -160,13 +161,13 @@ export default function StackSimulator() {
   };
 
   return (
-    <div className="flex-1 flex flex-col relative overflow-hidden bg-canvas lg:block">
+    <div className="w-full h-full relative overflow-hidden bg-canvas">
       {/* Background Canvas */}
-      <div className="lg:absolute lg:inset-0 z-0 relative min-h-[50vh] lg:min-h-0">
+      <div className="absolute inset-0 z-0">
         <NeuroCanvas activeStack={stack} vectors={simulationState.net} />
 
         {/* Overlay Info (Centered/Top) */}
-        <div className="absolute top-6 left-6 pointer-events-none z-10 lg:left-[380px] lg:right-[320px] flex flex-col items-center text-center">
+        <div className="absolute top-6 left-1/2 -translate-x-1/2 pointer-events-none z-10 flex flex-col items-center text-center">
           <div className="flex items-center gap-2 mb-1">
             <div className="w-2 h-2 rounded-full bg-accent-500/100 animate-pulse"></div>
             <span className="text-[10px] font-bold text-accent-400 uppercase tracking-widest">React Three Fiber Engine</span>
@@ -180,7 +181,7 @@ export default function StackSimulator() {
         </div>
 
         {/* View Controls (Bottom Center) */}
-        <div className="absolute bottom-6 left-6 right-6 lg:left-[380px] lg:right-[320px] pointer-events-auto z-10 flex justify-center">
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 pointer-events-auto z-10 flex justify-center">
           <div className="p-4 bg-surface-50/80 border border-line-strong rounded-clinical backdrop-blur-xl shadow-2xl flex flex-col gap-3 min-w-[250px] text-center">
             <div className="text-[9px] uppercase font-bold text-accent-400 mb-1 tracking-widest">Baseline Alignment (Healthy)</div>
             <div className="flex justify-between items-end mb-1 px-1">
@@ -198,24 +199,16 @@ export default function StackSimulator() {
         </div>
       </div>
 
-      {/* Left Sidebar: Stack Builder */}
-      <aside id="left-sidebar" className={`w-full lg:absolute lg:left-4 lg:top-4 z-10 border-b lg:border border-line bg-surface-0/80 backdrop-blur-xl lg:rounded-clinical flex flex-col custom-scrollbar shadow-2xl pointer-events-auto transition-all duration-300 ${leftMinimized ? 'lg:w-auto h-auto' : 'lg:w-[350px] lg:bottom-4 overflow-y-auto'}`}>
-        <PanelHeader 
-          title="Intervention Builder" 
-          subtitle={leftMinimized ? "" : "Simulate interventions and regimens"}
-          onToggle={() => setLeftMinimized(!leftMinimized)}
-          minimized={leftMinimized}
-        >
-          {!leftMinimized && (
-            <>
-              <div className="inline-block px-2 py-1 bg-accent-500/10 text-accent-400 rounded text-[9px] font-bold uppercase tracking-widest">DB Connected</div>
-            </>
-          )}
-        </PanelHeader>
-
-        {!leftMinimized && (
-          <>
-          <div className="clinical-card p-4 flex-none border-b border-line bg-surface-50">
+      {/* Left Sidebar: Stack Builder -> Now Draggable */}
+      <DraggablePanel
+        id="stack-builder"
+        title="Intervention Builder"
+        subtitle="Simulate interventions and regimens"
+        defaultPosition={{ x: 20, y: 20 }}
+        defaultSize={{ width: 380, height: 600 }}
+        zIndex={20}
+      >
+        <div className="clinical-card p-4 flex-none border-b border-line bg-surface-50">
           <div className="space-y-4">
             <div className="flex gap-2 p-1 bg-surface-100 rounded-clinical">
               {(["holistic", "pharma", "vanilla"] as const).map((m) => (
@@ -337,9 +330,7 @@ export default function StackSimulator() {
               </div>
           </div>
         </div>
-          </>
-        )}
-      </aside>
+      </DraggablePanel>
     </div>
   );
 }

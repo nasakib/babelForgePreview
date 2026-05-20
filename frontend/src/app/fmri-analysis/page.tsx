@@ -18,6 +18,7 @@ import type { Pathology } from "@/lib/engine/topology";
 import { PATHOLOGIES } from "@/lib/engine/topology";
 import { parseBackendResponse, validateDataset, type FmriDataset } from "@/lib/fmri/dataset";
 import PanelHeader from "@/components/palantir/PanelHeader";
+import DraggablePanel from "@/components/palantir/DraggablePanel";
 
 import {
   computePSD,
@@ -157,9 +158,9 @@ export default function FMRIAnalysis() {
   };
 
   return (
-    <div className="flex-1 flex flex-col relative overflow-hidden bg-canvas lg:block">
+    <div className="w-full h-full relative overflow-hidden bg-canvas">
       {/* Background Canvas / Main Display */}
-      <div className="lg:absolute lg:inset-0 z-0 min-h-[50vh] lg:min-h-0 relative bg-canvas">
+      <div className="absolute inset-0 z-0 bg-canvas">
         {!fmriDataset && (
           <div className="absolute inset-0 flex items-center justify-center text-ink-muted">
             <div className="text-center">
@@ -196,16 +197,13 @@ export default function FMRIAnalysis() {
       </div>
 
       {/* Left Sidebar: Upload + headline metrics */}
-      <aside className={`w-full lg:absolute lg:left-4 lg:top-4 z-10 border-b lg:border border-line bg-surface-0/80 backdrop-blur-xl lg:rounded-clinical flex flex-col custom-scrollbar shadow-2xl pointer-events-auto transition-all duration-300 ${leftMinimized ? 'lg:w-auto h-auto' : 'lg:w-[360px] lg:bottom-4 overflow-y-auto'}`}>
-        <PanelHeader 
-          title="fMRI Workbench" 
-          subtitle={leftMinimized ? "" : "Data Ingestion & Extraction"}
-          onToggle={() => setLeftMinimized(!leftMinimized)}
-          minimized={leftMinimized}
-        />
-
-        {!leftMinimized && (
-          <>
+      <DraggablePanel
+        id="fmri-workbench"
+        title="fMRI Workbench"
+        subtitle="Data Ingestion & Extraction"
+        defaultPosition={{ x: 20, y: 20 }}
+        defaultSize={{ width: 380, height: 600 }}
+      >
           <div className="p-4 flex-none">
           <p className="text-xs text-ink-muted mb-6 leading-relaxed">
           Upload a CSV BOLD matrix (parcels × TR or TR × parcels) or any file to trigger
@@ -270,9 +268,7 @@ export default function FMRIAnalysis() {
           </button>
         )}
       </div>
-      </>
-      )}
-      </aside>
+      </DraggablePanel>
     </div>
   );
 }

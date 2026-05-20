@@ -10,6 +10,7 @@ import SignalMetricsBar from "@/components/signal/SignalMetricsBar";
 import type { Stimulus, BandKey } from "@/lib/signal/bands";
 import { useAI } from "@/context/AIContext";
 import PanelHeader from "@/components/palantir/PanelHeader";
+import DraggablePanel from "@/components/palantir/DraggablePanel";
 
 const STORAGE_KEY = "babelforge:signal-analyzer:v1";
 
@@ -28,7 +29,6 @@ export default function SignalAnalyzer() {
     rms: 0,
   });
   const [hydrated, setHydrated] = useState(false);
-  const [leftMinimized, setLeftMinimized] = useState(false);
 
   useEffect(() => {
     setCurrentModule("signal-analyzer");
@@ -59,10 +59,10 @@ export default function SignalAnalyzer() {
   }, [stimulus, mode, hydrated]);
 
   return (
-    <div className="flex-1 flex flex-col relative overflow-hidden bg-canvas lg:block">
+    <div className="w-full h-full relative overflow-hidden bg-canvas">
       {/* Background Canvas / Main Display */}
-      <div className="lg:absolute lg:inset-0 z-0 min-h-[50vh] lg:min-h-0 relative flex flex-col bg-canvas">
-        <header className="z-10 p-4 lg:p-6 lg:pl-[400px] border-b border-line-strong bg-surface-0/70 backdrop-blur flex flex-wrap items-start gap-3 justify-between">
+      <div className="absolute inset-0 z-0 flex flex-col bg-canvas">
+        <header className="z-10 p-4 lg:p-6 lg:pl-[400px] border-b border-line-strong bg-surface-0/70 backdrop-blur flex flex-wrap items-start gap-3 justify-between pointer-events-auto">
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className="w-2 h-2 rounded-full bg-ok animate-pulse" />
@@ -99,16 +99,14 @@ export default function SignalAnalyzer() {
         </div>
       </div>
 
-      <aside className={`w-full lg:absolute lg:left-4 lg:top-4 z-20 border-b lg:border border-line bg-surface-0/80 backdrop-blur-xl lg:rounded-clinical flex flex-col custom-scrollbar shadow-2xl pointer-events-auto transition-all duration-300 ${leftMinimized ? 'lg:w-auto h-auto' : 'lg:w-[350px] lg:bottom-4 overflow-y-auto'}`}>
-        <PanelHeader 
-          title="Stimulus Application" 
-          subtitle={leftMinimized ? "" : "Inject synthetic cortex stimuli"}
-          onToggle={() => setLeftMinimized(!leftMinimized)}
-          minimized={leftMinimized}
-        />
-
-        {!leftMinimized && (
-          <>
+      <DraggablePanel
+        id="signal-analyzer-sidebar"
+        title="Stimulus Application"
+        subtitle="Inject synthetic cortex stimuli"
+        defaultPosition={{ x: 20, y: 20 }}
+        defaultSize={{ width: 350, height: 600 }}
+        zIndex={20}
+      >
           <div className="p-4 flex flex-col gap-6">
             <p className="text-xs text-ink-muted leading-relaxed">
               Inject a stimulus into the simulated cortex and watch the
@@ -120,9 +118,7 @@ export default function SignalAnalyzer() {
             <StimulusSelector active={stimulus} onSelect={setStimulus} />
             <SignalControls mode={mode} onChange={setMode} />
           </div>
-          </>
-        )}
-      </aside>
+      </DraggablePanel>
     </div>
   );
 }

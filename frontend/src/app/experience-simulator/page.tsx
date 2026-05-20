@@ -6,13 +6,13 @@ import dynamic from "next/dynamic";
 const NeuroCanvas = dynamic(() => import("@/components/NeuroCanvas"), { ssr: false });
 import { babelforgeApi } from "@/lib/api/client";
 import PanelHeader from "@/components/palantir/PanelHeader";
+import DraggablePanel from "@/components/palantir/DraggablePanel";
 
 export default function ExperienceSimulator() {
   const { activePathologies, setViewPerspective } = useAI();
   const [experience, setExperience] = useState("");
   const [isSimulating, setIsSimulating] = useState(false);
   const [result, setResult] = useState<any>(null);
-  const [leftMinimized, setLeftMinimized] = useState(false);
 
   const handleSimulate = async () => {
     if (!experience.trim()) return;
@@ -39,23 +39,20 @@ export default function ExperienceSimulator() {
   } : { arousal: 0, dampening: 0, chaos: 0, repair: 0 };
 
   return (
-    <div className="flex-1 flex flex-col relative overflow-hidden bg-canvas lg:block">
+    <div className="w-full h-full relative overflow-hidden bg-canvas">
       {/* Background Canvas */}
-      <div className="lg:absolute lg:inset-0 z-0 relative min-h-[50vh] lg:min-h-0">
+      <div className="absolute inset-0 z-0">
         <NeuroCanvas vectors={vectors} />
       </div>
 
       {/* Left Sidebar: Simulator Input */}
-      <aside className={`w-full lg:absolute lg:left-4 lg:top-4 z-10 border-b lg:border border-line bg-surface-0/80 backdrop-blur-xl lg:rounded-clinical flex flex-col custom-scrollbar shadow-2xl pointer-events-auto transition-all duration-300 ${leftMinimized ? 'lg:w-auto h-auto' : 'lg:w-[380px] lg:bottom-4 overflow-y-auto'}`}>
-        <PanelHeader 
-          title="Subjective Reaction Engine" 
-          subtitle={leftMinimized ? "" : "LLM-Physics Bridge"}
-          onToggle={() => setLeftMinimized(!leftMinimized)}
-          minimized={leftMinimized}
-        />
-
-        {!leftMinimized && (
-          <>
+      <DraggablePanel
+        id="experience-simulator"
+        title="Subjective Reaction Engine"
+        subtitle="LLM-Physics Bridge"
+        defaultPosition={{ x: 20, y: 20 }}
+        defaultSize={{ width: 400, height: 600 }}
+      >
         <div className="p-4 flex flex-col gap-4 border-b border-line flex-none">
           <p className="text-xs text-ink-subtle leading-relaxed">
             Describe a subjective experience, intervention, or state in natural language. The engine will parse your description and map it onto the brain&apos;s topological physics engine in real-time.
@@ -133,9 +130,7 @@ export default function ExperienceSimulator() {
             <div className="text-[10px] text-ink-muted font-mono">Awaiting linguistic input.</div>
           )}
         </div>
-        </>
-        )}
-      </aside>
+      </DraggablePanel>
     </div>
   );
 }

@@ -55,7 +55,7 @@ export default function RootLayout({
         <UserModeProvider>
           <AIProvider>
             <Navbar />
-            <main className="flex-1 flex flex-col overflow-hidden relative bg-void">
+            <main className="flex-1 flex flex-col overflow-y-auto overflow-x-hidden relative bg-void">
               {children}
             </main>
             <StatusBar />

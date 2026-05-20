@@ -141,9 +141,9 @@ export default function ConsolePage() {
   };
 
   return (
-    <div className="flex-1 relative overflow-hidden bg-canvas flex flex-col lg:block">
+    <div className="w-full h-full relative overflow-hidden bg-canvas">
       {/* BACKGROUND CANVAS */}
-      <div className="lg:absolute lg:inset-0 z-0 min-h-[50vh] lg:min-h-0 relative">
+      <div className="absolute inset-0 z-0 pointer-events-auto">
         <NeuroCanvas
           topology={topo}
           vectors={vectors}

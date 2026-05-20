@@ -609,7 +609,7 @@ function BrainScene({
       </lineSegments>
 
       {/* Render Naming Convention Tags on Nodes */}
-      {viewPerspective !== "anatomy" && nodeLabels.map((label, i) => {
+      {/* viewPerspective !== "anatomy" && nodeLabels.map((label, i) => {
         // Find the color of the nearest neighbor's region for r2
         let r2Color = "#ffffff";
         let nearestDist = Infinity;
@@ -636,7 +636,7 @@ function BrainScene({
         >
           {`${label.r1}${label.idStr}${label.r2}`}
         </Text>
-      )})}
+      )}) */}
     </group>
   );
 }
