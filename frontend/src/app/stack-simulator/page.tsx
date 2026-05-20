@@ -7,11 +7,25 @@ import { molecules } from "@/data/molecules";
 import { useAI } from "@/context/AIContext";
 import PanelHeader from "@/components/palantir/PanelHeader";
 import DraggablePanel from "@/components/palantir/DraggablePanel";
+import { runDiagnosis } from "@/lib/engine/diagnosis";
+import { computeStackVectors } from "@/lib/engine/stackVectors";
+import type { Pathology } from "@/lib/engine/topology";
+import TimeEnginePanel from "@/components/palantir/TimeEnginePanel";
 
 const STORAGE_KEY = "babelforge:stack-simulator:v1";
 
 export default function StackSimulator() {
-  const { setCurrentModule, setActiveStack, activeStack, setIntegrityScore, triggerAIAnalysis, viewPerspective, setViewPerspective } = useAI();
+  const {
+    setCurrentModule,
+    setActiveStack,
+    activeStack,
+    setIntegrityScore,
+    triggerAIAnalysis,
+    viewPerspective,
+    setViewPerspective,
+    simulationTimeMonths,
+    activePathologies,
+  } = useAI();
   const [leftMinimized, setLeftMinimized] = useState(false);
 
   useEffect(() => {
@@ -22,6 +36,7 @@ export default function StackSimulator() {
   const [classFilter, setClassFilter] = useState("all");
   const [interventionMode, setInterventionMode] = useState<"pharma" | "vanilla" | "holistic">("holistic");
   const [selectedMolId, setSelectedMolId] = useState(molecules[0]?.id || "");
+  const [startingAge, setStartingAge] = useState(35);
   const [hydrated, setHydrated] = useState(false);
 
   // Use activeStack from AIContext as the single source of truth for the stack.
@@ -37,6 +52,7 @@ export default function StackSimulator() {
         if (parsed.classFilter !== undefined) setClassFilter(parsed.classFilter);
         if (parsed.interventionMode !== undefined) setInterventionMode(parsed.interventionMode);
         if (parsed.selectedMolId !== undefined) setSelectedMolId(parsed.selectedMolId);
+        if (parsed.startingAge !== undefined) setStartingAge(parsed.startingAge);
       }
     } catch {
       /* ignore */
@@ -52,12 +68,13 @@ export default function StackSimulator() {
         searchQuery,
         classFilter,
         interventionMode,
-        selectedMolId
+        selectedMolId,
+        startingAge
       }));
     } catch {
       /* ignore */
     }
-  }, [searchQuery, classFilter, interventionMode, selectedMolId, hydrated]);
+  }, [searchQuery, classFilter, interventionMode, selectedMolId, startingAge, hydrated]);
 
   // Computed Properties
   const filteredMolecules = useMemo(() => {
@@ -76,99 +93,31 @@ export default function StackSimulator() {
 
   const selectedMol = useMemo(() => molecules.find(m => m.id === selectedMolId), [selectedMolId]);
 
-  // Physics Engine Calculations
+  // Physics Engine Calculations via runDiagnosis
   const simulationState = useMemo(() => {
-    let net = { arousal: 0, dampening: 0, chaos: 0, repair: 0 };
-    let classCounts: any = { ssri: 0, stimulant: 0, depressant: 0, antipsychotic: 0, cannabinoid: 0, novel: 0 };
-
-    stack.forEach((mol) => {
-      if (mol.currentIntensity > 0) {
-        const tolMonths = mol.toleranceMonths || 0;
-        let tolRate = 0.1;
-        if (mol.class === "stimulant" || mol.class === "recreational") tolRate = 0.5;
-        if (mol.class === "novel") tolRate = 0.05;
-        if (mol.class === "cannabinoid") tolRate = 0.3;
-
-        const tolFactor = 1 / (1 + Math.log1p(tolMonths * tolRate));
-        const rawRatio = mol.currentIntensity / 3.0;
-        const ratio = rawRatio * 1.0 * tolFactor; // Assuming 70kg weight
-
-        const overDose = Math.max(0, ratio - 1);
-        classCounts[mol.class] = (classCounts[mol.class] || 0) + ratio;
-
-        net.arousal += mol.effects.arousal * Math.min(1, ratio);
-        net.dampening += mol.effects.dampening * Math.min(1, ratio);
-        net.repair += mol.effects.repair * Math.min(1, ratio);
-        net.chaos += mol.effects.chaos * Math.min(1, ratio);
-
-        if (overDose > 0) {
-          if ((mol.class === "stimulant" || mol.class === "novel") && mol.effects.arousal > 0) {
-            net.chaos += overDose * 1.5;
-            net.arousal += overDose * 0.5;
-            net.repair -= overDose * 0.5;
-          } else if (mol.class === "antipsychotic" || mol.class === "depressant" || mol.class === "ssri") {
-            net.dampening += overDose * 2.0;
-            net.chaos += overDose * 0.5;
-            net.repair -= overDose * 0.5;
-          } else {
-            net.chaos += overDose * 1.0;
-            net.repair -= overDose * 0.5;
-          }
-        }
+    const net = computeStackVectors(stack);
+    const report = runDiagnosis(
+      activePathologies as Pathology[],
+      net,
+      {
+        weightKg: 70,
+        toleranceMonths: 0,
+        ageYears: startingAge,
+        simulationTimeMonths: simulationTimeMonths,
       }
-    });
+    );
 
-    let label = "Healthy Baseline";
-    let desc = "Simulation is perfectly aligned with the healthy baseline template.";
-    let subj = "Healthy Baseline: A sense of 'Flow.' Clear, baseline cognition.";
-    let sync = 1.0;
+    const sync = report.integrity / 100;
 
-    if (stack.length > 0) {
-      if ((classCounts.ssri > 0 && classCounts.stimulant > 0) || classCounts.stimulant > 2.0 || classCounts.ssri > 2.0) {
-        label = "Toxicity (Serotonin/Stimulant)";
-        desc = "Dangerous overlapping toxicity. Severe chaotic structural fragmentation.";
-        subj = "Baseline Shattered: Severe confusion, hyperthermia, and autonomic instability.";
-        sync = 0.10;
-      } else if (classCounts.depressant > 0 && classCounts.antipsychotic > 0) {
-        label = "Severe CNS Depression";
-        desc = "Overlapping dampening effects have dangerously suppressed global network amplitude.";
-        subj = "Baseline Suppressed: Profound lethargy. Cognitive functions are shutting down.";
-        sync = 0.20;
-      } else if (net.repair > 1.0 && net.chaos <= 0) {
-        label = "Topological Optimization";
-        desc = "Precision compounds are expanding Arnold Tongues, aligning the network back toward baseline.";
-        subj = "Baseline Restored: Lucid clarity. Effortless focus, emotional balance.";
-        sync = 0.95;
-      } else if (net.dampening > 2.0 && net.arousal <= 0) {
-        label = "Severe Rigidity / Sedation";
-        desc = "Excessive dampening has frozen the network, deviating severely from baseline variance.";
-        subj = "Baseline Suppressed: Heavy physical sedation. Thoughts are sluggish.";
-        sync = 0.30;
-      } else if (net.arousal > 2.0 || net.chaos > 1.5) {
-        label = "Hyper-Arousal Toxicity";
-        desc = "Dangerous over-stimulation. Baseline cliques are shattering into chaotic fragments.";
-        subj = "Baseline Shattered: Intense anxiety, jitteriness, and an inability to maintain focus.";
-        sync = 0.15;
-      } else if (net.arousal > 0.5 && net.dampening > 0.5 && net.chaos > 0.5) {
-        label = "Polypharmacy Conflict";
-        desc = "Competing mechanisms are creating uncoordinated signal propagation.";
-        subj = "Baseline Distorted: A confusing mix of physical lethargy paired with mental racing ('tired but wired').";
-        sync = 0.55;
-      } else if (net.dampening > 0.5) {
-        label = "Global Suppression";
-        desc = "Network amplitude is blunted globally. Baseline topologies are preserved but sluggish.";
-        subj = "Baseline Dampened: Calm and relaxed, but with noticeable cognitive slowing.";
-        sync = 0.70;
-      } else if (net.arousal > 0.5) {
-        label = "Upregulated State";
-        desc = "Network firing rates increased above healthy baseline.";
-        subj = "Baseline Elevated: Heightened alertness and energy, though potentially tense.";
-        sync = 0.80;
-      }
-    }
-
-    return { net, label, desc, subj, sync };
-  }, [stack]);
+    return {
+      net,
+      label: report.label,
+      desc: report.description,
+      subj: report.subjective.join(" · "),
+      warnings: report.warnings,
+      sync,
+    };
+  }, [stack, activePathologies, startingAge, simulationTimeMonths]);
 
   useEffect(() => {
     setIntegrityScore(Math.round(simulationState.sync * 100));
@@ -211,6 +160,14 @@ export default function StackSimulator() {
               <span className="text-[9px] uppercase font-bold text-crit block mb-1">Projected Subjective Experience</span>
               <p className="text-xs text-ink-subtle italic leading-relaxed drop-shadow">{simulationState.subj}</p>
           </div>
+          {simulationState.warnings && simulationState.warnings.length > 0 && (
+            <div className="mt-2 pt-2 border-t border-crit/30 max-w-sm">
+              <span className="text-[9px] uppercase font-bold text-crit block mb-1">Clinical Warnings</span>
+              {simulationState.warnings.map((w, idx) => (
+                <p key={idx} className="text-[10px] text-crit font-semibold leading-normal drop-shadow">{w}</p>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* View Controls (Bottom Center) */}
@@ -276,6 +233,23 @@ export default function StackSimulator() {
               </select>
             </div>
             
+            <div>
+              <div className="flex justify-between items-baseline mb-2">
+                <span className="text-[10px] font-bold text-ink-muted uppercase tracking-widest">Starting Age</span>
+                <span className="font-mono text-xs text-ink font-semibold">{startingAge} <span className="text-ink-muted text-[10px]">Yrs</span></span>
+              </div>
+              <input
+                type="range"
+                className="slider-clinical w-full"
+                min="18"
+                max="100"
+                step="1"
+                value={startingAge}
+                onChange={(e) => setStartingAge(parseInt(e.target.value))}
+                style={{ accentColor: '#a855f7' }}
+              />
+            </div>
+
             <div>
               <label className="text-[10px] uppercase font-bold text-ink-muted block mb-2 tracking-widest">Select Intervention</label>
               <select value={selectedMolId} onChange={(e) => setSelectedMolId(e.target.value)} className="w-full bg-surface-0 border border-line text-sm font-semibold text-ink-subtle rounded-clinical p-2.5 focus:outline-none focus:border-accent-500">
@@ -363,6 +337,7 @@ export default function StackSimulator() {
           </div>
         </div>
       </DraggablePanel>
+      <TimeEnginePanel />
     </div>
   );
 }
