@@ -522,10 +522,13 @@ function BrainScene({
       let baseHex = REGION_COLOR[topo.nodes[i].region as keyof typeof REGION_COLOR] || "#ffffff";
       
       const isSelected = selectedNodeIds.includes(i);
+      const isFiltering = selectedNodeIds.length > 0;
       
-      if (isSelected) {
-        tmpColor.current.set("#4c1d95"); // Dark purple for isolated node
-        tmpColor.current.multiplyScalar(1.2 + 0.3 * amp);
+      if (isFiltering && !isSelected) {
+        tmpColor.current.set("#0f172a"); // Very dark, nearly invisible
+        tmpColor.current.multiplyScalar(0.4);
+      } else if (isFiltering && isSelected) {
+        tmpColor.current.set(baseHex).multiplyScalar(1.5 + 0.5 * amp); // Highlight brightly
       } else if (viewPerspective === "physics") {
         // Pure phase chromatic for physics
         tmpColor.current.setHSL((phase / (Math.PI * 2) + 1) % 1, 0.85, 0.5 + 0.3 * amp);
@@ -609,7 +612,11 @@ function BrainScene({
       </lineSegments>
 
       {/* Render Naming Convention Tags on Nodes */}
-      {/* viewPerspective !== "anatomy" && nodeLabels.map((label, i) => {
+      {viewPerspective !== "anatomy" && nodeLabels.map((label, i) => {
+        const isFiltering = selectedNodeIds.length > 0;
+        const isSelected = selectedNodeIds.includes(i);
+        if (isFiltering && !isSelected) return null;
+
         // Find the color of the nearest neighbor's region for r2
         let r2Color = "#ffffff";
         let nearestDist = Infinity;
@@ -629,14 +636,14 @@ function BrainScene({
           key={`lbl-${i}`}
           position={[topo.nodes[i].x, topo.nodes[i].y + 1.8, topo.nodes[i].z]}
           fontSize={1.5}
-          color={label.strengthColor}
+          color="#ffffff"
           anchorX="center"
           anchorY="middle"
           depthOffset={-1}
         >
           {`${label.r1}${label.idStr}${label.r2}`}
         </Text>
-      )}) */}
+      )})}
     </group>
   );
 }

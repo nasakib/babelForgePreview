@@ -33,6 +33,7 @@ export interface PatientParams {
   weightKg: number;
   toleranceMonths: number; // global, simplified
   ageYears: number;
+  simulationTimeMonths: number; // Time Engine
 }
 
 export interface DiagnosticReport {
@@ -43,6 +44,7 @@ export interface DiagnosticReport {
   description: string;
   subjective: string[];
   warnings: string[];
+  structuralPlasticityK: number; // delta to K based on time
 }
 
 export const ZERO_VECTORS: PharmaVectors = {
@@ -58,11 +60,19 @@ export function runDiagnosis(
   patient: PatientParams
 ): DiagnosticReport {
   const topo = composeTopology(states);
+  
+  // Temporal Engine Integration
+  const effectiveAge = patient.ageYears + (patient.simulationTimeMonths / 12);
+  const prolongedExposure = patient.simulationTimeMonths;
+  
+  // Tolerance grows over time if compounds are present
+  const dynamicTolerance = patient.toleranceMonths + prolongedExposure;
+  
   const weightFactor = 70 / Math.max(40, patient.weightKg);
-  const tolFactor = 1 / (1 + Math.log1p(patient.toleranceMonths * 0.08));
+  const tolFactor = 1 / (1 + Math.log1p(dynamicTolerance * 0.08));
   // Age factor: older age generally reduces neuroplasticity (repair efficacy) and increases sensitivity to dampening/chaos
-  const ageFactor = patient.ageYears > 60 ? (1 - (patient.ageYears - 60) * 0.015) : 1.0;
-  const ageSensitivity = patient.ageYears > 65 ? 1.2 : 1.0;
+  const ageFactor = effectiveAge > 60 ? (1 - (effectiveAge - 60) * 0.015) : 1.0;
+  const ageSensitivity = effectiveAge > 65 ? 1.2 : 1.0;
 
   const v: PharmaVectors = {
     arousal: vectors.arousal * weightFactor * tolFactor * ageSensitivity,
@@ -71,8 +81,15 @@ export function runDiagnosis(
     repair: vectors.repair * weightFactor * tolFactor * Math.max(0.5, ageFactor),
   };
 
-  const K = effectiveCoupling(v);
-  const noise = effectiveNoise(v);
+  // Structural neuroplasticity (Hebridean learning / BDNF increase via repair over time)
+  // Structural excitotoxicity (atrophy via chronic high chaos over time)
+  const structuralPlasticityK = (v.repair * Math.log1p(prolongedExposure) * 0.05) - (v.chaos * Math.log1p(prolongedExposure) * 0.08);
+  const temporalNoise = (v.chaos * Math.log1p(prolongedExposure) * 0.02) + (effectiveAge > 70 ? (effectiveAge - 70) * 0.005 : 0);
+
+  const baseK = effectiveCoupling(v);
+  const K = Math.max(0.1, baseK + structuralPlasticityK);
+  const noise = Math.max(0.01, effectiveNoise(v) + temporalNoise);
+  
   const R = estimateOrderParameter({
     N: topo.N,
     adjacency: topo.adjacency,
@@ -87,7 +104,7 @@ export function runDiagnosis(
   const ratio = Rbase > 0 ? R / Rbase : 1;
   const integrity = Math.round(Math.max(0, Math.min(100, ratio * 100)));
 
-  // Label heuristic from vectors + states
+  // Label heuristic from vectors + states + time
   let label = states.length === 0 ? "Healthy Baseline" : "Pathological Baseline";
   let description = states.length === 0
     ? "Network entrainment within healthy variance. R(t) ≈ Kuramoto reference."
@@ -98,11 +115,12 @@ export function runDiagnosis(
   if (v.chaos > 1.8) warnings.push("Topological fragmentation — high stochastic entropy.");
   if (v.arousal > 2.2) warnings.push("Hyperarousal toxicity threshold approached.");
   if (v.dampening > 2.2) warnings.push("Severe CNS depression — global amplitude collapsed.");
+  if (structuralPlasticityK < -0.2) warnings.push("Excitotoxic atrophy — long-term damage projected.");
 
-  if (vectors.arousal !== 0 || vectors.dampening !== 0 || vectors.chaos !== 0 || vectors.repair !== 0) {
+  if (vectors.arousal !== 0 || vectors.dampening !== 0 || vectors.chaos !== 0 || vectors.repair !== 0 || prolongedExposure > 0) {
     if (warnings.length === 0 && v.repair > 0.7 && v.chaos < 0.4) {
-      label = "Topological Optimization";
-      description = "Precision compounds widening Arnold tongues; system re-entraining toward healthy baseline.";
+      label = structuralPlasticityK > 0.2 ? "Sustained Neuroplastic Growth" : "Topological Optimization";
+      description = structuralPlasticityK > 0.2 ? "Long-term exposure has permanently widened Arnold tongues, resulting in structural growth." : "Precision compounds widening Arnold tongues; system re-entraining toward healthy baseline.";
     } else if (warnings.length > 0) {
       label = warnings[0].split(" — ")[0];
       description = warnings[0];
@@ -112,6 +130,9 @@ export function runDiagnosis(
     } else if (v.arousal > 0.7) {
       label = "Upregulated State";
       description = "Firing rates increased above baseline; spectral peak shifted to higher bands.";
+    } else if (prolongedExposure > 24 && v.repair < 0.1) {
+      label = "Temporal Drift";
+      description = "Network aging and steady drift from baseline equilibrium.";
     }
   }
 
@@ -122,7 +143,7 @@ export function runDiagnosis(
   }
   if (subjective.length === 0) subjective.push("Baseline: a sense of 'flow', clear cognition, stable affect.");
 
-  return { integrity, R: +R.toFixed(3), K: +K.toFixed(2), label, description, subjective, warnings };
+  return { integrity, R: +R.toFixed(3), K: +K.toFixed(2), label, description, subjective, warnings, structuralPlasticityK };
 }
 
 // Memoised baseline R so repeated diagnoses stay cheap.

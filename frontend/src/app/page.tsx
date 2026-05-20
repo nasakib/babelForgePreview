@@ -20,6 +20,8 @@ import {
 import { autoOptimize, type RegimenItem } from "@/lib/engine/optimize";
 import { molecules } from "@/data/molecules";
 import DraggablePanel from "@/components/palantir/DraggablePanel";
+import TimeEnginePanel from "@/components/palantir/TimeEnginePanel";
+import NodeFilterPanel from "@/components/palantir/NodeFilterPanel";
 
 const VIEW_MODES = [
   { id: "topology", label: "Topology", desc: "Region tint · amplitude pulse" },
@@ -38,6 +40,7 @@ export default function ConsolePage() {
     setIntegrityScore,
     viewPerspective,
     setViewPerspective,
+    simulationTimeMonths,
   } = useAI();
 
   const [weight, setWeight] = useState(70);
@@ -66,9 +69,6 @@ export default function ConsolePage() {
   const [log, setLog] = useState<string[]>([]);
   const [liveR, setLiveR] = useState<number | null>(null);
 
-  const [leftMinimized, setLeftMinimized] = useState(false);
-  const [rightMinimized, setRightMinimized] = useState(false);
-
   useEffect(() => {
     setCurrentModule("dashboard");
   }, [setCurrentModule]);
@@ -81,6 +81,7 @@ export default function ConsolePage() {
           weightKg: weight,
           toleranceMonths: tolerance,
           ageYears: age,
+          simulationTimeMonths: simulationTimeMonths,
         });
         setReport(r);
         setIntegrityScore(r.integrity);
@@ -96,7 +97,7 @@ export default function ConsolePage() {
       }, 16);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [activePathologies, vectors, weight, tolerance, age, setIntegrityScore]
+    [activePathologies, vectors, weight, tolerance, age, simulationTimeMonths, setIntegrityScore]
   );
 
   useEffect(() => {
@@ -114,6 +115,7 @@ export default function ConsolePage() {
         weightKg: weight,
         toleranceMonths: tolerance,
         ageYears: age,
+        simulationTimeMonths: simulationTimeMonths,
       });
       setActiveStack(result.regimen);
       setLog((l) =>
@@ -340,6 +342,9 @@ export default function ConsolePage() {
           </div>
         </div>
       </DraggablePanel>
+
+      <TimeEnginePanel />
+      <NodeFilterPanel />
     </div>
   );
 }
