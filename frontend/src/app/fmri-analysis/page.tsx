@@ -158,7 +158,7 @@ export default function FMRIAnalysis() {
   };
 
   return (
-    <div className="w-full h-full relative overflow-hidden bg-canvas">
+    <div className="w-full h-full relative lg:overflow-hidden overflow-y-auto bg-canvas">
       {/* Background Canvas / Main Display */}
       <div className="absolute inset-0 z-0 bg-canvas">
         {!fmriDataset && (

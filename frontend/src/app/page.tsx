@@ -143,7 +143,7 @@ export default function ConsolePage() {
   };
 
   return (
-    <div className="w-full h-full relative overflow-hidden bg-canvas">
+    <div className="w-full h-full relative lg:overflow-hidden overflow-y-auto bg-canvas">
       {/* BACKGROUND CANVAS */}
       <div className="absolute inset-0 z-0 pointer-events-auto">
         <NeuroCanvas

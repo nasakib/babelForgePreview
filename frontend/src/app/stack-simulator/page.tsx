@@ -194,7 +194,7 @@ export default function StackSimulator() {
   };
 
   return (
-    <div className="w-full h-full relative overflow-hidden bg-canvas">
+    <div className="w-full h-full relative lg:overflow-hidden overflow-y-auto bg-canvas">
       {/* Background Canvas */}
       <div className="absolute inset-0 z-0">
         <NeuroCanvas activeStack={stack} vectors={simulationState.net} />

@@ -7,11 +7,19 @@ export default function MobileDisclaimer() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const dismissed = window.sessionStorage.getItem("babelforge:mobile-disclaimer-dismissed");
-      const isMobile = window.innerWidth < 1024;
-      if (isMobile && !dismissed) {
-        setShow(true);
-      }
+      const handleResize = () => {
+        const isMobile = window.innerWidth < 1024;
+        const dismissed = window.sessionStorage.getItem("babelforge:mobile-disclaimer-dismissed");
+        if (isMobile && !dismissed) {
+          setShow(true);
+        } else {
+          setShow(false);
+        }
+      };
+
+      handleResize();
+      window.addEventListener("resize", handleResize);
+      return () => window.removeEventListener("resize", handleResize);
     }
   }, []);
 

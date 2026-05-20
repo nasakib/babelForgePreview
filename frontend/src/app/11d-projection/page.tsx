@@ -22,7 +22,7 @@ export default function ElevenDProjection() {
   const eulerProxy = dimHist.reduce((acc, n, k) => acc + (k % 2 === 0 ? n : -n), 0);
 
   return (
-    <div className="w-full h-full relative overflow-hidden bg-canvas">
+    <div className="w-full h-full relative lg:overflow-hidden overflow-y-auto bg-canvas">
       <div className="absolute inset-0 z-0 pointer-events-auto">
         <NeuroCanvas topology={topo} />
         <div className="absolute top-4 left-4 z-10 pointer-events-none">

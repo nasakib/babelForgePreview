@@ -59,7 +59,7 @@ export default function SignalAnalyzer() {
   }, [stimulus, mode, hydrated]);
 
   return (
-    <div className="w-full h-full relative overflow-hidden bg-canvas">
+    <div className="w-full h-full relative lg:overflow-hidden overflow-y-auto bg-canvas">
       {/* Background Canvas / Main Display */}
       <div className="absolute inset-0 z-0 flex flex-col bg-canvas">
         <header className="z-10 p-4 lg:p-6 lg:pl-[400px] border-b border-line-strong bg-surface-0/70 backdrop-blur flex flex-wrap items-start gap-3 justify-between pointer-events-auto">
