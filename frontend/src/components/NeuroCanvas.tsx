@@ -55,6 +55,7 @@ export default function NeuroCanvas({
     setSelectedNodeIds,
     targetedOperations,
     setTargetedOperations,
+    simulationTimeMonths,
   } = useAI();
   const [simTime, setSimTime] = useState(0);
   const [liveR, setLiveR] = useState(0);
@@ -76,8 +77,8 @@ export default function NeuroCanvas({
   );
 
   const topo = useMemo<ComposedTopology>(
-    () => topology ?? composeTopology(pathologies, targetedOperations),
-    [topology, pathologies, targetedOperations]
+    () => topology ?? composeTopology(pathologies, targetedOperations, simulationTimeMonths, vectors),
+    [topology, pathologies, targetedOperations, simulationTimeMonths, vectors]
   );
 
   // Precalculate labels: [FirstLetterRegion][NodeID][FirstLetterNearestNodeRegion]
@@ -352,6 +353,33 @@ export default function NeuroCanvas({
               {r}
             </span>
           ))}
+        </div>
+      </DraggablePanel>
+
+      <DraggablePanel
+        id="movements-legend"
+        title="3D Canvas Navigation"
+        subtitle="OrbitControls mapping"
+        defaultPosition={{ x: 20, y: typeof window !== "undefined" ? window.innerHeight - 280 : 600 }}
+        defaultSize={{ width: 340, height: 195 }}
+      >
+        <div className="p-4 flex flex-col gap-2.5 text-[11px] font-mono text-ink-subtle">
+          <div className="flex justify-between items-center border-b border-line pb-1.5">
+            <span className="text-accent-400 font-bold uppercase tracking-widest">Rotate Brain</span>
+            <span className="text-ink font-semibold">Left-Click + Drag <span className="text-ink-muted text-[10px]">(or 1-finger drag)</span></span>
+          </div>
+          <div className="flex justify-between items-center border-b border-line pb-1.5">
+            <span className="text-accent-400 font-bold uppercase tracking-widest">Pan Camera</span>
+            <span className="text-ink font-semibold">Right-Click + Drag <span className="text-ink-muted text-[10px]">(or 2-finger drag)</span></span>
+          </div>
+          <div className="flex justify-between items-center border-b border-line pb-1.5">
+            <span className="text-accent-400 font-bold uppercase tracking-widest">Zoom In/Out</span>
+            <span className="text-ink font-semibold">Scroll Wheel <span className="text-ink-muted text-[10px]">(or pinch)</span></span>
+          </div>
+          <div className="flex justify-between items-center pb-0.5">
+            <span className="text-accent-400 font-bold uppercase tracking-widest">Isolate Node</span>
+            <span className="text-ink font-semibold">Left-Click Node <span className="text-ink-muted text-[10px]">(tap node)</span></span>
+          </div>
         </div>
       </DraggablePanel>
     </div>

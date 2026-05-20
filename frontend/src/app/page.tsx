@@ -17,7 +17,7 @@ import {
   type DiagnosticReport,
   type PharmaVectors,
 } from "@/lib/engine/diagnosis";
-import { autoOptimize, type RegimenItem } from "@/lib/engine/optimize";
+import { autoOptimizeIdeal, autoOptimizeLeastResistance, type RegimenItem } from "@/lib/engine/optimize";
 import { molecules } from "@/data/molecules";
 import DraggablePanel from "@/components/palantir/DraggablePanel";
 import TimeEnginePanel from "@/components/palantir/TimeEnginePanel";
@@ -41,13 +41,22 @@ export default function ConsolePage() {
     viewPerspective,
     setViewPerspective,
     simulationTimeMonths,
+    targetedOperations,
   } = useAI();
 
   const [weight, setWeight] = useState(70);
   const [tolerance, setTolerance] = useState(0);
   const [age, setAge] = useState(35);
 
-  const topo = useMemo(() => composeTopology(activePathologies as Pathology[]), [activePathologies]);
+  const [recommendations, setRecommendations] = useState<{
+    ideal: { regimen: RegimenItem[]; integrity: number; reasoning: string[] };
+    least: { regimen: RegimenItem[]; integrity: number; reasoning: string[] };
+  } | null>(null);
+
+  // Reset recommendations when active pathologies change to keep suggestions consistent
+  useEffect(() => {
+    setRecommendations(null);
+  }, [activePathologies]);
 
   const vectors: PharmaVectors = useMemo(() => {
     const v = { ...ZERO_VECTORS };
@@ -63,6 +72,11 @@ export default function ConsolePage() {
     }
     return v;
   }, [activeStack]);
+
+  const topo = useMemo(
+    () => composeTopology(activePathologies as Pathology[], targetedOperations, simulationTimeMonths, vectors),
+    [activePathologies, targetedOperations, simulationTimeMonths, vectors]
+  );
 
   const [report, setReport] = useState<DiagnosticReport | null>(null);
   const [computing, setComputing] = useState(false);
@@ -107,28 +121,30 @@ export default function ConsolePage() {
   const handleAutoOptimize = useCallback(() => {
     setComputing(true);
     setLog((l) => [
-      `[${ts()}] Auto-optimizer engaged · greedy search across precision compounds…`,
+      `[${ts()}] Auto-optimizer engaged · generating dual clinical pathways…`,
       ...l,
     ]);
     setTimeout(() => {
-      const result = autoOptimize(activePathologies as Pathology[], {
+      const patientParams = {
         weightKg: weight,
         toleranceMonths: tolerance,
         ageYears: age,
         simulationTimeMonths: simulationTimeMonths,
-      });
-      setActiveStack(result.regimen);
+      };
+      const ideal = autoOptimizeIdeal(activePathologies as Pathology[], patientParams);
+      const least = autoOptimizeLeastResistance(activePathologies as Pathology[], patientParams);
+      setRecommendations({ ideal, least });
+
       setLog((l) =>
         [
-          ...result.reasoning.map((line) => `   ${line}`),
-          `[${ts()}] Auto-optimization complete · final Φ = ${result.integrity}%`,
+          `[${ts()}] Auto-optimization complete. Pathways generated.`,
           ...l,
         ].slice(0, 60)
       );
       setComputing(false);
     }, 30);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activePathologies, weight, tolerance, age, setActiveStack]);
+  }, [activePathologies, weight, tolerance, age, simulationTimeMonths]);
 
   const togglePathology = (p: Pathology) => {
     const next = activePathologies.includes(p)
@@ -300,6 +316,87 @@ export default function ConsolePage() {
             </div>
           ))}
         </div>
+
+        {recommendations && (
+          <div className="p-4 border-b border-line animate-fade-in-up">
+            <div className="section-label mb-2.5">Clinical Recommendation Pathways</div>
+            <div className="grid grid-cols-2 gap-2.5">
+              {/* Ideal Regimen (Purple) */}
+              <div className="border border-accent-500/30 bg-accent-500/[0.04] rounded-sharp p-2.5 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between gap-1 mb-2">
+                    <span className="text-[10px] uppercase font-bold text-accent-400 tracking-wider">Ideal Path</span>
+                    <span className="text-[10px] font-mono font-bold text-accent-400 bg-accent-500/10 px-1.5 py-0.5 rounded">
+                      Φ {recommendations.ideal.integrity}%
+                    </span>
+                  </div>
+                  <div className="space-y-1.5 my-2">
+                    {recommendations.ideal.regimen.map((item) => (
+                      <div key={item.id} className="text-[10px] text-ink-subtle flex justify-between gap-1 border-b border-line/10 pb-1">
+                        <span className="truncate max-w-[80px] font-medium text-white" title={item.name}>{item.name}</span>
+                        <span className="font-mono text-accent-400 flex-shrink-0">D{item.dose}</span>
+                      </div>
+                    ))}
+                    {recommendations.ideal.regimen.length === 0 && (
+                      <div className="text-[9px] text-ink-muted italic">No compounds recommended</div>
+                    )}
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setActiveStack(recommendations.ideal.regimen);
+                    setLog((l) => [
+                      `[${ts()}] Applied Ideal Regimen stack:`,
+                      ...recommendations.ideal.reasoning.map((r) => `   ${r}`),
+                      `[${ts()}] Target Integrity projected: Φ = ${recommendations.ideal.integrity}%`,
+                      ...l,
+                    ].slice(0, 60));
+                  }}
+                  className="w-full text-center py-1.5 bg-accent-500 hover:bg-accent-600 active:bg-accent-700 text-white rounded font-mono text-[9px] font-bold uppercase tracking-wider transition-colors mt-2"
+                >
+                  Apply Ideal
+                </button>
+              </div>
+
+              {/* Path of Least Resistance (Blue) */}
+              <div className="border border-clinical-500/30 bg-clinical-500/[0.04] rounded-sharp p-2.5 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between gap-1 mb-2">
+                    <span className="text-[10px] uppercase font-bold text-clinical-400 tracking-wider">Least Resist</span>
+                    <span className="text-[10px] font-mono font-bold text-clinical-400 bg-clinical-500/10 px-1.5 py-0.5 rounded">
+                      Φ {recommendations.least.integrity}%
+                    </span>
+                  </div>
+                  <div className="space-y-1.5 my-2">
+                    {recommendations.least.regimen.map((item) => (
+                      <div key={item.id} className="text-[10px] text-ink-subtle flex justify-between gap-1 border-b border-line/10 pb-1">
+                        <span className="truncate max-w-[80px] font-medium text-white" title={item.name}>{item.name}</span>
+                        <span className="font-mono text-clinical-400 flex-shrink-0">D{item.dose}</span>
+                      </div>
+                    ))}
+                    {recommendations.least.regimen.length === 0 && (
+                      <div className="text-[9px] text-ink-muted italic">No compounds recommended</div>
+                    )}
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setActiveStack(recommendations.least.regimen);
+                    setLog((l) => [
+                      `[${ts()}] Applied Path of Least Resistance stack:`,
+                      ...recommendations.least.reasoning.map((r) => `   ${r}`),
+                      `[${ts()}] Target Integrity projected: Φ = ${recommendations.least.integrity}%`,
+                      ...l,
+                    ].slice(0, 60));
+                  }}
+                  className="w-full text-center py-1.5 bg-clinical-500 hover:bg-clinical-600 active:bg-clinical-700 text-white rounded font-mono text-[9px] font-bold uppercase tracking-wider transition-colors mt-2"
+                >
+                  Apply Least
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="p-4 border-b border-line">
           <div className="flex items-center justify-between mb-2">

@@ -33,19 +33,72 @@ export function autoOptimize(
   patient: PatientParams,
   maxStack = 3
 ): { regimen: RegimenItem[]; integrity: number; reasoning: string[] } {
-  // Candidate pool: prefer babelForge precision agents matching state indications.
+  return autoOptimizeIdeal(states, patient, maxStack);
+}
+
+// Ideal Regimen (Purple path): Includes high-potency novel therapeutics, surgical neuromodulations, psychotherapies, etc.
+export function autoOptimizeIdeal(
+  states: Pathology[],
+  patient: PatientParams,
+  maxStack = 3
+): { regimen: RegimenItem[]; integrity: number; reasoning: string[] } {
   const candidates = molecules.filter((m) => {
     if (m.class === "novel") return true;
     if (m.class === "ssri" || m.class === "antipsychotic" || m.class === "depressant") return true;
     if (m.class === "cannabinoid") return true;
-    if (m.class === "stimulant" && (m.id === "modaf" || m.id === "armodaf" || m.id === "mph")) return true;
+    if (m.class === "stimulant" && (m.id === "modaf" || m.id === "armodaf" || m.id === "mph" || m.id === "caffeine")) return true;
+    if (m.isLifestyle) return true;
     return false;
   });
 
   const reasoning: string[] = [];
   const chosen: RegimenItem[] = [];
 
-  // Greedy hill-climb.
+  for (let pick = 0; pick < maxStack; pick++) {
+    let best: { mol: any; dose: number; integ: number } | null = null;
+    for (const mol of candidates) {
+      if (chosen.find((c) => c.id === mol.id)) continue;
+      for (const dose of [1, 2, 3]) {
+        const trial = [...chosen, mkItem(mol, dose)];
+        const v = sumVectors(trial);
+        const r = runDiagnosis(states, v, patient);
+        if (!best || r.integrity > best.integ) best = { mol, dose, integ: r.integrity };
+      }
+    }
+    if (!best) break;
+    const v0 = sumVectors(chosen);
+    const r0 = runDiagnosis(states, v0, patient);
+    if (best.integ <= r0.integrity + 1) break; // diminishing return
+    chosen.push(mkItem(best.mol, best.dose));
+    reasoning.push(
+      `+ ${best.mol.name} @ dose ${best.dose}  →  Φ = ${best.integ}% (Δ ${best.integ - r0.integrity > 0 ? "+" : ""}${best.integ - r0.integrity})`
+    );
+  }
+
+  const finalVec = sumVectors(chosen);
+  const finalReport = runDiagnosis(states, finalVec, patient);
+  return { regimen: chosen, integrity: finalReport.integrity, reasoning };
+}
+
+// Path of Least Resistance (Blue path): Cheap, legal, easy to obtain, highly accessible (Lifestyle + OTC supplements)
+export function autoOptimizeLeastResistance(
+  states: Pathology[],
+  patient: PatientParams,
+  maxStack = 3
+): { regimen: RegimenItem[]; integrity: number; reasoning: string[] } {
+  const candidates = molecules.filter((m) => {
+    return (
+      m.isLifestyle ||
+      m.id === "caffeine" ||
+      m.id === "omega3" ||
+      m.id === "sauna" ||
+      (m.class === "cannabinoid" && !["thc", "hhc", "thcp", "thco", "delta10"].includes(m.id))
+    );
+  });
+
+  const reasoning: string[] = [];
+  const chosen: RegimenItem[] = [];
+
   for (let pick = 0; pick < maxStack; pick++) {
     let best: { mol: any; dose: number; integ: number } | null = null;
     for (const mol of candidates) {
@@ -78,7 +131,7 @@ function mkItem(mol: any, dose: number): RegimenItem {
     name: mol.name,
     classLabel: mol.classLabel,
     isBabelForge: mol.isBabelForge,
-    isBlue: mol.isBlue,
+    isBlue: mol.isBlue || mol.isLifestyle || mol.id === "caffeine" || mol.class === "cannabinoid",
     dose,
   };
 }

@@ -15,6 +15,7 @@
 // ----------------------------------------------------------------------------
 
 import { mulberry32 } from "./rng";
+import { type PharmaVectors } from "./stackVectors";
 
 export type Region =
   | "Default"
@@ -360,11 +361,25 @@ export interface ComposedTopology extends Topology {
   edgeStats: { added: number; removed: number; total: number };
 }
 
-export function composeTopology(states: Pathology[], targetedOperations: { nodeId: number, type: string }[] = []): ComposedTopology {
+function getEdgeRandom(u: number, v: number): number {
+  const a = Math.min(u, v);
+  const b = Math.max(u, v);
+  let seed = (a * 73856093) ^ (b * 19349663);
+  seed = Math.imul(seed ^ (seed >>> 15), 1 - seed);
+  seed = seed + Math.imul(seed ^ (seed >>> 7), seed | 61);
+  return ((seed ^ (seed >>> 14)) >>> 0) / 4294967296;
+}
+
+export function composeTopology(
+  states: Pathology[],
+  targetedOperations: { nodeId: number, type: string }[] = [],
+  simulationTimeMonths: number = 0,
+  vectors: PharmaVectors = { arousal: 0, dampening: 0, chaos: 0, repair: 0 }
+): ComposedTopology {
   const base = getBaselineTopology();
   // Deep-clone adjacency only (cheap O(N²)).
   const adjacency = new Uint8Array(base.adjacency);
-  const nodes = base.nodes.map((n) => ({ ...n, hubness: n.hubness, cliques: n.cliques }));
+  const nodes = base.nodes.map((n) => ({ ...n, hubness: n.hubness, cliques: n.cliques, omega: n.omega }));
   const cliques: Clique[] = base.cliques.map((c) => ({ ...c, nodes: c.nodes.slice() }));
 
   const rng = mulberry32(SEED + sumHash(states));
@@ -449,6 +464,72 @@ export function composeTopology(states: Pathology[], targetedOperations: { nodeI
         nodes[op.nodeId].omega *= 2.0; // Boost intrinsic frequency
       } else if (op.type === 'inhibit') {
         nodes[op.nodeId].omega *= 0.5; // Dampen intrinsic frequency
+      }
+    }
+  }
+
+  // 4. Apply Temporal Connectome Decay & Intrinsic Frequency Drift
+  const activePathologiesForRegion: Record<Region, number> = {
+    Default: 0,
+    Control: 0,
+    Limbic: 0,
+    Visual: 0,
+    SomatoMotor: 0,
+    VentAttn: 0,
+  };
+  for (const state of states) {
+    const spec = MODIFIERS[state];
+    if (spec && spec.biasRegion) {
+      activePathologiesForRegion[spec.biasRegion]++;
+    }
+  }
+
+  const regionPruneFraction: Record<Region, number> = {
+    Default: 0,
+    Control: 0,
+    Limbic: 0,
+    Visual: 0,
+    SomatoMotor: 0,
+    VentAttn: 0,
+  };
+
+  const basePruneRate = 0.005; // 0.5% per month of active pathology exposure
+  const normalAgingRate = 0.0005; // 0.05% per month normal decay
+
+  (Object.keys(regionPruneFraction) as Region[]).forEach((r) => {
+    const count = activePathologiesForRegion[r];
+    const chaosFactor = 1.0 + Math.max(0, vectors.chaos) * 0.5;
+    const repairFactor = Math.max(0, 1.0 - Math.min(1.0, vectors.repair));
+    const pathologyDecayRate = basePruneRate * count * chaosFactor * repairFactor;
+    const decayRate = normalAgingRate + pathologyDecayRate;
+    regionPruneFraction[r] = Math.min(0.6, decayRate * simulationTimeMonths);
+  });
+
+  if (simulationTimeMonths > 0) {
+    // Edge Pruning
+    for (let i = 0; i < N; i++) {
+      for (let j = i + 1; j < N; j++) {
+        if (adjacency[i * N + j]) {
+          const edgePruneFraction = (regionPruneFraction[nodes[i].region] + regionPruneFraction[nodes[j].region]) / 2;
+          const rVal = getEdgeRandom(i, j);
+          if (rVal < edgePruneFraction) {
+            adjacency[i * N + j] = 0;
+            adjacency[j * N + i] = 0;
+            edgesRemoved++;
+          }
+        }
+      }
+    }
+
+    // Node Intrinsic Frequency Drift
+    for (let i = 0; i < N; i++) {
+      const count = activePathologiesForRegion[nodes[i].region];
+      if (count > 0) {
+        const driftChaosFactor = 1.0 + Math.max(0, vectors.chaos) * 0.5;
+        const driftRepairFactor = Math.max(0, 1.0 - Math.min(1.0, vectors.repair));
+        const effectiveDriftRate = -0.005 * count * driftChaosFactor * driftRepairFactor;
+        const frequencyMultiplier = Math.max(0.1, 1.0 + effectiveDriftRate * simulationTimeMonths);
+        nodes[i].omega *= frequencyMultiplier;
       }
     }
   }

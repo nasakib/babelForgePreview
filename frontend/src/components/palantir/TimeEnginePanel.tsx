@@ -19,8 +19,7 @@ export default function TimeEnginePanel() {
       const deltaMs = time - lastUpdateRef.current;
       if (deltaMs > 1000 / 30) { // Update at roughly 30fps max
         lastUpdateRef.current = time;
-        const newTime = simulationTimeMonths + (playbackSpeed * (deltaMs / 1000));
-        setSimulationTimeMonths(Math.min(newTime, 120)); // Cap at 120 months (10 years)
+        (setSimulationTimeMonths as any)((prev: number) => Math.min(prev + playbackSpeed * (deltaMs / 1000), 120));
       }
       
       if (isPlaying) {
