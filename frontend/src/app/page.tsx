@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAI } from "@/context/AIContext";
-import NeuroCanvas from "@/components/NeuroCanvas";
+import dynamic from "next/dynamic";
+const NeuroCanvas = dynamic(() => import("@/components/NeuroCanvas"), { ssr: false });
 import {
   composeTopology,
   PATHOLOGIES,
@@ -47,10 +48,11 @@ export default function ConsolePage() {
 
   const vectors: PharmaVectors = useMemo(() => {
     const v = { ...ZERO_VECTORS };
-    for (const item of activeStack as RegimenItem[]) {
+    for (const item of activeStack as any[]) {
       const mol = molecules.find((m) => m.id === item.id);
       if (!mol) continue;
-      const ratio = Math.min(1, item.dose / 2);
+      const intensity = item.dose ?? item.currentIntensity ?? 0;
+      const ratio = Math.min(1, intensity / 3.0);
       v.arousal += mol.effects.arousal * ratio;
       v.dampening += mol.effects.dampening * ratio;
       v.chaos += mol.effects.chaos * ratio;

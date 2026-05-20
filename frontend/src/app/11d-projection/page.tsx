@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import NeuroCanvas from "@/components/NeuroCanvas";
+import dynamic from "next/dynamic";
+const NeuroCanvas = dynamic(() => import("@/components/NeuroCanvas"), { ssr: false });
 import { composeTopology } from "@/lib/engine/topology";
 
 export default function ElevenDProjection() {

@@ -270,7 +270,7 @@ def simulate_experience(req: SimulateRequest):
     
     genai.configure(api_key=api_key)
     try:
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-1.5-flash-latest')
         
         prompt = (
             "You are babelForge's simulation engine. The user has described a subjective experience, intervention, or state. "
@@ -305,7 +305,7 @@ def chat_endpoint(req: ChatRequest):
     genai.configure(api_key=api_key)
     
     try:
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-1.5-flash-latest')
 
         system_instruction = (
             "You are babelAI, a clinical computational neuroscience assistant. "

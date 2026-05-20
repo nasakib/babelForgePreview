@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   title: 'babelForge | Precision Neuroscience Engine',
   description:
     'Computational topology + Kuramoto phase dynamics + precision-compound optimization for clinical neuroscience research.',
-  manifest: '/manifest.json',
+  manifest: `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/manifest.json`,
 }
 
 export const viewport: Viewport = {

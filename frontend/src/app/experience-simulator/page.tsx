@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useAI } from "@/context/AIContext";
-import NeuroCanvas from "@/components/NeuroCanvas";
+import dynamic from "next/dynamic";
+const NeuroCanvas = dynamic(() => import("@/components/NeuroCanvas"), { ssr: false });
 import { babelforgeApi } from "@/lib/api/client";
 import PanelHeader from "@/components/palantir/PanelHeader";
 

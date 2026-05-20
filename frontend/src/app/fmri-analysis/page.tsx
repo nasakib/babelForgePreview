@@ -11,7 +11,8 @@
  */
 
 import { useEffect, useState, useRef, useMemo } from "react";
-import NeuroCanvas from "@/components/NeuroCanvas";
+import dynamic from "next/dynamic";
+const NeuroCanvas = dynamic(() => import("@/components/NeuroCanvas"), { ssr: false });
 import { useAI } from "@/context/AIContext";
 import type { Pathology } from "@/lib/engine/topology";
 import { PATHOLOGIES } from "@/lib/engine/topology";

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import NeuroCanvas from "@/components/NeuroCanvas";
+import dynamic from "next/dynamic";
+const NeuroCanvas = dynamic(() => import("@/components/NeuroCanvas"), { ssr: false });
 import { molecules } from "@/data/molecules";
 import { useAI } from "@/context/AIContext";
 import PanelHeader from "@/components/palantir/PanelHeader";
@@ -55,7 +56,7 @@ export default function StackSimulator() {
         if (mol.class === "cannabinoid") tolRate = 0.3;
 
         const tolFactor = 1 / (1 + Math.log1p(tolMonths * tolRate));
-        const rawRatio = mol.currentIntensity / 2.0;
+        const rawRatio = mol.currentIntensity / 3.0;
         const ratio = rawRatio * 1.0 * tolFactor; // Assuming 70kg weight
 
         const overDose = Math.max(0, ratio - 1);
@@ -267,8 +268,15 @@ export default function StackSimulator() {
 
         <div className="clinical-card p-4 flex-grow flex flex-col overflow-hidden">
           <div className="flex justify-between items-center mb-4 flex-none">
-              <h3 className="text-sm font-bold text-ink uppercase tracking-widest">Active Stack</h3>
-              <span className="bg-surface-100 text-ink-muted text-[10px] font-bold px-2 py-0.5 rounded-full">{stack.length}/10</span>
+              <div className="flex items-center gap-3">
+                <h3 className="text-sm font-bold text-ink uppercase tracking-widest">Active Stack</h3>
+                <span className="bg-surface-100 text-ink-muted text-[10px] font-bold px-2 py-0.5 rounded-full">{stack.length}/10</span>
+              </div>
+              {stack.length > 0 && (
+                <button onClick={() => setStack([])} className="text-[10px] font-bold text-ink-muted hover:text-crit uppercase tracking-widest transition-colors">
+                  Clear
+                </button>
+              )}
           </div>
           
           <div className="flex-grow overflow-y-auto space-y-3 pr-1">

@@ -48,7 +48,7 @@ export function computeStackVectors(stack: StackItem[] | undefined | null): Phar
     if (mol.class === "cannabinoid") tolRate = 0.3;
 
     const tolFactor = 1 / (1 + Math.log1p(tolMonths * tolRate));
-    const ratio = (intensity / 2.0) * tolFactor;
+    const ratio = (intensity / 3.0) * tolFactor;
     const capped = Math.min(1, ratio);
     const overDose = Math.max(0, ratio - 1);
 

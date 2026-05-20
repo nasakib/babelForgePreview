@@ -19,7 +19,7 @@ function sumVectors(items: RegimenItem[]): PharmaVectors {
   for (const item of items) {
     const mol = molecules.find((m) => m.id === item.id);
     if (!mol) continue;
-    const ratio = item.dose / 2;
+    const ratio = item.dose / 3.0;
     v.arousal += mol.effects.arousal * Math.min(1, ratio);
     v.dampening += mol.effects.dampening * Math.min(1, ratio);
     v.chaos += mol.effects.chaos * Math.min(1, ratio);

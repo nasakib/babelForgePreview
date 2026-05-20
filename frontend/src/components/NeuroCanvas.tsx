@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { Canvas, useFrame } from "@react-three/fiber";
-import { OrbitControls, Html } from "@react-three/drei";
+import { OrbitControls, Text } from "@react-three/drei";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { useAI } from "@/context/AIContext";
@@ -481,7 +481,8 @@ function BrainScene({
   const coherenceFrame = useRef(0);
 
   useFrame((_, dt) => {
-    // Sub-step Kuramoto for numerical stability with large adjacency
+    try {
+      // Sub-step Kuramoto for numerical stability with large adjacency
     const steps = 1;
     const sdt = Math.min(0.05, dt) / steps;
     for (let s = 0; s < steps; s++) stepKuramoto(kuramoto, sdt);
@@ -551,7 +552,10 @@ function BrainScene({
     // Edge opacity pulses with global coherence
     if (lineMatRef.current) {
       const baseOp = viewPerspective === "physics" ? 0.15 : 0.35;
-      lineMatRef.current.opacity = baseOp + kuramoto.R * 0.25;
+      lineMatRef.current.opacity = baseOp + (isNaN(kuramoto.R) ? 0 : kuramoto.R * 0.25);
+    }
+    } catch(e) {
+      console.error(e);
     }
   });
 
@@ -621,28 +625,17 @@ function BrainScene({
         }
 
         return (
-        <Html
+        <Text
           key={`lbl-${i}`}
           position={[topo.nodes[i].x, topo.nodes[i].y + 1.8, topo.nodes[i].z]}
-          center
-          zIndexRange={[10, 0]}
+          fontSize={1.5}
+          color={label.strengthColor}
+          anchorX="center"
+          anchorY="middle"
+          depthOffset={-1}
         >
-          <div
-            style={{
-              fontSize: '8px',
-              fontFamily: 'JetBrains Mono, monospace',
-              fontWeight: 'bold',
-              textShadow: '0 0 2px #05070d, 0 0 4px #05070d, 0 0 6px #05070d',
-              pointerEvents: 'none',
-              userSelect: 'none',
-              opacity: 0.8
-            }}
-          >
-            <span style={{ color: REGION_COLOR[topo.nodes[i].region as keyof typeof REGION_COLOR] }}>{label.r1}</span>
-            <span style={{ color: label.strengthColor }}>{label.idStr}</span>
-            <span style={{ color: r2Color }}>{label.r2}</span>
-          </div>
-        </Html>
+          {`${label.r1}${label.idStr}${label.r2}`}
+        </Text>
       )})}
     </group>
   );
