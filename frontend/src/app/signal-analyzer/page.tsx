@@ -105,7 +105,6 @@ export default function SignalAnalyzer() {
         subtitle="Inject synthetic cortex stimuli"
         defaultPosition={{ x: 20, y: 20 }}
         defaultSize={{ width: 350, height: 600 }}
-        zIndex={20}
       >
           <div className="p-4 flex flex-col gap-6">
             <p className="text-xs text-ink-muted leading-relaxed">

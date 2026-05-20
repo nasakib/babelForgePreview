@@ -4,9 +4,11 @@ import './globals.css'
 import Navbar from '@/components/Navbar'
 import { AIProvider } from '@/context/AIContext'
 import { UserModeProvider } from '@/context/UserModeContext'
+import { WindowProvider } from '@/context/WindowContext'
 import AIAssistant from '@/components/AIAssistant'
 import StatusBar from '@/components/palantir/StatusBar'
 import CommandPalette from '@/components/palantir/CommandPalette'
+import WindowDock from '@/components/palantir/WindowDock'
 import { palette } from '@/lib/theme/palette'
 import { cssVarBlock } from '@/lib/theme/cssVars'
 
@@ -54,13 +56,16 @@ export default function RootLayout({
       <body className="font-sans antialiased h-screen-dvh flex flex-col overflow-hidden bg-canvas text-ink">
         <UserModeProvider>
           <AIProvider>
-            <Navbar />
-            <main className="flex-1 flex flex-col overflow-y-auto overflow-x-hidden relative bg-void">
-              {children}
-            </main>
-            <StatusBar />
-            <AIAssistant />
-            <CommandPalette />
+            <WindowProvider>
+              <Navbar />
+              <main className="flex-1 flex flex-col overflow-y-auto overflow-x-hidden relative bg-void">
+                {children}
+              </main>
+              <WindowDock />
+              <StatusBar />
+              <AIAssistant />
+              <CommandPalette />
+            </WindowProvider>
           </AIProvider>
         </UserModeProvider>
       </body>

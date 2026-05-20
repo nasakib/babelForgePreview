@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAI } from "@/context/AIContext";
 import dynamic from "next/dynamic";
 const NeuroCanvas = dynamic(() => import("@/components/NeuroCanvas"), { ssr: false });
@@ -8,11 +8,38 @@ import { babelforgeApi } from "@/lib/api/client";
 import PanelHeader from "@/components/palantir/PanelHeader";
 import DraggablePanel from "@/components/palantir/DraggablePanel";
 
+const STORAGE_KEY = "babelforge:experience-simulator:v1";
+
 export default function ExperienceSimulator() {
   const { activePathologies, setViewPerspective } = useAI();
   const [experience, setExperience] = useState("");
   const [isSimulating, setIsSimulating] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed.experience) setExperience(parsed.experience);
+        if (parsed.result) setResult(parsed.result);
+      }
+    } catch {
+      /* ignore */
+    } finally {
+      setHydrated(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ experience, result }));
+    } catch {
+      /* ignore */
+    }
+  }, [experience, result, hydrated]);
 
   const handleSimulate = async () => {
     if (!experience.trim()) return;

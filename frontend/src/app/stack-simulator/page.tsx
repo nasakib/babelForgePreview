@@ -8,8 +8,10 @@ import { useAI } from "@/context/AIContext";
 import PanelHeader from "@/components/palantir/PanelHeader";
 import DraggablePanel from "@/components/palantir/DraggablePanel";
 
+const STORAGE_KEY = "babelforge:stack-simulator:v1";
+
 export default function StackSimulator() {
-  const { setCurrentModule, setActiveStack, setIntegrityScore, triggerAIAnalysis, viewPerspective, setViewPerspective } = useAI();
+  const { setCurrentModule, setActiveStack, activeStack, setIntegrityScore, triggerAIAnalysis, viewPerspective, setViewPerspective } = useAI();
   const [leftMinimized, setLeftMinimized] = useState(false);
 
   useEffect(() => {
@@ -20,11 +22,42 @@ export default function StackSimulator() {
   const [classFilter, setClassFilter] = useState("all");
   const [interventionMode, setInterventionMode] = useState<"pharma" | "vanilla" | "holistic">("holistic");
   const [selectedMolId, setSelectedMolId] = useState(molecules[0]?.id || "");
-  const [stack, setStack] = useState<any[]>([]);
+  const [hydrated, setHydrated] = useState(false);
+
+  // Use activeStack from AIContext as the single source of truth for the stack.
+  // We no longer need the local `stack` state variable.
+  const stack = activeStack as any[];
 
   useEffect(() => {
-    setActiveStack(stack);
-  }, [stack, setActiveStack]);
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed.searchQuery !== undefined) setSearchQuery(parsed.searchQuery);
+        if (parsed.classFilter !== undefined) setClassFilter(parsed.classFilter);
+        if (parsed.interventionMode !== undefined) setInterventionMode(parsed.interventionMode);
+        if (parsed.selectedMolId !== undefined) setSelectedMolId(parsed.selectedMolId);
+      }
+    } catch {
+      /* ignore */
+    } finally {
+      setHydrated(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        searchQuery,
+        classFilter,
+        interventionMode,
+        selectedMolId
+      }));
+    } catch {
+      /* ignore */
+    }
+  }, [searchQuery, classFilter, interventionMode, selectedMolId, hydrated]);
 
   // Computed Properties
   const filteredMolecules = useMemo(() => {
@@ -148,16 +181,16 @@ export default function StackSimulator() {
       return;
     }
     if (selectedMol && !stack.find(m => m.id === selectedMol.id)) {
-      setStack([...stack, { ...selectedMol, currentIntensity: 2, toleranceMonths: 0 }]);
+      setActiveStack([...stack, { ...selectedMol, currentIntensity: 2, toleranceMonths: 0 }]);
     }
   };
 
   const removeFromStack = (id: string) => {
-    setStack(stack.filter(m => m.id !== id));
+    setActiveStack(stack.filter(m => m.id !== id));
   };
 
   const updateMolAttr = (id: string, key: string, value: number) => {
-    setStack(stack.map(m => m.id === id ? { ...m, [key]: value } : m));
+    setActiveStack(stack.map(m => m.id === id ? { ...m, [key]: value } : m));
   };
 
   return (
@@ -206,7 +239,6 @@ export default function StackSimulator() {
         subtitle="Simulate interventions and regimens"
         defaultPosition={{ x: 20, y: 20 }}
         defaultSize={{ width: 380, height: 600 }}
-        zIndex={20}
       >
         <div className="clinical-card p-4 flex-none border-b border-line bg-surface-50">
           <div className="space-y-4">
@@ -266,7 +298,7 @@ export default function StackSimulator() {
                 <span className="bg-surface-100 text-ink-muted text-[10px] font-bold px-2 py-0.5 rounded-full">{stack.length}/10</span>
               </div>
               {stack.length > 0 && (
-                <button onClick={() => setStack([])} className="text-[10px] font-bold text-ink-muted hover:text-crit uppercase tracking-widest transition-colors">
+                <button onClick={() => setActiveStack([])} className="text-[10px] font-bold text-ink-muted hover:text-crit uppercase tracking-widest transition-colors">
                   Clear
                 </button>
               )}

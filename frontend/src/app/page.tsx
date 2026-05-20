@@ -19,7 +19,7 @@ import {
 } from "@/lib/engine/diagnosis";
 import { autoOptimize, type RegimenItem } from "@/lib/engine/optimize";
 import { molecules } from "@/data/molecules";
-import PanelHeader from "@/components/palantir/PanelHeader";
+import DraggablePanel from "@/components/palantir/DraggablePanel";
 
 const VIEW_MODES = [
   { id: "topology", label: "Topology", desc: "Region tint · amplitude pulse" },
@@ -154,24 +154,14 @@ export default function ConsolePage() {
       </div>
 
       {/* LEFT PANEL */}
-      <aside className={`w-full lg:absolute lg:left-4 lg:top-4 z-10 border-b lg:border border-line bg-surface-0/80 backdrop-blur-xl lg:rounded-clinical flex flex-col custom-scrollbar shadow-2xl pointer-events-auto transition-all duration-300 ${leftMinimized ? 'lg:w-auto h-auto' : 'lg:w-[320px] lg:bottom-4 overflow-y-auto'}`}>
-        <PanelHeader 
-          title="Patient State Modifiers" 
-          subtitle={leftMinimized ? "" : "Compose pathological networks"}
-          onToggle={() => setLeftMinimized(!leftMinimized)}
-          minimized={leftMinimized}
-        >
-          {!leftMinimized && (
-            <>
-              <span className="status-dot ok" />
-              <span className="section-label">Engine Online</span>
-            </>
-          )}
-        </PanelHeader>
-
-        {!leftMinimized && (
-          <>
-            <div className="p-4 border-b border-line space-y-2.5">
+      <DraggablePanel
+        id="console-left-panel"
+        title="Patient State Modifiers"
+        subtitle="Compose pathological networks"
+        defaultPosition={{ x: 20, y: 20 }}
+        defaultSize={{ width: 340, height: 600 }}
+      >
+        <div className="p-4 border-b border-line space-y-2.5">
           {PATHOLOGIES.map((p) => {
             const meta = PATHOLOGY_META[p];
             const active = activePathologies.includes(p);
@@ -256,28 +246,16 @@ export default function ConsolePage() {
             {liveR !== null && <span className="text-accent-400">live {liveR.toFixed(2)}</span>}
           </div>
         </div>
-          </>
-        )}
-      </aside>
+      </DraggablePanel>
 
       {/* RIGHT PANEL */}
-      <aside className={`w-full lg:absolute lg:right-4 lg:top-4 z-10 border-t lg:border border-line bg-surface-0/80 backdrop-blur-xl lg:rounded-clinical flex flex-col custom-scrollbar shadow-2xl pointer-events-auto transition-all duration-300 ${rightMinimized ? 'lg:w-auto h-auto' : 'lg:w-[380px] lg:bottom-4 overflow-y-auto'}`}>
-        <PanelHeader 
-          title="Diagnostic AI" 
-          subtitle={rightMinimized ? "" : "Topology + Pharmacology Analyzer"}
-          onToggle={() => setRightMinimized(!rightMinimized)}
-          minimized={rightMinimized}
-        >
-          {!rightMinimized && (
-            <>
-              <span className={`status-dot ${computing ? "warn" : "ok"}`} />
-              <span className="section-label">{computing ? "Computing" : "Idle"}</span>
-            </>
-          )}
-        </PanelHeader>
-
-        {!rightMinimized && (
-          <>
+      <DraggablePanel
+        id="console-right-panel"
+        title="Diagnostic AI"
+        subtitle="Topology + Pharmacology Analyzer"
+        defaultPosition={{ x: typeof window !== "undefined" && window.innerWidth > 800 ? window.innerWidth - 420 : 400, y: 20 }}
+        defaultSize={{ width: 400, height: 600 }}
+      >
         <div className="p-4 border-b border-line grid grid-cols-2 gap-2">
           <button className="btn-primary" onClick={() => runReport()} disabled={computing}>
             Calculate Now
@@ -361,9 +339,7 @@ export default function ConsolePage() {
             ))}
           </div>
         </div>
-          </>
-        )}
-      </aside>
+      </DraggablePanel>
     </div>
   );
 }
