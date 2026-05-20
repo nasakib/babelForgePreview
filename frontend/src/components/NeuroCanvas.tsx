@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, Html } from "@react-three/drei";
@@ -49,6 +49,7 @@ export default function NeuroCanvas({
     viewPerspective,
     activeStack: ctxStack,
     activePathologies: ctxPathologies,
+    integrityScore,
     setIntegrityScore,
     selectedNodeIds,
     setSelectedNodeIds,
@@ -173,11 +174,18 @@ export default function NeuroCanvas({
           nodeLabels={nodeLabels}
           activeLayers={activeLayers}
           onCoherence={(R) => {
-            setLiveR(R);
+            setLiveR((prev) => {
+              const p = prev.toFixed(3);
+              const n = R.toFixed(3);
+              return p === n ? prev : R;
+            });
             if (onCoherence) {
               onCoherence(R);
             } else {
-              setIntegrityScore(Math.round(R * 100));
+              const nextScore = Math.round(R * 100);
+              if (nextScore !== integrityScore) {
+                setIntegrityScore(nextScore);
+              }
             }
           }}
         />
@@ -638,36 +646,27 @@ function BrainScene({
 
       {/* Render Naming Convention Tags on Nodes */}
       {viewPerspective !== "anatomy" && nodeLabels.map((label, i) => {
-        const isFiltering = selectedNodeIds.length > 0;
         const isSelected = selectedNodeIds.includes(i);
-        if (isFiltering && !isSelected) return null;
-
-        // Find the color of the nearest neighbor's region for r2
-        let r2Color = "#ffffff";
-        let nearestDist = Infinity;
-        for (let j = 0; j < topo.N; j++) {
-          if (i !== j && topo.adjacency[i * topo.N + j]) {
-            const nj = topo.nodes[j];
-            const dist = (topo.nodes[i].x - nj.x) ** 2 + (topo.nodes[i].y - nj.y) ** 2 + (topo.nodes[i].z - nj.z) ** 2;
-            if (dist < nearestDist) {
-              nearestDist = dist;
-              r2Color = REGION_COLOR[nj.region as keyof typeof REGION_COLOR] || "#ffffff";
-            }
-          }
-        }
+        const isFiltering = selectedNodeIds.length > 0;
+        
+        // Performance optimization: limit rendering to selected nodes or key hub nodes (hubness > 15)
+        // to avoid browser layout thrashing from 200 floating HTML elements.
+        const shouldShow = isSelected || (!isFiltering && topo.nodes[i].hubness > 15);
+        if (!shouldShow) return null;
 
         return (
-        <Html
-          key={`lbl-${i}`}
-          position={[topo.nodes[i].x, topo.nodes[i].y + 1.8, topo.nodes[i].z]}
-          center
-          style={{ pointerEvents: 'none' }}
-        >
-          <div className="text-[10px] font-mono font-bold text-white drop-shadow-md whitespace-nowrap">
-            {`${label.r1}${label.idStr}${label.r2}`}
-          </div>
-        </Html>
-      )})}
+          <Html
+            key={`lbl-${i}`}
+            position={[topo.nodes[i].x, topo.nodes[i].y + 1.8, topo.nodes[i].z]}
+            center
+            style={{ pointerEvents: 'none' }}
+          >
+            <div className="text-[10px] font-mono font-bold text-white drop-shadow-md whitespace-nowrap">
+              {`${label.r1}${label.idStr}${label.r2}`}
+            </div>
+          </Html>
+        );
+      })}
     </group>
   );
 }

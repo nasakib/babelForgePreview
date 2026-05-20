@@ -9,6 +9,7 @@ import AIAssistant from '@/components/AIAssistant'
 import StatusBar from '@/components/palantir/StatusBar'
 import CommandPalette from '@/components/palantir/CommandPalette'
 import WindowDock from '@/components/palantir/WindowDock'
+import MobileDisclaimer from '@/components/clinical/MobileDisclaimer'
 import { palette } from '@/lib/theme/palette'
 import { cssVarBlock } from '@/lib/theme/cssVars'
 
@@ -57,6 +58,7 @@ export default function RootLayout({
         <UserModeProvider>
           <AIProvider>
             <WindowProvider>
+              <MobileDisclaimer />
               <Navbar />
               <main className="flex-1 flex flex-col overflow-y-auto overflow-x-hidden relative bg-void">
                 {children}

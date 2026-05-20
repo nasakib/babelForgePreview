@@ -24,6 +24,16 @@ export default function DraggablePanel({
   className = "",
 }: DraggablePanelProps) {
   const { windows, registerWindow, updateWindow, toggleMinimize, bringToFront, zenMode, ready } = useWindowContext();
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     if (ready) {
@@ -41,6 +51,57 @@ export default function DraggablePanel({
   if (zenMode) return null;
 
   const win = windows[id];
+
+  if (isMobile) {
+    return (
+      <div
+        className={`relative flex flex-col bg-surface-0/90 backdrop-blur-xl border border-line rounded-clinical shadow-lg overflow-hidden my-4 mx-auto w-full max-w-lg pointer-events-auto ${className}`}
+        style={{ display: win.minimized ? 'none' : 'flex', zIndex: win.zIndex }}
+        onMouseDown={() => bringToFront(id)}
+      >
+        <div className="flex items-center justify-between px-4 py-3 border-b border-line bg-surface-50">
+          <div>
+            <div className="text-[14px] text-ink font-medium tracking-tight">
+              {title}
+            </div>
+            {subtitle && (
+              <div className="text-[10.5px] font-mono uppercase tracking-widest2 text-ink-muted mt-0.5">
+                {subtitle}
+              </div>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleMinimize(id);
+              }}
+              className="text-ink-subtle hover:text-ink transition-colors p-1"
+            >
+              <svg className={`w-4 h-4 transition-transform ${win.minimized ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+            {onClose && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onClose();
+                }}
+                className="text-ink-subtle hover:text-crit transition-colors p-1"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+        </div>
+        
+        {!win.minimized && (
+          <div className="flex-1 max-h-[450px] overflow-y-auto custom-scrollbar bg-canvas/50">
+            {children}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <Rnd
