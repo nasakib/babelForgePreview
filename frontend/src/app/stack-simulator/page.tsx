@@ -10,6 +10,7 @@ import DraggablePanel from "@/components/palantir/DraggablePanel";
 import { runDiagnosis } from "@/lib/engine/diagnosis";
 import { computeStackVectors } from "@/lib/engine/stackVectors";
 import type { Pathology } from "@/lib/engine/topology";
+import { EMPTY_PROFILE, type PatientProfile } from "@/lib/patient/profile";
 import TimeEnginePanel from "@/components/palantir/TimeEnginePanel";
 
 const STORAGE_KEY = "babelforge:stack-simulator:v1";
@@ -37,6 +38,7 @@ export default function StackSimulator() {
   const [interventionMode, setInterventionMode] = useState<"pharma" | "vanilla" | "holistic">("holistic");
   const [selectedMolId, setSelectedMolId] = useState(molecules[0]?.id || "");
   const [startingAge, setStartingAge] = useState(35);
+  const [profile, setProfile] = useState<PatientProfile>(EMPTY_PROFILE);
   const [hydrated, setHydrated] = useState(false);
 
   // Use activeStack from AIContext as the single source of truth for the stack.
@@ -53,6 +55,16 @@ export default function StackSimulator() {
         if (parsed.interventionMode !== undefined) setInterventionMode(parsed.interventionMode);
         if (parsed.selectedMolId !== undefined) setSelectedMolId(parsed.selectedMolId);
         if (parsed.startingAge !== undefined) setStartingAge(parsed.startingAge);
+      }
+      
+      // Load active clinical heads-up scanner profile
+      const rawProfile = localStorage.getItem("babelforge:anomaly:profile:v1");
+      if (rawProfile) {
+        const parsedProfile = JSON.parse(rawProfile);
+        setProfile(parsedProfile);
+        if (parsedProfile.demographics?.ageYears) {
+          setStartingAge(parsedProfile.demographics.ageYears);
+        }
       }
     } catch {
       /* ignore */
@@ -100,10 +112,11 @@ export default function StackSimulator() {
       activePathologies as Pathology[],
       net,
       {
-        weightKg: 70,
+        weightKg: profile.demographics?.weightKg ?? 70,
         toleranceMonths: 0,
         ageYears: startingAge,
         simulationTimeMonths: simulationTimeMonths,
+        profile: profile,
       },
       stack
     );
@@ -121,7 +134,7 @@ export default function StackSimulator() {
       holisticSynergyBonus: report.holisticSynergyBonus,
       activeCorrections: report.activeCorrections,
     };
-  }, [stack, activePathologies, startingAge, simulationTimeMonths]);
+  }, [stack, activePathologies, startingAge, simulationTimeMonths, profile]);
 
   useEffect(() => {
     setIntegrityScore(Math.round(simulationState.sync * 100));

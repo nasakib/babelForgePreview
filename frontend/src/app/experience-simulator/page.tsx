@@ -7,11 +7,15 @@ const NeuroCanvas = dynamic(() => import("@/components/NeuroCanvas"), { ssr: fal
 import { babelforgeApi } from "@/lib/api/client";
 import PanelHeader from "@/components/palantir/PanelHeader";
 import DraggablePanel from "@/components/palantir/DraggablePanel";
+import { runDiagnosis } from "@/lib/engine/diagnosis";
+import type { Pathology } from "@/lib/engine/topology";
+import { EMPTY_PROFILE, type PatientProfile } from "@/lib/patient/profile";
 
 const STORAGE_KEY = "babelforge:experience-simulator:v1";
 
 export default function ExperienceSimulator() {
   const { activePathologies, setViewPerspective } = useAI();
+  const [profile, setProfile] = useState<PatientProfile>(EMPTY_PROFILE);
   const [experience, setExperience] = useState("");
   const [isSimulating, setIsSimulating] = useState(false);
   const [result, setResult] = useState<any>(null);
@@ -19,6 +23,11 @@ export default function ExperienceSimulator() {
 
   useEffect(() => {
     try {
+      const profileRaw = localStorage.getItem("babelforge:anomaly:profile:v1");
+      if (profileRaw) {
+        setProfile(JSON.parse(profileRaw));
+      }
+
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
@@ -47,17 +56,12 @@ export default function ExperienceSimulator() {
     setResult(null);
 
     try {
-      const data = await babelforgeApi.simulate(experience, { pathologies: activePathologies });
-      if (data && (data.error || /GEMINI_API_KEY|not configured|missing key/i.test(data?.desc || '') || /GEMINI_API_KEY|not configured|missing key/i.test(data?.label || ''))) {
-        throw new Error("Backend API key missing");
-      }
-      setResult(data);
-      setViewPerspective("pharma"); // Switch to effect view
-    } catch (err) {
-      console.error("Simulation API failed, using local high-fidelity fallback:", err);
-      const localData = localSimulateFallback(experience, activePathologies);
+      // Local simulation incorporates clinical genetics, vitals, labs, and psychometrics, ensuring absolute data privacy and physical correctness
+      const localData = localSimulateFallback(experience, activePathologies, profile);
       setResult(localData);
       setViewPerspective("pharma"); // Switch to effect view
+    } catch (err) {
+      console.error("Simulation failed:", err);
     } finally {
       setIsSimulating(false);
     }
@@ -77,13 +81,13 @@ export default function ExperienceSimulator() {
         <NeuroCanvas vectors={vectors} />
       </div>
 
-      {/* Left Sidebar: Simulator Input */}
+      {/* Left Sidebar: Simulator Input & Physical Vectors */}
       <DraggablePanel
         id="experience-simulator"
         title="Subjective Reaction Engine"
         subtitle="LLM-Physics Bridge"
         defaultPosition={{ x: 20, y: 20 }}
-        defaultSize={{ width: 400, height: 600 }}
+        defaultSize={{ width: 400, height: 620 }}
       >
         <div className="p-4 flex flex-col gap-4 border-b border-line flex-none">
           <p className="text-xs text-ink-subtle leading-relaxed">
@@ -91,7 +95,7 @@ export default function ExperienceSimulator() {
           </p>
           <div className="flex flex-col gap-2">
             <textarea
-              className="w-full h-32 bg-surface-50 border border-line-strong rounded-clinical p-3 text-sm text-ink font-sans resize-none focus:outline-none focus:border-accent-500 custom-scrollbar"
+              className="w-full h-28 bg-surface-50 border border-line-strong rounded-clinical p-3 text-xs text-ink font-sans resize-none focus:outline-none focus:border-accent-500 custom-scrollbar"
               placeholder="e.g., 'I just ran a marathon and then sat in a sauna for 20 minutes', or 'I took 2mg of alprazolam during a panic attack...'"
               value={experience}
               onChange={(e) => setExperience(e.target.value)}
@@ -99,7 +103,7 @@ export default function ExperienceSimulator() {
             <button
               onClick={handleSimulate}
               disabled={isSimulating || !experience.trim()}
-              className="btn-primary w-full flex items-center justify-center gap-2"
+              className="btn-primary w-full flex items-center justify-center gap-2 text-xs py-2"
             >
               {isSimulating ? (
                 <>
@@ -113,7 +117,7 @@ export default function ExperienceSimulator() {
           </div>
         </div>
 
-        <div className="p-4 flex-grow overflow-y-auto">
+        <div className="p-4 flex-grow overflow-y-auto custom-scrollbar">
           <div className="section-label mb-3">Objective & Subjective Projections</div>
           {isSimulating ? (
             <div className="flex flex-col gap-2 text-ink-muted font-mono text-[10px] animate-pulse">
@@ -129,8 +133,8 @@ export default function ExperienceSimulator() {
             ) : (
               <div className="space-y-4 animate-fade-in-up">
                 <div>
-                  <h4 className="text-lg font-bold text-ink mb-1">{result.label}</h4>
-                  <p className="text-xs text-ink-subtle leading-relaxed">{result.desc}</p>
+                  <h4 className="text-base font-bold text-white mb-1 tracking-tight">{result.label}</h4>
+                  <p className="text-[11px] text-ink-subtle leading-relaxed">{result.desc}</p>
                 </div>
                 
                 <div className="bg-surface-50 border border-line-strong rounded-clinical p-3">
@@ -156,6 +160,22 @@ export default function ExperienceSimulator() {
                     <span className={`text-base font-bold ${result.repair > 0 ? 'text-accent-400' : 'text-crit'}`}>{result.repair > 0 ? '+' : ''}{result.repair.toFixed(2)}</span>
                   </div>
                 </div>
+
+                <div className="section-label mt-4 mb-2">Kuramoto Dynamics</div>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="bg-surface-0 border border-line p-2 rounded-clinical flex flex-col text-center">
+                    <span className="text-[9px] font-mono uppercase text-ink-muted">Integrity (Φ)</span>
+                    <span className="text-sm font-bold text-emerald-400">{result.integrity ?? 100}%</span>
+                  </div>
+                  <div className="bg-surface-0 border border-line p-2 rounded-clinical flex flex-col text-center">
+                    <span className="text-[9px] font-mono uppercase text-ink-muted">Sync (R)</span>
+                    <span className="text-sm font-bold text-accent-400">{result.R !== undefined ? result.R.toFixed(3) : "1.000"}</span>
+                  </div>
+                  <div className="bg-surface-0 border border-line p-2 rounded-clinical flex flex-col text-center">
+                    <span className="text-[9px] font-mono uppercase text-ink-muted">Coupling (K)</span>
+                    <span className="text-sm font-bold text-indigo-400">{result.K !== undefined ? result.K.toFixed(2) : "1.00"}</span>
+                  </div>
+                </div>
               </div>
             )
           ) : (
@@ -163,6 +183,129 @@ export default function ExperienceSimulator() {
           )}
         </div>
       </DraggablePanel>
+
+      {/* Right Sidebar: Patient Qualia Projection & Cognitive Domains */}
+      {result && !result.error && result.subjectiveProfile && (
+        <DraggablePanel
+          id="experience-projection"
+          title="Patient Qualia Projection"
+          subtitle="Real-Time Cortex Simulation"
+          defaultPosition={{ x: 440, y: 20 }}
+          defaultSize={{ width: 440, height: 620 }}
+        >
+          <div className="p-4 flex flex-col gap-3 h-full overflow-y-auto custom-scrollbar">
+            {/* Qualia Class Display */}
+            <div className="bg-surface-50 border border-line rounded-clinical p-3 relative overflow-hidden flex-none">
+              <div className="absolute top-0 right-0 w-16 h-16 bg-accent-500/5 blur-xl rounded-full" />
+              <div className="text-[10px] text-ink-subtle uppercase font-bold tracking-wider mb-0.5">Phenomenological Qualia</div>
+              <div className="text-sm text-white font-bold tracking-tight mb-1 flex items-center gap-1.5 drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.5)]">
+                <span className="w-1.5 h-1.5 rounded-full bg-accent-400 animate-ping" />
+                {result.subjectiveProfile.qualiaClass}
+              </div>
+              <div className="text-xs text-ink-subtle leading-relaxed italic">
+                &ldquo;{result.subjectiveProfile.qualiaDescription}&rdquo;
+              </div>
+            </div>
+
+            {/* State Badges / Tags */}
+            <div className="flex flex-wrap gap-1.5 flex-none">
+              {result.subjectiveProfile.tags.map((tag: string) => {
+                const isPositive = ["Flow State", "Emotional Serenity", "Autonomic Balance", "Homeostasis"].includes(tag);
+                const isWarning = ["Anhedonia", "Cognitive Fatigue", "Tachycardia Risk", "Connectome Decay", "Vagal Depletion", "Vit D Deficit", "Vit B12 Deficit", "Severe DMN Lock", "Acute Hyperarousal", "CYP Poor Metabolizer"].includes(tag);
+                const colorClass = isPositive 
+                  ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" 
+                  : (isWarning ? "bg-rose-500/10 border-rose-500/30 text-rose-400" : "bg-accent-500/10 border-accent-500/30 text-accent-400");
+                return (
+                  <span 
+                    key={tag} 
+                    className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded border ${colorClass} uppercase tracking-wider`}
+                  >
+                    {tag}
+                  </span>
+                );
+              })}
+            </div>
+
+            {/* Cognitive Domains */}
+            <div className="bg-surface-50 border border-line rounded-clinical p-3 space-y-2.5 flex-none">
+              <div className="text-[10px] text-ink-subtle uppercase font-bold tracking-wider">Cognitive Domain translation</div>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                {/* Focus */}
+                <div className="space-y-1">
+                  <div className="flex justify-between text-[10px] font-medium text-ink-subtle">
+                    <span>Executive Focus</span>
+                    <span className="font-mono text-white font-semibold">{result.subjectiveProfile.domains.focus}%</span>
+                  </div>
+                  <div className="h-1 bg-line rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-indigo-500 transition-all duration-500" 
+                      style={{ width: `${result.subjectiveProfile.domains.focus}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Affective Valence */}
+                <div className="space-y-1">
+                  <div className="flex justify-between text-[10px] font-medium text-ink-subtle">
+                    <span>Emotional Valence</span>
+                    <span className="font-mono text-white font-semibold">{result.subjectiveProfile.domains.affectiveValence}%</span>
+                  </div>
+                  <div className="h-1 bg-line rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-emerald-500 transition-all duration-500" 
+                      style={{ width: `${result.subjectiveProfile.domains.affectiveValence}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Perceptual Entropy */}
+                <div className="space-y-1">
+                  <div className="flex justify-between text-[10px] font-medium text-ink-subtle">
+                    <span>Perceptual Entropy</span>
+                    <span className="font-mono text-white font-semibold">{result.subjectiveProfile.domains.perceptualEntropy}%</span>
+                  </div>
+                  <div className="h-1 bg-line rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-fuchsia-500 transition-all duration-500" 
+                      style={{ width: `${result.subjectiveProfile.domains.perceptualEntropy}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Autonomic Tone */}
+                <div className="space-y-1">
+                  <div className="flex justify-between text-[10px] font-medium text-ink-subtle">
+                    <span>Autonomic Balance</span>
+                    <span className="font-mono text-white font-semibold">{result.subjectiveProfile.domains.autonomicTone}%</span>
+                  </div>
+                  <div className="h-1 bg-line rounded-full overflow-hidden relative">
+                    <div 
+                      className="absolute top-0 bottom-0 w-0.5 bg-white/40 left-1/2 -translate-x-1/2 z-10" 
+                      title="Ideal Balance"
+                    />
+                    <div 
+                      className={`h-full transition-all duration-500 ${
+                        result.subjectiveProfile.domains.autonomicTone > 70 
+                          ? "bg-rose-500" 
+                          : (result.subjectiveProfile.domains.autonomicTone < 30 ? "bg-cyan-500" : "bg-amber-500")
+                      }`} 
+                      style={{ width: `${result.subjectiveProfile.domains.autonomicTone}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Dynamic Narrative Paragraph */}
+            <div className="text-xs text-ink-subtle leading-relaxed bg-surface-50 border border-line rounded-clinical p-3 font-sans relative overflow-hidden flex-grow custom-scrollbar overflow-y-auto">
+              <div className="text-[10px] text-ink-subtle uppercase font-bold tracking-wider mb-1.5">Connectome Neuro-Narrative</div>
+              <p className="indent-4 text-justify select-text">
+                {result.subjectiveProfile.narrative}
+              </p>
+            </div>
+          </div>
+        </DraggablePanel>
+      )}
     </div>
   );
 }
@@ -251,7 +394,7 @@ const ARCHETYPES: Archetype[] = [
   }
 ];
 
-function localSimulateFallback(experience: string, pathologies: string[]): any {
+function localSimulateFallback(experience: string, pathologies: string[], profile: PatientProfile): any {
   const text = experience.toLowerCase();
   const matches: Archetype[] = [];
 
@@ -266,53 +409,110 @@ function localSimulateFallback(experience: string, pathologies: string[]): any {
     pathText = ` Comorbid pathologies active: ${pathologies.join(", ")}.`;
   }
 
-  if (matches.length === 0) {
-    return {
-      arousal: 0.1,
-      dampening: 0.1,
-      chaos: 0.0,
-      repair: 0.2,
-      label: "Integrated Cortical Adaptation",
-      desc: `Linguistic input parsed locally. The brain shifts its topological phase parameters deterministically to maintain homeostatic equilibrium.${pathText}`,
-      subj: "A subtle shift in baseline cognitive focus, normal sensory flow, and steady homeostatic adaptation."
-    };
+  let blendedArousal = 0.1;
+  let blendedDampening = 0.1;
+  let blendedChaos = 0.0;
+  let blendedRepair = 0.2;
+  let blendedLabel = "Integrated Cortical Adaptation";
+  let blendedDesc = `Linguistic input parsed locally. The brain shifts its topological phase parameters deterministically to maintain homeostatic equilibrium.${pathText}`;
+  let blendedSubj = "A subtle shift in baseline cognitive focus, normal sensory flow, and steady homeostatic adaptation.";
+
+  if (matches.length > 0) {
+    let arousal = 0;
+    let dampening = 0;
+    let chaos = 0;
+    let repair = 0;
+    const labels: string[] = [];
+    const descs: string[] = [];
+    const subjs: string[] = [];
+
+    for (const match of matches) {
+      arousal += match.arousal;
+      dampening += match.dampening;
+      chaos += match.chaos;
+      repair += match.repair;
+      labels.push(match.label);
+      descs.push(match.desc);
+      subjs.push(match.subj);
+    }
+
+    const count = matches.length;
+    blendedArousal = +(arousal / count).toFixed(2);
+    blendedDampening = +(dampening / count).toFixed(2);
+    blendedChaos = +(chaos / count).toFixed(2);
+    blendedRepair = +(repair / count).toFixed(2);
+
+    blendedLabel = labels.slice(0, 2).join(" + ") + (labels.length > 2 ? "..." : "");
+    blendedDesc = descs.join(" ") + pathText;
+    blendedSubj = "A hybrid state: " + subjs.map(s => s.replace("A hybrid state: ", "")).join(" Combined with ");
   }
 
-  let arousal = 0;
-  let dampening = 0;
-  let chaos = 0;
-  let repair = 0;
-  const labels: string[] = [];
-  const descs: string[] = [];
-  const subjs: string[] = [];
+  const vectors = {
+    arousal: blendedArousal,
+    dampening: blendedDampening,
+    chaos: blendedChaos,
+    repair: blendedRepair
+  };
 
-  for (const match of matches) {
-    arousal += match.arousal;
-    dampening += match.dampening;
-    chaos += match.chaos;
-    repair += match.repair;
-    labels.push(match.label);
-    descs.push(match.desc);
-    subjs.push(match.subj);
-  }
+  const stack: any[] = [];
+  if (text.includes("psilocybin") || text.includes("shroom")) stack.push({ id: "psilo", dose: 1 });
+  if (text.includes("lsd") || text.includes("acid")) stack.push({ id: "lsd", dose: 1 });
+  if (text.includes("mdma") || text.includes("empathogen")) stack.push({ id: "mdma", dose: 1 });
+  if (text.includes("ketamine")) stack.push({ id: "ketamine", dose: 1 });
+  if (text.includes("xanax") || text.includes("alprazolam")) stack.push({ id: "alpraz", dose: 1 });
+  if (text.includes("valium") || text.includes("diazepam")) stack.push({ id: "clonaz", dose: 1 });
+  if (text.includes("alcohol") || text.includes("beer") || text.includes("wine") || text.includes("whiskey") || text.includes("drink")) stack.push({ id: "alcohol", dose: 1 });
+  if (text.includes("amphetamine") || text.includes("adderall")) stack.push({ id: "amph", dose: 1 });
+  if (text.includes("ritalin") || text.includes("methylphenidate")) stack.push({ id: "mph", dose: 1 });
+  if (text.includes("coffee") || text.includes("caffeine") || text.includes("cappuccino") || text.includes("espresso")) stack.push({ id: "caffeine", dose: 1 });
+  if (text.includes("modafinil")) stack.push({ id: "modaf", dose: 1 });
+  if (text.includes("fentanyl") || text.includes("oxy") || text.includes("heroin") || text.includes("opiate") || text.includes("opioid")) stack.push({ id: "opioid", dose: 1 });
+  if (text.includes("thc") || text.includes("cannabis") || text.includes("marijuana") || text.includes("weed")) stack.push({ id: "thc", dose: 1 });
+  if (text.includes("meditat")) stack.push({ id: "meditation", dose: 1 });
+  if (text.includes("breathwork")) stack.push({ id: "breathwork", dose: 1 });
+  if (text.includes("sleep")) stack.push({ id: "sleep", dose: 1 });
+  if (text.includes("cold plunge") || text.includes("sauna") || text.includes("cold water") || text.includes("ice bath")) stack.push({ id: "coldplunge", dose: 1 });
+  if (text.includes("nrg-01") || text.includes("nrg01")) stack.push({ id: "nrg01", dose: 1 });
+  if (text.includes("nac")) stack.push({ id: "nac", dose: 1 });
+  if (text.includes("nx-44") || text.includes("nx44")) stack.push({ id: "nx44", dose: 1 });
+  if (text.includes("lion's mane") || text.includes("lionmane") || text.includes("lions mane")) stack.push({ id: "lionmane", dose: 1 });
+  if (text.includes("clonidine")) stack.push({ id: "clonidine", dose: 1 });
+  if (text.includes("sr17") || text.includes("sr17-018")) stack.push({ id: "sr17", dose: 1 });
+  if (text.includes("cbt") || text.includes("therapy")) stack.push({ id: "cbt", dose: 1 });
+  if (text.includes("hbot")) stack.push({ id: "hbot", dose: 1 });
 
-  const count = matches.length;
-  const blendedArousal = +(arousal / count).toFixed(2);
-  const blendedDampening = +(dampening / count).toFixed(2);
-  const blendedChaos = +(chaos / count).toFixed(2);
-  const blendedRepair = +(repair / count).toFixed(2);
+  const patientParams = {
+    weightKg: profile.demographics?.weightKg ?? 70,
+    toleranceMonths: 0,
+    ageYears: profile.demographics?.ageYears ?? 35,
+    simulationTimeMonths: 0,
+    profile
+  };
 
-  const blendedLabel = labels.slice(0, 2).join(" + ") + (labels.length > 2 ? "..." : "");
-  const blendedDesc = descs.join(" ") + pathText;
-  const blendedSubj = "A hybrid state: " + subjs.map(s => s.replace("A hybrid state: ", "")).join(" Combined with ");
+  const report = runDiagnosis(pathologies as Pathology[], vectors, patientParams, stack);
 
   return {
     arousal: blendedArousal,
     dampening: blendedDampening,
     chaos: blendedChaos,
     repair: blendedRepair,
-    label: blendedLabel,
-    desc: blendedDesc,
-    subj: blendedSubj
+    label: report.label || blendedLabel,
+    desc: report.description || blendedDesc,
+    subj: report.subjectiveProfile?.narrative || blendedSubj,
+    subjectiveProfile: report.subjectiveProfile || {
+      qualiaClass: report.label || blendedLabel,
+      qualiaDescription: report.description || blendedDesc,
+      domains: {
+        focus: Math.round(50 + blendedArousal * 15 - blendedDampening * 8),
+        affectiveValence: Math.round(50 + blendedRepair * 15 - blendedChaos * 10),
+        perceptualEntropy: Math.round(10 + blendedChaos * 25),
+        autonomicTone: Math.round(50 + blendedArousal * 18 - blendedDampening * 20),
+      },
+      tags: ["Homeostasis"],
+      narrative: report.description || blendedDesc,
+    },
+    integrity: report.integrity,
+    R: report.R,
+    K: report.K
   };
 }

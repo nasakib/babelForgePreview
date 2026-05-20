@@ -36,19 +36,28 @@ export function autoOptimize(
   return autoOptimizeIdeal(states, patient, maxStack);
 }
 
-// Ideal Regimen (Purple path): Includes high-potency novel therapeutics, surgical neuromodulations, psychotherapies, etc.
+// Ideal Clinical Intervention (Purple path): Includes high-potency novel therapeutics, surgical neuromodulations, psychotherapies, and advanced synergies
 export function autoOptimizeIdeal(
   states: Pathology[],
   patient: PatientParams,
   maxStack = 3
 ): { regimen: RegimenItem[]; integrity: number; reasoning: string[] } {
   const candidates = molecules.filter((m) => {
-    if (m.class === "novel") return true;
-    if (m.class === "ssri" || m.class === "antipsychotic" || m.class === "depressant") return true;
-    if (m.class === "cannabinoid") return true;
-    if (m.class === "stimulant" && (m.id === "modaf" || m.id === "armodaf" || m.id === "mph" || m.id === "caffeine")) return true;
-    if (m.isLifestyle) return true;
-    return false;
+    // Exclude recreational high-toxicity/addiction compounds
+    if (["meth", "coke", "fent", "oxy", "alc", "nicotine", "alpraz", "clonaz", "diaz", "loraz", "zolp", "zopic"].includes(m.id)) {
+      return false;
+    }
+    // Include all novels, SSRIs, antipsychotics, correctives, lifestyle, neuromodulation, and selected stimulants/cannabinoids
+    return (
+      m.class === "novel" ||
+      m.class === "ssri" ||
+      m.class === "antipsychotic" ||
+      m.class === "corrective" ||
+      m.isLifestyle ||
+      (m.class === "stimulant" && ["modaf", "armodaf", "mph", "dexmph", "lisdexamph", "caffeine"].includes(m.id)) ||
+      (m.class === "cannabinoid" && ["cbd", "cbg", "cbga", "cbdv", "cbdp", "cbc", "cbl", "cbn"].includes(m.id)) ||
+      (m.class === "depressant" && ["gaba", "pregab", "donepezil", "memantine", "dextro"].includes(m.id))
+    );
   });
 
   const reasoning: string[] = [];
@@ -59,40 +68,55 @@ export function autoOptimizeIdeal(
     for (const mol of candidates) {
       if (chosen.find((c) => c.id === mol.id)) continue;
       for (const dose of [1, 2, 3]) {
-        const trial = [...chosen, mkItem(mol, dose)];
+        const trial = [...chosen, mkItem(mol, dose, "ideal")];
         const v = sumVectors(trial);
-        const r = runDiagnosis(states, v, patient);
+        const r = runDiagnosis(states, v, patient, trial);
         if (!best || r.integrity > best.integ) best = { mol, dose, integ: r.integrity };
       }
     }
     if (!best) break;
     const v0 = sumVectors(chosen);
-    const r0 = runDiagnosis(states, v0, patient);
-    if (best.integ <= r0.integrity + 1) break; // diminishing return
-    chosen.push(mkItem(best.mol, best.dose));
+    const r0 = runDiagnosis(states, v0, patient, chosen);
+    if (best.integ <= r0.integrity + 0.5) break; // diminishing return check (tuned to 0.5 to allow tiny positive adjustments)
+    chosen.push(mkItem(best.mol, best.dose, "ideal"));
     reasoning.push(
       `+ ${best.mol.name} @ dose ${best.dose}  →  Φ = ${best.integ}% (Δ ${best.integ - r0.integrity > 0 ? "+" : ""}${best.integ - r0.integrity})`
     );
   }
 
   const finalVec = sumVectors(chosen);
-  const finalReport = runDiagnosis(states, finalVec, patient);
+  const finalReport = runDiagnosis(states, finalVec, patient, chosen);
   return { regimen: chosen, integrity: finalReport.integrity, reasoning };
 }
 
-// Path of Least Resistance (Blue path): Cheap, legal, easy to obtain, highly accessible (Lifestyle + OTC supplements)
+// Conventional Intervention (Blue path): Cheap, legal, FDA-approved, highly accessible standard clinical care (Lifestyle + approved OTC/prescription medications)
 export function autoOptimizeLeastResistance(
   states: Pathology[],
   patient: PatientParams,
   maxStack = 3
 ): { regimen: RegimenItem[]; integrity: number; reasoning: string[] } {
   const candidates = molecules.filter((m) => {
+    // Exclude all novel therapeutics/psychedelics/experimental items
+    if (m.isBabelForge || m.class === "novel" || ["psilo", "lsd", "mdma", "ketamine", "tcca", "dbs", "vns", "tms", "ect"].includes(m.id)) {
+      return false;
+    }
+    // Exclude experimental/novel correctives
+    if (["sr17", "nrg01", "flumazenil"].includes(m.id)) {
+      return false;
+    }
+    // Exclude toxic/abusive/recreational compounds
+    if (["meth", "coke", "fent", "oxy", "alc", "nicotine", "alpraz", "clonaz", "diaz", "loraz", "zolp", "zopic"].includes(m.id)) {
+      return false;
+    }
+    // Include conventional, legal standard items
     return (
       m.isLifestyle ||
-      m.id === "caffeine" ||
-      m.id === "omega3" ||
-      m.id === "sauna" ||
-      (m.class === "cannabinoid" && !["thc", "hhc", "thcp", "thco", "delta10"].includes(m.id))
+      m.class === "ssri" ||
+      m.class === "antipsychotic" ||
+      (m.class === "corrective" && ["clonidine", "acamprosate", "nac", "agmatine", "galantamine", "methadone", "buprenorphine"].includes(m.id)) ||
+      (m.class === "stimulant" && ["modaf", "armodaf", "mph", "dexmph", "lisdexamph", "caffeine"].includes(m.id)) ||
+      (m.class === "cannabinoid" && ["cbd", "cbg", "cbga", "cbdv", "cbdp", "cbc", "cbl", "cbn"].includes(m.id)) ||
+      (m.class === "depressant" && ["gaba", "pregab", "donepezil", "memantine", "dextro"].includes(m.id))
     );
   });
 
@@ -104,34 +128,34 @@ export function autoOptimizeLeastResistance(
     for (const mol of candidates) {
       if (chosen.find((c) => c.id === mol.id)) continue;
       for (const dose of [1, 2, 3]) {
-        const trial = [...chosen, mkItem(mol, dose)];
+        const trial = [...chosen, mkItem(mol, dose, "conventional")];
         const v = sumVectors(trial);
-        const r = runDiagnosis(states, v, patient);
+        const r = runDiagnosis(states, v, patient, trial);
         if (!best || r.integrity > best.integ) best = { mol, dose, integ: r.integrity };
       }
     }
     if (!best) break;
     const v0 = sumVectors(chosen);
-    const r0 = runDiagnosis(states, v0, patient);
-    if (best.integ <= r0.integrity + 1) break; // diminishing return
-    chosen.push(mkItem(best.mol, best.dose));
+    const r0 = runDiagnosis(states, v0, patient, chosen);
+    if (best.integ <= r0.integrity + 0.5) break; // diminishing return check
+    chosen.push(mkItem(best.mol, best.dose, "conventional"));
     reasoning.push(
       `+ ${best.mol.name} @ dose ${best.dose}  →  Φ = ${best.integ}% (Δ ${best.integ - r0.integrity > 0 ? "+" : ""}${best.integ - r0.integrity})`
     );
   }
 
   const finalVec = sumVectors(chosen);
-  const finalReport = runDiagnosis(states, finalVec, patient);
+  const finalReport = runDiagnosis(states, finalVec, patient, chosen);
   return { regimen: chosen, integrity: finalReport.integrity, reasoning };
 }
 
-function mkItem(mol: any, dose: number): RegimenItem {
+function mkItem(mol: any, dose: number, path: "conventional" | "ideal"): RegimenItem {
   return {
     id: mol.id,
     name: mol.name,
     classLabel: mol.classLabel,
     isBabelForge: mol.isBabelForge,
-    isBlue: mol.isBlue || mol.isLifestyle || mol.id === "caffeine" || mol.class === "cannabinoid",
+    isBlue: path === "conventional",
     dose,
   };
 }

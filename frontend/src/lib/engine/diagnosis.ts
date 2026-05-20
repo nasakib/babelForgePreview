@@ -21,6 +21,8 @@ import {
   effectiveCoupling,
   effectiveNoise,
 } from "./kuramoto";
+import { translateSubjective, type SubjectiveProfile } from "./subjective";
+import type { PatientProfile } from "@/lib/patient/profile";
 
 export interface PharmaVectors {
   arousal: number;
@@ -34,6 +36,7 @@ export interface PatientParams {
   toleranceMonths: number; // global, simplified
   ageYears: number;
   simulationTimeMonths: number; // Time Engine
+  profile?: PatientProfile;
 }
 
 export interface RestorationMetric {
@@ -55,6 +58,7 @@ export interface DiagnosticReport {
   correctionConvergence: number; // 0..100% convergence to healthy baseline
   holisticSynergyBonus: number;  // synergistic amplifier (e.g. 1.0..1.5)
   activeCorrections: RestorationMetric[];
+  subjectiveProfile?: SubjectiveProfile;
 }
 
 export const ZERO_VECTORS: PharmaVectors = {
@@ -230,11 +234,27 @@ export function runDiagnosis(
   }
   synergyChaosMultiplier = Math.max(0.4, synergyChaosMultiplier);
 
+  // Ingest Patient Genotypic & Physiological Factors
+  let cypFactor = 1.0;
+  if (patient.profile?.pgx?.cyp2d6 === "PM" || patient.profile?.pgx?.cyp2c19 === "PM") {
+    cypFactor = 1.35; // slow metabolizers accumulate active compounds
+  } else if (patient.profile?.pgx?.cyp2d6 === "UM" || patient.profile?.pgx?.cyp2c19 === "UM") {
+    cypFactor = 0.65; // rapid metabolizers clear compounds too quickly
+  }
+
+  let deficiencyRepairPenalty = 1.0;
+  if (patient.profile) {
+    const pVitD = patient.profile.labs?.vitD;
+    const pVitB12 = patient.profile.labs?.vitB12;
+    if (pVitD !== undefined && pVitD < 30) deficiencyRepairPenalty -= 0.15;
+    if (pVitB12 !== undefined && pVitB12 < 200) deficiencyRepairPenalty -= 0.20;
+  }
+
   const v: PharmaVectors = {
-    arousal: vectors.arousal * weightFactor * tolFactor * ageSensitivity,
-    dampening: vectors.dampening * weightFactor * tolFactor * ageSensitivity,
-    chaos: vectors.chaos * weightFactor * tolFactor * ageSensitivity * synergyChaosMultiplier,
-    repair: vectors.repair * weightFactor * tolFactor * Math.max(0.5, ageFactor) * synergyRepairMultiplier,
+    arousal: vectors.arousal * weightFactor * tolFactor * ageSensitivity * cypFactor,
+    dampening: vectors.dampening * weightFactor * tolFactor * ageSensitivity * cypFactor,
+    chaos: vectors.chaos * weightFactor * tolFactor * ageSensitivity * synergyChaosMultiplier * cypFactor,
+    repair: vectors.repair * weightFactor * tolFactor * Math.max(0.5, ageFactor) * synergyRepairMultiplier * (cypFactor > 1 ? 1.1 : cypFactor) * deficiencyRepairPenalty,
   };
 
   // Structural neuroplasticity (Hebridean learning / BDNF increase via repair over time)
@@ -242,9 +262,23 @@ export function runDiagnosis(
   const structuralPlasticityK = (v.repair * Math.log1p(prolongedExposure) * 0.05) - (v.chaos * Math.log1p(prolongedExposure) * 0.08);
   const temporalNoise = (v.chaos * Math.log1p(prolongedExposure) * 0.02) + (effectiveAge > 70 ? (effectiveAge - 70) * 0.005 : 0);
 
+  // Ingest stress and anxiety parameters as phase noise in the Kuramoto model
+  let profileNoise = 0;
+  if (patient.profile) {
+    const pSleep = patient.profile.lifestyle?.sleepHours;
+    const pStress = patient.profile.lifestyle?.perceivedStress;
+    const pGad = patient.profile.psychometric?.gad7;
+    const pHrv = patient.profile.vitals?.hrvRmssd;
+    
+    if (pSleep !== undefined && pSleep < 6.0) profileNoise += (6.0 - pSleep) * 0.05;
+    if (pStress !== undefined && pStress >= 7) profileNoise += (pStress - 5) * 0.02;
+    if (pGad !== undefined && pGad >= 12) profileNoise += 0.07;
+    if (pHrv !== undefined && pHrv < 25) profileNoise += 0.04;
+  }
+
   const baseK = effectiveCoupling(v);
   const K = Math.max(0.1, baseK + structuralPlasticityK);
-  const noise = Math.max(0.01, effectiveNoise(v) + temporalNoise);
+  const noise = Math.max(0.01, effectiveNoise(v) + temporalNoise + profileNoise);
   
   const R = estimateOrderParameter({
     N: topo.N,
@@ -301,25 +335,26 @@ export function runDiagnosis(
     }
   }
 
-  const subjective: string[] = [];
-  states.forEach((s) => subjective.push(PATHOLOGY_META[s].subjective));
-  if (v.repair > 1.0 && v.chaos < 0.4 && warnings.length === 0) {
-    subjective.unshift("Restored cognitive clarity; effortless focus; emotional contrast returning.");
-  }
-  if (subjective.length === 0) subjective.push("Baseline: a sense of 'flow', clear cognition, stable affect.");
+  const subjectiveProfile = translateSubjective(states, vectors, patient, { R, K: baseK, noise, integrity }, stack);
+  
+  const finalLabel = subjectiveProfile.qualiaClass;
+  const finalDescription = subjectiveProfile.qualiaDescription;
+  
+  const subjective: string[] = [subjectiveProfile.qualiaDescription, subjectiveProfile.narrative];
 
   return { 
     integrity, 
     R: +R.toFixed(3), 
     K: +K.toFixed(2), 
-    label, 
-    description, 
+    label: finalLabel, 
+    description: finalDescription, 
     subjective, 
     warnings, 
     structuralPlasticityK,
     correctionConvergence,
     holisticSynergyBonus: +holisticSynergyBonus.toFixed(2),
-    activeCorrections
+    activeCorrections,
+    subjectiveProfile
   };
 }
 
