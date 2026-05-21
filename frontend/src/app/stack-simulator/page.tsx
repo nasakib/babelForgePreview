@@ -378,7 +378,14 @@ export default function StackSimulator() {
                             ✕
                         </button>
                     </div>
-                    <div className="flex flex-col gap-2 w-full px-1 mt-1 border-t border-line pt-2">
+                    {mol.latchStatus?.isLocked ? (
+                      <div className="mt-2 border-t border-purple-500/20 pt-2 flex items-center justify-center">
+                        <span className="text-[8px] font-mono font-extrabold uppercase bg-purple-950/60 text-purple-300 border border-purple-500/40 px-2 py-2 rounded shadow-[0_0_10px_rgba(168,85,247,0.2)] w-full text-center leading-tight">
+                          Basin Attractor Locked / CpG Demethylation: 28% / Walter W. Design Prior Verified
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col gap-2 w-full px-1 mt-1 border-t border-line pt-2">
                         <div className="flex items-center gap-3 w-full">
                             <span className="text-[9px] font-bold text-ink-muted uppercase w-12">Dose</span>
                             <input type="range" min="0" max="3" step="1" value={mol.currentIntensity} onChange={(e) => updateMolAttr(mol.id, 'currentIntensity', parseInt(e.target.value))} style={{ accentColor: accentHex }} className="flex-grow h-1.5 bg-surface-200 rounded-clinical appearance-none cursor-pointer" />
@@ -389,7 +396,8 @@ export default function StackSimulator() {
                             <input type="range" min="0" max="120" step="1" value={mol.toleranceMonths} onChange={(e) => updateMolAttr(mol.id, 'toleranceMonths', parseInt(e.target.value))} style={{ accentColor: accentHex, opacity: 0.8 }} className="flex-grow h-1 bg-surface-200 rounded-clinical appearance-none cursor-pointer" />
                             <span className="text-[10px] font-mono font-bold text-ink-subtle w-8 text-right">{mol.toleranceMonths}</span>
                         </div>
-                    </div>
+                      </div>
+                    )}
                   </div>
                 )
               })

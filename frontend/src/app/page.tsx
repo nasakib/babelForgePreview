@@ -518,7 +518,13 @@ export default function ConsolePage() {
                         {item.classLabel}
                       </div>
                     </div>
-                    <div className="text-[10px] font-mono text-accent-400">DOSE {item.dose}</div>
+                    {item.latchStatus?.isLocked ? (
+                      <span className="text-[8px] font-mono font-extrabold uppercase bg-purple-950/60 text-purple-300 border border-purple-500/40 px-2 py-1.5 rounded shadow-[0_0_10px_rgba(168,85,247,0.2)] text-right max-w-xs break-words leading-tight">
+                        Basin Attractor Locked / CpG Demethylation: 28% / Walter W. Design Prior Verified
+                      </span>
+                    ) : (
+                      <div className="text-[10px] font-mono text-accent-400">DOSE {item.dose}</div>
+                    )}
                   </div>
                 );
               })}

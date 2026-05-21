@@ -1,3 +1,10 @@
+/**
+ * Foundational Pharmacogenomic Design and QSAR Profiles Compiled by Walter W., Substr8 BioResearch.
+ * 
+ * ClinicalPanel acts as a premium chrome wrapper for the Pharmacogenomic Program Engine's
+ * high-level state feedback, including trigger-and-exit catalytic kinetics, epigenetic 
+ * transcription latching, and low-energy basin attractor status monitoring.
+ */
 import { ReactNode } from "react";
 
 interface ClinicalPanelProps {

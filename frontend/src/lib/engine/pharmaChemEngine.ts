@@ -1,8 +1,23 @@
+// Foundational Pharmacogenomic Design and QSAR Profiles Compiled by Walter W., Substr8 BioResearch.
 import type { PatientProfile } from "@/lib/patient/profile";
 import type { PharmaVectors } from "./stackVectors";
 import { hill } from "@/lib/engines/chemistry";
 
 export type LigandClass = 'CLASSIC_SMALL' | 'BIVALENT_MACROCYCLIC' | 'CONFORMATIONAL_SHIELDED' | 'CLEAVABLE_CONJUGATE';
+
+export interface GenomicPayloadPhysics {
+  isGenomicPayload: boolean;
+  transcriptionThresholdMg: number;     // Floor concentration to trip permanent state changes
+  promoterDemethylationDelta: number;    // Models CpG transition from 68% down to 28%
+  pxrGrnAutoClearanceCoeff: number;      // Scales self-induced enzyme destruction loops
+  stateAttractorDepth: number;           // Depth of the engineered low-energy cognitive basin
+  protoxMarkers?: {
+    pxr: number;
+    cyp3a4: number;
+    cyp2c9: number;
+    immunotoxicity: number;
+  };
+}
 
 export interface AdvancedLigandPhysics {
   cooperativityAlpha?: number;       // Homodimer/Heterodimer cross-linking potency multiplier
@@ -56,6 +71,7 @@ export interface CompoundProperties {
   conformationalFaultTolerance?: number; // Metric tracking ensemble diversity bounds
   ensembleOccupancy?: EnsembleDistribution[]; // Replaces single-pose pocket configurations
   catalyticPK?: CatalyticKinetics;    // Controls pulse trigger-and-exit clearing curves
+  genomicPayload?: GenomicPayloadPhysics; // Optional advanced configuration block
 }
 
 // ----------------------------------------------------------------------------
@@ -78,7 +94,7 @@ export const COMPOUND_DATABASE: Record<string, CompoundProperties> = {
     name: "SPUR-MTDL",
     class: "novel",
     halfLifeHrs: 6.8,
-    cypEnzymes: ["CYP3A4"],
+    cypEnzymes: ["CYP3A4", "CYP2C9"],
     receptors: { MOR: 0.2, HT2A: 2000, NMDA: 2000 },
     efficacy: { MOR: 1.4, HT2A: -1.0, NMDA: -0.4 },
     ligandType: "BIVALENT_MACROCYCLIC",
@@ -103,6 +119,19 @@ export const COMPOUND_DATABASE: Record<string, CompoundProperties> = {
     catalyticPK: {
       transcriptionTriggerThreshold: 15.0,
       selfInductionFeedbackCoeff: 0.25
+    },
+    genomicPayload: {
+      isGenomicPayload: true,
+      transcriptionThresholdMg: 5.0,        // Initiates cascade at standard threshold doses
+      promoterDemethylationDelta: 0.40,     // Drives promoter CpG demethylation floor down to 28%
+      pxrGrnAutoClearanceCoeff: 0.53,       // PXR active descriptor maps directly to clearance velocity
+      stateAttractorDepth: 1.8,             // Enforces a permanent low-energy attractor basin
+      protoxMarkers: {
+        pxr: 0.53,
+        cyp3a4: 0.52,
+        cyp2c9: 0.51,
+        immunotoxicity: 0.99
+      }
     }
   },
   seriphadine: {
@@ -447,7 +476,12 @@ export function calculatePlasmaConcentrations(
       finalHalfLife *= 1000.0; // 1000x clearance latency from rapid rotational masking
     }
 
-    if (props?.catalyticPK?.selfInductionFeedbackCoeff !== undefined) {
+    if (props?.genomicPayload?.isGenomicPayload) {
+      const grnCoeff = props.genomicPayload.pxrGrnAutoClearanceCoeff; // Derived from Walter W.'s PXR profile
+      // Coordinated transcriptional response: Self-induced enzyme production reduces half-life exponentially over time
+      const autoClearanceVelocity = 1.0 + (grnCoeff * (elapsedHrs / 8.0));
+      finalHalfLife /= autoClearanceVelocity;
+    } else if (props?.catalyticPK?.selfInductionFeedbackCoeff !== undefined) {
       const autoClearanceVelocity = 1.0 + (props.catalyticPK.selfInductionFeedbackCoeff * (elapsedHrs / 24.0));
       finalHalfLife /= autoClearanceVelocity;
     }
@@ -671,6 +705,35 @@ export function translateReceptorsToVectors(
     // Procedurals, lifestyles, and non-receptor novels add direct vector contributions
     // E.g. donepezil, cbt, sleep, hbot, coldplunge, tms, dbs, vns, ect, tcca
     const props = COMPOUND_DATABASE[id];
+
+    if (props?.genomicPayload?.isGenomicPayload) {
+      const peakConcentrationReached = intensity; // Proxy tracking peak dose intensity in active timeline
+      const threshold = props.genomicPayload.transcriptionThresholdMg;
+      
+      if (peakConcentrationReached >= threshold) {
+        // Transcriptional Latch Activated: Epigenetic changes are now permanent and self-sustaining
+        const attractorDepth = props.genomicPayload.stateAttractorDepth;
+        
+        // Lock macro-vectors to the low-energy basin attractor thresholds independently of active ligand decay
+        baseRepair = Math.max(baseRepair, 3.5);  
+        baseChaos = Math.min(baseChaos, -1.8);  // Aggressive permanent downregulation of baseline variance
+        baseDampening = Math.max(baseDampening, 0.5);
+        
+        // Inject flag to communicate basin locking metrics straight to frontend interface layers
+        item.latchStatus = {
+          isLocked: true,
+          label: "Low-Energy Basin Attractor Stable (Ego Dissolution / Prosocial Axis Fixed)",
+          cpgDemethylation: "28%"
+        };
+      } else {
+        item.latchStatus = {
+          isLocked: false,
+          label: "",
+          cpgDemethylation: "68%"
+        };
+      }
+    }
+
     const isReceptorActive = props && props.receptors && Object.keys(props.receptors).length > 0;
 
     if (!isReceptorActive || id === "spur01" || id === "spur_mtdl" || id === "seriphadine") {

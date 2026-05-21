@@ -12,6 +12,11 @@ export interface RegimenItem {
   isBabelForge?: boolean;
   isBlue?: boolean;
   dose: number; // 0..3
+  latchStatus?: {
+    isLocked: boolean;
+    label: string;
+    cpgDemethylation: string;
+  };
 }
 
 function sumVectors(items: RegimenItem[]): PharmaVectors {
