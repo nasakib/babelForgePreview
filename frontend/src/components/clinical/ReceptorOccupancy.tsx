@@ -85,12 +85,16 @@ export default function ReceptorOccupancy({ occupancyData, title = "Receptor Occ
               const props = COMPOUND_DATABASE[drugId];
               let eps = props?.efficacy[key] ?? 1.0;
               let isAntagonist = eps < 0;
-              if (props?.residuePhysics?.[key]) {
-                const geo = props.residuePhysics[key]!;
-                const amineSaltBridgeFactor = Math.exp(-Math.abs(geo.d_D155_amine_A - 2.9) / 0.5);
-                const rotamerToggleFactor = Math.tanh(geo.theta_W336_displacement / 45.0);
-                const computedEfficacy = (amineSaltBridgeFactor * rotamerToggleFactor) - geo.E_pi_phenyl_stacking;
-                const dynamicEps = geo.theta_W336_displacement >= 45.0 ? Math.max(0.1, computedEfficacy) : -Math.abs(computedEfficacy);
+              if (props?.structuralPhysics?.[key]) {
+                const geo = props.structuralPhysics[key]!;
+                const d_D155 = geo.d_D155_amine_A ?? 2.9;
+                const theta_W336 = geo.theta_W336_displacement ?? 0.0;
+                const E_pi = geo.E_pi_phenyl_traps ?? 0.0;
+
+                const saltBridgeScore = Math.exp(-Math.abs(d_D155 - 2.9) / 0.4);
+                const rotamerToggleScore = Math.tanh(theta_W336 / 45.0);
+                const rawCalculatedSignal = (saltBridgeScore * rotamerToggleScore) - E_pi;
+                const dynamicEps = theta_W336 >= 45.0 ? Math.max(0.1, rawCalculatedSignal) : -Math.abs(rawCalculatedSignal);
                 isAntagonist = dynamicEps < 0;
               }
               drugShares.push({
@@ -179,10 +183,10 @@ export default function ReceptorOccupancy({ occupancyData, title = "Receptor Occ
                     if (occ <= 0.005) return null;
                     
                     const props = COMPOUND_DATABASE[drugId];
-                    if (!props?.residuePhysics?.[key]) return null;
+                    if (!props?.structuralPhysics?.[key]) return null;
                     
-                    const geo = props.residuePhysics[key]!;
-                    const isActive = geo.delta_TM6_outward_A >= 4.5;
+                    const geo = props.structuralPhysics[key]!;
+                    const isActive = (geo.delta_TM6_outward_A ?? 0) >= 4.5;
                     
                     return (
                       <div key={`${drugId}-physics`} className="mt-1.5 bg-accent-500/5 border border-accent-500/10 rounded p-2 text-[8.5px] font-mono space-y-1 text-accent-300">
@@ -193,10 +197,10 @@ export default function ReceptorOccupancy({ occupancyData, title = "Receptor Occ
                           </span>
                         </div>
                         <div className="grid grid-cols-2 gap-x-2 text-ink-subtle">
-                          <div>D155 Dist: <span className="text-white font-bold">{geo.d_D155_amine_A.toFixed(1)}Å</span></div>
-                          <div>W336 Shift: <span className="text-white font-bold">{geo.theta_W336_displacement.toFixed(0)}°</span></div>
-                          <div>Pi-Stack: <span className="text-white font-bold">{geo.E_pi_phenyl_stacking.toFixed(3)} eV</span></div>
-                          <div>ΔTM6 Out: <span className="text-white font-bold">{geo.delta_TM6_outward_A.toFixed(1)}Å</span></div>
+                          <div>D155 Dist: <span className="text-white font-bold">{(geo.d_D155_amine_A ?? 0).toFixed(1)}Å</span></div>
+                          <div>W336 Shift: <span className="text-white font-bold">{(geo.theta_W336_displacement ?? 0).toFixed(0)}°</span></div>
+                          <div>Pi-Stack: <span className="text-white font-bold">{(geo.E_pi_phenyl_traps ?? 0).toFixed(3)} eV</span></div>
+                          <div>ΔTM6 Out: <span className="text-white font-bold">{(geo.delta_TM6_outward_A ?? 0).toFixed(1)}Å</span></div>
                         </div>
                       </div>
                     );
