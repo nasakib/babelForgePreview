@@ -4,9 +4,20 @@ const svgPhen = `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" st
 const svgTricyclic = `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" class="w-full h-full"><path d="M10 50 L30 20 L60 20 L80 50 L60 80 L30 80 Z"/><path d="M60 20 L80 10 L100 30 L80 50"/><circle cx="45" cy="50" r="12"/></svg>`;
 const svgCannabinoid = `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" class="w-full h-full"><polygon points="30,35 40,20 55,20 65,35 55,50 40,50" /><polygon points="65,35 75,20 90,20 100,35 90,50 75,50" /><path d="M55,20 L75,20" /><path d="M20,25 L30,35 L20,45" /><circle cx="65" cy="35" r="5" /></svg>`;
 const svgSpur = `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" class="w-full h-full"><path d="M50 15 L20 35 L20 65 L50 85 L80 65 L80 35 Z"/><circle cx="50" cy="50" r="15"/><path d="M50 15 L50 5"/><path d="M20 35 L5 25"/><path d="M80 35 L95 25"/><circle cx="50" cy="50" r="4" fill="currentColor"/></svg>`;
+const svgMtdl = `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" class="w-full h-full"><path d="M50 10 L25 30 L25 70 L50 90 L75 70 L75 30 Z"/><path d="M25 30 L50 50 L75 30"/><circle cx="50" cy="50" r="10"/><line x1="50" y1="10" x2="50" y2="50"/></svg>`;
 
 export const molecules = [
     // Novel Therapeutics
+    { 
+      id: 'spur_mtdl', 
+      name: 'SPUR-MTDL (TrkB Pan-Modulator)', 
+      class: 'novel', 
+      classLabel: 'Epigenetic Neuroplastogen', 
+      isBabelForge: true, 
+      svg: svgMtdl, 
+      halfLife: 'medium', 
+      effects: { arousal: -0.2, dampening: 0.5, chaos: -1.8, repair: 3.5 } 
+    },
     { 
       id: 'spur01', 
       name: 'SPUR-1 Ontological Reducer', 
