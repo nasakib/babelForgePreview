@@ -76,29 +76,38 @@ export default function ReceptorOccupancy({ occupancyData, title = "Receptor Occ
           // Calculate total occupancy bound by all compounds at this receptor
           let totalOccupancy = 0;
           const drugShares: { name: string; share: number; isAntagonist: boolean }[] = [];
-
+ 
           for (const drugId in occupancies) {
             const occMap = occupancies[drugId];
             const occ = occMap[key] ?? 0;
             if (occ > 0.005) {
               totalOccupancy += occ;
               const props = COMPOUND_DATABASE[drugId];
-              const eps = props?.efficacy[key] ?? 1.0;
+              let eps = props?.efficacy[key] ?? 1.0;
+              let isAntagonist = eps < 0;
+              if (props?.residuePhysics?.[key]) {
+                const geo = props.residuePhysics[key]!;
+                const amineSaltBridgeFactor = Math.exp(-Math.abs(geo.d_D155_amine_A - 2.9) / 0.5);
+                const rotamerToggleFactor = Math.tanh(geo.theta_W336_displacement / 45.0);
+                const computedEfficacy = (amineSaltBridgeFactor * rotamerToggleFactor) - geo.E_pi_phenyl_stacking;
+                const dynamicEps = geo.theta_W336_displacement >= 45.0 ? Math.max(0.1, computedEfficacy) : -Math.abs(computedEfficacy);
+                isAntagonist = dynamicEps < 0;
+              }
               drugShares.push({
                 name: props?.name ?? drugId,
                 share: Math.round(occ * 100),
-                isAntagonist: eps < 0,
+                isAntagonist,
               });
             }
           }
-
+ 
           const displayOccupancy = Math.min(100, Math.round(totalOccupancy * 100));
           
           // Determine color scheme based on net activation type (Agonist vs Antagonist)
           let activationLabel = "Neutral";
           let badgeColor = "bg-surface-0 border-line text-ink-subtle";
           let barBgColor = "bg-accent-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]";
-
+ 
           if (activation > 0.8) {
             activationLabel = `${activation > 1.25 ? "Releaser" : "Agonist"} (+${activation.toFixed(2)})`;
             badgeColor = "bg-indigo-500/15 border-indigo-500/30 text-indigo-400";
@@ -112,13 +121,13 @@ export default function ReceptorOccupancy({ occupancyData, title = "Receptor Occ
             badgeColor = "bg-rose-500/15 border-rose-500/30 text-rose-400";
             barBgColor = "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]";
           }
-
+ 
           if (displayOccupancy === 0) {
             activationLabel = "Inactive";
             badgeColor = "bg-surface-1/50 border-line text-ink-muted";
             barBgColor = "bg-line";
           }
-
+ 
           return (
             <div key={key} className="border border-line rounded-clinical bg-surface-0/60 p-2.5 space-y-2 hover:border-line-strong transition-all duration-300">
               <div className="flex items-start justify-between gap-2">
@@ -133,12 +142,12 @@ export default function ReceptorOccupancy({ occupancyData, title = "Receptor Occ
                   </div>
                   <div className="text-[9.5px] text-ink-muted leading-tight mt-0.5 font-mono">{desc}</div>
                 </div>
-
+ 
                 <span className={`text-[8.5px] font-mono font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider ${badgeColor}`}>
                   {activationLabel}
                 </span>
               </div>
-
+ 
               {/* Progress bar container */}
               <div className="h-1.5 bg-surface-100 rounded-full overflow-hidden relative">
                 <div 
@@ -146,20 +155,52 @@ export default function ReceptorOccupancy({ occupancyData, title = "Receptor Occ
                   style={{ width: `${displayOccupancy}%` }}
                 />
               </div>
-
+ 
               {/* Fractional drug breakdowns */}
               {drugShares.length > 0 && (
-                <div className="flex flex-wrap gap-x-2 gap-y-0.5 text-[9px] font-mono text-ink-subtle">
-                  <span className="text-ink-muted uppercase tracking-wider text-[8px] font-bold">Bound:</span>
-                  {drugShares.map((share, idx) => (
-                    <span key={share.name} className="flex items-center">
-                      <span className={share.isAntagonist ? "text-rose-400" : "text-emerald-400"}>
-                        {share.name}
+                <div className="space-y-1.5 mt-1 border-t border-line/30 pt-1.5">
+                  <div className="flex flex-wrap gap-x-2 gap-y-0.5 text-[9px] font-mono text-ink-subtle">
+                    <span className="text-ink-muted uppercase tracking-wider text-[8px] font-bold">Bound:</span>
+                    {drugShares.map((share, idx) => (
+                      <span key={share.name} className="flex items-center">
+                        <span className={share.isAntagonist ? "text-rose-400" : "text-emerald-400"}>
+                          {share.name}
+                        </span>
+                        <span className="text-ink-muted ml-0.5">({share.share}%)</span>
+                        {idx < drugShares.length - 1 && <span className="text-line mx-1.5">·</span>}
                       </span>
-                      <span className="text-ink-muted ml-0.5">({share.share}%)</span>
-                      {idx < drugShares.length - 1 && <span className="text-line mx-1.5">·</span>}
-                    </span>
-                  ))}
+                    ))}
+                  </div>
+                  
+                  {/* Pocket Mechanics Matrix Log */}
+                  {Object.keys(occupancies).map((drugId) => {
+                    const occMap = occupancies[drugId];
+                    const occ = occMap[key] ?? 0;
+                    if (occ <= 0.005) return null;
+                    
+                    const props = COMPOUND_DATABASE[drugId];
+                    if (!props?.residuePhysics?.[key]) return null;
+                    
+                    const geo = props.residuePhysics[key]!;
+                    const isActive = geo.delta_TM6_outward_A >= 4.5;
+                    
+                    return (
+                      <div key={`${drugId}-physics`} className="mt-1.5 bg-accent-500/5 border border-accent-500/10 rounded p-2 text-[8.5px] font-mono space-y-1 text-accent-300">
+                        <div className="flex items-center justify-between font-bold text-accent-400">
+                          <span>⚛️ {props.name} Pocket Mechanics:</span>
+                          <span className={isActive ? "text-indigo-400" : "text-rose-400"}>
+                            {isActive ? "R* Active Agonist" : "Inactive Antagonist Block"}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-x-2 text-ink-subtle">
+                          <div>D155 Dist: <span className="text-white font-bold">{geo.d_D155_amine_A.toFixed(1)}Å</span></div>
+                          <div>W336 Shift: <span className="text-white font-bold">{geo.theta_W336_displacement.toFixed(0)}°</span></div>
+                          <div>Pi-Stack: <span className="text-white font-bold">{geo.E_pi_phenyl_stacking.toFixed(3)} eV</span></div>
+                          <div>ΔTM6 Out: <span className="text-white font-bold">{geo.delta_TM6_outward_A.toFixed(1)}Å</span></div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>

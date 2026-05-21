@@ -57,6 +57,13 @@ export interface CatalyticKinetics {
   selfInductionFeedbackCoeff: number;    // Scalar driving targeted auto-clearance feedback velocity
 }
 
+export interface PocketResidueGeometry {
+  d_D155_amine_A: number;       // Distance between protonated amine and D155 carboxylate (Angstroms)
+  theta_W336_displacement: number; // Rotamer displacement toggle angle (Degrees)
+  E_pi_phenyl_stacking: number;  // Cumulative interaction energies across F332/F340 loops
+  delta_TM6_outward_A: number;   // Transmembrane Helix 6 template shift tracking metric
+}
+
 export interface CompoundProperties {
   id: string;
   name: string;
@@ -66,6 +73,7 @@ export interface CompoundProperties {
   cypEnzymes: string[]; // CYP2D6, CYP2C19, CYP3A4, CYP1A2, etc.
   receptors: Partial<ReceptorProfile>;
   efficacy: Partial<Record<keyof ReceptorProfile, number>>; // agonist (>0), antagonist (<0), transporter releasing (>1)
+  residuePhysics?: Partial<Record<keyof ReceptorProfile, PocketResidueGeometry>>; // Advanced structural physics block
   advancedPhysics?: AdvancedLigandPhysics; // Optional advanced simulation block
   
   // --- ADAPTIVE MOLECULAR PROGRAM & DOSING SCHEDULE ADDITIONS ---
@@ -88,7 +96,15 @@ export const COMPOUND_DATABASE: Record<string, CompoundProperties> = {
   spur01: {
     id: "spur01", name: "SPUR-1 Ontological Reducer", class: "novel", halfLifeHrs: 0.168, cypEnzymes: ["CYP3A4"],
     receptors: { MOR: 0.2, HT2A: 1.5, NMDA: 150 },
-    efficacy: { MOR: 1.4, HT2A: -1.0, NMDA: -0.4 },
+    efficacy: { MOR: 1.4, NMDA: -0.4 }, // HT2A calculated dynamically from structure below
+    residuePhysics: {
+      HT2A: {
+        d_D155_amine_A: 2.7,
+        theta_W336_displacement: 62.0,
+        E_pi_phenyl_stacking: 0.02,
+        delta_TM6_outward_A: 5.5
+      }
+    },
     ligandType: "CONFORMATIONAL_SHIELDED",
     advancedPhysics: {
       shieldingFactor: 1000.0,
@@ -156,9 +172,21 @@ export const COMPOUND_DATABASE: Record<string, CompoundProperties> = {
     regimen: { frequency: 'prn', standardRange: { min: 2, max: 25, unit: "mg" } }
   },
   zb01: {
-    id: "zb01", name: "ZenBud™ (ZB-01)", class: "novel", halfLifeHrs: 18, cypEnzymes: ["CYP3A4"],
+    id: "zb01",
+    name: "ZenBud™ (ZB-01)",
+    class: "novel",
+    halfLifeHrs: 18,
+    cypEnzymes: ["CYP3A4"],
     receptors: { HT2A: 100, GABAA: 250 },
-    efficacy: { HT2A: -0.8, GABAA: 0.4 } // moderate GABA-A agonism, HT2A block
+    efficacy: { GABAA: 0.4 }, // HT2A calculated dynamically from structure below
+    residuePhysics: {
+      HT2A: {
+        d_D155_amine_A: 2.8,          // Clean salt-bridge packing geometry (< 3.0A)
+        theta_W336_displacement: 55.0, // Exceeds 45-degree threshold: triggers rotamer activation
+        E_pi_phenyl_stacking: 0.05,    // Minimized inactive-state edge-to-face traps
+        delta_TM6_outward_A: 5.2       // Exceeds 4.5A floor: forces R* active template selection
+      }
+    }
   },
   ll07: {
     id: "ll07", name: "LimbicLink™ (LL-07)", class: "novel", halfLifeHrs: 36, cypEnzymes: ["CYP2C19"],
@@ -736,8 +764,30 @@ export function calculateReceptorOccupancies(
         const occ = hill(C_nM, apparentKi, 1, 1);
         occupancies[drugId][r] = occ;
 
+        // Resolve dynamic functional selectivity from pocket physics properties
+        let structuralEfficacy = eps;
+        
+        if (props.residuePhysics && props.residuePhysics[r]) {
+          const geo = props.residuePhysics[r]!;
+          
+          if (geo.delta_TM6_outward_A >= 4.5) {
+            // R* Active Template Switch Engaged: Process sub-residue binding mechanics
+            const amineSaltBridgeFactor = Math.exp(-Math.abs(geo.d_D155_amine_A - 2.9) / 0.5);
+            const rotamerToggleFactor = Math.tanh(geo.theta_W336_displacement / 45.0);
+            
+            // Recompute functional outcome: Agonism vs Antagonism balances here
+            const computedEfficacy = (amineSaltBridgeFactor * rotamerToggleFactor) - geo.E_pi_phenyl_stacking;
+            
+            // If rotamer displacement clears threshold boundaries, map as true structural agonist
+            structuralEfficacy = (geo.theta_W336_displacement >= 45.0 ? Math.max(0.1, computedEfficacy) : -Math.abs(computedEfficacy)) * drugEfficacyMultiplier;
+          } else {
+            // Inactive template constraint forces traditional antagonist blocking profile
+            structuralEfficacy = -0.8 * drugEfficacyMultiplier;
+          }
+        }
+
         // Activation contributor: occupancy * intrinsic efficacy
-        netActivation += occ * eps;
+        netActivation += occ * structuralEfficacy;
       }
     }
 
