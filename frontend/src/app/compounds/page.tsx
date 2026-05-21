@@ -1,15 +1,25 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { molecules } from "@/data/molecules";
 
 const SMILESRenderer = dynamic(() => import("@/components/clinical/SMILESRenderer"), { ssr: false });
+const NeuroCanvas = dynamic(() => import("@/components/NeuroCanvas").then(mod => mod.NeuroCanvas), { ssr: false });
+const ProjectionEngine = dynamic(() => import("@/components/clinical/ProjectionEngine"), { ssr: false });
 
 export default function CompoundsDirectory() {
   const [searchQuery, setSearchQuery] = useState("");
   const [classFilter, setClassFilter] = useState("all");
   const [selectedMolId, setSelectedMolId] = useState<string | null>(null);
+  const [detailTab, setDetailTab] = useState<"profile" | "mechanistic" | "projection">("profile");
+  const [isSimulatingMech, setIsSimulatingMech] = useState(false);
+
+  // Reset tab active states when swapping active compound ids
+  useEffect(() => {
+    setDetailTab("profile");
+    setIsSimulatingMech(false);
+  }, [selectedMolId]);
 
   const filteredMolecules = useMemo(() => {
     return molecules.filter((m) => {
@@ -119,10 +129,11 @@ export default function CompoundsDirectory() {
             <p className="text-xs text-ink-muted mt-2 max-w-sm">Select a molecule from the list to view its pharmacological profile and topological targets.</p>
           </div>
         ) : (
-          <div className="flex flex-col h-full overflow-y-auto custom-scrollbar">
+          <div className="flex flex-col h-full overflow-y-auto custom-scrollbar bg-[#0d1117]">
+            {/* Header Block */}
             <div className="p-6 md:p-8 border-b border-line flex flex-col md:flex-row items-center md:items-start gap-6 bg-surface-0">
               {selectedMol.smilesPhysics?.canonicalSmiles ? (
-                <div className="w-32 h-32 flex-none flex items-center justify-center bg-surface-0/20 backdrop-blur-sm rounded-clinical border border-line p-1 shadow-inner relative overflow-hidden">
+                <div className="w-32 h-32 flex-none flex items-center justify-center bg-surface-100 backdrop-blur-sm rounded-clinical border border-line p-2 shadow-inner relative overflow-hidden">
                   <SMILESRenderer
                     smiles={selectedMol.smilesPhysics.canonicalSmiles}
                     width={128}
@@ -174,69 +185,169 @@ export default function CompoundsDirectory() {
               </div>
             </div>
 
-            <div className="p-6 md:p-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Vectors */}
-              <div>
-                <div className="flex items-center gap-2 mb-4 border-b border-line pb-2">
-                  <svg className="w-5 h-5 text-accent-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                  <h3 className="text-sm uppercase tracking-widest font-bold text-ink">Pharmacological Vectors</h3>
-                </div>
-                <div className="space-y-5 bg-surface-0 p-5 rounded-clinical border border-line">
-                  <div>
-                    <div className="flex justify-between text-xs font-bold text-ink-subtle mb-1"><span>Arousal (Excitatory)</span><span className="font-mono">{selectedMol.effects.arousal > 0 ? `+${selectedMol.effects.arousal}` : selectedMol.effects.arousal}</span></div>
-                    <div className="w-full bg-surface-200 rounded-full h-2"><div className="bg-ok h-2 rounded-full transition-all duration-500" style={{ width: `${Math.min(100, Math.max(0, (selectedMol.effects.arousal + 2) / 4 * 100))}%` }}></div></div>
-                  </div>
-                  <div>
-                    <div className="flex justify-between text-xs font-bold text-ink-subtle mb-1"><span>Dampening (Inhibitory)</span><span className="font-mono">{selectedMol.effects.dampening > 0 ? `+${selectedMol.effects.dampening}` : selectedMol.effects.dampening}</span></div>
-                    <div className="w-full bg-surface-200 rounded-full h-2"><div className="bg-accent-400 h-2 rounded-full transition-all duration-500" style={{ width: `${Math.min(100, Math.max(0, (selectedMol.effects.dampening + 2) / 4 * 100))}%` }}></div></div>
-                  </div>
-                  <div>
-                    <div className="flex justify-between text-xs font-bold text-ink-subtle mb-1"><span>Chaos (Entropy/Noise)</span><span className="font-mono">{selectedMol.effects.chaos > 0 ? `+${selectedMol.effects.chaos}` : selectedMol.effects.chaos}</span></div>
-                    <div className="w-full bg-surface-200 rounded-full h-2"><div className={`${selectedMol.effects.chaos > 0 ? 'bg-crit' : 'bg-accent-400'} h-2 rounded-full transition-all duration-500`} style={{ width: `${Math.min(100, Math.max(0, (selectedMol.effects.chaos + 2) / 4 * 100))}%` }}></div></div>
-                  </div>
-                  <div>
-                    <div className="flex justify-between text-xs font-bold text-ink-subtle mb-1"><span>Repair (Synaptogenesis)</span><span className="font-mono">{selectedMol.effects.repair > 0 ? `+${selectedMol.effects.repair}` : selectedMol.effects.repair}</span></div>
-                    <div className="w-full bg-surface-200 rounded-full h-2"><div className="bg-info h-2 rounded-full transition-all duration-500" style={{ width: `${Math.min(100, Math.max(0, (selectedMol.effects.repair + 2) / 4 * 100))}%` }}></div></div>
-                  </div>
-                </div>
-              </div>
+            {/* Dashboard Navigation Tabs */}
+            <div className="flex border-b border-line bg-surface-0 px-6 md:px-8">
+              <button
+                onClick={() => setDetailTab("profile")}
+                className={`py-3.5 px-4 font-mono text-xs font-bold uppercase tracking-wider border-b-2 transition-all focus:outline-none ${
+                  detailTab === "profile" 
+                    ? "border-accent-500 text-accent-400" 
+                    : "border-transparent text-ink-muted hover:text-ink-subtle"
+                }`}
+              >
+                Clinical Profile
+              </button>
+              <button
+                onClick={() => setDetailTab("mechanistic")}
+                className={`py-3.5 px-4 font-mono text-xs font-bold uppercase tracking-wider border-b-2 transition-all focus:outline-none ${
+                  detailTab === "mechanistic" 
+                    ? "border-accent-500 text-accent-400" 
+                    : "border-transparent text-ink-muted hover:text-ink-subtle"
+                }`}
+              >
+                Mechanistic Action
+              </button>
+              <button
+                onClick={() => setDetailTab("projection")}
+                className={`py-3.5 px-4 font-mono text-xs font-bold uppercase tracking-wider border-b-2 transition-all focus:outline-none ${
+                  detailTab === "projection" 
+                    ? "border-accent-500 text-accent-400" 
+                    : "border-transparent text-ink-muted hover:text-ink-subtle"
+                }`}
+              >
+                Projection Sweep
+              </button>
+            </div>
 
-              {/* Targets & Notes */}
-              <div className="space-y-8">
-                <div>
-                  <div className="flex items-center gap-2 mb-4 border-b border-line pb-2">
-                    <svg className="w-5 h-5 text-accent-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
-                    <h3 className="text-sm uppercase tracking-widest font-bold text-ink">Primary Neural Targets</h3>
+            {/* Tab Contents */}
+            <div className="p-6 md:p-8 flex-grow">
+              {detailTab === "profile" && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  {/* Vectors */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-4 border-b border-line pb-2">
+                      <svg className="w-5 h-5 text-accent-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                      <h3 className="text-sm uppercase tracking-widest font-bold text-ink">Pharmacological Vectors</h3>
+                    </div>
+                    <div className="space-y-5 bg-surface-0 p-5 rounded-clinical border border-line">
+                      <div>
+                        <div className="flex justify-between text-xs font-bold text-ink-subtle mb-1"><span>Arousal (Excitatory)</span><span className="font-mono">{selectedMol.effects.arousal > 0 ? `+${selectedMol.effects.arousal}` : selectedMol.effects.arousal}</span></div>
+                        <div className="w-full bg-surface-200 rounded-full h-2"><div className="bg-ok h-2 rounded-full transition-all duration-500" style={{ width: `${Math.min(100, Math.max(0, (selectedMol.effects.arousal + 2) / 4 * 100))}%` }}></div></div>
+                      </div>
+                      <div>
+                        <div className="flex justify-between text-xs font-bold text-ink-subtle mb-1"><span>Dampening (Inhibitory)</span><span className="font-mono">{selectedMol.effects.dampening > 0 ? `+${selectedMol.effects.dampening}` : selectedMol.effects.dampening}</span></div>
+                        <div className="w-full bg-surface-200 rounded-full h-2"><div className="bg-accent-400 h-2 rounded-full transition-all duration-500" style={{ width: `${Math.min(100, Math.max(0, (selectedMol.effects.dampening + 2) / 4 * 100))}%` }}></div></div>
+                      </div>
+                      <div>
+                        <div className="flex justify-between text-xs font-bold text-ink-subtle mb-1"><span>Chaos (Entropy/Noise)</span><span className="font-mono">{selectedMol.effects.chaos > 0 ? `+${selectedMol.effects.chaos}` : selectedMol.effects.chaos}</span></div>
+                        <div className="w-full bg-surface-200 rounded-full h-2"><div className={`${selectedMol.effects.chaos > 0 ? 'bg-crit' : 'bg-accent-400'} h-2 rounded-full transition-all duration-500`} style={{ width: `${Math.min(100, Math.max(0, (selectedMol.effects.chaos + 2) / 4 * 100))}%` }}></div></div>
+                      </div>
+                      <div>
+                        <div className="flex justify-between text-xs font-bold text-ink-subtle mb-1"><span>Repair (Synaptogenesis)</span><span className="font-mono">{selectedMol.effects.repair > 0 ? `+${selectedMol.effects.repair}` : selectedMol.effects.repair}</span></div>
+                        <div className="w-full bg-surface-200 rounded-full h-2"><div className="bg-info h-2 rounded-full transition-all duration-500" style={{ width: `${Math.min(100, Math.max(0, (selectedMol.effects.repair + 2) / 4 * 100))}%` }}></div></div>
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-sm text-ink-subtle font-medium leading-relaxed clinical-card p-4 rounded-clinical shadow-sm">
-                    {(() => {
-                      if (selectedMol.class === 'stimulant' && selectedMol.effects.arousal > 1) return "Frontoparietal Control Network, Basal Ganglia";
-                      if (selectedMol.class === 'depressant' || selectedMol.class === 'ssri') return "Default Mode Network, Limbic System";
-                      if (selectedMol.id === 'zb01' || selectedMol.id === 'cbd') return "Global Phase-Locking Modulator (Systemic)";
-                      if (selectedMol.id === 'sr17') return "Mu-Opioid Receptors (Biased), Brainstem";
-                      if (selectedMol.class === 'novel' && selectedMol.effects.chaos > 1) return "Default Mode Network (Disruptive)";
-                      return "Systemic / Network-wide";
-                    })()}
-                  </p>
-                </div>
-                
-                <div>
-                  <div className="flex items-center gap-2 mb-4 border-b border-line pb-2">
-                    <svg className="w-5 h-5 text-accent-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    <h3 className="text-sm uppercase tracking-widest font-bold text-ink">Clinical Application</h3>
+
+                  {/* Targets & Notes */}
+                  <div className="space-y-8">
+                    <div>
+                      <div className="flex items-center gap-2 mb-4 border-b border-line pb-2">
+                        <svg className="w-5 h-5 text-accent-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                        <h3 className="text-sm uppercase tracking-widest font-bold text-ink">Primary Neural Targets</h3>
+                      </div>
+                      <p className="text-sm text-ink-subtle font-medium leading-relaxed clinical-card p-4 rounded-clinical shadow-sm">
+                        {(() => {
+                          if (selectedMol.class === 'stimulant' && selectedMol.effects.arousal > 1) return "Frontoparietal Control Network, Basal Ganglia";
+                          if (selectedMol.class === 'depressant' || selectedMol.class === 'ssri') return "Default Mode Network, Limbic System";
+                          if (selectedMol.id === 'zb01' || selectedMol.id === 'cbd') return "Global Phase-Locking Modulator (Systemic)";
+                          if (selectedMol.id === 'sr17') return "Mu-Opioid Receptors (Biased), Brainstem";
+                          if (selectedMol.class === 'novel' && selectedMol.effects.chaos > 1) return "Default Mode Network (Disruptive)";
+                          return "Systemic / Network-wide";
+                        })()}
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <div className="flex items-center gap-2 mb-4 border-b border-line pb-2">
+                        <svg className="w-5 h-5 text-accent-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <h3 className="text-sm uppercase tracking-widest font-bold text-ink">Clinical Application</h3>
+                      </div>
+                      <p className="text-sm text-ink-subtle leading-relaxed clinical-card p-4 rounded-clinical shadow-sm">
+                        {(() => {
+                          if (selectedMol.class === 'stimulant' && selectedMol.effects.arousal > 1) return "Primarily indicated for profound hypo-arousal or severe executive dysfunction (e.g., severe ADHD or narcolepsy). Carries high risk of structural entropy if misapplied.";
+                          if (selectedMol.class === 'depressant' || selectedMol.class === 'ssri') return "Dampens high-frequency oscillatory noise. Often prescribed for rigid rumination loops (MDD) or hyper-arousal (severe anxiety), though prolonged use risks structural rigidity.";
+                          if (selectedMol.id === 'zb01' || selectedMol.id === 'cbd') return "A precision tool for stabilizing chaotic cliques without inducing severe dampening. Ideal for conditions characterized by intense topological jittering like PTSD.";
+                          if (selectedMol.id === 'sr17') return "A novel biased agonist designed specifically to halt opioid withdrawal chaos without inducing respiratory depression. Essential for stabilizing neurochemical debt.";
+                          if (selectedMol.class === 'novel' && selectedMol.effects.chaos > 1) return "Intentionally induces high entropy to shatter rigid pathological cliques (e.g., treatment-resistant depression). Must be paired with a repair vector.";
+                          return "Modulates global network states. Useful as a baseline or adjunctive therapy depending on specific vector strengths.";
+                        })()}
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-sm text-ink-subtle leading-relaxed clinical-card p-4 rounded-clinical shadow-sm">
-                    {(() => {
-                      if (selectedMol.class === 'stimulant' && selectedMol.effects.arousal > 1) return "Primarily indicated for profound hypo-arousal or severe executive dysfunction (e.g., severe ADHD or narcolepsy). Carries high risk of structural entropy if misapplied.";
-                      if (selectedMol.class === 'depressant' || selectedMol.class === 'ssri') return "Dampens high-frequency oscillatory noise. Often prescribed for rigid rumination loops (MDD) or hyper-arousal (severe anxiety), though prolonged use risks structural rigidity.";
-                      if (selectedMol.id === 'zb01' || selectedMol.id === 'cbd') return "A precision tool for stabilizing chaotic cliques without inducing severe dampening. Ideal for conditions characterized by intense topological jittering like PTSD.";
-                      if (selectedMol.id === 'sr17') return "A novel biased agonist designed specifically to halt opioid withdrawal chaos without inducing respiratory depression. Essential for stabilizing neurochemical debt.";
-                      if (selectedMol.class === 'novel' && selectedMol.effects.chaos > 1) return "Intentionally induces high entropy to shatter rigid pathological cliques (e.g., treatment-resistant depression). Must be paired with a repair vector.";
-                      return "Modulates global network states. Useful as a baseline or adjunctive therapy depending on specific vector strengths.";
-                    })()}
-                  </p>
                 </div>
-              </div>
+              )}
+
+              {detailTab === "mechanistic" && (
+                <div className="space-y-6">
+                  {/* Animation Controls */}
+                  <div className="flex justify-between items-center p-4 bg-surface-100 rounded-clinical border border-line">
+                    <div>
+                      <h4 className="font-bold text-sm text-ink font-mono tracking-wider">BIOPHYSICAL MECHANISTIC SIMULATION</h4>
+                      <p className="text-[10px] text-ink-muted mt-0.5">Real-time multi-resolution biophysical animation loops.</p>
+                    </div>
+                    <button
+                      onClick={() => setIsSimulatingMech(!isSimulatingMech)}
+                      className={`px-4 py-1.5 rounded-clinical font-mono text-xs font-bold transition-all shadow-sm ${
+                        isSimulatingMech 
+                          ? "bg-crit text-white hover:bg-crit/80 shadow-crit/20" 
+                          : "bg-ok text-white hover:bg-ok/80 shadow-ok/20"
+                      }`}
+                    >
+                      {isSimulatingMech ? "PAUSE ACTION" : "ANIMATE CHANNELS"}
+                    </button>
+                  </div>
+
+                  {/* Active Biophysical Animation Canvas */}
+                  <NeuroCanvas 
+                    vectors={selectedMol.effects} 
+                    activeCompoundId={selectedMol.id} 
+                    isSimulating={isSimulatingMech} 
+                  />
+
+                  {/* Scientific Explanations */}
+                  <div className="p-4 bg-surface-100 rounded-clinical border border-line text-xs leading-relaxed space-y-4">
+                    <h5 className="font-extrabold text-ink text-[10px] uppercase tracking-wider font-mono border-b border-line pb-1.5">Simulation Visual Reference</h5>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className="space-y-1">
+                        <span className="font-extrabold text-cyan-400 font-mono text-[10px] block">1. MACRO-SCALE (CONFORMATIONAL SHIELDING)</span>
+                        <p className="text-ink-muted text-[11px]">
+                          Simulates thermal nanosecond transitions of peripheral substituent arms rotating at 310K body temperature. In novel program compounds like SPUR-MTDL, these arms rapidly rotate around the locked core, shielding binding pockets from clearance enzyme interactions.
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <span className="font-extrabold text-purple-400 font-mono text-[10px] block">2. MICRO-SCALE (SYNAPTIC GATING)</span>
+                        <p className="text-ink-muted text-[11px]">
+                          Visualizes synaptic vesicle discharges and ion gating kinetics. Strong dampening vectors widen GABA-A channels, allowing Chlorine (Cl-) ions to hyperpolarize the post-synapse. Alternatively, NMDA blocker compounds (e.g. Memantine) physically plug channels, halting chaotic calcium bursts.
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <span className="font-extrabold text-emerald-400 font-mono text-[10px] block">3. INTRA-CELLULAR (EPIGENETIC LATCHING)</span>
+                        <p className="text-ink-muted text-[11px]">
+                          Models the transcriptional phosphorylation cascade migrating toward the nucleus. Upon crossing the required concentration delta, active CREB pathways trigger chromatin CpG demethylation (visualized as a glowing green double helix), locking promoter IV into an immutable attractor basin.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {detailTab === "projection" && (
+                <ProjectionEngine 
+                  moleculeId={selectedMol.id} 
+                  vectors={selectedMol.effects} 
+                />
+              )}
             </div>
           </div>
         )}

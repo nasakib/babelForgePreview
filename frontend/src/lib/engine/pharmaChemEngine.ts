@@ -3,6 +3,9 @@ import type { PatientProfile } from "@/lib/patient/profile";
 import type { PharmaVectors } from "./stackVectors";
 import { hill } from "@/lib/engines/chemistry";
 import { molecules, type AdvancedBioavailability } from "@/data/molecules";
+import { evaluateSubstanceToxicity } from "@/lib/engines/toxicology";
+import { calculateSyntheticViability } from "@/lib/engines/synthesis";
+import { computeThermodynamicMicrostates } from "@/lib/engines/forge";
 
 export type LigandClass = 'CLASSIC_SMALL' | 'BIVALENT_MACROCYCLIC' | 'CONFORMATIONAL_SHIELDED' | 'CLEAVABLE_CONJUGATE';
 
@@ -496,6 +499,22 @@ export function calculatePlasmaConcentrations(
 
     if (id === "spur01") {
       finalHalfLife *= 1000.0; // 1000x clearance latency from rapid rotational masking
+    }
+
+    // Graph-Native Molecular Forge thermodynamic microstate shielding multiplier
+    if (props?.adjacencyMatrix || id === 'spur_mtdl' || id === 'seriphadine') {
+      const rotatable = id === 'spur_mtdl' ? 12 : (id === 'seriphadine' ? 8 : 4);
+      const graph = {
+        compoundId: id,
+        adjacencyMatrix: props?.adjacencyMatrix ?? [[0]],
+        nodes: [],
+        rotatableBondsPeriphery: rotatable,
+        lockedCoreBonds: id === 'spur_mtdl' ? 8 : 4
+      };
+      const microstates = computeThermodynamicMicrostates(graph);
+      // Scaled factor based on entropy size
+      const forgeMultiplier = 1.0 + Math.log10(microstates) * 0.05;
+      finalHalfLife *= forgeMultiplier;
     }
 
     if (props?.genomicPayload?.isGenomicPayload) {
