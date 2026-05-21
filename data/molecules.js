@@ -3,9 +3,20 @@ const svgIndole = `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" 
 const svgPhen = `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" class="w-full h-full"><path d="M20 50 L40 20 L70 20 L90 50 L70 80 L40 80 Z"/><line x1="20" y1="50" x2="5" y2="50"/><line x1="40" y1="80" x2="30" y2="95"/></svg>`;
 const svgTricyclic = `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" class="w-full h-full"><path d="M10 50 L30 20 L60 20 L80 50 L60 80 L30 80 Z"/><path d="M60 20 L80 10 L100 30 L80 50"/><circle cx="45" cy="50" r="12"/></svg>`;
 const svgCannabinoid = `<svg viewBox="0 0 100 50" class="h-full w-auto stroke-current fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="30,25 40,10 55,10 65,25 55,40 40,40" /><polygon points="65,25 75,10 90,10 100,25 90,40 75,40" /><path d="M55,10 L75,10" /><path d="M20,15 L30,25 L20,35" /><circle cx="65" cy="25" r="2" fill="currentColor" /></svg>`;
+const svgSpur = `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" class="w-full h-full"><path d="M50 15 L20 35 L20 65 L50 85 L80 65 L80 35 Z"/><circle cx="50" cy="50" r="15"/><path d="M50 15 L50 5"/><path d="M20 35 L5 25"/><path d="M80 35 L95 25"/><circle cx="50" cy="50" r="4" fill="currentColor"/></svg>`;
 
 window.molecules = [
     // Novel Therapeutics
+    { 
+      id: 'spur01', 
+      name: 'SPUR-1 Ontological Reducer', 
+      class: 'novel', 
+      classLabel: 'Conformational Pan-Modulator', 
+      isBabelForge: true, 
+      svg: svgSpur, 
+      halfLife: 'long', 
+      effects: { arousal: -0.2, dampening: 0.5, chaos: -1.8, repair: 3.5 } 
+    },
     { id: 'zb01', name: 'ZenBud™ (ZB-01)', class: 'novel', classLabel: 'Precision Agonist', isBabelForge: true, svg: svgIndole, halfLife: 'medium', effects: { arousal: 0.1, dampening: 0.0, chaos: -0.8, repair: 1.5 } },
     { id: 'll07', name: 'LimbicLink™ (LL-07)', class: 'novel', classLabel: 'DMN Modulator', isBabelForge: true, svg: svgTricyclic, halfLife: 'long', effects: { arousal: -0.2, dampening: 0.3, chaos: 0.4, repair: 1.2 } },
     { id: 'ss20', name: 'SynaptoStim™ (SS-20)', class: 'novel', classLabel: 'Targeted DRI', isBabelForge: true, svg: svgPhen, halfLife: 'short', effects: { arousal: 1.5, dampening: 0.0, chaos: -0.2, repair: 0.5 } },

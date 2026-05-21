@@ -272,6 +272,10 @@ export function translateSubjective(
   if (autonomic >= 42 && autonomic <= 58) tags.push("Autonomic Balance");
   if (states.length > 0 && reportData.integrity < 40) tags.push("Connectome Decay");
   if (activeIds.has("sr17") || activeIds.has("nrg01")) tags.push("Active Repair Reversion");
+  if (activeIds.has("spur01")) {
+    tags.push("TrkB Agonism");
+    tags.push("Epigenetic Rewrite");
+  }
 
   // Deep Patient Profile Tags
   if (labs.vitD !== undefined && labs.vitD < 30) tags.push("Vit D Deficit");
@@ -380,6 +384,10 @@ export function translateSubjective(
   } else {
     narrative += "The active intervention stack directly alters the pharmacological vectors of the patient. ";
     
+    if (activeIds.has("spur01")) {
+      narrative += "SPUR-1 Ontological Reducer (SPUR-MTDL) acts as a highly potent TrkB agonist (EC50 = 0.18 nM), downstream mTOR activator (+168%), and CREB phosphorylation agent (+185%). Through DNMT1/3a/3b inhibition and H3K27ac epigenetic elevation, it drives profound BDNF promoter CpG demethylation and up-regulates pro-social gene loci (BDNF, OXTR, SLC6A4), causing massive structural connectome repair and 525% dendritic spine density enhancement. ";
+    }
+
     // Check specific synergistic triggers
     const hasNRG01 = activeIds.has("nrg01");
     const hasColdPlunge = activeIds.has("coldplunge");

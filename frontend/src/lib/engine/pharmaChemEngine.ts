@@ -27,6 +27,11 @@ export interface CompoundProperties {
 // ----------------------------------------------------------------------------
 export const COMPOUND_DATABASE: Record<string, CompoundProperties> = {
   // --- NOVELS & EXPERIMENTALS ---
+  spur01: {
+    id: "spur01", name: "SPUR-1 Ontological Reducer", class: "novel", halfLifeHrs: 0.168, cypEnzymes: ["CYP3A4"],
+    receptors: { MOR: 0.2, HT2A: 1.5, NMDA: 150 },
+    efficacy: { MOR: 1.4, HT2A: -1.0, NMDA: -0.4 }
+  },
   zb01: {
     id: "zb01", name: "ZenBud™ (ZB-01)", class: "novel", halfLifeHrs: 18, cypEnzymes: ["CYP3A4"],
     receptors: { HT2A: 100, GABAA: 250 },
@@ -332,7 +337,11 @@ export function calculatePlasmaConcentrations(
 
     // Scale half-life based on age (clearance decays in older patients)
     const ageMultiplier = effectiveAge > 65 ? 1.3 : 1.0;
-    const finalHalfLife = baseHalfLife * pgxMultiplier * ageMultiplier;
+    let finalHalfLife = baseHalfLife * pgxMultiplier * ageMultiplier;
+
+    if (id === "spur01") {
+      finalHalfLife *= 1000.0; // 1000x clearance latency from rapid rotational masking
+    }
 
     // Elimination rate constant
     const ke = Math.log(2) / finalHalfLife;
@@ -468,11 +477,16 @@ export function translateReceptorsToVectors(
     const props = COMPOUND_DATABASE[id];
     const isReceptorActive = props && props.receptors && Object.keys(props.receptors).length > 0;
 
-    if (!isReceptorActive) {
+    if (!isReceptorActive || id === "spur01") {
       // Find the template molecule in shared list to extract direct effects
       // We will match these by direct effects
       const doseRatio = Math.min(1.0, intensity / 3.0);
-      if (!props && item.effects) {
+      if (id === "spur01") {
+        baseRepair += 3.5 * doseRatio;
+        baseChaos -= 1.8 * doseRatio;
+        baseDampening += 0.5 * doseRatio;
+        baseArousal -= 0.2 * doseRatio;
+      } else if (!props && item.effects) {
         baseArousal += (item.effects.arousal ?? 0) * doseRatio;
         baseDampening += (item.effects.dampening ?? 0) * doseRatio;
         baseChaos += (item.effects.chaos ?? 0) * doseRatio;
