@@ -33,6 +33,7 @@ export default function SMILESRenderer({
       if (!isMounted) return;
 
       try {
+        const SmilesDrawerLib = (SmilesDrawer as any).default || SmilesDrawer;
         const canvas = canvasRef.current;
         if (!canvas) return;
 
@@ -43,7 +44,7 @@ export default function SMILESRenderer({
         }
 
         // Initialize Drawer with optimized high-contrast styling for dark theme
-        const drawer = new SmilesDrawer.Drawer({
+        const drawer = new SmilesDrawerLib.Drawer({
           width,
           height,
           bondThickness: 2.0,
@@ -55,7 +56,7 @@ export default function SMILESRenderer({
         });
 
         // Parse and render the SMILES string
-        SmilesDrawer.parse(
+        SmilesDrawerLib.parse(
           smiles,
           (tree: any) => {
             if (!isMounted || !canvas) return;
