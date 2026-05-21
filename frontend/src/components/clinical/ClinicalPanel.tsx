@@ -9,6 +9,7 @@
  */
 import { ReactNode, useState, useEffect, useRef } from "react";
 import { molecules } from "@/data/molecules";
+import ExplanationOverlay from "@/components/clinical/ExplanationOverlay";
 
 interface ClinicalPanelProps {
   title: string;
@@ -22,7 +23,15 @@ interface ClinicalPanelProps {
   enableSimulation?: boolean;
   /** The compound ID to drive telemetry parameters. */
   moleculeId?: string | null;
+  /** The active tab context to enable matching explanations. */
+  activeTab?: string;
 }
+
+const TAB_EXPLANATION_MAP: Record<string, string[]> = {
+  "profile": ["clinical-profile", "receptor-occupancy"],
+  "mechanistic": ["biophysical-canvas"],
+  "projection": ["projection-engine"],
+};
 
 export default function ClinicalPanel({
   title,
@@ -32,13 +41,19 @@ export default function ClinicalPanel({
   className = "",
   enableSimulation = false,
   moleculeId = null,
+  activeTab,
 }: ClinicalPanelProps) {
   const [isSimulating, setIsSimulating] = useState(false);
   const [elapsedHrs, setElapsedHrs] = useState(0);
   const [logs, setLogs] = useState<string[]>([]);
+  const [isExplainOpen, setIsExplainOpen] = useState(false);
+  const [selectedExplainKey, setSelectedExplainKey] = useState("");
   const logsContainerRef = useRef<HTMLDivElement | null>(null);
 
   const selectedMol = moleculeId ? molecules.find((m) => m.id === moleculeId) : null;
+
+  const explainKeys = activeTab ? TAB_EXPLANATION_MAP[activeTab] || [] : [];
+  const hasExplanation = explainKeys.length > 0;
 
   // Auto-scroll logs to bottom
   useEffect(() => {
@@ -206,7 +221,7 @@ export default function ClinicalPanel({
 
   return (
     <section
-      className={`rounded-clinical border border-line bg-surface-0 shadow-sm flex flex-col overflow-hidden ${className}`}
+      className={`rounded-clinical border border-line bg-surface-0 shadow-sm flex flex-col overflow-hidden relative ${className}`}
     >
       <header className="flex items-start justify-between gap-3 px-4 py-3 border-b border-line">
         <div>
@@ -217,7 +232,32 @@ export default function ClinicalPanel({
           )}
           <h2 className="text-sm font-bold text-ink">{title}</h2>
         </div>
-        {actions && <div className="flex items-center gap-2">{actions}</div>}
+        <div className="flex items-center gap-2">
+          {hasExplanation && (
+            <div className="flex items-center gap-1.5 mr-1">
+              {explainKeys.map((key) => {
+                const label = key === "receptor-occupancy" ? "Explain Binding" : "Explain Tab";
+                return (
+                  <button
+                    key={key}
+                    onClick={() => {
+                      setSelectedExplainKey(key);
+                      setIsExplainOpen(true);
+                    }}
+                    className="px-2 py-1 bg-accent-500/10 hover:bg-accent-500/25 border border-accent-500/30 hover:border-accent-500/60 rounded-clinical font-mono text-[9px] font-bold text-accent-400 hover:text-white transition-all shadow-sm flex items-center gap-1 cursor-pointer"
+                    title={`Explain ${key === "receptor-occupancy" ? "GPCR binding mechanics" : "this dashboard view"}`}
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+          {actions && <div className="flex items-center gap-2">{actions}</div>}
+        </div>
       </header>
 
       {/* Stateful simulation controls bar (Timeline Step Integration) */}
@@ -294,6 +334,14 @@ export default function ClinicalPanel({
             })}
           </div>
         </div>
+      )}
+
+      {isExplainOpen && (
+        <ExplanationOverlay
+          componentId={selectedExplainKey}
+          isOpen={isExplainOpen}
+          onClose={() => setIsExplainOpen(false)}
+        />
       )}
     </section>
   );

@@ -135,6 +135,7 @@ export default function CompoundsDirectory() {
         eyebrow="Adaptive Molecular Program"
         enableSimulation={!!selectedMol}
         moleculeId={selectedMol?.id}
+        activeTab={detailTab}
         className="w-full md:w-2/3 lg:w-3/4 shadow-sm flex flex-col overflow-hidden relative min-h-0 animate-fade-in"
       >
         {!selectedMol ? (

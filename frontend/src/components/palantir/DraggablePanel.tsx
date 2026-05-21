@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Rnd } from "react-rnd";
 import { useWindowContext } from "@/context/WindowContext";
+import ExplanationOverlay from "@/components/clinical/ExplanationOverlay";
 
 interface DraggablePanelProps {
   id: string;
@@ -12,6 +13,17 @@ interface DraggablePanelProps {
   onClose?: () => void;
   className?: string;
 }
+
+const PANEL_EXPLANATION_MAP: Record<string, string> = {
+  "console-left-panel": "patient-state-modifiers",
+  "console-right-panel": "diagnostic-ai",
+  "node-filter-panel": "node-filter",
+  "time-engine-panel": "time-engine",
+  "realtime-kuramoto": "neuro-canvas",
+  "layer-controls": "neuro-canvas",
+  "receptor-occupancy-panel": "receptor-occupancy",
+  "stack-builder": "clinical-profile",
+};
 
 export default function DraggablePanel({
   id,
@@ -25,6 +37,7 @@ export default function DraggablePanel({
 }: DraggablePanelProps) {
   const { windows, registerWindow, updateWindow, toggleMinimize, bringToFront, zenMode, ready } = useWindowContext();
   const [isMobile, setIsMobile] = useState(false);
+  const [isExplainOpen, setIsExplainOpen] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
@@ -51,6 +64,8 @@ export default function DraggablePanel({
   if (zenMode) return null;
 
   const win = windows[id];
+  const explanationId = PANEL_EXPLANATION_MAP[id];
+  const hasExplanation = !!explanationId;
 
   if (isMobile) {
     return (
@@ -71,6 +86,20 @@ export default function DraggablePanel({
             )}
           </div>
           <div className="flex items-center gap-2">
+            {hasExplanation && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsExplainOpen(true);
+                }}
+                className="text-ink-subtle hover:text-accent transition-colors p-1 flex items-center justify-center rounded-full hover:bg-surface-100"
+                title="Explain component"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </button>
+            )}
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -98,6 +127,14 @@ export default function DraggablePanel({
           <div className="flex-1 max-h-[450px] overflow-y-auto custom-scrollbar bg-canvas/50">
             {children}
           </div>
+        )}
+
+        {hasExplanation && (
+          <ExplanationOverlay
+            componentId={explanationId}
+            isOpen={isExplainOpen}
+            onClose={() => setIsExplainOpen(false)}
+          />
         )}
       </div>
     );
@@ -142,6 +179,20 @@ export default function DraggablePanel({
           )}
         </div>
         <div className="flex items-center gap-2">
+          {hasExplanation && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsExplainOpen(true);
+              }}
+              className="text-ink-subtle hover:text-accent transition-colors p-1 flex items-center justify-center rounded-full hover:bg-surface-100"
+              title="Explain component"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </button>
+          )}
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -169,6 +220,14 @@ export default function DraggablePanel({
         <div className="flex-1 overflow-y-auto custom-scrollbar bg-canvas/50">
           {children}
         </div>
+      )}
+
+      {hasExplanation && (
+        <ExplanationOverlay
+          componentId={explanationId}
+          isOpen={isExplainOpen}
+          onClose={() => setIsExplainOpen(false)}
+        />
       )}
     </Rnd>
   );

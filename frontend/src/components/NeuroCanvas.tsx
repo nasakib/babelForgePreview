@@ -690,14 +690,7 @@ function BrainScene({
       {/* Render Naming Convention Tags on Nodes */}
       {viewPerspective !== "anatomy" && nodeLabels.map((label, i) => {
         const isSelected = selectedNodeIds.includes(i);
-        const isFiltering = selectedNodeIds.length > 0;
-        
-        // Performance optimization: limit rendering to selected nodes or key hub nodes
-        // (restricted to hubness > 12 on mobile to prevent layout thrashing, and hubness > 5 on desktop to restore rich details).
-        const isMobile = typeof window !== "undefined" && window.innerWidth < 1024;
-        const threshold = isMobile ? 12 : 5;
-        const shouldShow = isSelected || (!isFiltering && topo.nodes[i].hubness > threshold);
-        if (!shouldShow) return null;
+        if (!isSelected) return null;
 
         return (
           <Html
