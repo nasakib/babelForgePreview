@@ -13,6 +13,7 @@ import type { Pathology } from "@/lib/engine/topology";
 import { EMPTY_PROFILE, type PatientProfile } from "@/lib/patient/profile";
 import TimeEnginePanel from "@/components/palantir/TimeEnginePanel";
 import ReceptorOccupancy from "@/components/clinical/ReceptorOccupancy";
+import SEEResultsPanel from "@/components/palantir/SEEResultsPanel";
 
 const STORAGE_KEY = "babelforge:stack-simulator:v1";
 
@@ -147,6 +148,7 @@ export default function StackSimulator() {
       holisticSynergyBonus: report.holisticSynergyBonus,
       activeCorrections: report.activeCorrections,
       occupancies: report.occupancies,
+      report,
     };
   }, [stack, activePathologies, startingAge, simulationTimeMonths, profile]);
 
@@ -187,10 +189,6 @@ export default function StackSimulator() {
           </div>
           <h4 className="text-xl font-bold text-ink font-semibold">{simulationState.label}</h4>
           <p className="text-xs text-ink-subtle mt-1 max-w-sm leading-relaxed drop-shadow">{simulationState.desc}</p>
-          <div className="mt-2 pt-2 border-t border-accent-500/30 max-w-sm">
-              <span className="text-[9px] uppercase font-bold text-crit block mb-1">Projected Subjective Experience (SEE)</span>
-              <p className="text-xs text-ink-subtle italic leading-relaxed drop-shadow">{simulationState.subj}</p>
-          </div>
           {simulationState.warnings && simulationState.warnings.length > 0 && (
             <div className="mt-2 pt-2 border-t border-crit/30 max-w-sm">
               <span className="text-[9px] uppercase font-bold text-crit block mb-1">Clinical Warnings</span>
@@ -408,6 +406,7 @@ export default function StackSimulator() {
       )}
 
       <TimeEnginePanel />
+      <SEEResultsPanel report={simulationState.report} />
     </div>
   );
 }
