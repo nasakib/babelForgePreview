@@ -1,5 +1,6 @@
 import type { PatientProfile } from "@/lib/patient/profile";
 import type { PharmaVectors } from "./stackVectors";
+import { hill } from "@/lib/engines/chemistry";
 
 export type LigandClass = 'CLASSIC_SMALL' | 'BIVALENT_MACROCYCLIC' | 'CONFORMATIONAL_SHIELDED' | 'CLEAVABLE_CONJUGATE';
 
@@ -562,6 +563,19 @@ export function calculateReceptorOccupancies(
       }
     }
 
+    // Intercept patient history logs to calculate dynamic tolerance curves
+    if (patient?.profile?.historyLogs) {
+      for (const drugId in concentrations) {
+        const log = patient.profile.historyLogs.find(l => l.compoundId === drugId);
+        if (log && log.administrationsLast30Days > 10) {
+          // High frequency usage causes receptor desensitization
+          const toleranceFactor = 1.0 + (log.administrationsLast30Days * 0.05);
+          rKiMultiplier *= toleranceFactor;       // Requires higher concentration to lock
+          rEfficacyMultiplier *= (1 / toleranceFactor); // Attenuate maximum signal capacity
+        }
+      }
+    }
+
     // 1. Calculate sum(C_j / K_j) with genotypic K_j adjustment
     let competitiveSum = 0;
     for (const drugId in concentrations) {
@@ -618,7 +632,10 @@ export function calculateReceptorOccupancies(
         }
 
         // Fractional occupancy: (C/Ki) / (1 + sum(C_j/K_j))
-        const occ = (C / Ki) / (1 + competitiveSum);
+        // Apply the standard non-linear Hill saturation function to govern binding velocity
+        const competitiveSumExcluding = Math.max(0, competitiveSum - (C / Ki));
+        const apparentKi = Ki * (1 + competitiveSumExcluding);
+        const occ = hill(C, apparentKi, 1, 1);
         occupancies[drugId][r] = occ;
 
         // Activation contributor: occupancy * intrinsic efficacy
@@ -637,7 +654,8 @@ export function calculateReceptorOccupancies(
 // ----------------------------------------------------------------------------
 export function translateReceptorsToVectors(
   activations: ReceptorActivationProfile,
-  stack: any[] = []
+  stack: any[] = [],
+  patient?: { profile?: PatientProfile }
 ): PharmaVectors {
   // Extract direct lifestyle / neuromodulation / procedural multipliers
   let baseArousal = 0;
@@ -659,6 +677,16 @@ export function translateReceptorsToVectors(
       // Find the template molecule in shared list to extract direct effects
       // We will match these by direct effects
       const doseRatio = Math.min(1.0, intensity / 3.0);
+
+      let consistencyMultiplier = 0.5; // Single isolated sessions return attenuated yields
+      if (patient?.profile?.historyLogs) {
+        const lifestyleLog = patient.profile.historyLogs.find(l => l.compoundId === id);
+        if (lifestyleLog && lifestyleLog.consecutiveDaysActive > 0) {
+          // Compounding performance returns: exponential function of consistency
+          consistencyMultiplier = Math.min(2.5, 1.0 + Math.log(lifestyleLog.consecutiveDaysActive + 1) * 0.4);
+        }
+      }
+
       if (id === "spur01") {
         baseRepair += 3.5 * doseRatio;
         baseChaos -= 1.8 * doseRatio;
@@ -696,12 +724,19 @@ export function translateReceptorsToVectors(
         baseChaos += (item.effects.chaos ?? 0) * doseRatio;
         baseRepair += (item.effects.repair ?? 0) * doseRatio;
       } else if (id === "cbt") {
-        baseRepair += 1.2 * doseRatio;
-        baseChaos -= 0.9 * doseRatio;
+        baseRepair += 1.2 * doseRatio * consistencyMultiplier;
+        baseChaos -= 0.9 * doseRatio * consistencyMultiplier;
       } else if (id === "sleep") {
-        baseRepair += 1.8 * doseRatio;
-        baseDampening += 0.4 * doseRatio;
-        baseChaos -= 1.0 * doseRatio;
+        baseRepair += 1.8 * doseRatio * consistencyMultiplier;
+        baseDampening += 0.4 * doseRatio * consistencyMultiplier;
+        baseChaos -= 1.0 * doseRatio * consistencyMultiplier;
+      } else if (id === "meditation") {
+        baseDampening += 0.5 * doseRatio * consistencyMultiplier;
+        baseChaos -= 0.6 * doseRatio * consistencyMultiplier;
+        baseRepair += 0.7 * doseRatio * consistencyMultiplier;
+      } else if (id === "z2cardio") {
+        baseRepair += 0.8 * doseRatio * consistencyMultiplier;
+        baseChaos -= 0.4 * doseRatio * consistencyMultiplier;
       } else if (id === "hbot") {
         baseRepair += 1.6 * doseRatio;
         baseChaos -= 0.5 * doseRatio;
@@ -709,10 +744,6 @@ export function translateReceptorsToVectors(
         baseArousal += 0.8 * doseRatio;
         baseRepair += 0.9 * doseRatio;
         baseDampening -= 0.2 * doseRatio;
-      } else if (id === "meditation") {
-        baseDampening += 0.5 * doseRatio;
-        baseChaos -= 0.6 * doseRatio;
-        baseRepair += 0.7 * doseRatio;
       } else if (id === "lionmane") {
         baseRepair += 1.4 * doseRatio;
       } else if (id === "tms") {
@@ -792,7 +823,7 @@ export function computePharmaChemVectors(
 ): { vectors: PharmaVectors; occupancies: OccupancyResult } {
   const concentrations = calculatePlasmaConcentrations(stack, patient, elapsedHrs);
   const occupancies = calculateReceptorOccupancies(concentrations, patient);
-  const vectors = translateReceptorsToVectors(occupancies.activations, stack);
+  const vectors = translateReceptorsToVectors(occupancies.activations, stack, patient);
 
   return { vectors, occupancies };
 }

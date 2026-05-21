@@ -163,6 +163,13 @@ export interface PatientPsychometric {
   moca?: number;
 }
 
+export interface IngestionHistoryLog {
+  compoundId: string;
+  administrationsLast30Days: number; // Frequency tracking parameter
+  consecutiveDaysActive: number;     // Tracking variable for tolerance or neuroplastic compounding
+  totalDoseExposed: number;          // Cumulative load metric
+}
+
 export interface PatientProfile {
   /** Pseudonymous handle the user picks. No real names. */
   handle: string;
@@ -178,6 +185,10 @@ export interface PatientProfile {
   lifestyle: PatientLifestyle;
   pgx: PatientPharmacogenomics;
   psychometric: PatientPsychometric;
+  id?: string;
+  weightKg?: number;
+  ageYears?: number;
+  historyLogs?: IngestionHistoryLog[];
 }
 
 export const EMPTY_PROFILE: PatientProfile = {
