@@ -39,6 +39,8 @@ interface AIContextProps {
   // Temporal Engine
   simulationTimeMonths: number;
   setSimulationTimeMonths: (months: number) => void;
+  startingAge: number;
+  setStartingAge: (age: number) => void;
 
   targetedOperations: TargetedOperation[];
   setTargetedOperations: (ops: TargetedOperation[]) => void;
@@ -73,6 +75,7 @@ export function AIProvider({ children }: { children: ReactNode }) {
   const [viewPerspective, setViewPerspective] = useState<'topology' | 'anatomy' | 'pharma' | 'physics'>('topology');
   const [selectedNodeIds, setSelectedNodeIds] = useState<number[]>([]);
   const [simulationTimeMonths, setSimulationTimeMonths] = useState<number>(0);
+  const [startingAge, setStartingAge] = useState<number>(35);
   const [targetedOperations, setTargetedOperations] = useState<TargetedOperation[]>([]);
   const [fmriDataset, setFmriDataset] = useState<FmriDataset | null>(null);
   const [hydrated, setHydrated] = useState(false);
@@ -84,6 +87,7 @@ export function AIProvider({ children }: { children: ReactNode }) {
     setViewPerspective('topology');
     setSelectedNodeIds([]);
     setSimulationTimeMonths(0);
+    setStartingAge(35);
     setTargetedOperations([]);
     setFmriDataset(null);
   };
@@ -100,6 +104,7 @@ export function AIProvider({ children }: { children: ReactNode }) {
         if (typeof v.integrityScore === "number") setIntegrityScore(v.integrityScore);
         if (v.viewPerspective) setViewPerspective(v.viewPerspective);
         if (typeof v.simulationTimeMonths === "number") setSimulationTimeMonths(v.simulationTimeMonths);
+        if (typeof v.startingAge === "number") setStartingAge(v.startingAge);
       }
     } catch {
       /* ignore corrupt persisted state */
@@ -114,12 +119,12 @@ export function AIProvider({ children }: { children: ReactNode }) {
     try {
       window.localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({ activePathologies, activeStack, integrityScore, viewPerspective, simulationTimeMonths })
+        JSON.stringify({ activePathologies, activeStack, integrityScore, viewPerspective, simulationTimeMonths, startingAge })
       );
     } catch {
       /* quota / privacy mode — ignore */
     }
-  }, [activePathologies, activeStack, integrityScore, viewPerspective, simulationTimeMonths, hydrated]);
+  }, [activePathologies, activeStack, integrityScore, viewPerspective, simulationTimeMonths, startingAge, hydrated]);
 
   // Derive wisdom from the live ambient state. Pure function, cheap; no
   // need to memoize the corpus itself.
@@ -166,6 +171,7 @@ export function AIProvider({ children }: { children: ReactNode }) {
       viewPerspective, setViewPerspective,
       selectedNodeIds, setSelectedNodeIds,
       simulationTimeMonths, setSimulationTimeMonths,
+      startingAge, setStartingAge,
       targetedOperations, setTargetedOperations,
       wisdom,
       fmriDataset, setFmriDataset,

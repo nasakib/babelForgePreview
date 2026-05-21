@@ -15,7 +15,7 @@ import ReceptorOccupancy from "@/components/clinical/ReceptorOccupancy";
 const STORAGE_KEY = "babelforge:experience-simulator:v1";
 
 export default function ExperienceSimulator() {
-  const { activePathologies, setViewPerspective } = useAI();
+  const { activePathologies, setViewPerspective, startingAge } = useAI();
   const [profile, setProfile] = useState<PatientProfile>(EMPTY_PROFILE);
   const [experience, setExperience] = useState("");
   const [isSimulating, setIsSimulating] = useState(false);
@@ -57,12 +57,12 @@ export default function ExperienceSimulator() {
   useEffect(() => {
     if (!experience.trim() || !hydrated || !result) return;
     try {
-      const localData = localSimulateFallback(experience, activePathologies, profile, elapsedHrs);
+      const localData = localSimulateFallback(experience, activePathologies, profile, elapsedHrs, startingAge);
       setResult(localData);
     } catch (err) {
       console.error("Dynamic simulation update failed:", err);
     }
-  }, [elapsedHrs, activePathologies, profile, hydrated]);
+  }, [elapsedHrs, activePathologies, profile, hydrated, startingAge]);
 
   const handleSimulate = async () => {
     if (!experience.trim()) return;
@@ -70,7 +70,7 @@ export default function ExperienceSimulator() {
 
     try {
       // Local simulation incorporates clinical genetics, vitals, labs, and psychometrics, ensuring absolute data privacy and physical correctness
-      const localData = localSimulateFallback(experience, activePathologies, profile, elapsedHrs);
+      const localData = localSimulateFallback(experience, activePathologies, profile, elapsedHrs, startingAge);
       setResult(localData);
       setViewPerspective("pharma"); // Switch to effect view
     } catch (err) {
@@ -437,7 +437,7 @@ const ARCHETYPES: Archetype[] = [
   }
 ];
 
-function localSimulateFallback(experience: string, pathologies: string[], profile: PatientProfile, elapsedHrs = 0): any {
+function localSimulateFallback(experience: string, pathologies: string[], profile: PatientProfile, elapsedHrs = 0, startingAge = 35): any {
   const text = experience.toLowerCase();
   const matches: Archetype[] = [];
 
@@ -527,7 +527,7 @@ function localSimulateFallback(experience: string, pathologies: string[], profil
   const patientParams = {
     weightKg: profile.demographics?.weightKg ?? 70,
     toleranceMonths: 0,
-    ageYears: profile.demographics?.ageYears ?? 35,
+    ageYears: startingAge || (profile.demographics?.ageYears ?? 35),
     simulationTimeMonths: 0,
     profile,
     elapsedHrs

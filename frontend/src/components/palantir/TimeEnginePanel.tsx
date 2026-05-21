@@ -5,7 +5,7 @@ import DraggablePanel from "./DraggablePanel";
 import { useEffect, useState, useRef } from "react";
 
 export default function TimeEnginePanel() {
-  const { simulationTimeMonths, setSimulationTimeMonths } = useAI();
+  const { simulationTimeMonths, setSimulationTimeMonths, startingAge, setStartingAge } = useAI();
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1); // months per second
   const lastUpdateRef = useRef<number>(0);
@@ -42,8 +42,8 @@ export default function TimeEnginePanel() {
       id="time-engine-panel"
       title="Temporal Dynamics Engine"
       subtitle="Predictive Structural Drift"
-      defaultPosition={{ x: typeof window !== "undefined" ? window.innerWidth / 2 - 200 : 400, y: typeof window !== "undefined" ? window.innerHeight - 250 : 600 }}
-      defaultSize={{ width: 400, height: 180 }}
+      defaultPosition={{ x: typeof window !== "undefined" ? window.innerWidth / 2 - 200 : 400, y: typeof window !== "undefined" ? window.innerHeight - 300 : 600 }}
+      defaultSize={{ width: 400, height: 250 }}
     >
       <div className="p-4 flex flex-col gap-4">
         <p className="text-xs text-ink-subtle leading-relaxed">
@@ -63,7 +63,7 @@ export default function TimeEnginePanel() {
               )}
             </button>
             <button 
-              onClick={() => setSimulationTimeMonths(0)} 
+              onClick={() => { setSimulationTimeMonths(0); }} 
               className="text-[10px] font-mono uppercase tracking-widest text-ink-muted hover:text-ink transition-colors"
             >
               Reset
@@ -85,7 +85,7 @@ export default function TimeEnginePanel() {
           </div>
         </div>
 
-        <div className="relative pt-4">
+        <div className="relative pt-2">
           <div className="flex justify-between items-baseline mb-1">
             <span className="text-[10px] font-bold text-accent-400 uppercase tracking-widest">T+ Time Horizon</span>
             <span className="font-mono text-sm text-ink">{simulationTimeMonths.toFixed(1)} <span className="text-ink-muted text-[10px]">Months</span></span>
@@ -103,6 +103,29 @@ export default function TimeEnginePanel() {
           <div className="flex justify-between mt-1 text-[9px] font-mono text-ink-subtle">
             <span>Now</span>
             <span>10 Yrs</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 pt-2 border-t border-line/30">
+          <div className="flex flex-col gap-1">
+            <div className="flex justify-between items-baseline">
+              <span className="text-[10px] font-bold text-ink-muted uppercase">Starting Age</span>
+              <span className="font-mono text-xs text-ink font-semibold">{startingAge} Yrs</span>
+            </div>
+            <input
+              type="range"
+              className="slider-clinical w-full"
+              min={18}
+              max={100}
+              step={1}
+              value={startingAge}
+              onChange={(e) => setStartingAge(Number(e.target.value))}
+              style={{ accentColor: '#a855f7' }}
+            />
+          </div>
+          <div className="flex flex-col justify-end text-[10.5px] font-mono text-ink-subtle leading-tight">
+            <div>Effective Age: <span className="text-ink font-bold">{(startingAge + simulationTimeMonths / 12).toFixed(1)} Yrs</span></div>
+            <div className="text-[9px] text-ink-muted mt-0.5">Tracks age-related coupling decay.</div>
           </div>
         </div>
       </div>

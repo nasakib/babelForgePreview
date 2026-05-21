@@ -28,6 +28,8 @@ export default function StackSimulator() {
     setViewPerspective,
     simulationTimeMonths,
     activePathologies,
+    startingAge,
+    setStartingAge,
   } = useAI();
   const [leftMinimized, setLeftMinimized] = useState(false);
 
@@ -39,7 +41,6 @@ export default function StackSimulator() {
   const [classFilter, setClassFilter] = useState("all");
   const [interventionMode, setInterventionMode] = useState<"pharma" | "vanilla" | "holistic">("holistic");
   const [selectedMolId, setSelectedMolId] = useState(molecules[0]?.id || "");
-  const [startingAge, setStartingAge] = useState(35);
   const [profile, setProfile] = useState<PatientProfile>(EMPTY_PROFILE);
   const [hydrated, setHydrated] = useState(false);
 

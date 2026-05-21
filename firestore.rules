@@ -1,0 +1,104 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper validation functions
+    function isValidSubject(data) {
+      return data.subjectId is string &&
+             data.treatmentResistanceStatus in [0, 1] &&
+             data.demographics.age is number &&
+             data.demographics.age >= 18 &&
+             data.demographics.age <= 120;
+    }
+    
+    function isValidFingerprint(data) {
+      return data.scanId is string &&
+             data.subjectId is string &&
+             data.timestamp is number &&
+             data.fingerprintMatrix is list;
+    }
+
+    function isValidBoundaryState(data) {
+      return data.stateId is string &&
+             data.simId is string &&
+             data.timestamp is number &&
+             data.mutualInformationMatrix is list;
+    }
+
+    function isValidBulkTopology(data) {
+      return data.topologyId is string &&
+             data.simId is string &&
+             data.activeVertexCount is number &&
+             data.boundaryOperatorsSparse is list;
+    }
+
+    function isValidDiagnostics(data) {
+      return data.diagnosticId is string &&
+             data.simId is string &&
+             data.generalizationCapacity.scorePercent is number &&
+             data.generalizationCapacity.scorePercent >= 0 &&
+             data.generalizationCapacity.scorePercent <= 100;
+    }
+
+    function isValidBiomarkerForge(data) {
+      return data.forgeId is string &&
+             data.simId is string &&
+             data.modelMetrics.accuracy is number &&
+             data.modelMetrics.accuracy >= 0 &&
+             data.modelMetrics.accuracy <= 1;
+    }
+
+    function isValidLogosSieve(data) {
+      return data.sieveId is string &&
+             data.simId is string &&
+             data.topFeatures is list;
+    }
+
+    // ============================================================================
+    // 1. SUBJECTS & SPECTRAL SCANS
+    // ============================================================================
+    
+    match /subjects/{subjectId} {
+      allow read, write: if true; // In production, require authenticated medical practitioners
+      allow create, update: if isValidSubject(request.resource.data);
+      
+      match /fourier_fingerprints/{scanId} {
+        allow read, write: if true;
+        allow create, update: if isValidFingerprint(request.resource.data);
+      }
+    }
+
+    // ============================================================================
+    // 2. SIMULATIONS SUBCOLLECTIONS (BOUNDARY, BULK, DIAGNOSTICS)
+    // ============================================================================
+    
+    match /simulations/{simId} {
+      allow read, write: if true;
+      
+      match /boundary_states/{stateId} {
+        allow read, write: if true;
+        allow create, update: if isValidBoundaryState(request.resource.data);
+      }
+      
+      match /bulk_topology/{topologyId} {
+        allow read, write: if true;
+        allow create, update: if isValidBulkTopology(request.resource.data);
+      }
+      
+      match /diagnostics/{diagnosticId} {
+        allow read, write: if true;
+        allow create, update: if isValidDiagnostics(request.resource.data);
+      }
+      
+      match /biomarker_forges/{forgeId} {
+        allow read, write: if true;
+        allow create, update: if isValidBiomarkerForge(request.resource.data);
+      }
+      
+      match /logos_sieves/{sieveId} {
+        allow read, write: if true;
+        allow create, update: if isValidLogosSieve(request.resource.data);
+      }
+    }
+  }
+}

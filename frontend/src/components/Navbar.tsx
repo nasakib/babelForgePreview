@@ -6,18 +6,19 @@ import { usePathname } from 'next/navigation';
 
 const NAV_ITEMS: { href: string; label: string; code: string }[] = [
   { href: '/',                  label: 'Console',         code: 'F1' },
-  { href: '/stack-simulator',   label: 'Stack Builder',   code: 'F2' },
-  { href: '/compounds',         label: 'Compound Library',code: 'F3' },
-  { href: '/signal-analyzer',   label: 'Signal Analyzer', code: 'F4' },
-  { href: '/fmri-analysis',     label: 'fMRI Ingest',     code: 'F5' },
-  { href: '/anomaly-scan',      label: 'Anomaly Scan',    code: 'F6' },
-  { href: '/11d-projection',    label: '11D Topology',    code: 'F7' },
-  { href: '/pharma-projection', label: 'Pharma Projection',code: 'F8'},
-  { href: '/studies',           label: 'Validation',      code: 'F9' },
-  { href: '/fourier',           label: 'Fourier',         code: 'F10' },
-  { href: '/procedures',        label: 'Procedures',      code: 'F11' },
-  { href: '/resources',         label: 'Resources',       code: 'F12' },
-  { href: '/experience-simulator', label: 'Reaction Sim', code: 'F13' },
+  { href: '/holographic-dashboard', label: 'Holographic DB', code: 'F2' },
+  { href: '/stack-simulator',   label: 'Stack Builder',   code: 'F3' },
+  { href: '/compounds',         label: 'Compound Library',code: 'F4' },
+  { href: '/signal-analyzer',   label: 'Signal Analyzer', code: 'F5' },
+  { href: '/fmri-analysis',     label: 'fMRI Ingest',     code: 'F6' },
+  { href: '/anomaly-scan',      label: 'Anomaly Scan',    code: 'F7' },
+  { href: '/11d-projection',    label: '11D Topology',    code: 'F8' },
+  { href: '/pharma-projection', label: 'Pharma Projection',code: 'F9'},
+  { href: '/studies',           label: 'Validation',      code: 'F10' },
+  { href: '/fourier',           label: 'Fourier',         code: 'F11' },
+  { href: '/procedures',        label: 'Procedures',      code: 'F12' },
+  { href: '/resources',         label: 'Resources',       code: 'F13' },
+  { href: '/experience-simulator', label: 'Reaction Sim', code: 'F14' },
 ];
 
 export default function Navbar() {
