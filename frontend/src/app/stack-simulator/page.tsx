@@ -347,6 +347,9 @@ export default function StackSimulator() {
                   <span className="bg-accent-500/20 text-accent-400 text-[8px] font-extrabold px-1.5 py-0.5 rounded ml-2 align-middle border border-accent-500/30">corrective</span>
                 ) : null);
 
+                const originalMol = molecules.find((m) => m.id === mol.id);
+                const regimen = originalMol?.regimen;
+
                 return (
                   <div key={mol.id} className={`stack-item flex flex-col p-3 rounded-clinical border ${bgClass} shadow-sm gap-2`}>
                     <div className="flex items-center justify-between">
@@ -355,6 +358,20 @@ export default function StackSimulator() {
                             <div>
                                 <h4 className="font-bold text-xs text-ink">{mol.name}</h4>
                                 <p className={`text-[9px] uppercase tracking-widest font-bold ${colorClass}`}>{mol.classLabel}{badge}</p>
+                                {regimen && (
+                                  <div className="flex items-center flex-wrap gap-1.5 mt-1 text-[9px] font-mono text-ink-subtle">
+                                    <span className={`px-1.5 py-0.5 rounded text-[7.5px] font-extrabold uppercase border ${
+                                      regimen.frequency === 'daily'
+                                        ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                                        : 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+                                    }`}>
+                                      {regimen.frequency === 'daily' ? 'Daily' : 'PRN'}
+                                    </span>
+                                    <span className="text-ink-muted">
+                                      Limits: {regimen.standardRange.min}–{regimen.standardRange.max} {regimen.standardRange.unit}
+                                    </span>
+                                  </div>
+                                )}
                             </div>
                         </div>
                         <button onClick={() => removeFromStack(mol.id)} aria-label="Remove" className="text-ink-muted hover:text-crit p-1 self-start">

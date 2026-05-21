@@ -82,9 +82,18 @@ export default function CompoundsDirectory() {
                     />
                     <div>
                       <h4 className="font-bold text-sm text-ink transition-colors">{mol.name}</h4>
-                      <p className={`text-[10px] uppercase tracking-widest font-bold ${colorClass}`}>
-                        {mol.classLabel}
-                        {isBabel && <span className="bg-accent-500/20 text-accent-400 text-[8px] font-extrabold px-1.5 py-0.5 rounded ml-2 align-middle border border-accent-500/30">babelForge</span>}
+                      <p className={`text-[10px] uppercase tracking-widest font-bold ${colorClass} flex flex-wrap items-center gap-1.5 mt-0.5`}>
+                        <span>{mol.classLabel}</span>
+                        {isBabel && <span className="bg-accent-500/20 text-accent-400 text-[8px] font-extrabold px-1.5 py-0.5 rounded border border-accent-500/30">babelForge</span>}
+                        {mol.regimen && (
+                          <span className={`text-[8px] font-bold uppercase tracking-wider px-1 py-0.5 rounded border ${
+                            mol.regimen.frequency === 'daily'
+                              ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                              : 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+                          }`}>
+                            {mol.regimen.frequency}
+                          </span>
+                        )}
                       </p>
                     </div>
                   </div>
@@ -137,6 +146,16 @@ export default function CompoundsDirectory() {
                       {selectedMol.addictionPotential ? `${(selectedMol.addictionPotential * 100).toFixed(0)}%` : 'Negligible'}
                     </span>
                   </div>
+                  {selectedMol.regimen && (
+                    <div className="clinical-card px-4 py-2 rounded-clinical text-center md:text-left shadow-sm">
+                      <span className="block text-[10px] uppercase tracking-widest font-bold text-ink-muted mb-1">Dosing Regimen</span>
+                      <span className={`text-sm font-bold capitalize ${
+                        selectedMol.regimen.frequency === 'daily' ? 'text-emerald-400' : 'text-amber-400'
+                      }`}>
+                        {selectedMol.regimen.frequency} ({selectedMol.regimen.standardRange.min}–{selectedMol.regimen.standardRange.max} {selectedMol.regimen.standardRange.unit})
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

@@ -1,6 +1,15 @@
 import type { PatientProfile } from "@/lib/patient/profile";
 import type { PharmaVectors } from "./stackVectors";
 
+export type LigandClass = 'CLASSIC_SMALL' | 'BIVALENT_MACROCYCLIC' | 'CONFORMATIONAL_SHIELDED' | 'CLEAVABLE_CONJUGATE';
+
+export interface AdvancedLigandPhysics {
+  cooperativityAlpha?: number;       // Homodimer/Heterodimer cross-linking potency multiplier
+  shieldingFactor?: number;          // CYP enzyme avoidance attenuation multiplier
+  intramolecularHBDMasking?: boolean;// Overrides high TPSA limits via lipophilic folding
+  cleavablePayloadId?: string;       // Secondary target release string
+}
+
 export interface ReceptorProfile {
   DAT: number;  // Ki in nM (lower = stronger binding)
   SERT: number;
@@ -12,14 +21,40 @@ export interface ReceptorProfile {
   ADRA2A: number; // Alpha-2A adrenergic
 }
 
+export interface DosingRegimen {
+  frequency: 'daily' | 'prn';
+  standardRange: { min: number; max: number; unit: string };
+}
+
+export interface EnsembleDistribution {
+  targetProfile: string;               // Target receptor identifier (e.g., 'TrkB', 'sigma1')
+  ensembleFraction: number;            // Percentage of active ensemble presenting the pharmacophore
+  intrinsicEfficacy: number;           // Agonist (>0) or Antagonist (<0) scalar
+}
+
+export interface CatalyticKinetics {
+  transcriptionTriggerThreshold: number; // Minimum concentration required to trip CREB cascade execution
+  selfInductionFeedbackCoeff: number;    // Scalar driving targeted auto-clearance feedback velocity
+}
+
 export interface CompoundProperties {
   id: string;
   name: string;
   class: string;
+  ligandType?: LigandClass;           // Optional type enforcement node
   halfLifeHrs: number;
   cypEnzymes: string[]; // CYP2D6, CYP2C19, CYP3A4, CYP1A2, etc.
   receptors: Partial<ReceptorProfile>;
   efficacy: Partial<Record<keyof ReceptorProfile, number>>; // agonist (>0), antagonist (<0), transporter releasing (>1)
+  advancedPhysics?: AdvancedLigandPhysics; // Optional advanced simulation block
+  
+  // --- ADAPTIVE MOLECULAR PROGRAM & DOSING SCHEDULE ADDITIONS ---
+  regimen?: DosingRegimen;             // Dosing frequency taxonomy and limits
+  adjacencyMatrix?: number[][];        // Graph-native definition overriding SMILES path dependencies
+  pharmacophoreNodes?: string[];       // Annotated node mapping keys
+  conformationalFaultTolerance?: number; // Metric tracking ensemble diversity bounds
+  ensembleOccupancy?: EnsembleDistribution[]; // Replaces single-pose pocket configurations
+  catalyticPK?: CatalyticKinetics;    // Controls pulse trigger-and-exit clearing curves
 }
 
 // ----------------------------------------------------------------------------
@@ -30,7 +65,12 @@ export const COMPOUND_DATABASE: Record<string, CompoundProperties> = {
   spur01: {
     id: "spur01", name: "SPUR-1 Ontological Reducer", class: "novel", halfLifeHrs: 0.168, cypEnzymes: ["CYP3A4"],
     receptors: { MOR: 0.2, HT2A: 1.5, NMDA: 150 },
-    efficacy: { MOR: 1.4, HT2A: -1.0, NMDA: -0.4 }
+    efficacy: { MOR: 1.4, HT2A: -1.0, NMDA: -0.4 },
+    ligandType: "CONFORMATIONAL_SHIELDED",
+    advancedPhysics: {
+      shieldingFactor: 1000.0,
+      intramolecularHBDMasking: true
+    }
   },
   spur_mtdl: {
     id: "spur_mtdl",
@@ -39,7 +79,30 @@ export const COMPOUND_DATABASE: Record<string, CompoundProperties> = {
     halfLifeHrs: 6.8,
     cypEnzymes: ["CYP3A4"],
     receptors: { MOR: 0.2, HT2A: 2000, NMDA: 2000 },
-    efficacy: { MOR: 1.4, HT2A: -1.0, NMDA: -0.4 }
+    efficacy: { MOR: 1.4, HT2A: -1.0, NMDA: -0.4 },
+    ligandType: "BIVALENT_MACROCYCLIC",
+    advancedPhysics: {
+      cooperativityAlpha: 2.5
+    },
+    regimen: { frequency: 'prn', standardRange: { min: 5, max: 25, unit: "mg" } },
+    adjacencyMatrix: [
+      [0, 1, 0, 1, 0],
+      [1, 0, 1, 0, 0],
+      [0, 1, 0, 1, 1],
+      [1, 0, 1, 0, 0],
+      [0, 0, 1, 0, 0]
+    ],
+    pharmacophoreNodes: ["MOR-pharmacophore", "HT2A-pharmacophore", "NMDA-pharmacophore"],
+    conformationalFaultTolerance: 0.85,
+    ensembleOccupancy: [
+      { targetProfile: "MOR", ensembleFraction: 0.85, intrinsicEfficacy: 1.4 },
+      { targetProfile: "HT2A", ensembleFraction: 0.10, intrinsicEfficacy: -1.0 },
+      { targetProfile: "NMDA", ensembleFraction: 0.05, intrinsicEfficacy: -0.4 }
+    ],
+    catalyticPK: {
+      transcriptionTriggerThreshold: 15.0,
+      selfInductionFeedbackCoeff: 0.25
+    }
   },
   zb01: {
     id: "zb01", name: "ZenBud™ (ZB-01)", class: "novel", halfLifeHrs: 18, cypEnzymes: ["CYP3A4"],
@@ -90,35 +153,43 @@ export const COMPOUND_DATABASE: Record<string, CompoundProperties> = {
   // --- SSRIs & SNRIs ---
   sert: {
     id: "sert", name: "Sertraline", class: "ssri", halfLifeHrs: 26, cypEnzymes: ["CYP2C19", "CYP3A4"],
-    receptors: { SERT: 0.3 }, efficacy: { SERT: 1.0 }
+    receptors: { SERT: 0.3 }, efficacy: { SERT: 1.0 },
+    regimen: { frequency: 'daily', standardRange: { min: 50, max: 200, unit: "mg" } }
   },
   fluox: {
     id: "fluox", name: "Fluoxetine", class: "ssri", halfLifeHrs: 72, cypEnzymes: ["CYP2D6", "CYP2C19"],
-    receptors: { SERT: 1.0 }, efficacy: { SERT: 1.0 }
+    receptors: { SERT: 1.0 }, efficacy: { SERT: 1.0 },
+    regimen: { frequency: 'daily', standardRange: { min: 20, max: 80, unit: "mg" } }
   },
   escit: {
     id: "escit", name: "Escitalopram", class: "ssri", halfLifeHrs: 30, cypEnzymes: ["CYP2C19", "CYP3A4"],
-    receptors: { SERT: 1.1 }, efficacy: { SERT: 1.0 }
+    receptors: { SERT: 1.1 }, efficacy: { SERT: 1.0 },
+    regimen: { frequency: 'daily', standardRange: { min: 5, max: 20, unit: "mg" } }
   },
   venla: {
     id: "venla", name: "Venlafaxine", class: "ssri", halfLifeHrs: 5, cypEnzymes: ["CYP2D6"],
-    receptors: { SERT: 80, NET: 1000 }, efficacy: { SERT: 1.0, NET: 0.3 }
+    receptors: { SERT: 80, NET: 1000 }, efficacy: { SERT: 1.0, NET: 0.3 },
+    regimen: { frequency: 'daily', standardRange: { min: 37.5, max: 225, unit: "mg" } }
   },
   dulox: {
     id: "dulox", name: "Duloxetine", class: "ssri", halfLifeHrs: 12, cypEnzymes: ["CYP2D6"],
-    receptors: { SERT: 0.8, NET: 7.5 }, efficacy: { SERT: 1.0, NET: 0.8 }
+    receptors: { SERT: 0.8, NET: 7.5 }, efficacy: { SERT: 1.0, NET: 0.8 },
+    regimen: { frequency: 'daily', standardRange: { min: 30, max: 120, unit: "mg" } }
   },
   citalo: {
     id: "citalo", name: "Citalopram", class: "ssri", halfLifeHrs: 35, cypEnzymes: ["CYP2C19"],
-    receptors: { SERT: 1.5 }, efficacy: { SERT: 1.0 }
+    receptors: { SERT: 1.5 }, efficacy: { SERT: 1.0 },
+    regimen: { frequency: 'daily', standardRange: { min: 10, max: 40, unit: "mg" } }
   },
   parox: {
     id: "parox", name: "Paroxetine", class: "ssri", halfLifeHrs: 21, cypEnzymes: ["CYP2D6"],
-    receptors: { SERT: 0.1 }, efficacy: { SERT: 1.0 }
+    receptors: { SERT: 0.1 }, efficacy: { SERT: 1.0 },
+    regimen: { frequency: 'daily', standardRange: { min: 10, max: 60, unit: "mg" } }
   },
   fluvox: {
     id: "fluvox", name: "Fluvoxamine", class: "ssri", halfLifeHrs: 15, cypEnzymes: ["CYP2D6", "CYP1A2"],
-    receptors: { SERT: 2.2 }, efficacy: { SERT: 1.0 }
+    receptors: { SERT: 2.2 }, efficacy: { SERT: 1.0 },
+    regimen: { frequency: 'daily', standardRange: { min: 50, max: 300, unit: "mg" } }
   },
   bupropion: {
     id: "bupropion", name: "Bupropion", class: "stimulant", halfLifeHrs: 20, cypEnzymes: ["CYP2B6"],
@@ -126,11 +197,13 @@ export const COMPOUND_DATABASE: Record<string, CompoundProperties> = {
   },
   mirtaz: {
     id: "mirtaz", name: "Mirtazapine", class: "ssri", halfLifeHrs: 30, cypEnzymes: ["CYP2D6"],
-    receptors: { HT2A: 30 }, efficacy: { HT2A: -0.85 }
+    receptors: { HT2A: 30 }, efficacy: { HT2A: -0.85 },
+    regimen: { frequency: 'daily', standardRange: { min: 15, max: 45, unit: "mg" } }
   },
   traz: {
     id: "traz", name: "Trazodone", class: "ssri", halfLifeHrs: 7, cypEnzymes: ["CYP3A4"],
-    receptors: { HT2A: 35, SERT: 160 }, efficacy: { HT2A: -0.9, SERT: 0.5 }
+    receptors: { HT2A: 35, SERT: 160 }, efficacy: { HT2A: -0.9, SERT: 0.5 },
+    regimen: { frequency: 'daily', standardRange: { min: 50, max: 300, unit: "mg" } }
   },
 
   // --- STIMULANTS & EUGEROICS ---
@@ -204,7 +277,8 @@ export const COMPOUND_DATABASE: Record<string, CompoundProperties> = {
   // --- DEPRESSANTS, BENZOS & OPIOIDS ---
   alpraz: {
     id: "alpraz", name: "Alprazolam", class: "depressant", halfLifeHrs: 11, cypEnzymes: ["CYP3A4"],
-    receptors: { GABAA: 2 }, efficacy: { GABAA: 1.0 }
+    receptors: { GABAA: 2 }, efficacy: { GABAA: 1.0 },
+    regimen: { frequency: 'prn', standardRange: { min: 0.25, max: 2.0, unit: "mg" } }
   },
   clonaz: {
     id: "clonaz", name: "Clonazepam", class: "depressant", halfLifeHrs: 30, cypEnzymes: ["CYP3A4"],
@@ -348,23 +422,60 @@ export function calculatePlasmaConcentrations(
     const ageMultiplier = effectiveAge > 65 ? 1.3 : 1.0;
     let finalHalfLife = baseHalfLife * pgxMultiplier * ageMultiplier;
 
+    if (props?.advancedPhysics?.shieldingFactor && props.ligandType === 'CONFORMATIONAL_SHIELDED') {
+      // Prolong functional stability based on dynamic structural steric blocking
+      finalHalfLife *= props.advancedPhysics.shieldingFactor;
+    }
+
     if (id === "spur01") {
       finalHalfLife *= 1000.0; // 1000x clearance latency from rapid rotational masking
     }
 
+    if (props?.catalyticPK?.selfInductionFeedbackCoeff !== undefined) {
+      const autoClearanceVelocity = 1.0 + (props.catalyticPK.selfInductionFeedbackCoeff * (elapsedHrs / 24.0));
+      finalHalfLife /= autoClearanceVelocity;
+    }
+
+    // Safeguard against zero/NaN/negative half-lives
+    const safeHalfLife = Math.max(0.01, isNaN(finalHalfLife) || finalHalfLife <= 0 ? baseHalfLife : finalHalfLife);
+
     // Elimination rate constant
-    const ke = Math.log(2) / finalHalfLife;
+    const ke = Math.log(2) / safeHalfLife;
 
     // Initial Peak Concentration (linear dose mapping to base reference index)
     // 0..3 maps to concentration units
     const C0 = intensity * weightFactor * 10.0;
 
     // Concentration decay over time
-    let C = C0 * Math.exp(-ke * elapsedHrs);
+    let C = 0;
+    if (props?.regimen?.frequency === 'daily') {
+      const tau = 24.0;
+      const n = Math.max(1, Math.floor(elapsedHrs / tau) + 1);
+      const t_current = elapsedHrs % tau;
+      const denom = 1.0 - Math.exp(-ke * tau);
+      let accumulationFactor = 0;
+      if (Math.abs(denom) < 1e-5) {
+        accumulationFactor = n;
+      } else {
+        accumulationFactor = (1.0 - Math.exp(-n * ke * tau)) / denom;
+      }
+      C = C0 * accumulationFactor * Math.exp(-ke * t_current);
+    } else {
+      // standard transient PRN single-dose decay
+      C = C0 * Math.exp(-ke * elapsedHrs);
+    }
+
     if (id === "spur_mtdl" && elapsedHrs === 4) {
       C = C0 * 0.62; // Force exactly 62% survival at T+4 hour mark as specified
     }
     concentrations[id] = C;
+
+    // Signal transcriptional cascade initiation flag
+    if (props?.catalyticPK?.transcriptionTriggerThreshold !== undefined) {
+      if (C >= props.catalyticPK.transcriptionTriggerThreshold) {
+        concentrations[id + "_cascade_active"] = 1.0;
+      }
+    }
 
     // Map Central Partition Scaling inside calculation loops
     if (id === "spur_mtdl") {
@@ -441,8 +552,25 @@ export function calculateReceptorOccupancies(
     for (const drugId in concentrations) {
       const props = COMPOUND_DATABASE[drugId];
       if (props && props.receptors && props.receptors[r] !== undefined) {
-        const C = concentrations[drugId];
+        let C = concentrations[drugId];
+
+        // Ensemble subpopulation concentration allocation
+        if (props.ensembleOccupancy && props.ensembleOccupancy.length > 0) {
+          const structuralMatch = props.ensembleOccupancy.find(e => e.targetProfile === r);
+          if (structuralMatch) {
+            C = C * structuralMatch.ensembleFraction;
+          } else {
+            C = 0; // Remainder of ensemble does not present the pharmacophore for this receptor
+          }
+        }
+
         const Ki = props.receptors[r]! * rKiMultiplier;
+
+        // Apply bivalent potency amplification (local concentration scaling)
+        if (props.advancedPhysics?.cooperativityAlpha && props.ligandType === 'BIVALENT_MACROCYCLIC') {
+          C *= props.advancedPhysics.cooperativityAlpha;
+        }
+
         competitiveSum += C / Ki;
       }
     }
@@ -452,9 +580,27 @@ export function calculateReceptorOccupancies(
     for (const drugId in concentrations) {
       const props = COMPOUND_DATABASE[drugId];
       if (props && props.receptors && props.receptors[r] !== undefined) {
-        const C = concentrations[drugId];
+        let C = concentrations[drugId];
+        let eps = (props.efficacy[r] ?? 1.0) * rEfficacyMultiplier;
+
+        // Ensemble subpopulation concentration and intrinsic efficacy allocation
+        if (props.ensembleOccupancy && props.ensembleOccupancy.length > 0) {
+          const structuralMatch = props.ensembleOccupancy.find(e => e.targetProfile === r);
+          if (structuralMatch) {
+            C = C * structuralMatch.ensembleFraction;
+            eps = structuralMatch.intrinsicEfficacy * rEfficacyMultiplier;
+          } else {
+            C = 0;
+            eps = 0;
+          }
+        }
+
         const Ki = props.receptors[r]! * rKiMultiplier;
-        const eps = (props.efficacy[r] ?? 1.0) * rEfficacyMultiplier;
+
+        // Apply bivalent potency amplification (local concentration scaling)
+        if (props.advancedPhysics?.cooperativityAlpha && props.ligandType === 'BIVALENT_MACROCYCLIC') {
+          C *= props.advancedPhysics.cooperativityAlpha;
+        }
 
         // Fractional occupancy: (C/Ki) / (1 + sum(C_j/K_j))
         const occ = (C / Ki) / (1 + competitiveSum);

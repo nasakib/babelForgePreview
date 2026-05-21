@@ -16,7 +16,8 @@ export const molecules = [
       isBabelForge: true, 
       svg: svgMtdl, 
       halfLife: 'medium', 
-      effects: { arousal: -0.2, dampening: 0.5, chaos: -1.8, repair: 3.5 } 
+      effects: { arousal: -0.2, dampening: 0.5, chaos: -1.8, repair: 3.5 },
+      regimen: { frequency: 'prn', standardRange: { min: 5, max: 25, unit: 'mg' } }
     },
     { 
       id: 'spur01', 
@@ -39,17 +40,17 @@ export const molecules = [
     { id: 'lsd', name: 'LSD', class: 'novel', classLabel: 'Classic Psychedelic', isBabelForge: true, svg: svgIndole, halfLife: 'medium', effects: { arousal: 0.7, dampening: -0.1, chaos: 1.4, repair: 0.4 } },
     
     // SSRIs, SNRIs & Antidepressants
-    { id: 'sert', name: 'Sertraline', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.2, dampening: 0.8, chaos: -0.1, repair: 0.0 } },
-    { id: 'fluox', name: 'Fluoxetine', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.1, dampening: 0.7, chaos: 0.0, repair: 0.0 } },
-    { id: 'escit', name: 'Escitalopram', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.3, dampening: 0.9, chaos: -0.2, repair: 0.0 } },
-    { id: 'venla', name: 'Venlafaxine', class: 'ssri', classLabel: 'SNRI', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: 0.1, dampening: 0.6, chaos: 0.0, repair: 0.0 } },
-    { id: 'dulox', name: 'Duloxetine', class: 'ssri', classLabel: 'SNRI', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: 0.2, dampening: 0.5, chaos: 0.1, repair: 0.0 } },
-    { id: 'citalo', name: 'Citalopram', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.2, dampening: 0.8, chaos: -0.1, repair: 0.0 } },
-    { id: 'parox', name: 'Paroxetine', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.4, dampening: 1.0, chaos: -0.2, repair: 0.0 } },
-    { id: 'fluvox', name: 'Fluvoxamine', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.5, dampening: 1.1, chaos: -0.1, repair: 0.0 } },
+    { id: 'sert', name: 'Sertraline', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.2, dampening: 0.8, chaos: -0.1, repair: 0.0 }, regimen: { frequency: 'daily', standardRange: { min: 50, max: 200, unit: 'mg' } } },
+    { id: 'fluox', name: 'Fluoxetine', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.1, dampening: 0.7, chaos: 0.0, repair: 0.0 }, regimen: { frequency: 'daily', standardRange: { min: 20, max: 80, unit: 'mg' } } },
+    { id: 'escit', name: 'Escitalopram', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.3, dampening: 0.9, chaos: -0.2, repair: 0.0 }, regimen: { frequency: 'daily', standardRange: { min: 5, max: 20, unit: 'mg' } } },
+    { id: 'venla', name: 'Venlafaxine', class: 'ssri', classLabel: 'SNRI', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: 0.1, dampening: 0.6, chaos: 0.0, repair: 0.0 }, regimen: { frequency: 'daily', standardRange: { min: 37.5, max: 225, unit: 'mg' } } },
+    { id: 'dulox', name: 'Duloxetine', class: 'ssri', classLabel: 'SNRI', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: 0.2, dampening: 0.5, chaos: 0.1, repair: 0.0 }, regimen: { frequency: 'daily', standardRange: { min: 30, max: 120, unit: 'mg' } } },
+    { id: 'citalo', name: 'Citalopram', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.2, dampening: 0.8, chaos: -0.1, repair: 0.0 }, regimen: { frequency: 'daily', standardRange: { min: 10, max: 40, unit: 'mg' } } },
+    { id: 'parox', name: 'Paroxetine', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.4, dampening: 1.0, chaos: -0.2, repair: 0.0 }, regimen: { frequency: 'daily', standardRange: { min: 10, max: 60, unit: 'mg' } } },
+    { id: 'fluvox', name: 'Fluvoxamine', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.5, dampening: 1.1, chaos: -0.1, repair: 0.0 }, regimen: { frequency: 'daily', standardRange: { min: 50, max: 300, unit: 'mg' } } },
     { id: 'bupropion', name: 'Bupropion', class: 'stimulant', classLabel: 'NDRI', svg: svgPhen, halfLife: 'medium', effects: { arousal: 0.9, dampening: -0.1, chaos: 0.2, repair: 0.1 } },
-    { id: 'mirtaz', name: 'Mirtazapine', class: 'ssri', classLabel: 'TeCA / NaSSA', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.8, dampening: 1.2, chaos: -0.1, repair: 0.1 } },
-    { id: 'traz', name: 'Trazodone', class: 'ssri', classLabel: 'SARI', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -1.0, dampening: 1.4, chaos: 0.1, repair: 0.0 } },
+    { id: 'mirtaz', name: 'Mirtazapine', class: 'ssri', classLabel: 'TeCA / NaSSA', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.8, dampening: 1.2, chaos: -0.1, repair: 0.1 }, regimen: { frequency: 'daily', standardRange: { min: 15, max: 45, unit: 'mg' } } },
+    { id: 'traz', name: 'Trazodone', class: 'ssri', classLabel: 'SARI', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -1.0, dampening: 1.4, chaos: 0.1, repair: 0.0 }, regimen: { frequency: 'daily', standardRange: { min: 50, max: 300, unit: 'mg' } } },
     
     // Stimulants & Wakefulness
     { id: 'amph', name: 'Amphetamine Salts', class: 'stimulant', classLabel: 'Stimulant', svg: svgPhen, halfLife: 'medium', addictionPotential: 0.7, effects: { arousal: 1.5, dampening: -0.5, chaos: 0.8, repair: -0.2 } },
@@ -91,7 +92,7 @@ export const molecules = [
     { id: 'cbdp', name: 'Cannabidiphorol (CBDP)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, halfLife: 'medium', effects: { arousal: -0.3, dampening: 0.8, chaos: -0.2, repair: 0.2 } },
     
     // Depressants / Benzos / Gabapentinoids / Z-Drugs / Opioids
-    { id: 'alpraz', name: 'Alprazolam', class: 'depressant', classLabel: 'Benzodiazepine', svg: svgTricyclic, halfLife: 'medium', addictionPotential: 0.8, effects: { arousal: -1.2, dampening: 1.4, chaos: -0.6, repair: -0.3 } },
+    { id: 'alpraz', name: 'Alprazolam', class: 'depressant', classLabel: 'Benzodiazepine', svg: svgTricyclic, halfLife: 'medium', addictionPotential: 0.8, effects: { arousal: -1.2, dampening: 1.4, chaos: -0.6, repair: -0.3 }, regimen: { frequency: 'prn', standardRange: { min: 0.25, max: 2.0, unit: 'mg' } } },
     { id: 'clonaz', name: 'Clonazepam', class: 'depressant', classLabel: 'Benzodiazepine', svg: svgTricyclic, halfLife: 'medium', addictionPotential: 0.7, effects: { arousal: -1.0, dampening: 1.3, chaos: -0.5, repair: -0.2 } },
     { id: 'diaz', name: 'Diazepam', class: 'depressant', classLabel: 'Benzodiazepine', svg: svgTricyclic, halfLife: 'medium', addictionPotential: 0.6, effects: { arousal: -0.9, dampening: 1.2, chaos: -0.4, repair: -0.1 } },
     { id: 'loraz', name: 'Lorazepam', class: 'depressant', classLabel: 'Benzodiazepine', svg: svgTricyclic, halfLife: 'medium', addictionPotential: 0.75, effects: { arousal: -1.1, dampening: 1.3, chaos: -0.5, repair: -0.2 } },
