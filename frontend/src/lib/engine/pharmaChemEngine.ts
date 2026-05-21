@@ -104,6 +104,21 @@ export const COMPOUND_DATABASE: Record<string, CompoundProperties> = {
       selfInductionFeedbackCoeff: 0.25
     }
   },
+  seriphadine: {
+    id: "seriphadine",
+    name: "Seriphadine",
+    class: "novel",
+    halfLifeHrs: 7.5,
+    cypEnzymes: ["CYP3A4"],
+    receptors: { GABAA: 2.0, NMDA: 150.0, HT2A: 45.0 },
+    efficacy: { GABAA: 1.0, NMDA: -0.6, HT2A: 0.4 },
+    ensembleOccupancy: [
+      { targetProfile: "GABAA", ensembleFraction: 0.65, intrinsicEfficacy: 1.0 },
+      { targetProfile: "NMDA", ensembleFraction: 0.20, intrinsicEfficacy: -0.6 },
+      { targetProfile: "HT2A", ensembleFraction: 0.15, intrinsicEfficacy: 0.4 }
+    ],
+    regimen: { frequency: 'prn', standardRange: { min: 2, max: 25, unit: "mg" } }
+  },
   zb01: {
     id: "zb01", name: "ZenBud™ (ZB-01)", class: "novel", halfLifeHrs: 18, cypEnzymes: ["CYP3A4"],
     receptors: { HT2A: 100, GABAA: 250 },
@@ -640,7 +655,7 @@ export function translateReceptorsToVectors(
     const props = COMPOUND_DATABASE[id];
     const isReceptorActive = props && props.receptors && Object.keys(props.receptors).length > 0;
 
-    if (!isReceptorActive || id === "spur01" || id === "spur_mtdl") {
+    if (!isReceptorActive || id === "spur01" || id === "spur_mtdl" || id === "seriphadine") {
       // Find the template molecule in shared list to extract direct effects
       // We will match these by direct effects
       const doseRatio = Math.min(1.0, intensity / 3.0);
@@ -654,6 +669,27 @@ export function translateReceptorsToVectors(
         baseChaos -= 1.8 * doseRatio;
         baseDampening += 0.5 * doseRatio;
         baseArousal -= 0.2 * doseRatio;
+      } else if (id === "seriphadine") {
+        const currentDoseMg = intensity; // Map current intensity to scale dose
+        
+        if (currentDoseMg <= 5.0) {
+          // 2-5 mg: Anxiolytic Carbamate Sedation Mode
+          baseDampening += 0.6 * doseRatio;
+          baseArousal -= 0.2 * doseRatio;
+          baseChaos *= 0.5; // Cools baseline noise
+        } else if (currentDoseMg > 5.0 && currentDoseMg <= 15.0) {
+          // 6-15 mg: Pro-Social/Oneirogenic Synchrony Mode
+          baseDampening += 1.0 * doseRatio;
+          baseChaos += 0.5 * doseRatio;
+          baseArousal -= 0.3 * doseRatio;
+          baseRepair += 0.2 * doseRatio;
+        } else if (currentDoseMg > 15.0) {
+          // 20+ mg: Deep Lucid NMDA Dissociation Mode
+          baseDampening += 1.4 * doseRatio;
+          baseChaos += 1.8 * doseRatio; // High cortical variance/dream attractor states
+          baseArousal -= 0.5 * doseRatio;
+          baseRepair += 0.4 * doseRatio;
+        }
       } else if (!props && item.effects) {
         baseArousal += (item.effects.arousal ?? 0) * doseRatio;
         baseDampening += (item.effects.dampening ?? 0) * doseRatio;
@@ -764,7 +800,7 @@ export function computePharmaChemVectors(
 // ----------------------------------------------------------------------------
 // 6. LOVELYMIND NEURODYNAMIC Simulation Bridge
 // ----------------------------------------------------------------------------
-export function bridgeVectorsToLovelyMind(vectors: PharmaVectors, lovelyMindState: any) {
+export function bridgeVectorsToLovelyMind(vectors: PharmaVectors, lovelyMindState: any, stack: any[] = []) {
   const doseRatio = Math.min(1.0, vectors.repair / 3.5);
   
   // 1. High-Bias Repair Mapping (mTOR/CREB/Synaptophysin Expansion Loops)
@@ -797,6 +833,19 @@ export function bridgeVectorsToLovelyMind(vectors: PharmaVectors, lovelyMindStat
   if (vectors.dampening > 0) {
     lovelyMindState.wta_inhibition_factor = Math.min(0.95, 0.40 + (0.45 * vectors.dampening / 0.5));
     lovelyMindState.thalamic_decay_bounds = [0.85, 0.92]; // Heightened state retention thresholds
+  }
+
+  if (vectors.dampening > 0.8 && lovelyMindState.wta_inhibition_factor) {
+    lovelyMindState.wta_inhibition_factor = Math.max(lovelyMindState.wta_inhibition_factor, 0.75);
+  }
+
+  const seriphadineItem = stack.find(item => item.id === "seriphadine");
+  const id = seriphadineItem ? "seriphadine" : "";
+  const intensity = seriphadineItem ? (seriphadineItem.dose ?? seriphadineItem.currentIntensity ?? 0) : 0;
+  if (id === "seriphadine" && intensity >= 20.0) {
+    // Inject highly specified oneirogenic state overrides into active PAD lattice tracking loops
+    lovelyMindState.forced_affective_seeds = ["liminal", "nostalgia", "curiosity"];
+    lovelyMindState.koopman_temperature_modulation = 1.35; // Expand sampling variance attractor paths
   }
 
   return lovelyMindState;
