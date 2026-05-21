@@ -673,7 +673,13 @@ export function calculateReceptorOccupancies(
           C *= props.advancedPhysics.cooperativityAlpha;
         }
 
-        competitiveSum += C / Ki;
+        // Convert concentration from mg/L to nM (nanomolar)
+        const molMatch = molecules.find(m => m.id === drugId);
+        const smilesPhysics = props.smilesPhysics ?? molMatch?.smilesPhysics;
+        const mw = smilesPhysics?.mw ?? 400.0;
+        const C_nM = (C * 1e6) / mw;
+
+        competitiveSum += C_nM / Ki;
       }
     }
 
@@ -717,11 +723,17 @@ export function calculateReceptorOccupancies(
           C *= props.advancedPhysics.cooperativityAlpha;
         }
 
-        // Fractional occupancy: (C/Ki) / (1 + sum(C_j/K_j))
+        // Convert concentration from mg/L to nM (nanomolar)
+        const molMatch = molecules.find(m => m.id === drugId);
+        const smilesPhysics = props.smilesPhysics ?? molMatch?.smilesPhysics;
+        const mw = smilesPhysics?.mw ?? 400.0;
+        const C_nM = (C * 1e6) / mw;
+
+        // Fractional occupancy: (C_nM/Ki) / (1 + sum(C_j,nM/K_j))
         // Apply the standard non-linear Hill saturation function to govern binding velocity
-        const competitiveSumExcluding = Math.max(0, competitiveSum - (C / Ki));
+        const competitiveSumExcluding = Math.max(0, competitiveSum - (C_nM / Ki));
         const apparentKi = Ki * (1 + competitiveSumExcluding);
-        const occ = hill(C, apparentKi, 1, 1);
+        const occ = hill(C_nM, apparentKi, 1, 1);
         occupancies[drugId][r] = occ;
 
         // Activation contributor: occupancy * intrinsic efficacy
