@@ -106,6 +106,18 @@ export default function StackSimulator() {
 
   const selectedMol = useMemo(() => molecules.find(m => m.id === selectedMolId), [selectedMolId]);
 
+  // Synchronize selectedMolId with filteredMolecules when the list changes
+  useEffect(() => {
+    if (filteredMolecules.length > 0) {
+      const exists = filteredMolecules.some(m => m.id === selectedMolId);
+      if (!exists) {
+        setSelectedMolId(filteredMolecules[0].id);
+      }
+    } else {
+      setSelectedMolId("");
+    }
+  }, [filteredMolecules, selectedMolId]);
+
   // Physics Engine Calculations via runDiagnosis
   const simulationState = useMemo(() => {
     const net = computeStackVectors(stack);
