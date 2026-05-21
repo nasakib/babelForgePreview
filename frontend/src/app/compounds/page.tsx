@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import { molecules } from "@/data/molecules";
 
 const SMILESRenderer = dynamic(() => import("@/components/clinical/SMILESRenderer"), { ssr: false });
-const NeuroCanvas = dynamic(() => import("@/components/NeuroCanvas").then(mod => mod.NeuroCanvas), { ssr: false });
+const BiophysicalCanvas = dynamic(() => import("@/components/BiophysicalCanvas").then(mod => mod.BiophysicalCanvas), { ssr: false });
 const ProjectionEngine = dynamic(() => import("@/components/clinical/ProjectionEngine"), { ssr: false });
 
 export default function CompoundsDirectory() {
@@ -309,7 +309,7 @@ export default function CompoundsDirectory() {
                   </div>
 
                   {/* Active Biophysical Animation Canvas */}
-                  <NeuroCanvas 
+                  <BiophysicalCanvas 
                     vectors={selectedMol.effects} 
                     activeCompoundId={selectedMol.id} 
                     isSimulating={isSimulatingMech} 

@@ -39,7 +39,6 @@ export default function ProjectionEngine({ moleculeId, vectors }: ProjectionEngi
   const eegRef = useRef<HTMLCanvasElement | null>(null);
   const kuramotoStateRef = useRef<KuramotoState | null>(null);
   const historyRef = useRef<number[]>([]);
-  const animationFrameId = useRef<number | null>(null);
 
   // Find the selected molecule configuration
   const selectedMol = useMemo(() => molecules.find(m => m.id === moleculeId), [moleculeId]);
@@ -313,11 +312,7 @@ export default function ProjectionEngine({ moleculeId, vectors }: ProjectionEngi
     kuramotoStateRef.current = kuramotoState;
     historyRef.current = [];
 
-    return () => {
-      if (animationFrameId.current) {
-        cancelAnimationFrame(animationFrameId.current);
-      }
-    };
+    return () => {};
   }, [vectors, moleculeId]);
 
   // Control simulation increments
