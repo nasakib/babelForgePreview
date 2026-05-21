@@ -1,7 +1,38 @@
-// ========================================================================
-// DESIGN ATTRIBUTION: GRAPH-NATIVE MOLECULAR FORGE ARCHITECTURE
-// Core-Locked / Periphery-Free Conformer Matrices Characterized by Walter W., Substr8 BioResearch.
-// ========================================================================
+// Header Credit: Core QSAR Matrix Profiles, Synthesis Sequences, and Structural Physics Characterized by Walter W.
+
+export interface TargetPocketMechanics {
+  delta_TM6_outward_A: number;     // Helical template shift tracking (Å)
+  d_D155_amine_A: number;         // Amine-to-carboxylate salt-bridge distance (Å)
+  theta_W336_displacement: number; // Tryptophan rotamer sidechain toggle angle (Degrees)
+  E_pi_phenyl_traps: number;      // Aromatic edge-to-face stabilization factor
+}
+
+export interface ProTox3QSAR {
+  probabilities: { immuno: number; dili: number; bbb: number; mie_pxr: number; cyp3a4: number; cyp2c9: number };
+  endpoints: { mutagen: string; cyto: string; nr_ahr: string; sr_are: string };
+}
+
+export interface SyntheticRoute {
+  stepsCount: number;
+  reagents: string[];
+  solvents: string[];
+  finalHPLCFlurityPercentage: number;
+  cumulativeYieldPercentage: number;
+}
+
+export interface MoleculeData {
+  id: string;
+  name: string;
+  class: string;
+  classLabel: string;
+  halfLife: 'short' | 'medium' | 'long';
+  effects: { arousal: number; dampening: number; chaos: number; repair: number };
+  smilesPhysics: { canonicalSmiles: string; mw: number; tpsa: number; F_bioavail: number; Vd_Lkg: number };
+  structuralPhysics?: Record<string, Partial<TargetPocketMechanics>>;
+  qsarProfile?: ProTox3QSAR;
+  synthesisRoute?: SyntheticRoute;
+  rotatableBondsPeriphery?: number;
+}
 
 export interface PharmacophoreNode {
   atomIndex: number;

@@ -75,6 +75,9 @@ export default function NeuroCanvas({
     () => vectorsProp ?? computeStackVectors(activeStack),
     [vectorsProp, activeStack],
   );
+  const activeCompoundId = useMemo(() => {
+    return activeStack && activeStack.length > 0 ? activeStack[0].id : null;
+  }, [activeStack]);
 
   const topo = useMemo<ComposedTopology>(
     () => topology ?? composeTopology(pathologies, targetedOperations, simulationTimeMonths, vectors),
@@ -380,6 +383,18 @@ export default function NeuroCanvas({
             <span className="text-accent-400 font-bold uppercase tracking-widest">Isolate Node</span>
             <span className="text-ink font-semibold">Left-Click Node <span className="text-ink-muted text-[10px]">(tap node)</span></span>
           </div>
+        </div>
+      </DraggablePanel>
+
+      <DraggablePanel
+        id="biophysical-animation"
+        title="Biophysical Animation Engine"
+        subtitle="Real-time multi-resolution biophysical animation loops"
+        defaultPosition={{ x: typeof window !== "undefined" ? window.innerWidth - 520 : 800, y: typeof window !== "undefined" ? window.innerHeight - 300 : 600 }}
+        defaultSize={{ width: 500, height: 260 }}
+      >
+        <div className="p-2 bg-[#0b1329] rounded shadow-inner">
+          <BiophysicalAnimationCanvas vectors={vectors} activeCompoundId={activeCompoundId} />
         </div>
       </DraggablePanel>
     </div>
@@ -698,5 +713,124 @@ function BrainScene({
         );
       })}
     </group>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// 2D Biophysical Animation Canvas
+// ---------------------------------------------------------------------------
+function BiophysicalAnimationCanvas({ vectors, activeCompoundId }: { vectors: PharmaVectors; activeCompoundId: string | null }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let animationId: number;
+    let frame = 0;
+
+    const render = () => {
+      frame++;
+      
+      // Clear with dark premium slate backdrop
+      ctx.fillStyle = '#0b1329';
+      ctx.fillRect(0, 0, 500, 200);
+
+      // Add a subtle grid overlay for a high-tech dashboard look
+      ctx.strokeStyle = 'rgba(71, 85, 105, 0.1)';
+      ctx.lineWidth = 1;
+      const gridSize = 20;
+      for (let x = 0; x < 500; x += gridSize) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 200); ctx.stroke();
+      }
+      for (let y = 0; y < 200; y += gridSize) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(500, y); ctx.stroke();
+      }
+
+      // Macro Scale: Conformer Microstate Ensemble Distribution (Renders top-left quadrant)
+      const isSpur = activeCompoundId === 'spur01';
+      if (activeCompoundId) {
+        ctx.strokeStyle = isSpur ? '#22d3ee' : '#475569'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(60, 60, 15, 0, Math.PI * 2); ctx.stroke(); // Fixed Rigid Core
+        const peripheralArms = isSpur ? 16 : 8;
+        for (let i = 0; i < peripheralArms; i++) {
+          const angle = (i * (Math.PI * 2) / peripheralArms) + Math.sin(frame * 0.08 + i) * 0.25;
+          const extension = (isSpur ? 25 : 20) + Math.cos(frame * 0.15 + i) * (isSpur ? 6 : 4);
+          ctx.beginPath(); ctx.moveTo(60, 60);
+          ctx.lineTo(60 + Math.cos(angle) * extension, 60 + Math.sin(angle) * extension);
+          ctx.stroke(); // Dynamic conformation space rotation shielding enzyme sites
+        }
+        ctx.fillStyle = '#94a3b8'; ctx.font = '9px monospace';
+        ctx.fillText(isSpur ? "MACRO: Torsional Ensemble Diversity" : "MACRO: Core-Periphery Conformation", 15, 110);
+      } else {
+        ctx.fillStyle = '#475569'; ctx.font = '9px monospace';
+        ctx.fillText("MACRO: No Active Ligand Core", 15, 60);
+      }
+
+      // Micro Scale: Synaptic Channel Gating & Receptor Selection (Renders center quadrant)
+      ctx.strokeStyle = '#334155'; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.moveTo(160, 15); ctx.lineTo(160, 150); ctx.stroke(); // Pre-synaptic membrane
+      ctx.beginPath(); ctx.moveTo(230, 15); ctx.lineTo(230, 150); ctx.stroke(); // Post-synaptic membrane
+
+      const travelVelocity = 1.5 + vectors.arousal * 2;
+      const transmitterCount = Math.floor(4 + vectors.arousal * 8);
+      ctx.fillStyle = '#c084fc';
+      for (let i = 0; i < transmitterCount; i++) {
+        const x = 160 + ((frame * travelVelocity + i * 30) % 70);
+        const y = 30 + (i * 15) % 100;
+        ctx.beginPath(); ctx.arc(x, y, 2.5, 0, Math.PI * 2); ctx.fill(); // Vestibular particle clearing
+      }
+
+      if (vectors.repair > 2.0) {
+        ctx.fillStyle = '#34d399'; ctx.fillRect(227, 45, 6, 18); // Wide agonist docking configuration
+        ctx.fillStyle = '#34d399'; ctx.font = '9px monospace';
+        ctx.fillText("MICRO: TrkB Receptor Dimerized", 145, 170);
+      } else {
+        ctx.fillStyle = '#94a3b8'; ctx.font = '9px monospace';
+        ctx.fillText("MICRO: Synaptic Gating", 145, 170);
+      }
+
+      // Intracellular Scale: Transcriptional Remodeling Helix (Renders right-side cell nucleus)
+      ctx.strokeStyle = '#2563eb'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(380, 80, 30, 0, Math.PI * 2); ctx.stroke(); // Nuclear membrane interface
+
+      if (vectors.repair >= 3.0) {
+        // Animate phosphorylation cascade migration passing through nuclear gates
+        const trajectoryFactor = (frame * 0.04) % 1;
+        ctx.fillStyle = '#38bdf8';
+        ctx.beginPath(); ctx.arc(320 + (380 - 320) * trajectoryFactor, 80 + Math.sin(frame * 0.1) * 8, 3.5, 0, Math.PI * 2); ctx.fill();
+
+        // Draw active double-helix expression tracking locked genetic latch structures
+        ctx.strokeStyle = '#10b981'; ctx.lineWidth = 2;
+        ctx.beginPath();
+        for (let k = 365; k < 395; k++) {
+          const doubleHelixY = 80 + Math.sin(k * 0.6 + frame * 0.12) * 10;
+          k === 365 ? ctx.moveTo(k, doubleHelixY) : ctx.lineTo(k, doubleHelixY);
+        }
+        ctx.stroke();
+        ctx.fillStyle = '#10b981'; ctx.font = '9px monospace';
+        ctx.fillText("INTRA: Promoter IV Demethylating", 325, 130);
+      } else {
+        ctx.fillStyle = '#64748b'; ctx.font = '9px monospace';
+        ctx.fillText("INTRA: Chromatin Muted", 325, 130);
+      }
+
+      animationId = requestAnimationFrame(render);
+    };
+
+    render();
+
+    return () => cancelAnimationFrame(animationId);
+  }, [vectors, activeCompoundId]);
+
+  return (
+    <canvas 
+      ref={canvasRef} 
+      width={500} 
+      height={200} 
+      className="w-full bg-[#0b1329] border border-slate-800 rounded shadow-inner" 
+    />
   );
 }

@@ -1,7 +1,4 @@
-// ========================================================================
-// DESIGN ATTRIBUTION: PROTOX-3.0 TOXICOLOGY MODEL INTERFACES
-// Core QSAR Matrix Datasets Compiled and Validated by Walter W., Substr8 BioResearch.
-// ========================================================================
+// Header Credit: Core QSAR Matrix Profiles, Synthesis Sequences, and Structural Physics Characterized by Walter W.
 
 export interface ProTox3Profile {
   dili: { active: boolean; confidence: number };

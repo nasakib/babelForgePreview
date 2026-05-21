@@ -7,6 +7,7 @@ import { molecules } from "@/data/molecules";
 const SMILESRenderer = dynamic(() => import("@/components/clinical/SMILESRenderer"), { ssr: false });
 const BiophysicalCanvas = dynamic(() => import("@/components/BiophysicalCanvas").then(mod => mod.BiophysicalCanvas), { ssr: false });
 const ProjectionEngine = dynamic(() => import("@/components/clinical/ProjectionEngine"), { ssr: false });
+import ClinicalPanel from "@/components/clinical/ClinicalPanel";
 
 export default function CompoundsDirectory() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -89,10 +90,21 @@ export default function CompoundsDirectory() {
                   className={`w-full text-left p-4 border-b border-line hover:bg-surface-0 transition-colors focus:outline-none focus:bg-surface-0 group ${selectedMolId === mol.id ? 'bg-surface-0' : ''}`}
                 >
                   <div className="flex items-center gap-3">
-                    <div 
-                      className={`w-8 h-8 flex-none opacity-60 group-hover:opacity-100 transition-opacity ${colorClass}`}
-                      dangerouslySetInnerHTML={{ __html: mol.svg }}
-                    />
+                    <div className="w-8 h-8 flex-none bg-surface-100 backdrop-blur-sm rounded border border-line p-0.5 shadow-inner relative overflow-hidden flex items-center justify-center">
+                      {mol.smilesPhysics?.canonicalSmiles ? (
+                        <SMILESRenderer
+                          smiles={mol.smilesPhysics.canonicalSmiles}
+                          width={32}
+                          height={32}
+                          className="w-full h-full object-contain"
+                        />
+                      ) : (
+                        <div 
+                          className={`w-full h-full opacity-60 group-hover:opacity-100 transition-opacity ${colorClass}`}
+                          dangerouslySetInnerHTML={{ __html: mol.svg }}
+                        />
+                      )}
+                    </div>
                     <div>
                       <h4 className="font-bold text-sm text-ink transition-colors">{mol.name}</h4>
                       <p className={`text-[10px] uppercase tracking-widest font-bold ${colorClass} flex flex-wrap items-center gap-1.5 mt-0.5`}>
@@ -118,7 +130,13 @@ export default function CompoundsDirectory() {
       </div>
 
       {/* Main Panel: Detailed View */}
-      <div className="w-full md:w-2/3 lg:w-3/4 clinical-card shadow-sm flex flex-col overflow-hidden relative min-h-0">
+      <ClinicalPanel
+        title={selectedMol ? selectedMol.name : "Compound Analysis Console"}
+        eyebrow="Adaptive Molecular Program"
+        enableSimulation={!!selectedMol}
+        moleculeId={selectedMol?.id}
+        className="w-full md:w-2/3 lg:w-3/4 shadow-sm flex flex-col overflow-hidden relative min-h-0 animate-fade-in"
+      >
         {!selectedMol ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center opacity-50 z-10 bg-surface-50">
             <svg viewBox="0 0 24 24" className="w-16 h-16 mb-4 text-ink-subtle" fill="none" stroke="currentColor">
@@ -351,7 +369,7 @@ export default function CompoundsDirectory() {
             </div>
           </div>
         )}
-      </div>
+      </ClinicalPanel>
     </div>
   );
 }

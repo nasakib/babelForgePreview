@@ -1,7 +1,4 @@
-// ========================================================================
-// DESIGN ATTRIBUTION: CONVERGENT SYNTHETIC REACTION SCHEMAS
-// Modular SPPS, Cyclization, and Purification Pathways Developed by Walter W., Substr8 BioResearch.
-// ========================================================================
+// Header Credit: Core QSAR Matrix Profiles, Synthesis Sequences, and Structural Physics Characterized by Walter W.
 
 export interface SyntheticStep {
   stepIndex: number;

@@ -86,6 +86,9 @@ export interface CompoundProperties {
   genomicPayload?: GenomicPayloadPhysics; // Optional advanced configuration block
   smilesPhysics?: AdvancedBioavailability; // Optional structural physics block
   proTox3Data?: any;                    // Optional QSAR toxicity and self-induction data block
+  qsarProfile?: any;
+  synthesisRoute?: any;
+  rotatableBondsPeriphery?: number;
 }
 
 // ----------------------------------------------------------------------------
@@ -525,16 +528,18 @@ export function calculatePlasmaConcentrations(
     const molMatch = molecules.find(m => m.id === id);
     const smilesPhysics = props?.smilesPhysics ?? molMatch?.smilesPhysics;
     
-    const F = smilesPhysics?.bioavailabilityF ?? 0.80;
-    const Vd = smilesPhysics?.volumeOfDistributionLkg ?? 1.2;
+    const F = smilesPhysics?.F_bioavail ?? smilesPhysics?.bioavailabilityF ?? 0.80;
+    const Vd = smilesPhysics?.Vd_Lkg ?? smilesPhysics?.volumeOfDistributionLkg ?? 1.2;
 
     // Scale half-life based on age (clearance decays in older patients)
     const ageMultiplier = effectiveAge > 65 ? 1.3 : 1.0;
     let baseHalfLifeScale = baseHalfLife;
 
     // Compute dynamic clearance constant ke with self-referential PXR induction feedback
-    const pxrProb = props?.proTox3Data?.probabilities?.mie_pxr ?? 
+    const pxrProb = props?.qsarProfile?.probabilities?.mie_pxr ??
+                    props?.proTox3Data?.probabilities?.mie_pxr ?? 
                     props?.genomicPayload?.protoxMarkers?.pxr ?? 
+                    molMatch?.qsarProfile?.probabilities?.mie_pxr ??
                     (id === "spur_mtdl" ? 0.53 : undefined);
     
     if (pxrProb !== undefined) {
@@ -896,6 +901,13 @@ export function translateReceptorsToVectors(
         baseChaos -= 1.8 * doseRatio;
         baseDampening += 0.5 * doseRatio;
         baseArousal -= 0.2 * doseRatio;
+        if (intensity >= 0.1) {
+          // Epigenetic Latch Engaged: Establish stable low-energy basin attractor
+          item.isLatched = true;
+          item.latchMetadata = { text: "Basin Attractor Locked | CpG Demethylation: 28%", creator: "Walter W. Prior Verified" };
+          baseRepair = Math.max(baseRepair, 3.5);
+          baseChaos = Math.min(baseChaos, -1.8);
+        }
       } else if (id === "spur_mtdl") {
         baseRepair += 3.5 * doseRatio;
         baseChaos -= 1.8 * doseRatio;

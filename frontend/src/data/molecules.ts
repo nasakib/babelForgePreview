@@ -7,6 +7,8 @@ export interface AdvancedBioavailability {
   canonicalSmiles: string;           // Used by the frontend canvas drawer component
   mw?: number;                       // Molecular weight in Da
   tpsa?: number;                     // Topological polar surface area in Å²
+  F_bioavail?: number;
+  Vd_Lkg?: number;
 }
 
 const svgIndole = `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" class="w-full h-full"><path d="M30 70 L30 40 L55 25 L80 40 L80 70 L55 85 Z"/><path d="M30 40 L10 25 L10 50 Z"/><circle cx="55" cy="55" r="10"/></svg>`;
@@ -57,7 +59,7 @@ export const molecules = [
     },
     { 
       id: 'spur01', 
-      name: 'SPUR-1 Ontological Reducer', 
+      name: 'SPUR-01 Ontological Reducer', 
       class: 'novel', 
       classLabel: 'Conformational Pan-Modulator', 
       isBabelForge: true, 
@@ -65,28 +67,46 @@ export const molecules = [
       halfLife: 'long', 
       effects: { arousal: -0.2, dampening: 0.5, chaos: -1.8, repair: 3.5 },
       smilesPhysics: {
-        bioavailabilityF: 0.45,
-        volumeOfDistributionLkg: 1.5,
-        canonicalSmiles: "CC(=O)NC1CCC2(C1)C(=O)NC3=C2C=CC(=C3)C(=O)N",
-        mw: 245.28,
-        tpsa: 75.3
-      }
+        canonicalSmiles: "CCCCC(=O)N[C@H](C(=O)N[C@H](Cc1ccc(O)cc1)C(=O)N2C(=O)C(c3cc4c(cc3O)CCN(C(=O)OCC)C4(c5ccccc5-c6ccccc6)(c7ccccc7CC))CCC2)C(C)CC",
+        mw: 955.20,
+        tpsa: 160.0,
+        F_bioavail: 0.85,
+        Vd_Lkg: 3.2,
+        bioavailabilityF: 0.85,
+        volumeOfDistributionLkg: 3.2
+      },
+      rotatableBondsPeriphery: 18,
+      structuralPhysics: {
+        HT2A: { delta_TM6_outward_A: 5.4, d_D155_amine_A: 2.9, theta_W336_displacement: 58.0, E_pi_phenyl_traps: 0.01 },
+        MOR: { delta_TM6_outward_A: 5.6, d_D155_amine_A: 2.8, theta_W336_displacement: 70.0, E_pi_phenyl_traps: 0.01 }
+      },
+      qsarProfile: {
+        probabilities: { immuno: 0.99, dili: 0.64, bbb: 0.72, mie_pxr: 0.53, cyp3a4: 0.52, cyp2c9: 0.51 },
+        endpoints: { mutagen: "Inactive", cyto: "Inactive", nr_ahr: "Inactive", sr_are: "Inactive" }
+      },
+      synthesisRoute: { stepsCount: 12, reagents: ["NaH", "HATU"], solvents: ["DMF"], finalHPLCFlurityPercentage: 99.2, cumulativeYieldPercentage: 3.8 }
     },
     {
       id: 'zb01',
       name: 'ZenBud™ (ZB-01)',
       class: 'novel',
-      classLabel: 'Precision Agonist',
+      classLabel: 'Anxiolytic Ligand',
       isBabelForge: true,
       svg: svgIndole,
-      halfLife: 'medium',
-      effects: { arousal: 0.1, dampening: 0.0, chaos: -0.8, repair: 1.5 },
+      halfLife: 'long',
+      effects: { arousal: -0.4, dampening: 1.0, chaos: -0.5, repair: 0.6 },
       smilesPhysics: {
-        bioavailabilityF: 0.82,
-        volumeOfDistributionLkg: 2.1,
-        canonicalSmiles: "CN(C)CCC1=CNC2=C1C=CC=C2",
-        mw: 188.27,
-        tpsa: 20.2
+        canonicalSmiles: "O=C1CCC2(CCN(CC2)c3cc4c(cc3)OCO4)N1",
+        mw: 344.4,
+        tpsa: 41.6,
+        F_bioavail: 0.72,
+        Vd_Lkg: 1.8,
+        bioavailabilityF: 0.72,
+        volumeOfDistributionLkg: 1.8
+      },
+      structuralPhysics: {
+        HT2A: { delta_TM6_outward_A: 5.1, d_D155_amine_A: 2.8, theta_W336_displacement: 52.0, E_pi_phenyl_traps: 0.02 },
+        GABAA: { delta_TM6_outward_A: 4.8, d_D155_amine_A: 2.9, theta_W336_displacement: 55.0, E_pi_phenyl_traps: 0.01 }
       }
     },
     { 
