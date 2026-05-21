@@ -2,6 +2,7 @@
 import type { PatientProfile } from "@/lib/patient/profile";
 import type { PharmaVectors } from "./stackVectors";
 import { hill } from "@/lib/engines/chemistry";
+import { molecules, type AdvancedBioavailability } from "@/data/molecules";
 
 export type LigandClass = 'CLASSIC_SMALL' | 'BIVALENT_MACROCYCLIC' | 'CONFORMATIONAL_SHIELDED' | 'CLEAVABLE_CONJUGATE';
 
@@ -72,6 +73,8 @@ export interface CompoundProperties {
   ensembleOccupancy?: EnsembleDistribution[]; // Replaces single-pose pocket configurations
   catalyticPK?: CatalyticKinetics;    // Controls pulse trigger-and-exit clearing curves
   genomicPayload?: GenomicPayloadPhysics; // Optional advanced configuration block
+  smilesPhysics?: AdvancedBioavailability; // Optional structural physics block
+  proTox3Data?: any;                    // Optional QSAR toxicity and self-induction data block
 }
 
 // ----------------------------------------------------------------------------
@@ -463,9 +466,28 @@ export function calculatePlasmaConcentrations(
       pgxMultiplier = 1 / Math.max(0.1, avgClearance);
     }
 
+    // Fetch smilesPhysics and proTox3Data from matching molecule record or properties
+    const molMatch = molecules.find(m => m.id === id);
+    const smilesPhysics = props?.smilesPhysics ?? molMatch?.smilesPhysics;
+    
+    const F = smilesPhysics?.bioavailabilityF ?? 0.80;
+    const Vd = smilesPhysics?.volumeOfDistributionLkg ?? 1.2;
+
     // Scale half-life based on age (clearance decays in older patients)
     const ageMultiplier = effectiveAge > 65 ? 1.3 : 1.0;
-    let finalHalfLife = baseHalfLife * pgxMultiplier * ageMultiplier;
+    let baseHalfLifeScale = baseHalfLife;
+
+    // Compute dynamic clearance constant ke with self-referential PXR induction feedback
+    const pxrProb = props?.proTox3Data?.probabilities?.mie_pxr ?? 
+                    props?.genomicPayload?.protoxMarkers?.pxr ?? 
+                    (id === "spur_mtdl" ? 0.53 : undefined);
+    
+    if (pxrProb !== undefined) {
+      const inductionScale = 1.0 + (pxrProb * (elapsedHrs / 16.0));
+      baseHalfLifeScale /= inductionScale; // Trigger-and-exit auto-clearance velocity acceleration
+    }
+
+    let finalHalfLife = baseHalfLifeScale * pgxMultiplier * ageMultiplier;
 
     if (props?.advancedPhysics?.shieldingFactor && props.ligandType === 'CONFORMATIONAL_SHIELDED') {
       // Prolong functional stability based on dynamic structural steric blocking
@@ -492,9 +514,10 @@ export function calculatePlasmaConcentrations(
     // Elimination rate constant
     const ke = Math.log(2) / safeHalfLife;
 
-    // Initial Peak Concentration (linear dose mapping to base reference index)
-    // 0..3 maps to concentration units
-    const C0 = intensity * weightFactor * 10.0;
+    // Authentic Initial Concentration: C0 = (F * Dose) / (Weight * Vd)
+    // Map dose intensity (0-3 scale) to estimated milligram equivalents (e.g., intensity * 10mg)
+    const impliedDoseMg = intensity * 10.0;
+    const C0 = (F * impliedDoseMg) / (patient.weightKg * Vd);
 
     // Concentration decay over time
     let C = 0;
@@ -597,20 +620,7 @@ export function calculateReceptorOccupancies(
       }
     }
 
-    // Intercept patient history logs to calculate dynamic tolerance curves
-    if (patient?.profile?.historyLogs) {
-      for (const drugId in concentrations) {
-        const log = patient.profile.historyLogs.find(l => l.compoundId === drugId);
-        if (log && log.administrationsLast30Days > 10) {
-          // High frequency usage causes receptor desensitization
-          const toleranceFactor = 1.0 + (log.administrationsLast30Days * 0.05);
-          rKiMultiplier *= toleranceFactor;       // Requires higher concentration to lock
-          rEfficacyMultiplier *= (1 / toleranceFactor); // Attenuate maximum signal capacity
-        }
-      }
-    }
-
-    // 1. Calculate sum(C_j / K_j) with genotypic K_j adjustment
+    // 1. Calculate sum(C_j / K_j) with genotypic and dynamic tachyphylaxis K_j adjustment
     let competitiveSum = 0;
     for (const drugId in concentrations) {
       const props = COMPOUND_DATABASE[drugId];
@@ -627,7 +637,17 @@ export function calculateReceptorOccupancies(
           }
         }
 
-        const Ki = props.receptors[r]! * rKiMultiplier;
+        // Tachyphylaxis (Tolerance) desensitization calculated per drugId-receptor pair
+        let drugKiMultiplier = rKiMultiplier;
+        if (patient?.profile?.historyLogs) {
+          const historicalExposure = patient.profile.historyLogs.find(l => l.compoundId === drugId);
+          if (historicalExposure && historicalExposure.administrationsLast30Days > 5) {
+            const desensitizationFactor = 1.0 + (historicalExposure.administrationsLast30Days * 0.04);
+            drugKiMultiplier *= desensitizationFactor;
+          }
+        }
+
+        const Ki = props.receptors[r]! * drugKiMultiplier;
 
         // Apply bivalent potency amplification (local concentration scaling)
         if (props.advancedPhysics?.cooperativityAlpha && props.ligandType === 'BIVALENT_MACROCYCLIC') {
@@ -644,21 +664,34 @@ export function calculateReceptorOccupancies(
       const props = COMPOUND_DATABASE[drugId];
       if (props && props.receptors && props.receptors[r] !== undefined) {
         let C = concentrations[drugId];
-        let eps = (props.efficacy[r] ?? 1.0) * rEfficacyMultiplier;
+
+        // Tachyphylaxis (Tolerance) desensitization calculated per drugId-receptor pair
+        let drugKiMultiplier = rKiMultiplier;
+        let drugEfficacyMultiplier = rEfficacyMultiplier;
+        if (patient?.profile?.historyLogs) {
+          const historicalExposure = patient.profile.historyLogs.find(l => l.compoundId === drugId);
+          if (historicalExposure && historicalExposure.administrationsLast30Days > 5) {
+            const desensitizationFactor = 1.0 + (historicalExposure.administrationsLast30Days * 0.04);
+            drugKiMultiplier *= desensitizationFactor;
+            drugEfficacyMultiplier *= (1.0 / desensitizationFactor);
+          }
+        }
+
+        let eps = (props.efficacy[r] ?? 1.0) * drugEfficacyMultiplier;
 
         // Ensemble subpopulation concentration and intrinsic efficacy allocation
         if (props.ensembleOccupancy && props.ensembleOccupancy.length > 0) {
           const structuralMatch = props.ensembleOccupancy.find(e => e.targetProfile === r);
           if (structuralMatch) {
             C = C * structuralMatch.ensembleFraction;
-            eps = structuralMatch.intrinsicEfficacy * rEfficacyMultiplier;
+            eps = structuralMatch.intrinsicEfficacy * drugEfficacyMultiplier;
           } else {
             C = 0;
             eps = 0;
           }
         }
 
-        const Ki = props.receptors[r]! * rKiMultiplier;
+        const Ki = props.receptors[r]! * drugKiMultiplier;
 
         // Apply bivalent potency amplification (local concentration scaling)
         if (props.advancedPhysics?.cooperativityAlpha && props.ligandType === 'BIVALENT_MACROCYCLIC') {
@@ -836,18 +869,31 @@ export function translateReceptorsToVectors(
     }
   }
 
+  // De-linearize Neuro-Vector state equations using patient baseline vitals & psychometrics
+  const hrRest = patient?.profile?.vitals?.hrRest ?? 70;
+  const hrvRmssd = patient?.profile?.vitals?.hrvRmssd ?? 40;
+  const gad7 = patient?.profile?.psychometric?.gad7 ?? 0;
+  const phq9 = patient?.profile?.psychometric?.phq9 ?? 0;
+  const vitD = patient?.profile?.labs?.vitD ?? 30;
+  const sleepHours = patient?.profile?.lifestyle?.sleepHours ?? 8;
+
+  const arousalCoeff = 1.4 * (hrRest / 70.0) * (40.0 / Math.max(10.0, hrvRmssd));
+  const dampeningCoeff = 1.6 * (1.0 / (1.0 + (gad7 / 21.0) * 0.5));
+  const chaosCoeff = 2.2 * (1.0 + (phq9 / 27.0) * 0.5);
+  const repairCoeff = 0.45 * (vitD >= 20 ? 1.2 : 0.8) * (sleepHours >= 7 ? 1.1 : 0.7);
+
   // 1. Arousal: driven by DAT and NET reuptake/release
   // Agonism at ADRA2A (Clonidine) lowers peripheral adrenergic tone, reducing arousal.
   const arousal =
     baseArousal +
-    1.4 * activations.DAT +
+    arousalCoeff * activations.DAT +
     0.8 * activations.NET -
     0.8 * Math.max(0, activations.ADRA2A);
 
   // 2. Dampening: driven by GABA-A and Mu-Opioid activation, and ADRA2A (clonidine down-regulates locus coeruleus)
   const dampening =
     baseDampening +
-    1.6 * activations.GABAA +
+    dampeningCoeff * activations.GABAA +
     1.5 * activations.MOR +
     0.6 * Math.max(0, activations.ADRA2A);
 
@@ -857,7 +903,7 @@ export function translateReceptorsToVectors(
   const cleanHT2A = rawHT2A * Math.max(0.1, 1.0 - 0.75 * activations.GABAA);
   const chaos =
     baseChaos +
-    2.2 * cleanHT2A +
+    chaosCoeff * cleanHT2A +
     1.8 * Math.max(0, -activations.NMDA) - // NMDA blockers are expressed as negative net activation
     0.3 * activations.DAT;
 
@@ -865,7 +911,7 @@ export function translateReceptorsToVectors(
   const repair =
     baseRepair +
     0.8 * activations.MOR * (1 - Math.min(0.5, activations.GABAA)) + // opioid induced neurogenesis, slightly dampened by high sedatives
-    0.45 * Math.max(0, activations.HT2A) +
+    repairCoeff * Math.max(0, activations.HT2A) +
     0.5 * Math.max(0, activations.ADRA2A); // alpha-2-agonists protect connectome integrity
 
   return {

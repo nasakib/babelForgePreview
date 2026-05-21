@@ -1,4 +1,10 @@
 // Shared Molecular Database
+export interface AdvancedBioavailability {
+  bioavailabilityF: number;          // Fractional absorption (0.0 - 1.0)
+  volumeOfDistributionLkg: number;   // Vd in L/kg to calculate authentic C0
+  canonicalSmiles: string;           // Used by the frontend canvas drawer component
+}
+
 const svgIndole = `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" class="w-full h-full"><path d="M30 70 L30 40 L55 25 L80 40 L80 70 L55 85 Z"/><path d="M30 40 L10 25 L10 50 Z"/><circle cx="55" cy="55" r="10"/></svg>`;
 const svgPhen = `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" class="w-full h-full"><path d="M20 50 L40 20 L70 20 L90 50 L70 80 L40 80 Z"/><line x1="20" y1="50" x2="5" y2="50"/><line x1="40" y1="80" x2="30" y2="95"/></svg>`;
 const svgTricyclic = `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" class="w-full h-full"><path d="M10 50 L30 20 L60 20 L80 50 L60 80 L30 80 Z"/><path d="M60 20 L80 10 L100 30 L80 50"/><circle cx="45" cy="50" r="12"/></svg>`;
@@ -18,7 +24,12 @@ export const molecules = [
       svg: svgSeriphadine,
       halfLife: 'medium',
       regimen: { frequency: 'prn', standardRange: { min: 2, max: 25, unit: "mg" } },
-      effects: { arousal: -0.4, dampening: 1.2, chaos: 0.8, repair: 0.4 }
+      effects: { arousal: -0.4, dampening: 1.2, chaos: 0.8, repair: 0.4 },
+      smilesPhysics: {
+        bioavailabilityF: 0.78,
+        volumeOfDistributionLkg: 2.4,
+        canonicalSmiles: "CN(C)CC(CC(=O)C1CN(C(=O)OC)c2c(cccc2)-c2ccccc21)C(=O)N1CCCC1=O"
+      }
     },
     { 
       id: 'spur_mtdl', 
@@ -29,7 +40,12 @@ export const molecules = [
       svg: svgMtdl, 
       halfLife: 'medium', 
       effects: { arousal: -0.2, dampening: 0.5, chaos: -1.8, repair: 3.5 },
-      regimen: { frequency: 'prn', standardRange: { min: 5, max: 25, unit: 'mg' } }
+      regimen: { frequency: 'prn', standardRange: { min: 5, max: 25, unit: 'mg' } },
+      smilesPhysics: {
+        bioavailabilityF: 0.58,
+        volumeOfDistributionLkg: 1.8,
+        canonicalSmiles: "CN(C)C(=O)OC1=CC(=C(C=C1)CCN(C)C(=O)CC2CCN(CC2)CC3=CC=CC=C3)C(=O)N"
+      }
     },
     { 
       id: 'spur01', 
@@ -39,21 +55,124 @@ export const molecules = [
       isBabelForge: true, 
       svg: svgSpur, 
       halfLife: 'long', 
-      effects: { arousal: -0.2, dampening: 0.5, chaos: -1.8, repair: 3.5 } 
+      effects: { arousal: -0.2, dampening: 0.5, chaos: -1.8, repair: 3.5 },
+      smilesPhysics: {
+        bioavailabilityF: 0.45,
+        volumeOfDistributionLkg: 1.5,
+        canonicalSmiles: "CC(=O)NC1CCC2(C1)C(=O)NC3=C2C=CC(=C3)C(=O)N"
+      }
     },
-    { id: 'zb01', name: 'ZenBud™ (ZB-01)', class: 'novel', classLabel: 'Precision Agonist', isBabelForge: true, svg: svgIndole, halfLife: 'medium', effects: { arousal: 0.1, dampening: 0.0, chaos: -0.8, repair: 1.5 } },
+    {
+      id: 'zb01',
+      name: 'ZenBud™ (ZB-01)',
+      class: 'novel',
+      classLabel: 'Precision Agonist',
+      isBabelForge: true,
+      svg: svgIndole,
+      halfLife: 'medium',
+      effects: { arousal: 0.1, dampening: 0.0, chaos: -0.8, repair: 1.5 },
+      smilesPhysics: {
+        bioavailabilityF: 0.82,
+        volumeOfDistributionLkg: 2.1,
+        canonicalSmiles: "CN(C)CCC1=CNC2=C1C=CC=C2"
+      }
+    },
     { id: 'll07', name: 'LimbicLink™ (LL-07)', class: 'novel', classLabel: 'DMN Modulator', isBabelForge: true, svg: svgTricyclic, halfLife: 'long', effects: { arousal: -0.2, dampening: 0.3, chaos: 0.4, repair: 1.2 } },
     { id: 'ss20', name: 'SynaptoStim™ (SS-20)', class: 'novel', classLabel: 'Targeted DRI', isBabelForge: true, svg: svgPhen, halfLife: 'short', effects: { arousal: 1.5, dampening: 0.0, chaos: -0.2, repair: 0.5 } },
     { id: 'dr02', name: 'DopaReg™ (DR-02)', class: 'novel', classLabel: 'Precision Antagonist', isBabelForge: true, svg: svgPhen, halfLife: 'medium', effects: { arousal: -0.5, dampening: 1.2, chaos: -0.4, repair: 0.2 } },
     { id: 'nx44', name: 'NeuroX™ (NX-44)', class: 'novel', classLabel: 'BDNF Enhancer', isBabelForge: true, svg: svgIndole, halfLife: 'long', effects: { arousal: 0.2, dampening: 0.1, chaos: -0.5, repair: 2.5 } },
-    { id: 'psilo', name: 'Psilocybin', class: 'novel', classLabel: 'Classic Psychedelic', isBabelForge: true, svg: svgIndole, halfLife: 'medium', effects: { arousal: 0.8, dampening: -0.2, chaos: 1.2, repair: 0.5 } },
-    { id: 'mdma', name: 'MDMA', class: 'novel', classLabel: 'Empathogen', isBabelForge: true, svg: svgPhen, halfLife: 'medium', effects: { arousal: 1.2, dampening: -0.3, chaos: 0.4, repair: 0.7 } },
-    { id: 'ketamine', name: 'Ketamine', class: 'novel', classLabel: 'Dissociative', isBabelForge: true, svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.2, dampening: 0.5, chaos: 1.0, repair: 0.9 } },
-    { id: 'lsd', name: 'LSD', class: 'novel', classLabel: 'Classic Psychedelic', isBabelForge: true, svg: svgIndole, halfLife: 'medium', effects: { arousal: 0.7, dampening: -0.1, chaos: 1.4, repair: 0.4 } },
+    {
+      id: 'psilo',
+      name: 'Psilocybin',
+      class: 'novel',
+      classLabel: 'Classic Psychedelic',
+      isBabelForge: true,
+      svg: svgIndole,
+      halfLife: 'medium',
+      effects: { arousal: 0.8, dampening: -0.2, chaos: 1.2, repair: 0.5 },
+      smilesPhysics: {
+        bioavailabilityF: 0.50,
+        volumeOfDistributionLkg: 0.9,
+        canonicalSmiles: "CN(C)CCC1=CNC2=C1C(=CC=C2)OP(=O)(O)O"
+      }
+    },
+    {
+      id: 'mdma',
+      name: 'MDMA',
+      class: 'novel',
+      classLabel: 'Empathogen',
+      isBabelForge: true,
+      svg: svgPhen,
+      halfLife: 'medium',
+      effects: { arousal: 1.2, dampening: -0.3, chaos: 0.4, repair: 0.7 },
+      smilesPhysics: {
+        bioavailabilityF: 0.90,
+        volumeOfDistributionLkg: 6.0,
+        canonicalSmiles: "CC(CC1=CC2=C(C=C1)OCO2)NC"
+      }
+    },
+    {
+      id: 'ketamine',
+      name: 'Ketamine',
+      class: 'novel',
+      classLabel: 'Dissociative',
+      isBabelForge: true,
+      svg: svgTricyclic,
+      halfLife: 'medium',
+      effects: { arousal: -0.2, dampening: 0.5, chaos: 1.0, repair: 0.9 },
+      smilesPhysics: {
+        bioavailabilityF: 0.20,
+        volumeOfDistributionLkg: 3.0,
+        canonicalSmiles: "ClC1=CC=CC=C1C2(C(=O)CCCC2)NC"
+      }
+    },
+    {
+      id: 'lsd',
+      name: 'LSD',
+      class: 'novel',
+      classLabel: 'Classic Psychedelic',
+      isBabelForge: true,
+      svg: svgIndole,
+      halfLife: 'medium',
+      effects: { arousal: 0.7, dampening: -0.1, chaos: 1.4, repair: 0.4 },
+      smilesPhysics: {
+        bioavailabilityF: 0.70,
+        volumeOfDistributionLkg: 0.28,
+        canonicalSmiles: "CCN(CC)C(=O)[C@H]1CN(C)[C@@H]2Cc3c[nH]c4ccc(C2=C1)c34"
+      }
+    },
     
     // SSRIs, SNRIs & Antidepressants
-    { id: 'sert', name: 'Sertraline', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.2, dampening: 0.8, chaos: -0.1, repair: 0.0 }, regimen: { frequency: 'daily', standardRange: { min: 50, max: 200, unit: 'mg' } } },
-    { id: 'fluox', name: 'Fluoxetine', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.1, dampening: 0.7, chaos: 0.0, repair: 0.0 }, regimen: { frequency: 'daily', standardRange: { min: 20, max: 80, unit: 'mg' } } },
+    {
+      id: 'sert',
+      name: 'Sertraline',
+      class: 'ssri',
+      classLabel: 'SSRI',
+      svg: svgTricyclic,
+      halfLife: 'medium',
+      effects: { arousal: -0.2, dampening: 0.8, chaos: -0.1, repair: 0.0 },
+      regimen: { frequency: 'daily', standardRange: { min: 50, max: 200, unit: 'mg' } },
+      smilesPhysics: {
+        bioavailabilityF: 0.44,
+        volumeOfDistributionLkg: 76.0,
+        canonicalSmiles: "CN[C@H]1CC[C@@H](C2=C(C=CC=C21)Cl)C3=CC=C(C=C3)Cl"
+      }
+    },
+    {
+      id: 'fluox',
+      name: 'Fluoxetine',
+      class: 'ssri',
+      classLabel: 'SSRI',
+      svg: svgTricyclic,
+      halfLife: 'medium',
+      effects: { arousal: -0.1, dampening: 0.7, chaos: 0.0, repair: 0.0 },
+      regimen: { frequency: 'daily', standardRange: { min: 20, max: 80, unit: 'mg' } },
+      smilesPhysics: {
+        bioavailabilityF: 0.72,
+        volumeOfDistributionLkg: 35.0,
+        canonicalSmiles: "CNCCC(C1=CC=CC=C1)OC2=CC=C(C=C2)C(F)(F)F"
+      }
+    },
     { id: 'escit', name: 'Escitalopram', class: 'ssri', classLabel: 'SSRI', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.3, dampening: 0.9, chaos: -0.2, repair: 0.0 }, regimen: { frequency: 'daily', standardRange: { min: 5, max: 20, unit: 'mg' } } },
     { id: 'venla', name: 'Venlafaxine', class: 'ssri', classLabel: 'SNRI', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: 0.1, dampening: 0.6, chaos: 0.0, repair: 0.0 }, regimen: { frequency: 'daily', standardRange: { min: 37.5, max: 225, unit: 'mg' } } },
     { id: 'dulox', name: 'Duloxetine', class: 'ssri', classLabel: 'SNRI', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: 0.2, dampening: 0.5, chaos: 0.1, repair: 0.0 }, regimen: { frequency: 'daily', standardRange: { min: 30, max: 120, unit: 'mg' } } },
@@ -65,19 +184,61 @@ export const molecules = [
     { id: 'traz', name: 'Trazodone', class: 'ssri', classLabel: 'SARI', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -1.0, dampening: 1.4, chaos: 0.1, repair: 0.0 }, regimen: { frequency: 'daily', standardRange: { min: 50, max: 300, unit: 'mg' } } },
     
     // Stimulants & Wakefulness
-    { id: 'amph', name: 'Amphetamine Salts', class: 'stimulant', classLabel: 'Stimulant', svg: svgPhen, halfLife: 'medium', addictionPotential: 0.7, effects: { arousal: 1.5, dampening: -0.5, chaos: 0.8, repair: -0.2 } },
+    {
+      id: 'amph',
+      name: 'Amphetamine Salts',
+      class: 'stimulant',
+      classLabel: 'Stimulant',
+      svg: svgPhen,
+      halfLife: 'medium',
+      addictionPotential: 0.7,
+      effects: { arousal: 1.5, dampening: -0.5, chaos: 0.8, repair: -0.2 },
+      smilesPhysics: {
+        bioavailabilityF: 0.85,
+        volumeOfDistributionLkg: 4.2,
+        canonicalSmiles: "CC(CC1=CC=CC=C1)N"
+      }
+    },
     { id: 'mph', name: 'Methylphenidate', class: 'stimulant', classLabel: 'Stimulant', svg: svgPhen, halfLife: 'medium', addictionPotential: 0.4, effects: { arousal: 1.2, dampening: -0.3, chaos: 0.5, repair: -0.1 } },
     { id: 'lisdexamph', name: 'Lisdexamfetamine', class: 'stimulant', classLabel: 'Stimulant', svg: svgPhen, halfLife: 'medium', addictionPotential: 0.6, effects: { arousal: 1.3, dampening: -0.4, chaos: 0.6, repair: -0.1 } },
     { id: 'dexmph', name: 'Dexmethylphenidate', class: 'stimulant', classLabel: 'Stimulant', svg: svgPhen, halfLife: 'medium', addictionPotential: 0.4, effects: { arousal: 1.1, dampening: -0.2, chaos: 0.4, repair: 0.0 } },
     { id: 'modaf', name: 'Modafinil', class: 'stimulant', classLabel: 'Eugeroic', svg: svgPhen, halfLife: 'medium', addictionPotential: 0.1, effects: { arousal: 0.8, dampening: 0.0, chaos: 0.1, repair: 0.1 } },
     { id: 'armodaf', name: 'Armodafinil', class: 'stimulant', classLabel: 'Eugeroic', svg: svgPhen, halfLife: 'medium', addictionPotential: 0.1, effects: { arousal: 0.9, dampening: 0.0, chaos: 0.1, repair: 0.1 } },
-    { id: 'caffeine', name: 'Caffeine', class: 'stimulant', classLabel: 'Xanthine', svg: svgPhen, halfLife: 'medium', effects: { arousal: 0.6, dampening: 0.0, chaos: 0.3, repair: 0.0 } },
-    { id: 'nicotine', name: 'Nicotine', class: 'stimulant', classLabel: 'Alkaloid Stimulant', svg: svgPhen, halfLife: 'medium', addictionPotential: 0.9, effects: { arousal: 0.5, dampening: 0.1, chaos: 0.2, repair: 0.0 } },
+    {
+      id: 'caffeine',
+      name: 'Caffeine',
+      class: 'stimulant',
+      classLabel: 'Xanthine',
+      svg: svgPhen,
+      halfLife: 'medium',
+      effects: { arousal: 0.6, dampening: 0.0, chaos: 0.3, repair: 0.0 },
+      smilesPhysics: {
+        bioavailabilityF: 0.99,
+        volumeOfDistributionLkg: 0.6,
+        canonicalSmiles: "CN1C=NC2=C1C(=O)N(C(=O)N2C)C"
+      }
+    },
+    {
+      id: 'nicotine',
+      name: 'Nicotine',
+      class: 'stimulant',
+      classLabel: 'Alkaloid Stimulant',
+      svg: svgPhen,
+      halfLife: 'medium',
+      addictionPotential: 0.9,
+      effects: { arousal: 0.5, dampening: 0.1, chaos: 0.2, repair: 0.0 },
+      smilesPhysics: {
+        bioavailabilityF: 0.44,
+        volumeOfDistributionLkg: 2.6,
+        canonicalSmiles: "CN1CCC[C@H]1C2=CN=CC=C2"
+      }
+    },
     { id: 'meth', name: 'Methamphetamine', class: 'stimulant', classLabel: 'Potent Releaser', svg: svgPhen, halfLife: 'long', addictionPotential: 0.9, effects: { arousal: 2.8, dampening: -1.2, chaos: 2.5, repair: -1.0 } },
     { id: 'coke', name: 'Cocaine', class: 'stimulant', classLabel: 'DRI / SNDRI', svg: svgPhen, halfLife: 'short', addictionPotential: 0.85, effects: { arousal: 2.2, dampening: -0.8, chaos: 1.8, repair: -0.5 } },
     
     // Antipsychotics & Mood Stabilizers
     { id: 'halo', name: 'Haloperidol', class: 'antipsychotic', classLabel: 'Typical Antipsychotic', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -1.0, dampening: 1.8, chaos: -0.5, repair: -0.5 } },
+
     { id: 'queti', name: 'Quetiapine', class: 'antipsychotic', classLabel: 'Atypical Antipsychotic', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.8, dampening: 1.5, chaos: -0.3, repair: -0.2 } },
     { id: 'arip', name: 'Aripiprazole', class: 'antipsychotic', classLabel: 'Atypical Antipsychotic', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.4, dampening: 1.2, chaos: -0.2, repair: 0.0 } },
     { id: 'risper', name: 'Risperidone', class: 'antipsychotic', classLabel: 'Atypical Antipsychotic', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: -0.6, dampening: 1.4, chaos: -0.3, repair: -0.1 } },
@@ -87,8 +248,35 @@ export const molecules = [
     { id: 'lamo', name: 'Lamotrigine', class: 'antipsychotic', classLabel: 'Mood Stabilizer', svg: svgTricyclic, halfLife: 'medium', effects: { arousal: 0.0, dampening: 0.5, chaos: -0.5, repair: 0.2 } },
     
     // Cannabinoids & Endocannabinoid Modulators
-    { id: 'thc', name: 'Delta-9-THC', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, halfLife: 'medium', addictionPotential: 0.3, effects: { arousal: 0.2, dampening: 0.5, chaos: 0.6, repair: -0.1 } },
-    { id: 'cbd', name: 'Cannabidiol (CBD)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, halfLife: 'medium', effects: { arousal: -0.2, dampening: 0.6, chaos: -0.4, repair: 0.1 } },
+    {
+      id: 'thc',
+      name: 'Delta-9-THC',
+      class: 'cannabinoid',
+      classLabel: 'Cannabinoid',
+      svg: svgCannabinoid,
+      halfLife: 'medium',
+      addictionPotential: 0.3,
+      effects: { arousal: 0.2, dampening: 0.5, chaos: 0.6, repair: -0.1 },
+      smilesPhysics: {
+        bioavailabilityF: 0.20,
+        volumeOfDistributionLkg: 10.0,
+        canonicalSmiles: "CCCCCC1=CC(=C2[C@H]3C=C(C)CC[C@@H]3C(C)(C)OC2=C1)O"
+      }
+    },
+    {
+      id: 'cbd',
+      name: 'Cannabidiol (CBD)',
+      class: 'cannabinoid',
+      classLabel: 'Cannabinoid',
+      svg: svgCannabinoid,
+      halfLife: 'medium',
+      effects: { arousal: -0.2, dampening: 0.6, chaos: -0.4, repair: 0.1 },
+      smilesPhysics: {
+        bioavailabilityF: 0.19,
+        volumeOfDistributionLkg: 32.0,
+        canonicalSmiles: "CCCCCC1=CC(=C(C(=C1)O)[C@@H]2C=C(C)CC[C@H]2C(=C)C)O"
+      }
+    },
     { id: 'delta8', name: 'Delta-8-THC', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, halfLife: 'medium', addictionPotential: 0.2, effects: { arousal: 0.1, dampening: 0.7, chaos: 0.3, repair: 0.0 } },
     { id: 'hhc', name: 'HHC (Hexahydrocannabinol)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, halfLife: 'medium', effects: { arousal: 0.15, dampening: 0.6, chaos: 0.4, repair: -0.05 } },
     { id: 'cbga', name: 'CBGA (Cannabigerolic acid)', class: 'cannabinoid', classLabel: 'Cannabinoid Precursor', svg: svgCannabinoid, halfLife: 'medium', effects: { arousal: 0.0, dampening: 0.3, chaos: -0.1, repair: 0.2 } },
@@ -104,7 +292,22 @@ export const molecules = [
     { id: 'cbdp', name: 'Cannabidiphorol (CBDP)', class: 'cannabinoid', classLabel: 'Cannabinoid', svg: svgCannabinoid, halfLife: 'medium', effects: { arousal: -0.3, dampening: 0.8, chaos: -0.2, repair: 0.2 } },
     
     // Depressants / Benzos / Gabapentinoids / Z-Drugs / Opioids
-    { id: 'alpraz', name: 'Alprazolam', class: 'depressant', classLabel: 'Benzodiazepine', svg: svgTricyclic, halfLife: 'medium', addictionPotential: 0.8, effects: { arousal: -1.2, dampening: 1.4, chaos: -0.6, repair: -0.3 }, regimen: { frequency: 'prn', standardRange: { min: 0.25, max: 2.0, unit: 'mg' } } },
+    {
+      id: 'alpraz',
+      name: 'Alprazolam',
+      class: 'depressant',
+      classLabel: 'Benzodiazepine',
+      svg: svgTricyclic,
+      halfLife: 'medium',
+      addictionPotential: 0.8,
+      effects: { arousal: -1.2, dampening: 1.4, chaos: -0.6, repair: -0.3 },
+      regimen: { frequency: 'prn', standardRange: { min: 0.25, max: 2.0, unit: 'mg' } },
+      smilesPhysics: {
+        bioavailabilityF: 0.90,
+        volumeOfDistributionLkg: 1.1,
+        canonicalSmiles: "CC1=NN=C2CN=C(C3=C(C=C(Cl)C=C3)C4=CC=CC=C4)N12"
+      }
+    },
     { id: 'clonaz', name: 'Clonazepam', class: 'depressant', classLabel: 'Benzodiazepine', svg: svgTricyclic, halfLife: 'medium', addictionPotential: 0.7, effects: { arousal: -1.0, dampening: 1.3, chaos: -0.5, repair: -0.2 } },
     { id: 'diaz', name: 'Diazepam', class: 'depressant', classLabel: 'Benzodiazepine', svg: svgTricyclic, halfLife: 'medium', addictionPotential: 0.6, effects: { arousal: -0.9, dampening: 1.2, chaos: -0.4, repair: -0.1 } },
     { id: 'loraz', name: 'Lorazepam', class: 'depressant', classLabel: 'Benzodiazepine', svg: svgTricyclic, halfLife: 'medium', addictionPotential: 0.75, effects: { arousal: -1.1, dampening: 1.3, chaos: -0.5, repair: -0.2 } },

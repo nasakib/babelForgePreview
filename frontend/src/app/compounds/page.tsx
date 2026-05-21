@@ -1,7 +1,10 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import dynamic from "next/dynamic";
 import { molecules } from "@/data/molecules";
+
+const SMILESRenderer = dynamic(() => import("@/components/clinical/SMILESRenderer"), { ssr: false });
 
 export default function CompoundsDirectory() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -118,12 +121,23 @@ export default function CompoundsDirectory() {
         ) : (
           <div className="flex flex-col h-full overflow-y-auto custom-scrollbar">
             <div className="p-6 md:p-8 border-b border-line flex flex-col md:flex-row items-center md:items-start gap-6 bg-surface-0">
-              <div 
-                className={`w-32 h-32 flex-none opacity-80 drop-shadow-sm ${
-                  selectedMol.isBabelForge ? 'text-accent-400' : (selectedMol.isBlue ? 'text-clinical-400' : (selectedMol.class === 'novel' ? 'text-clinical-400' : 'text-ink-subtle'))
-                }`}
-                dangerouslySetInnerHTML={{ __html: selectedMol.svg }}
-              />
+              {selectedMol.smilesPhysics?.canonicalSmiles ? (
+                <div className="w-32 h-32 flex-none flex items-center justify-center bg-surface-0/20 backdrop-blur-sm rounded-clinical border border-line p-1 shadow-inner relative overflow-hidden">
+                  <SMILESRenderer
+                    smiles={selectedMol.smilesPhysics.canonicalSmiles}
+                    width={128}
+                    height={128}
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              ) : (
+                <div 
+                  className={`w-32 h-32 flex-none opacity-80 drop-shadow-sm ${
+                    selectedMol.isBabelForge ? 'text-accent-400' : (selectedMol.isBlue ? 'text-clinical-400' : (selectedMol.class === 'novel' ? 'text-clinical-400' : 'text-ink-subtle'))
+                  }`}
+                  dangerouslySetInnerHTML={{ __html: selectedMol.svg }}
+                />
+              )}
               <div className="flex-grow text-center md:text-left">
                 <h2 className="text-3xl font-bold text-ink mb-1">{selectedMol.name}</h2>
                 <span className={`text-xs uppercase tracking-widest font-bold px-3 py-1 rounded-full border ${
