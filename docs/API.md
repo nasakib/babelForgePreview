@@ -108,3 +108,60 @@ const errorCorrectionVector: number[] = decodeQLDPCSyndrome(
 
 #### Returns:
 - `number[]`: Reconstructed sparse synaptic correction vector $e$ of length $N_k$. Elements denote synaptic strength corrections required to recover perfect code stability.
+
+---
+
+## ⏱️ 5. Intrinsic Kuramoto Phase Synchronization Dynamics API
+
+### `simulateKuramotoFrequencies`
+Solves the intrinsic phase synchronization equations over the parcellation nodes using the Fourth-Order Runge-Kutta numerical integration scheme.
+
+```typescript
+import { simulateKuramotoFrequencies, KuramotoState } from "@babelforge/core";
+
+const R_steady_state: number = simulateKuramotoFrequencies(
+  state: KuramotoState,
+  timesteps: number,
+  dt: number
+);
+```
+
+#### Parameters:
+- `state` (`KuramotoState`): Type-safe configuration containing:
+  - `N` (`number`): Number of vertices (200 ROIs).
+  - `adjacency` (`Uint8Array`): Composed structural connectivity adjacency matrix of size $[N][N]$ (mutated by pathological modifiers: $A_{\text{composed}}$).
+  - `omegas` (`Float32Array`): Intrinsic oscillator frequency array of length $N$ (rad/s).
+  - `K` (`number`): Coupling coefficient strength. Range: $[0.1, 4.0]$.
+  - `noise` (`number`): Effective phase noise intensity. Range: $[0.01, 1.0]$.
+  - `seed` (`number`): Random number generator seed.
+- `timesteps` (`number`): Total numerical solver integration cycles. Defaults to `500`.
+- `dt` (`number`): Time integration step size. Defaults to `0.04` (seconds).
+
+#### Returns:
+- `number`: Steady-state Kuramoto order parameter $R(t) \in [0, 1]$ representing global phase coherence.
+
+---
+
+## 🧪 6. ProTox-3.0 QSAR Molecular Neurotoxicity Alert API
+
+### `analyzeQSARNeurotoxicity`
+Performs QSAR analysis on molecular structures to identify, rate, and explain chemical moieties causing or preventing neurotoxicity.
+
+```typescript
+import { analyzeQSARNeurotoxicity, NeuroToxAnalysis } from "@babelforge/core";
+
+const report: NeuroToxAnalysis = analyzeQSARNeurotoxicity(
+  compoundId: string,
+  compoundClass?: string
+);
+```
+
+#### Parameters:
+- `compoundId` (`string`): Unique molecular identifier of the substance (e.g. `spur_mtdl`, `jianshouqing`, `meth`, `halo`).
+- `compoundClass` (`string`, *optional*): Clinical class label of the compound (e.g. `stimulant`, `ssri`, `depressant`).
+
+#### Returns:
+- `NeuroToxAnalysis`: Clinical-grade toxicity diagnostic containing:
+  - `structuralAlert` (`string`): Monospace tag detailing the identified chemical moiety (e.g. *4-chlorophenyl-4-piperidinol moiety*).
+  - `explanation` (`string`): Comprehensive mechanistic explanation including the required peer comparison clause: *"This part of the compound is what makes it more or less neurotoxic than other compounds of its class"*.
+  - `riskLevel` (`'Low' | 'Moderate' | 'High' | 'Severe'`): dynamic HSL tier rating.

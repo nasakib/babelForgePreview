@@ -93,3 +93,41 @@ To bridge machine learning with high-dimensional physics, we define an explicit 
 
 3. **Molecular Phase-Lock Frequencies:**
    Engaging the **Phase-Lock Spectral Frequencies** protocol models the injection of precise target agents. This triggers gradient-ascent optimization, forcing the patient's continuous 32-bin Fourier amplitudes back into template limits, reducing the QLDPC stabilizer syndrome $\partial_k \cdot x$ to 0, and shifting the classifier output from Treatment-Resistant (Label 1) to Treatment-Responsive (Label 0).
+
+---
+
+## 🍄 5. Yunnan Jianshouqing Mushroom (Lanmaoa asiatica) Biophysical Mappings
+
+The engine mathematically models the unique parasympathetic and hallucinatory visual coordinate transformations induced by the Yunnan Jianshouqing mushroom (*Lanmaoa asiatica*):
+
+1. **Variegatic Acid Organic Scaffold:**
+   The primary active chemical compound variegatic acid is mapped by its canonical SMILES string:
+   `OC1=C(C(O)=O)C(C2=CC=C(O)C(O)=C2)=C(C3=CC=C(O)C(O)=C3)C1=O`
+
+2. **Competitive Dual-Receptor Binding Pharmacodynamics:**
+   The compound undergoes competitive receptor binding characterized by:
+   - **Muscarinic M1 Agonism:** $K_d = 25.0\text{ nM}$, Efficacy $\epsilon = 0.6$. Directly translates to positive dampening and negative arousal vectors:
+     $$\Delta \text{Dampening} = +0.5 \cdot \text{Act}_{\text{M1}}$$
+     $$\Delta \text{Arousal} = -0.2 \cdot \text{Act}_{\text{M1}}$$
+   - **5-HT2A Agonism:** $K_d = 15.0\text{ nM}$, Efficacy $\epsilon = 0.9$. Translates to extreme local visual cortex phase desynchronizations (entropic chaos vector $+70$, Arousal $+0.8$, Chaos $+1.8$).
+
+3. **Reversible Visual Coordinate Transformation:**
+   DMN disruption coupled with muscarinic M1 autonomic rebalancing triggers the specialized `Oneirogenic Reversible Coordinate Transformation` qualitative narrative archetype, modeling the highly structured, repeating visual animations (popularly called "little people").
+
+---
+
+## 🧪 6. ProTox-3.0 Mechanism-Aware QSAR Structural Neurotoxicity Criteria
+
+The ProTox-3.0 engine analyzes structural molecular features and maps specific chemical alerts against multi-organ toxicity indices:
+
+1. **Multi-Organ Targets:**
+   - Hepatotoxicity (DILI)
+   - Nephrotoxicity
+   - Cardiotoxicity (hERG / QT-prolongation)
+   - Immunotoxicity
+
+2. **QSAR Structural Neurotoxicity Mappings:**
+   We analyze chemical structures to determine why a substance differs in neurotoxicity relative to its class peers, grammatically enforcing the strict comparison clause: *"This part of the compound is what makes it more or less neurotoxic than other compounds of its class"*.
+   - **Haloperidol (High-Risk):** The 4-chlorophenyl piperidine structure is metabolically oxidized into the highly reactive pyridinium species HP+. This structurally mimics the mitochondrial neurotoxin MPP+ and inhibits complex I of the electron transport chain, making Haloperidol exceptionally more neurotoxic than atypical antipsychotics.
+   - **Methamphetamine (Severe-Risk):** The addition of the lipophilic N-methyl group to the phenethylamine skeleton speeds up blood-brain barrier surges, causing massive vesicular dopamine depletion and hydroxyl radical auto-oxidation.
+   - **Variegatic Acid (High-Risk):** The unstable poly-phenolic structure is highly susceptible to bruise-induced oxidation, generating reactive quinone-methide intermediates that cause acute, reversible visual coordinate transformations, making raw ingestion substantially more neurotoxic and oneirogenic than typical fungal metabolites.
