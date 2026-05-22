@@ -14,6 +14,7 @@ import { EMPTY_PROFILE, type PatientProfile } from "@/lib/patient/profile";
 import TimeEnginePanel from "@/components/palantir/TimeEnginePanel";
 import ReceptorOccupancy from "@/components/clinical/ReceptorOccupancy";
 import SEEResultsPanel from "@/components/palantir/SEEResultsPanel";
+import { analyzeNeurotoxicity } from "@/lib/engines/toxicology";
 
 const STORAGE_KEY = "babelforge:stack-simulator:v1";
 
@@ -309,6 +310,62 @@ export default function StackSimulator() {
             <button onClick={addToStack} className="w-full btn-primary text-ink text-xs font-bold uppercase tracking-widest py-3 rounded-clinical transition-colors shadow-md shadow-accent-500/20">
                 + Add to Stack
             </button>
+
+            {selectedMol && (
+              <div className="mt-4 p-3 bg-slate-900/90 border border-slate-800 rounded-clinical space-y-2.5 text-white">
+                <div className="flex justify-between items-center border-b border-slate-800 pb-1.5 mb-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-red-500 animate-pulse">⚡</span>
+                    <span className="text-[10px] font-mono font-extrabold uppercase tracking-widest text-slate-300">
+                      ProTox-3.0 Safety Card
+                    </span>
+                  </div>
+                  {(() => {
+                    const neuroTox = analyzeNeurotoxicity(selectedMol.id, selectedMol.class);
+                    return (
+                      <span className={`text-[8px] font-mono font-extrabold uppercase px-1.5 py-0.5 rounded border ${
+                        neuroTox.riskLevel === 'Severe' ? 'bg-red-500/20 text-red-400 border-red-500/30' :
+                        neuroTox.riskLevel === 'High' ? 'bg-orange-500/20 text-orange-400 border-orange-500/30' :
+                        neuroTox.riskLevel === 'Moderate' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' :
+                        'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                      }`}>
+                        Tox: {neuroTox.riskLevel}
+                      </span>
+                    );
+                  })()}
+                </div>
+                
+                {/* 2D Mini structure and Details */}
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-slate-950/60 border border-slate-800 rounded p-1 flex-none relative overflow-hidden flex items-center justify-center">
+                    <div 
+                      className="w-full h-full opacity-80 text-cyan-400 [&>svg]:w-full [&>svg]:h-full flex items-center justify-center"
+                      dangerouslySetInnerHTML={{ __html: selectedMol.svg }}
+                    />
+                  </div>
+                  <div className="min-w-0">
+                    <h5 className="font-bold text-xs text-white truncate">{selectedMol.name}</h5>
+                    <p className="text-[9px] text-slate-400 truncate font-mono uppercase tracking-wider">{selectedMol.classLabel}</p>
+                  </div>
+                </div>
+
+                {(() => {
+                  const neuroTox = analyzeNeurotoxicity(selectedMol.id, selectedMol.class);
+                  return (
+                    <div className="space-y-2 text-[11px] leading-relaxed">
+                      <div>
+                        <span className="text-slate-500 block font-mono text-[8px] uppercase tracking-wider font-extrabold">Active Moiety:</span>
+                        <span className="text-cyan-400 font-mono font-semibold text-[10px]">{neuroTox.structuralAlert}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 block font-mono text-[8px] uppercase tracking-wider font-extrabold">Diagnostics:</span>
+                        <p className="text-slate-300 text-[10.5px] font-sans mt-0.5">{neuroTox.explanation}</p>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
           </div>
         </div>
 
@@ -352,7 +409,15 @@ export default function StackSimulator() {
                 const regimen = originalMol?.regimen;
 
                 return (
-                  <div key={mol.id} className={`stack-item flex flex-col p-3 rounded-clinical border ${bgClass} shadow-sm gap-2`}>
+                  <div
+                    key={mol.id}
+                    onClick={() => setSelectedMolId(mol.id)}
+                    className={`stack-item flex flex-col p-3 rounded-clinical border cursor-pointer transition-all ${
+                      selectedMolId === mol.id
+                        ? 'border-accent-500 bg-accent-500/[0.08] shadow-[0_0_12px_rgba(168,85,247,0.15)] ring-1 ring-accent-500/30'
+                        : bgClass
+                    } shadow-sm gap-2`}
+                  >
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className={`w-10 h-10 flex-none opacity-80 ${colorClass}`} dangerouslySetInnerHTML={{ __html: mol.svg }} />

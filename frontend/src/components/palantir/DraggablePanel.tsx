@@ -41,6 +41,7 @@ const PANEL_EXPLANATION_MAP: Record<string, string> = {
   "signal-analyzer-sidebar": "signal-analyzer-sidebar",
   "11d-projection-sidebar": "11d-projection-sidebar",
   "biophysical-animation": "biophysical-canvas",
+  "console-compound-inspector": "biophysical-canvas",
 };
 
 export default function DraggablePanel({

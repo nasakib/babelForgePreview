@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAI } from "@/context/AIContext";
 import dynamic from "next/dynamic";
 const NeuroCanvas = dynamic(() => import("@/components/NeuroCanvas"), { ssr: false });
+const SMILESRenderer = dynamic(() => import("@/components/clinical/SMILESRenderer"), { ssr: false });
+import Link from "next/link";
 import {
   composeTopology,
   PATHOLOGIES,
@@ -24,6 +26,7 @@ import DraggablePanel from "@/components/palantir/DraggablePanel";
 import TimeEnginePanel from "@/components/palantir/TimeEnginePanel";
 import NodeFilterPanel from "@/components/palantir/NodeFilterPanel";
 import SEEResultsPanel from "@/components/palantir/SEEResultsPanel";
+import { evaluateSubstanceToxicity, analyzeNeurotoxicity, type ProTox3Profile } from "@/lib/engines/toxicology";
 
 const VIEW_MODES = [
   { id: "topology", label: "Topology", desc: "Region tint · amplitude pulse" },
@@ -50,6 +53,49 @@ export default function ConsolePage() {
   const [tolerance, setTolerance] = useState(0);
   const [age, setAge] = useState(35);
   const [profile, setProfile] = useState<PatientProfile>(EMPTY_PROFILE);
+
+  const [selectedCompoundId, setSelectedCompoundId] = useState<string | null>(null);
+
+  const selectedCompound = useMemo(() => {
+    if (!selectedCompoundId) return null;
+    return molecules.find((m) => m.id === selectedCompoundId);
+  }, [selectedCompoundId]);
+
+  const isInStack = useMemo(() => {
+    if (!selectedCompoundId) return false;
+    return activeStack.some((item: any) => item.id === selectedCompoundId);
+  }, [selectedCompoundId, activeStack]);
+
+  const handleApplyToStack = useCallback(() => {
+    if (!selectedCompound) return;
+    if (activeStack.some((item: any) => item.id === selectedCompound.id)) return;
+    if (activeStack.length >= 10) {
+      alert("Maximum stack size (10) reached.");
+      return;
+    }
+    setActiveStack([
+      ...activeStack,
+      {
+        id: selectedCompound.id,
+        name: selectedCompound.name,
+        dose: 2,
+        currentIntensity: 2,
+        toleranceMonths: 0,
+        isBabelForge: selectedCompound.isBabelForge,
+        classLabel: selectedCompound.classLabel,
+        effects: selectedCompound.effects,
+        svg: selectedCompound.svg,
+        class: selectedCompound.class,
+      }
+    ]);
+    setLog((l) => [`[${ts()}] Applied ${selectedCompound.name} (Dose 2) to active regimen stack.`, ...l]);
+  }, [selectedCompound, activeStack, setActiveStack]);
+
+  const handleRemoveFromStack = useCallback(() => {
+    if (!selectedCompound) return;
+    setActiveStack(activeStack.filter((item: any) => item.id !== selectedCompound.id));
+    setLog((l) => [`[${ts()}] Removed ${selectedCompound.name} from active regimen stack.`, ...l]);
+  }, [selectedCompound, activeStack, setActiveStack]);
 
   // Sync with the heads-up scanner profile on mount
   useEffect(() => {
@@ -309,6 +355,27 @@ export default function ConsolePage() {
           </button>
         </div>
 
+        <div className="p-4 border-b border-line bg-surface-50/40">
+          <div className="section-label mb-2">Compound Selection Browser</div>
+          <div className="relative">
+            <select
+              value={selectedCompoundId || ""}
+              onChange={(e) => setSelectedCompoundId(e.target.value || null)}
+              className="w-full bg-surface-0 border border-line text-xs font-semibold text-ink-subtle rounded-clinical p-2.5 focus:outline-none focus:border-accent-500 cursor-pointer transition-all hover:border-line-strong font-mono uppercase tracking-wider"
+            >
+              <option value="">-- Inspect A Compound --</option>
+              {molecules.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name} ({m.classLabel})
+                </option>
+              ))}
+            </select>
+          </div>
+          <p className="text-[10.5px] text-ink-muted mt-1.5 leading-normal">
+            Select any standard or novel compound to review molecular structure, telemetry logs, and ProTox-3.0 neurotoxicity diagnostics.
+          </p>
+        </div>
+
         <div className="p-4 border-b border-line">
           <div className="section-label mb-2">Diagnosis</div>
           {report ? (
@@ -498,7 +565,12 @@ export default function ConsolePage() {
                 return (
                   <div
                     key={item.id}
-                    className={`flex items-center justify-between border rounded-sharp px-2.5 py-1.5 ${item.isBabelForge ? 'border-accent-500/40 bg-accent-500/10' : 'border-line'}`}
+                    onClick={() => setSelectedCompoundId(item.id === selectedCompoundId ? null : item.id)}
+                    className={`flex items-center justify-between border rounded-sharp px-2.5 py-1.5 cursor-pointer transition-all hover:bg-surface-100 hover:border-line-strong ${
+                      selectedCompoundId === item.id 
+                        ? 'border-accent-500 bg-accent-500/[0.08] shadow-[0_0_10px_rgba(168,85,247,0.15)] ring-1 ring-accent-500/30' 
+                        : (item.isBabelForge ? 'border-accent-500/40 bg-accent-500/10' : 'border-line bg-surface-0')
+                    }`}
                   >
                     <div className="min-w-0">
                       <div className={`text-[12px] truncate ${item.isBabelForge ? 'text-accent-400 font-bold' : 'text-ink'}`}>
@@ -546,6 +618,253 @@ export default function ConsolePage() {
           </div>
         </div>
       </DraggablePanel>
+
+      {selectedCompound && (
+        <DraggablePanel
+          id="console-compound-inspector"
+          title="ProTox-3.0 Compound Inspector"
+          subtitle="Toxicity & Structural Safety Diagnostics"
+          defaultPosition={{ x: 440, y: 150 }}
+          defaultSize={{ width: 420, height: 600 }}
+          onClose={() => setSelectedCompoundId(null)}
+        >
+          <div className="flex flex-col h-full overflow-y-auto custom-scrollbar bg-[#0d1117] text-white p-4 space-y-4">
+            {/* Header section */}
+            <div className="flex items-start justify-between gap-4 border-b border-slate-800 pb-3">
+              <div>
+                <h3 className="text-lg font-bold text-white leading-tight">{selectedCompound.name}</h3>
+                <span className={`inline-block text-[9px] uppercase tracking-widest font-extrabold px-2 py-0.5 rounded border mt-1.5 ${
+                  selectedCompound.isBabelForge ? 'border-accent-500/30 bg-accent-500/10 text-accent-400' : 
+                  (selectedCompound.isBlue ? 'border-clinical-500/30 bg-clinical-500/10 text-clinical-400' : 
+                  (selectedCompound.class === 'novel' ? 'border-clinical-500/30 bg-clinical-500/10 text-clinical-400' : 'border-slate-800 bg-slate-900 text-slate-400'))
+                }`}>
+                  {selectedCompound.classLabel}
+                </span>
+                {selectedCompound.isBabelForge && (
+                  <span className="ml-1.5 inline-block bg-accent-500/20 text-accent-400 text-[8px] font-extrabold px-1.5 py-0.5 rounded border border-accent-500/30 align-middle">
+                    babelForge
+                  </span>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col gap-1.5">
+                {isInStack ? (
+                  <button
+                    onClick={handleRemoveFromStack}
+                    className="px-3 py-1.5 bg-red-950/85 hover:bg-red-900 text-red-300 border border-red-500/30 rounded-clinical font-mono text-[9px] font-bold uppercase tracking-wider transition-colors shadow-sm cursor-pointer"
+                  >
+                    Remove Stack
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleApplyToStack}
+                    className="px-3 py-1.5 bg-accent-500 hover:bg-accent-600 active:bg-accent-700 text-white rounded-clinical font-mono text-[9px] font-bold uppercase tracking-wider transition-colors shadow-sm cursor-pointer"
+                  >
+                    Apply Stack
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Structure Drawing & SMILES */}
+            <div className="grid grid-cols-3 gap-3 bg-slate-900/40 p-3 border border-slate-800 rounded-clinical">
+              <div className="col-span-1 bg-slate-950/80 border border-slate-800 rounded p-1 flex items-center justify-center relative overflow-hidden aspect-square">
+                {selectedCompound.smilesPhysics?.canonicalSmiles ? (
+                  <SMILESRenderer
+                    smiles={selectedCompound.smilesPhysics.canonicalSmiles}
+                    width={90}
+                    height={90}
+                    className="w-full h-full object-contain bg-slate-950"
+                  />
+                ) : (
+                  <div 
+                    className="w-full h-full opacity-80 text-cyan-400 [&>svg]:w-full [&>svg]:h-full"
+                    dangerouslySetInnerHTML={{ __html: selectedCompound.svg }}
+                  />
+                )}
+              </div>
+              <div className="col-span-2 flex flex-col justify-between space-y-1.5">
+                <div>
+                  <span className="text-slate-500 block font-mono text-[8px] uppercase tracking-wider font-extrabold">Formula / SMILES:</span>
+                  <p className="text-[10px] font-mono text-cyan-400 break-all select-all font-semibold max-h-[52px] overflow-y-auto custom-scrollbar">
+                    {selectedCompound.smilesPhysics?.canonicalSmiles || "N/A"}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-slate-500 block font-mono text-[8px] uppercase tracking-wider font-extrabold">Half-life:</span>
+                  <span className="text-[10.5px] text-slate-300 font-semibold">{selectedCompound.halfLife || "N/A"}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 4-Vector Telemetry */}
+            <div className="space-y-2 bg-slate-900/20 p-3 border border-slate-800/80 rounded-clinical">
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block border-b border-slate-800/60 pb-1">
+                Pharmacological Vectors
+              </span>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+                <div>
+                  <div className="flex justify-between text-[10px] font-mono text-slate-400 mb-0.5">
+                    <span>Arousal</span>
+                    <span className="font-bold text-slate-300">{(selectedCompound.effects.arousal > 0 ? '+' : '') + selectedCompound.effects.arousal.toFixed(1)}</span>
+                  </div>
+                  <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                    <div className="bg-cyan-500 h-full rounded-full" style={{ width: `${Math.min(100, Math.max(0, (selectedCompound.effects.arousal + 2) / 4 * 100))}%` }}></div>
+                  </div>
+                </div>
+                <div>
+                  <div className="flex justify-between text-[10px] font-mono text-slate-400 mb-0.5">
+                    <span>Dampening</span>
+                    <span className="font-bold text-slate-300">{(selectedCompound.effects.dampening > 0 ? '+' : '') + selectedCompound.effects.dampening.toFixed(1)}</span>
+                  </div>
+                  <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                    <div className="bg-purple-500 h-full rounded-full" style={{ width: `${Math.min(100, Math.max(0, (selectedCompound.effects.dampening + 2) / 4 * 100))}%` }}></div>
+                  </div>
+                </div>
+                <div>
+                  <div className="flex justify-between text-[10px] font-mono text-slate-400 mb-0.5">
+                    <span>Chaos</span>
+                    <span className="font-bold text-slate-300">{(selectedCompound.effects.chaos > 0 ? '+' : '') + selectedCompound.effects.chaos.toFixed(1)}</span>
+                  </div>
+                  <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                    <div className="bg-amber-500 h-full rounded-full" style={{ width: `${Math.min(100, Math.max(0, (selectedCompound.effects.chaos + 2) / 4 * 100))}%` }}></div>
+                  </div>
+                </div>
+                <div>
+                  <div className="flex justify-between text-[10px] font-mono text-slate-400 mb-0.5">
+                    <span>Repair</span>
+                    <span className="font-bold text-slate-300">{(selectedCompound.effects.repair > 0 ? '+' : '') + selectedCompound.effects.repair.toFixed(1)}</span>
+                  </div>
+                  <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                    <div className="bg-emerald-500 h-full rounded-full" style={{ width: `${Math.min(100, Math.max(0, (selectedCompound.effects.repair + 2) / 4 * 100))}%` }}></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ProTox-3.0 Diagnostics */}
+            {(() => {
+              const isStim = selectedCompound.class === "stimulant";
+              const isDep = selectedCompound.class === "depressant";
+              const toxProfile: ProTox3Profile = selectedCompound.id === "spur_mtdl" ? {
+                dili: { active: false, confidence: 0.12 },
+                neuro: { active: false, confidence: 0.08 },
+                nephro: { active: false, confidence: 0.15 },
+                respi: { active: false, confidence: 0.18 },
+                cardio: { active: false, confidence: 0.22 },
+                immuno: { active: true, confidence: 0.99 },
+                sr_are: { active: true, confidence: 0.65 },
+                mie_pxr: { active: true, confidence: 0.53 }
+              } : selectedCompound.id === "seriphadine" ? {
+                dili: { active: false, confidence: 0.05 },
+                neuro: { active: false, confidence: 0.14 },
+                nephro: { active: false, confidence: 0.08 },
+                respi: { active: false, confidence: 0.10 },
+                cardio: { active: false, confidence: 0.18 },
+                immuno: { active: true, confidence: 0.96 },
+                sr_are: { active: false, confidence: 0.20 },
+                mie_pxr: { active: true, confidence: 0.44 }
+              } : {
+                dili: { active: false, confidence: 0.10 },
+                neuro: { active: false, confidence: 0.15 },
+                nephro: { active: false, confidence: 0.05 },
+                respi: { active: isDep, confidence: isDep ? 0.65 : 0.05 },
+                cardio: { active: isStim, confidence: isStim ? 0.72 : 0.12 },
+                immuno: { active: false, confidence: 0.02 },
+                sr_are: { active: false, confidence: 0.10 },
+                mie_pxr: { active: false, confidence: 0.08 }
+              };
+              const toxReport = evaluateSubstanceToxicity(selectedCompound.id, toxProfile);
+              const neuroTox = analyzeNeurotoxicity(selectedCompound.id, selectedCompound.class);
+
+              return (
+                <div className="space-y-4">
+                  {/* Organ Tox Grid */}
+                  <div className="bg-slate-900/40 border border-slate-800 p-3 rounded-clinical space-y-2">
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block border-b border-slate-800/60 pb-1">
+                      ProTox-3.0 Organ Diagnostics
+                    </span>
+                    <div className="grid grid-cols-2 gap-2 text-[10px]">
+                      <div className="p-2 bg-slate-950/40 rounded border border-slate-800/80">
+                        <span className="block text-[8px] text-slate-500 uppercase tracking-wider font-bold mb-0.5">DILI</span>
+                        <span className={`font-mono font-bold ${toxProfile.dili.active ? "text-red-400" : "text-emerald-400"}`}>
+                          {toxProfile.dili.active ? "HAZARD" : "Safe"}
+                        </span>
+                      </div>
+                      <div className="p-2 bg-slate-950/40 rounded border border-slate-800/80">
+                        <span className="block text-[8px] text-slate-500 uppercase tracking-wider font-bold mb-0.5">Nephrotoxicity</span>
+                        <span className={`font-mono font-bold ${toxProfile.nephro.active ? "text-red-400" : "text-emerald-400"}`}>
+                          {toxProfile.nephro.active ? "HAZARD" : "Safe"}
+                        </span>
+                      </div>
+                      <div className="p-2 bg-slate-950/40 rounded border border-slate-800/80">
+                        <span className="block text-[8px] text-slate-500 uppercase tracking-wider font-bold mb-0.5">Cardiotoxicity</span>
+                        <span className={`font-mono font-bold ${toxProfile.cardio.active ? "text-red-400" : "text-emerald-400"}`}>
+                          {toxProfile.cardio.active ? "HAZARD" : "Safe"}
+                        </span>
+                      </div>
+                      <div className="p-2 bg-slate-950/40 rounded border border-slate-800/80">
+                        <span className="block text-[8px] text-slate-500 uppercase tracking-wider font-bold mb-0.5">Immunotoxicity</span>
+                        <span className={`font-mono font-bold ${toxProfile.immuno.active ? (toxReport.overrideVerified ? "text-cyan-400" : "text-red-400") : "text-emerald-400"}`}>
+                          {toxProfile.immuno.active ? (toxReport.overrideVerified ? "OVERRIDDEN" : "HAZARD") : "Safe"}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="p-2 bg-slate-950/80 border border-slate-800/60 rounded font-mono text-[9px] text-cyan-400 border-l-2 border-l-cyan-500 leading-tight">
+                      {toxReport.diagnosticOutput}
+                    </div>
+                  </div>
+
+                  {/* Structural Neurotoxicity Alert */}
+                  <div className="p-3 bg-slate-900/60 border border-slate-800 rounded-clinical space-y-2.5">
+                    <div className="flex items-center justify-between border-b border-slate-800 pb-1.5">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-red-500 animate-pulse">⚡</span>
+                        <span className="text-[10px] uppercase font-extrabold tracking-widest text-slate-300 font-mono">Structural Neurotoxicity Alert</span>
+                      </div>
+                      <span className={`text-[8px] font-mono font-extrabold uppercase px-1.5 py-0.5 rounded border ${
+                        neuroTox.riskLevel === 'Severe' ? 'bg-red-500/20 text-red-400 border-red-500/30' :
+                        neuroTox.riskLevel === 'High' ? 'bg-orange-500/20 text-orange-400 border-orange-500/30' :
+                        neuroTox.riskLevel === 'Moderate' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' :
+                        'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                      }`}>
+                        RISK TIER: {neuroTox.riskLevel}
+                      </span>
+                    </div>
+                    <div className="space-y-2 text-[11px] leading-relaxed">
+                      <div>
+                        <span className="text-slate-500 block font-mono text-[8px] uppercase tracking-wider font-extrabold">Identified Moiety Alert:</span>
+                        <span className="text-cyan-400 font-mono font-semibold text-[10px]">{neuroTox.structuralAlert}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 block font-mono text-[8px] uppercase tracking-wider font-extrabold">Mechanistic Explanation:</span>
+                        <p className="text-slate-300 font-sans mt-0.5">{neuroTox.explanation}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Quick Action Navigation Links */}
+            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800">
+              <Link
+                href={`/stack-simulator`}
+                className="w-full text-center py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white rounded-clinical font-mono text-[9px] font-bold uppercase tracking-wider transition-all"
+              >
+                Open in Simulator
+              </Link>
+              <Link
+                href={`/holographic-dashboard`}
+                className="w-full text-center py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white rounded-clinical font-mono text-[9px] font-bold uppercase tracking-wider transition-all"
+              >
+                Open in Holograph
+              </Link>
+            </div>
+          </div>
+        </DraggablePanel>
+      )}
 
       <TimeEnginePanel />
       <NodeFilterPanel />
