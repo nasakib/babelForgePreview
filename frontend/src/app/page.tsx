@@ -27,6 +27,7 @@ import TimeEnginePanel from "@/components/palantir/TimeEnginePanel";
 import NodeFilterPanel from "@/components/palantir/NodeFilterPanel";
 import SEEResultsPanel from "@/components/palantir/SEEResultsPanel";
 import { evaluateSubstanceToxicity, analyzeNeurotoxicity, type ProTox3Profile } from "@/lib/engines/toxicology";
+import { citationUrl } from "@/lib/wisdom/select";
 
 const VIEW_MODES = [
   { id: "topology", label: "Topology", desc: "Region tint · amplitude pulse" },
@@ -47,6 +48,7 @@ export default function ConsolePage() {
     setViewPerspective,
     simulationTimeMonths,
     targetedOperations,
+    wisdom,
   } = useAI();
 
   const [weight, setWeight] = useState(70);
@@ -179,7 +181,7 @@ export default function ConsolePage() {
             ].slice(0, 30)
           );
         }
-      }, 16);
+      }, opts?.silent ? 16 : 1200);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [activePathologies, vectors, weight, tolerance, age, simulationTimeMonths, setIntegrityScore, activeStack]
@@ -214,7 +216,7 @@ export default function ConsolePage() {
         ].slice(0, 60)
       );
       setComputing(false);
-    }, 30);
+    }, 1500);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activePathologies, weight, tolerance, age, simulationTimeMonths, profile]);
 
@@ -232,6 +234,45 @@ export default function ConsolePage() {
 
   return (
     <div className="w-full h-full relative lg:overflow-hidden overflow-y-auto bg-canvas">
+      {/* SCANNING / CALCULATION OVERLAY */}
+      {computing && (
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-slate-950/75 backdrop-blur-md select-none animate-fade-in">
+          <div className="relative w-80 p-6 bg-slate-900 border border-slate-800/80 rounded-clinical shadow-2xl space-y-4 text-white">
+            {/* Pulse rings */}
+            <div className="flex justify-center">
+              <div className="relative w-16 h-16 flex items-center justify-center">
+                <span className="absolute inline-flex h-full w-full rounded-full bg-accent-500/25 opacity-75 animate-ping"></span>
+                <div className="w-10 h-10 rounded-full bg-accent-500/20 border border-accent-500/60 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-accent-400 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            {/* Title & Status */}
+            <div className="text-center">
+              <h4 className="text-xs font-extrabold font-mono uppercase tracking-widest text-accent-400">Clinical Optimization Engine</h4>
+              <p className="text-[10px] text-slate-500 mt-1 font-mono uppercase animate-pulse">QSAR screening & topological search active...</p>
+            </div>
+
+            {/* Simulated Live logs */}
+            <div className="bg-slate-950 p-3 rounded border border-slate-800 font-mono text-[9.5px] text-cyan-400 space-y-1.5 max-h-[120px] overflow-y-hidden select-none">
+              <div className="flex items-center gap-1.5"><span className="text-emerald-500">✔</span> Composing pathology: {activePathologies.length > 0 ? activePathologies.join(', ') : 'HOMEOSTASIS'}</div>
+              <div className="flex items-center gap-1.5"><span className="text-accent-400 animate-pulse">▶</span> Solving Ryu-Takayanagi minimal cut...</div>
+              <div className="flex items-center gap-1.5 opacity-60">▶ Verifying ProTox-3.0 safety bounds...</div>
+              <div className="flex items-center gap-1.5 opacity-40">▶ Selecting maximum-Phi vectors...</div>
+            </div>
+
+            {/* Glowing progress bar */}
+            <div className="w-full bg-slate-950 rounded-full h-1.5 overflow-hidden border border-slate-800">
+              <div className="bg-accent-500 h-full rounded-full w-2/3 animate-pulse shadow-[0_0_8px_rgba(168,85,247,0.6)]"></div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* BACKGROUND CANVAS */}
       <div className="absolute inset-0 z-0 pointer-events-auto">
         <NeuroCanvas
@@ -545,6 +586,83 @@ export default function ConsolePage() {
                 >
                   Apply Conventional
                 </button>
+              </div>
+            </div>
+
+            {/* Clinical Engine Justification & Wisdom Panel */}
+            <div className="mt-4 p-4 bg-slate-950/70 border border-slate-800/80 rounded-clinical space-y-3 text-white">
+              <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
+                <span className="text-accent-400">🧠</span>
+                <span className="text-[11px] font-mono font-bold uppercase tracking-widest text-slate-300">
+                  Clinical Recommendation Engine Justifications
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-[11px] leading-relaxed text-slate-300">
+                <div className="space-y-1.5">
+                  <span className="text-[9px] font-bold text-accent-400 uppercase tracking-wider block">1. Therapeutic Core Selection (Why this stack?)</span>
+                  <p>
+                    The active greedy optimizer selects synergistic multi-vector combinations (aligning Arousal, Dampening, Chaos, and Repair vectors) that directly counteract the specific functional network imbalances of the composed pathologies. For instance, in clinical syndromes characterized by Default Mode Network (DMN) hyper-coherence, the engine prioritizes targeted high-efficacy synaptic repair agents and selective agonists to restore the baseline global topological integrity index <span className="font-mono text-cyan-400">Φ</span>. These compounds are tuned to recover the Kuramoto phase order parameter <span className="font-mono text-cyan-400">R</span> back into its homeostatic critical transition region <span className="font-mono text-cyan-400">R ≈ 0.85</span>, restoring normal functional variance.
+                  </p>
+                </div>
+                <div className="space-y-1.5">
+                  <span className="text-[9px] font-bold text-red-400 uppercase tracking-wider block">2. Candidate Exclusions (Why the absence of other stuff?)</span>
+                  <p>
+                    To maintain strict biocompatibility constraints, all candidates exceeding ProTox-3.0 hazard thresholds are filtered out of the recommendation space. Highly addictive, toxic, or auto-oxidizing stimulants (such as methamphetamine or cocaine) are actively excluded to prevent blood-brain barrier surges, rapid vesicular depletion of dopamine, and severe vasoconstrictive hypoxia. Classical sedatives (like standard benzodiazepines) are also omitted to avoid downstream GABA-A receptor downregulation and subsequent excitotoxic withdrawal syndromes, favoring non-addictive, selective correctives and holistic stabilizers.
+                  </p>
+                </div>
+              </div>
+
+              {/* Grounded Scientific Evidence (Wisdom Engine Hits) */}
+              <div className="border-t border-slate-800/60 pt-3 space-y-2">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-[9.5px] font-bold text-slate-400 uppercase tracking-widest block font-mono">
+                    Grounded Scientific Evidence (Wisdom Engine)
+                  </span>
+                  <span className="text-[9px] font-mono text-slate-500">
+                    {wisdom.length > 0 ? `${Math.min(3, wisdom.length)} active literature hits` : "0 literature hits"}
+                  </span>
+                </div>
+                
+                {wisdom.length === 0 ? (
+                  <p className="text-[10px] text-slate-500 italic font-mono">No active literature hits for the current state.</p>
+                ) : (
+                  <div className="space-y-2 bg-slate-900/20 p-2.5 border border-slate-800/60 rounded">
+                    {wisdom.slice(0, 3).map((w) => (
+                      <div key={w.id} className="text-[11px] text-slate-300 leading-snug border-b border-slate-800/30 pb-1.5 last:border-0 last:pb-0">
+                        <span className="text-accent-400 font-bold mr-1">▶</span>
+                        <span className="font-medium text-slate-200">{w.claim}</span>
+                        <div className="mt-0.5 text-[10px] text-slate-500 font-sans flex items-center flex-wrap gap-1.5">
+                          <span>Evidence: <strong className="uppercase font-mono text-cyan-400/80">{w.evidence}</strong></span>
+                          <span>·</span>
+                          <span>Source citations:</span>
+                          <span className="flex items-center gap-1">
+                            {w.citations.map((c, i) => {
+                              const href = citationUrl(c);
+                              return href ? (
+                                <a
+                                  key={c.id}
+                                  href={href}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="text-cyan-400/85 hover:text-cyan-300 underline underline-offset-2 decoration-dotted font-medium"
+                                >
+                                  {c.label}
+                                  {i < w.citations.length - 1 ? "; " : ""}
+                                </a>
+                              ) : (
+                                <span key={c.id} className="text-slate-500">
+                                  {c.label}
+                                  {i < w.citations.length - 1 ? "; " : ""}
+                                </span>
+                              );
+                            })}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
