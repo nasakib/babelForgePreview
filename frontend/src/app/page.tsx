@@ -436,6 +436,28 @@ export default function ConsolePage() {
                   ))}
                 </div>
               )}
+
+              {/* Clinical Case Assessment Sub-Panel */}
+              <div className="mt-3.5 p-3 bg-surface-100/50 rounded-clinical border border-line/60 space-y-2">
+                <span className="text-[9px] font-bold text-ink uppercase tracking-wider block border-b border-line/45 pb-1 font-mono">
+                  Clinical Case Assessment: Self-Report vs. Connectome Diagnostics
+                </span>
+                {activePathologies.length === 0 ? (
+                  <p className="text-[10.5px] leading-relaxed text-ink-subtle">
+                    <strong>The patient self-reports as clinically healthy.</strong> The engine confirms this assessment: no pathological network deviations are detected. The brain connectome structural adjacency matrix matches healthy baseline standards (<span className="font-mono text-cyan-500">A_composed = A_baseline</span>), and intrinsic Yeo-7 functional parcellation frequencies are perfectly synchronized with zero pathological noise.
+                    <span className="block mt-1 text-ink-muted italic">
+                      If different mental states or conditions were applied (e.g. toggling modifiers in the left panel), they would immediately mutate the structural adjacency matrix and degrade this homeostatic baseline.
+                    </span>
+                  </p>
+                ) : (
+                  <p className="text-[10.5px] leading-relaxed text-ink-subtle">
+                    <strong>The patient self-reports as clinically healthy.</strong> <span className="text-red-400 font-semibold">However, the engine identifies active network pathology:</span> The BOLD topological scanner detects clear functional network deviations. Currently active modifiers (<strong>{activePathologies.join(", ")}</strong>) have additively mutated the brain connectome structural adjacency connections (<span className="font-mono text-cyan-500">A_composed ≠ A_baseline</span>), causing localized control network edge collapses or hyper-synchronizations.
+                    <span className="block mt-1 text-ink-muted italic">
+                      If additional comorbid conditions were applied, the coupling order parameter (R) would drift further away from healthy reference values, escalating excitotoxicity risks and clinical cognitive impairment.
+                    </span>
+                  </p>
+                )}
+              </div>
             </div>
           ) : (
             <div className="text-[11px] text-ink-muted font-mono">Awaiting input…</div>
@@ -610,6 +632,48 @@ export default function ConsolePage() {
                   <p>
                     To maintain strict biocompatibility constraints, all candidates exceeding ProTox-3.0 hazard thresholds are filtered out of the recommendation space. Highly addictive, toxic, or auto-oxidizing stimulants (such as methamphetamine or cocaine) are actively excluded to prevent blood-brain barrier surges, rapid vesicular depletion of dopamine, and severe vasoconstrictive hypoxia. Classical sedatives (like standard benzodiazepines) are also omitted to avoid downstream GABA-A receptor downregulation and subsequent excitotoxic withdrawal syndromes, favoring non-addictive, selective correctives and holistic stabilizers.
                   </p>
+                </div>
+              </div>
+
+              {/* Topology-Specific Mathematical Framework */}
+              <div className="border-t border-slate-800/60 pt-3 space-y-2">
+                <span className="text-[9.5px] font-bold text-accent-400 uppercase tracking-widest block font-mono">
+                  Topology-Specific Mathematical Optimization Framework
+                </span>
+                <p className="text-[11px] leading-relaxed text-slate-300 font-sans">
+                  The clinical recommendation engine operates on a formal graph-theoretic optimization model mapped directly to the patient&apos;s individual brain connectome structure:
+                </p>
+                <div className="bg-slate-950 p-3 rounded border border-slate-850 space-y-3 font-mono text-[10px] text-cyan-400 select-all overflow-x-auto custom-scrollbar">
+                  <div>
+                    <span className="text-slate-500 block uppercase tracking-wider text-[8px] mb-1 font-bold">1. Brain Adjacency Composed State Matrix Mapping:</span>
+                    <p className="pl-2 leading-relaxed">
+                      {"A_composed = A_baseline ⊕ ∑_{p ∈ P} ΔA_p"}
+                    </p>
+                    <p className="pl-4 text-[9px] text-slate-400 font-sans leading-normal mt-1">
+                      Where <code className="text-cyan-400 font-mono">A_baseline</code> is the patient&apos;s Schaefer-200 parcellation template connectome, and each active pathology <code className="text-cyan-400 font-mono">p ∈ P</code> additively modifies the matrix (e.g. pruning long-range Control network edges in ADHD, or locking Default Mode Network sub-cliques in Depression).
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block uppercase tracking-wider text-[8px] mb-1 font-bold">2. Phase-Space Synchronization Dynamics (Kuramoto Equation):</span>
+                    <p className="pl-2 leading-relaxed">
+                      {"θ'_i(t) = ω_i + (K_eff / N) · ∑_{j=1}^N A_composed_{ij} · sin(θ_j(t) - θ_i(t)) + σ_eff · ξ_i(t)"}
+                    </p>
+                    <p className="pl-4 text-[9px] text-slate-400 font-sans leading-normal mt-1">
+                      Intrinsic oscillator frequencies <code className="text-cyan-400 font-mono">ω_i</code> integrate with phase coupling <code className="text-cyan-400 font-mono">K_eff</code> directly over the modified structural matrix <code className="text-cyan-400 font-mono">A_composed</code>. The global phase order parameter <code className="text-cyan-400 font-mono">R(t)</code> measures synchrony coherence:
+                    </p>
+                    <p className="pl-6 mt-1 font-mono text-[10px] text-cyan-400">
+                      {"R(t) · e^{i·ψ(t)} = (1/N) · ∑_{j=1}^N e^{i·θ_j(t)}"}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block uppercase tracking-wider text-[8px] mb-1 font-bold">3. Multi-Vector Regimen Optimization Objective:</span>
+                    <p className="pl-2 leading-relaxed">
+                      {"S_optimal = argmax_S  Φ( R( A_composed, K_eff(S), σ_eff(S) ) )"}
+                    </p>
+                    <p className="pl-4 text-[9px] text-slate-400 font-sans leading-normal mt-1">
+                      Subject to the zero-toxicity QSAR constraint: <code className="text-cyan-400 font-mono">∀ c ∈ S, Hazard(c) = Safe</code>. This objective selects the exact chemical dosage vector combination <code className="text-cyan-400 font-mono">S</code> that maximizes the Topological Integrity Score <code className="text-cyan-400 font-mono">Φ</code> based on the patient&apos;s actual brain structure and composed network pathways.
+                    </p>
+                  </div>
                 </div>
               </div>
 
