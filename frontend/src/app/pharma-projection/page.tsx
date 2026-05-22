@@ -117,7 +117,7 @@ export default function PharmaProjection() {
             </div>
           </header>
 
-        <div className="p-4 lg:p-8 lg:pl-[380px] flex-1 min-h-0 overflow-y-auto custom-scrollbar flex items-center justify-center">
+        <div className="p-4 lg:p-8 lg:pl-[380px] flex-1 min-h-0 overflow-y-auto custom-scrollbar flex flex-col items-center justify-start">
           <div className="w-full max-w-5xl">
             <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto bg-surface-0 border border-line rounded-clinical shadow-sm">
             {/* Axes */}

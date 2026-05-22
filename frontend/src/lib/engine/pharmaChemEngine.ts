@@ -1041,18 +1041,22 @@ export function translateReceptorsToVectors(
 
   // 1. Arousal: driven by DAT and NET reuptake/release
   // Agonism at ADRA2A (Clonidine) lowers peripheral adrenergic tone, reducing arousal.
+  // Muscarinic M1 receptor activation decreases arousal.
   const arousal =
     baseArousal +
     arousalCoeff * activations.DAT +
     0.8 * activations.NET -
-    0.8 * Math.max(0, activations.ADRA2A);
+    0.8 * Math.max(0, activations.ADRA2A) -
+    0.2 * activations.M1;
 
   // 2. Dampening: driven by GABA-A and Mu-Opioid activation, and ADRA2A (clonidine down-regulates locus coeruleus)
+  // Muscarinic M1 receptor activation increases dampening.
   const dampening =
     baseDampening +
     dampeningCoeff * activations.GABAA +
     1.5 * activations.MOR +
-    0.6 * Math.max(0, activations.ADRA2A);
+    0.6 * Math.max(0, activations.ADRA2A) +
+    0.5 * activations.M1;
 
   // 3. Chaos: driven by HT2A activation (psychedelics) and NMDA block (dissociatives)
   // Widespread GABA-A activation (sedatives/benzos) down-regulates cortical chaos, hence the dampening penalty
