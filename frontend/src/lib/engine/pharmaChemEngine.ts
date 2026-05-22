@@ -39,6 +39,7 @@ export interface ReceptorProfile {
   MOR: number;  // Mu-Opioid
   NMDA: number; // NMDA glutamate channel
   ADRA2A: number; // Alpha-2A adrenergic
+  M1: number; // Muscarinic M1 Receptor
 }
 
 export interface DosingRegimen {
@@ -209,6 +210,41 @@ export const COMPOUND_DATABASE: Record<string, CompoundProperties> = {
     id: "lsd", name: "LSD", class: "novel", halfLifeHrs: 8, cypEnzymes: ["CYP2D6"],
     receptors: { HT2A: 1.2, DAT: 500, NET: 1000 },
     efficacy: { HT2A: 0.95, DAT: 0.2, NET: 0.1 }
+  },
+  jianshouqing: {
+    id: "jianshouqing",
+    name: "Jianshouqing Mushroom",
+    class: "novel",
+    halfLifeHrs: 6,
+    cypEnzymes: ["CYP3A4", "CYP2C9"],
+    receptors: { HT2A: 15.0, M1: 25.0 },
+    efficacy: { HT2A: 0.9, M1: 0.6 },
+    regimen: { frequency: "prn", standardRange: { min: 10, max: 100, unit: "g" } },
+    smilesPhysics: {
+      canonicalSmiles: "OC1=C(C(O)=O)C(C2=CC=C(O)C(O)=C2)=C(C3=CC=C(O)C(O)=C3)C1=O",
+      mw: 396.35,
+      tpsa: 168.5,
+      F_bioavail: 0.35,
+      Vd_Lkg: 1.2,
+      bioavailabilityF: 0.35,
+      volumeOfDistributionLkg: 1.2
+    },
+    rotatableBondsPeriphery: 6,
+    structuralPhysics: {
+      HT2A: { delta_TM6_outward_A: 5.2, d_D155_amine_A: 3.1, theta_W336_displacement: 48.0, E_pi_phenyl_traps: 0.02 },
+      M1: { delta_TM6_outward_A: 4.8, d_D155_amine_A: 2.7, theta_W336_displacement: 55.0, E_pi_phenyl_traps: 0.03 }
+    },
+    qsarProfile: {
+      probabilities: { immuno: 0.15, dili: 0.32, bbb: 0.48, mie_pxr: 0.22, cyp3a4: 0.12, cyp2c9: 0.08 },
+      endpoints: { mutagen: "Inactive", cyto: "Inactive", nr_ahr: "Inactive", sr_are: "Active" }
+    },
+    synthesisRoute: {
+      stepsCount: 4,
+      reagents: ["Bruising-oxidation catalytic check", "Variegatic acid isolation"],
+      solvents: ["Ethanol", "Water", "Glacial acetic acid"],
+      finalHPLCFlurityPercentage: 98.6,
+      cumulativeYieldPercentage: 12.4
+    }
   },
   mdma: {
     id: "mdma", name: "MDMA", class: "novel", halfLifeHrs: 7, cypEnzymes: ["CYP2D6"],
@@ -647,6 +683,7 @@ export interface ReceptorActivationProfile {
   MOR: number;
   NMDA: number;
   ADRA2A: number;
+  M1: number;
 }
 
 export interface OccupancyResult {
@@ -659,12 +696,12 @@ export function calculateReceptorOccupancies(
   patient?: { profile?: PatientProfile }
 ): OccupancyResult {
   const receptors: Array<keyof ReceptorProfile> = [
-    "DAT", "SERT", "NET", "HT2A", "GABAA", "MOR", "NMDA", "ADRA2A"
+    "DAT", "SERT", "NET", "HT2A", "GABAA", "MOR", "NMDA", "ADRA2A", "M1"
   ];
 
   const occupancies: Record<string, Partial<ReceptorActivationProfile>> = {};
   const activations: ReceptorActivationProfile = {
-    DAT: 0, SERT: 0, NET: 0, HT2A: 0, GABAA: 0, MOR: 0, NMDA: 0, ADRA2A: 0
+    DAT: 0, SERT: 0, NET: 0, HT2A: 0, GABAA: 0, MOR: 0, NMDA: 0, ADRA2A: 0, M1: 0
   };
 
   // Pre-initialize occupancy maps

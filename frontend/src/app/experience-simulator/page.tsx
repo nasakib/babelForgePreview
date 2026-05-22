@@ -434,6 +434,16 @@ const ARCHETYPES: Archetype[] = [
     label: "Sympathetic Adrenergic Surge",
     desc: "Corticotropin-releasing hormone and systemic epinephrine release trigger DMN hyperconnectivity and limbic network fragmentation, destabilizing functional edges.",
     subj: "Somatic chest constriction, circular racing thoughts, hyper-vigilant scanning of the environment, and high acute alarm."
+  },
+  {
+    keywords: ["jianshouqing", "yunnan mushroom", "little people", "little green men", "lanmaoa", "variegatic acid", "boletaceae", "boletus"],
+    arousal: 0.1,
+    dampening: 0.3,
+    chaos: 1.8,
+    repair: 0.8,
+    label: "Oneirogenic Reversible Coordinate Transformation",
+    desc: "Oxidation kinetics of Variegatic Acid and structural HT2A/M1 receptor displacements drive dynamic default network dissolution and precise coordinate alterations in the primary visual cortex (V1-V4).",
+    subj: "Highly structured, repetitive, and playful tiny-person animations ('little green men' or 'gentle people' hallucinations) with a deep, dreamlike state of oneirogenic awareness and parasympathetic autonomic shifts."
   }
 ];
 
@@ -500,6 +510,7 @@ function localSimulateFallback(experience: string, pathologies: string[], profil
   const stack: any[] = [];
   if (text.includes("psilocybin") || text.includes("shroom")) stack.push({ id: "psilo", dose: 1 });
   if (text.includes("lsd") || text.includes("acid")) stack.push({ id: "lsd", dose: 1 });
+  if (text.includes("jianshouqing") || text.includes("yunnan") || text.includes("little people") || text.includes("little green men")) stack.push({ id: "jianshouqing", dose: 1 });
   if (text.includes("mdma") || text.includes("empathogen")) stack.push({ id: "mdma", dose: 1 });
   if (text.includes("ketamine")) stack.push({ id: "ketamine", dose: 1 });
   if (text.includes("xanax") || text.includes("alprazolam")) stack.push({ id: "alpraz", dose: 1 });

@@ -155,6 +155,7 @@ export function translateSubjective(
 
   if (activeIds.has("lsd")) entropy += 60;
   if (activeIds.has("psilo")) entropy += 50;
+  if (activeIds.has("jianshouqing")) entropy += 70;
   if (activeIds.has("ketamine")) entropy += 40;
   if (activeIds.has("thc") || activeIds.has("thcp") || activeIds.has("thco")) entropy += 15;
   
@@ -422,6 +423,10 @@ export function translateSubjective(
     // Psychedelic entropy
     if (activeIds.has("psilo") || activeIds.has("lsd")) {
       narrative += "The classic psychedelic compounds introduce structural high-entropy dynamics into the cortex, dissolving rigid default pathways and projecting a wide window of neuroplastic hyper-receptive learning. ";
+    }
+
+    if (activeIds.has("jianshouqing")) {
+      narrative += "The Yunnan Jianshouqing Mushroom (*Lanmaoa asiatica*) introduces profound visual coordinate transformations. Under the oxidation kinetics of Variegatic Acid, its high-chaos entropic vectors and M1/HT2A receptor displacements trigger highly structured, vivid oneirogenic visual animations (colloquially 'little people') and a marked disruption of rigid default mode network structures, allowing a fluid topological reorganizing of sensory-visual projections. ";
     }
 
     // Opioid corrective agonist

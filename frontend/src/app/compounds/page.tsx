@@ -8,6 +8,7 @@ const SMILESRenderer = dynamic(() => import("@/components/clinical/SMILESRendere
 const BiophysicalCanvas = dynamic(() => import("@/components/BiophysicalCanvas").then(mod => mod.BiophysicalCanvas), { ssr: false });
 const ProjectionEngine = dynamic(() => import("@/components/clinical/ProjectionEngine"), { ssr: false });
 import ClinicalPanel from "@/components/clinical/ClinicalPanel";
+import ExplanationOverlay from "@/components/clinical/ExplanationOverlay";
 
 export default function CompoundsDirectory() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -15,6 +16,7 @@ export default function CompoundsDirectory() {
   const [selectedMolId, setSelectedMolId] = useState<string | null>(null);
   const [detailTab, setDetailTab] = useState<"profile" | "mechanistic" | "projection">("profile");
   const [isSimulatingMech, setIsSimulatingMech] = useState(false);
+  const [isExplainOpen, setIsExplainOpen] = useState(false);
 
   // Reset tab active states when swapping active compound ids
   useEffect(() => {
@@ -239,7 +241,7 @@ export default function CompoundsDirectory() {
             </div>
 
             {/* Tab Contents */}
-            <div className="p-6 md:p-8 flex-grow">
+            <div className="p-6 md:p-8 flex-grow relative">
               {detailTab === "profile" && (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                   {/* Vectors */}
@@ -277,6 +279,7 @@ export default function CompoundsDirectory() {
                       </div>
                       <p className="text-sm text-ink-subtle font-medium leading-relaxed clinical-card p-4 rounded-clinical shadow-sm">
                         {(() => {
+                          if (selectedMol.id === 'jianshouqing') return "Visual Cortex (V1-V4), Default Mode Network, Muscarinic M1 Rec.";
                           if (selectedMol.class === 'stimulant' && selectedMol.effects.arousal > 1) return "Frontoparietal Control Network, Basal Ganglia";
                           if (selectedMol.class === 'depressant' || selectedMol.class === 'ssri') return "Default Mode Network, Limbic System";
                           if (selectedMol.id === 'zb01' || selectedMol.id === 'cbd') return "Global Phase-Locking Modulator (Systemic)";
@@ -294,6 +297,7 @@ export default function CompoundsDirectory() {
                       </div>
                       <p className="text-sm text-ink-subtle leading-relaxed clinical-card p-4 rounded-clinical shadow-sm">
                         {(() => {
+                          if (selectedMol.id === 'jianshouqing') return "Induces highly structured, repetitive oneirogenic/hallucinatory visual animations (colloquially 'little people'). Traditionally researched in Yunnan Province as a source of reversible visual coordinate transformation. Acts as a potent pharmacological DMN disruptor.";
                           if (selectedMol.class === 'stimulant' && selectedMol.effects.arousal > 1) return "Primarily indicated for profound hypo-arousal or severe executive dysfunction (e.g., severe ADHD or narcolepsy). Carries high risk of structural entropy if misapplied.";
                           if (selectedMol.class === 'depressant' || selectedMol.class === 'ssri') return "Dampens high-frequency oscillatory noise. Often prescribed for rigid rumination loops (MDD) or hyper-arousal (severe anxiety), though prolonged use risks structural rigidity.";
                           if (selectedMol.id === 'zb01' || selectedMol.id === 'cbd') return "A precision tool for stabilizing chaotic cliques without inducing severe dampening. Ideal for conditions characterized by intense topological jittering like PTSD.";
@@ -303,6 +307,7 @@ export default function CompoundsDirectory() {
                         })()}
                       </p>
                     </div>
+
                   </div>
                 </div>
               )}
@@ -310,29 +315,57 @@ export default function CompoundsDirectory() {
               {detailTab === "mechanistic" && (
                 <div className="space-y-6">
                   {/* Animation Controls */}
-                  <div className="flex justify-between items-center p-4 bg-surface-100 rounded-clinical border border-line">
+                  <div className="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center p-4 bg-surface-100 rounded-clinical border border-line">
                     <div>
                       <h4 className="font-bold text-sm text-ink font-mono tracking-wider">BIOPHYSICAL MECHANISTIC SIMULATION</h4>
                       <p className="text-[10px] text-ink-muted mt-0.5">Real-time multi-resolution biophysical animation loops.</p>
                     </div>
-                    <button
-                      onClick={() => setIsSimulatingMech(!isSimulatingMech)}
-                      className={`px-4 py-1.5 rounded-clinical font-mono text-xs font-bold transition-all shadow-sm ${
-                        isSimulatingMech 
-                          ? "bg-crit text-white hover:bg-crit/80 shadow-crit/20" 
-                          : "bg-ok text-white hover:bg-ok/80 shadow-ok/20"
-                      }`}
-                    >
-                      {isSimulatingMech ? "PAUSE ACTION" : "ANIMATE CHANNELS"}
-                    </button>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <button
+                        onClick={() => setIsExplainOpen(!isExplainOpen)}
+                        className={`px-3 py-1.5 border rounded-clinical font-mono text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer ${
+                          isExplainOpen
+                            ? "bg-accent-500 text-white border-accent-500"
+                            : "bg-accent-500/10 hover:bg-accent-500/25 border-accent-500/30 hover:border-accent-500/60 text-accent-400 hover:text-white"
+                        }`}
+                        title={isExplainOpen ? "Close explanation" : "Explain Biophysical Animation Engine"}
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Explain Engine
+                      </button>
+                      <button
+                        onClick={() => setIsSimulatingMech(!isSimulatingMech)}
+                        className={`px-4 py-1.5 rounded-clinical font-mono text-xs font-bold transition-all shadow-sm ${
+                          isSimulatingMech 
+                            ? "bg-crit text-white hover:bg-crit/80 shadow-crit/20" 
+                            : "bg-ok text-white hover:bg-ok/80 shadow-ok/20"
+                        }`}
+                      >
+                        {isSimulatingMech ? "PAUSE ACTION" : "ANIMATE CHANNELS"}
+                      </button>
+                    </div>
                   </div>
 
-                  {/* Active Biophysical Animation Canvas */}
-                  <BiophysicalCanvas 
-                    vectors={selectedMol.effects} 
-                    activeCompoundId={selectedMol.id} 
-                    isSimulating={isSimulatingMech} 
-                  />
+                  {/* Active Biophysical Animation Canvas with isolated local explanation overlay */}
+                  <div className="relative">
+                    <BiophysicalCanvas 
+                      vectors={selectedMol.effects} 
+                      activeCompoundId={selectedMol.id} 
+                      isSimulating={isSimulatingMech} 
+                    />
+                    {isExplainOpen && (
+                      <div className="absolute inset-0 mt-4 rounded-clinical overflow-hidden z-40">
+                        <ExplanationOverlay
+                          componentId="biophysical-canvas"
+                          isOpen={isExplainOpen}
+                          onClose={() => setIsExplainOpen(false)}
+                          inline={true}
+                        />
+                      </div>
+                    )}
+                  </div>
 
                   {/* Scientific Explanations */}
                   <div className="p-4 bg-surface-100 rounded-clinical border border-line text-xs leading-relaxed space-y-4">

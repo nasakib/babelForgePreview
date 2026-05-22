@@ -18,6 +18,8 @@ const svgCannabinoid = `<svg viewBox="0 0 100 100" fill="none" stroke="currentCo
 const svgSpur = `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" class="w-full h-full"><path d="M50 15 L20 35 L20 65 L50 85 L80 65 L80 35 Z"/><circle cx="50" cy="50" r="15"/><path d="M50 15 L50 5"/><path d="M20 35 L5 25"/><path d="M80 35 L95 25"/><circle cx="50" cy="50" r="4" fill="currentColor"/></svg>`;
 const svgMtdl = `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" class="w-full h-full"><path d="M50 10 L25 30 L25 70 L50 90 L75 70 L75 30 Z"/><path d="M25 30 L50 50 L75 30"/><circle cx="50" cy="50" r="10"/><line x1="50" y1="10" x2="50" y2="50"/></svg>`;
 const svgSeriphadine = `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" class="w-full h-full"><circle cx="35" cy="50" r="12"/><circle cx="65" cy="50" r="12"/><path d="M35 38 L65 38 M35 62 L65 62"/><rect x="42" y="45" width="16" height="10" rx="2"/><circle cx="50" cy="25" r="6"/></svg>`;
+const svgMushroom = `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" class="w-full h-full"><path d="M50 15 C25 15, 20 45, 20 50 C35 50, 40 45, 50 45 C60 45, 65 50, 80 50 C80 45, 75 15, 50 15 Z" fill="none"/><path d="M40 50 L40 85 C40 90, 60 90, 60 85 L60 50"/><circle cx="35" cy="30" r="3" fill="currentColor"/><circle cx="50" cy="25" r="3" fill="currentColor"/><circle cx="65" cy="35" r="3" fill="currentColor"/></svg>`;
+
 
 export const molecules = [
     // --- NOVEL THERAPEUTICS & BABELFORGE PROGRAMMATIC SYSTEMS ---
@@ -279,6 +281,43 @@ export const molecules = [
         tpsa: 54.1
       }
     },
+    {
+      id: 'jianshouqing',
+      name: 'Jianshouqing Mushroom',
+      class: 'novel',
+      classLabel: 'Oneirogenic Hallucinogen',
+      isBabelForge: true,
+      svg: svgMushroom,
+      halfLife: 'medium',
+      effects: { arousal: 0.1, dampening: 0.3, chaos: 1.8, repair: 0.8 },
+      regimen: { frequency: 'prn', standardRange: { min: 10, max: 100, unit: 'g' } },
+      smilesPhysics: {
+        canonicalSmiles: "OC1=C(C(O)=O)C(C2=CC=C(O)C(O)=C2)=C(C3=CC=C(O)C(O)=C3)C1=O",
+        mw: 396.35,
+        tpsa: 168.5,
+        F_bioavail: 0.35,
+        Vd_Lkg: 1.2,
+        bioavailabilityF: 0.35,
+        volumeOfDistributionLkg: 1.2
+      },
+      rotatableBondsPeriphery: 6,
+      structuralPhysics: {
+        HT2A: { delta_TM6_outward_A: 5.2, d_D155_amine_A: 3.1, theta_W336_displacement: 48.0, E_pi_phenyl_traps: 0.02 },
+        M1: { delta_TM6_outward_A: 4.8, d_D155_amine_A: 2.7, theta_W336_displacement: 55.0, E_pi_phenyl_traps: 0.03 }
+      },
+      qsarProfile: {
+        probabilities: { immuno: 0.15, dili: 0.32, bbb: 0.48, mie_pxr: 0.22, cyp3a4: 0.12, cyp2c9: 0.08 },
+        endpoints: { mutagen: "Inactive", cyto: "Inactive", nr_ahr: "Inactive", sr_are: "Active" }
+      },
+      synthesisRoute: {
+        stepsCount: 4,
+        reagents: ["Bruising-oxidation catalytic check", "Variegatic acid isolation"],
+        solvents: ["Ethanol", "Water", "Glacial acetic acid"],
+        finalHPLCFlurityPercentage: 98.6,
+        cumulativeYieldPercentage: 12.4
+      }
+    },
+
     
     // --- SSRIs, SNRIs & ANTIDEPRESSANTS ---
     {

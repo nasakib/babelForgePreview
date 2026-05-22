@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { useAI } from "@/context/AIContext";
 import DraggablePanel from "@/components/palantir/DraggablePanel";
+import ExplanationOverlay from "@/components/clinical/ExplanationOverlay";
 import {
   composeTopology,
   REGION_COLOR,
@@ -65,6 +66,7 @@ export default function NeuroCanvas({
     Subcortical: true,
     Deep: true
   });
+  const [isExplainMechOpen, setIsExplainMechOpen] = useState(false);
 
   // Single source of truth: props override AIContext. Defaulting to the
   // context means a bare <NeuroCanvas /> mount anywhere in the app stays
@@ -391,10 +393,42 @@ export default function NeuroCanvas({
         title="Biophysical Animation Engine"
         subtitle="Real-time multi-resolution biophysical animation loops"
         defaultPosition={{ x: typeof window !== "undefined" ? window.innerWidth - 520 : 800, y: typeof window !== "undefined" ? window.innerHeight - 300 : 600 }}
-        defaultSize={{ width: 500, height: 260 }}
+        defaultSize={{ width: 500, height: 320 }}
+        isExplainOpen={isExplainMechOpen}
+        onExplainToggle={setIsExplainMechOpen}
+        customExplanation={true}
       >
-        <div className="p-2 bg-[#0b1329] rounded shadow-inner">
-          <BiophysicalAnimationCanvas vectors={vectors} activeCompoundId={activeCompoundId} />
+        <div className="p-3 bg-[#0b1329] rounded shadow-inner flex flex-col gap-2 h-full">
+          <div className="flex justify-between items-center border-b border-slate-800 pb-1.5 flex-none">
+            <span className="text-[10px] text-slate-400 font-mono font-bold uppercase tracking-wider">Sub-cellular Channels</span>
+            <button
+              onClick={() => setIsExplainMechOpen(!isExplainMechOpen)}
+              className={`px-2.5 py-1 border rounded-clinical font-mono text-[10px] font-bold transition-all shadow-sm flex items-center gap-1 cursor-pointer ${
+                isExplainMechOpen
+                  ? "bg-accent-500 text-white border-accent-500"
+                  : "bg-accent-500/10 hover:bg-accent-500/25 border-accent-500/30 hover:border-accent-500/60 text-accent-400 hover:text-white"
+              }`}
+              title={isExplainMechOpen ? "Close explanation" : "Explain Biophysical Animation Engine"}
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Explain Engine
+            </button>
+          </div>
+          <div className="relative flex-grow min-h-0">
+            <BiophysicalAnimationCanvas vectors={vectors} activeCompoundId={activeCompoundId} />
+            {isExplainMechOpen && (
+              <div className="absolute inset-0 rounded shadow-2xl overflow-hidden z-40">
+                <ExplanationOverlay
+                  componentId="biophysical-canvas"
+                  isOpen={isExplainMechOpen}
+                  onClose={() => setIsExplainMechOpen(false)}
+                  inline={true}
+                />
+              </div>
+            )}
+          </div>
         </div>
       </DraggablePanel>
     </div>

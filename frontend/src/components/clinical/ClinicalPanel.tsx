@@ -29,7 +29,7 @@ interface ClinicalPanelProps {
 
 const TAB_EXPLANATION_MAP: Record<string, string[]> = {
   "profile": ["clinical-profile", "receptor-occupancy"],
-  "mechanistic": ["biophysical-canvas"],
+  "mechanistic": [],
   "projection": ["projection-engine"],
 };
 
@@ -237,15 +237,24 @@ export default function ClinicalPanel({
             <div className="flex items-center gap-1.5 mr-1">
               {explainKeys.map((key) => {
                 const label = key === "receptor-occupancy" ? "Explain Binding" : "Explain Tab";
+                const isCurrentActive = isExplainOpen && selectedExplainKey === key;
                 return (
                   <button
                     key={key}
                     onClick={() => {
-                      setSelectedExplainKey(key);
-                      setIsExplainOpen(true);
+                      if (isExplainOpen && selectedExplainKey === key) {
+                        setIsExplainOpen(false);
+                      } else {
+                        setSelectedExplainKey(key);
+                        setIsExplainOpen(true);
+                      }
                     }}
-                    className="px-2 py-1 bg-accent-500/10 hover:bg-accent-500/25 border border-accent-500/30 hover:border-accent-500/60 rounded-clinical font-mono text-[9px] font-bold text-accent-400 hover:text-white transition-all shadow-sm flex items-center gap-1 cursor-pointer"
-                    title={`Explain ${key === "receptor-occupancy" ? "GPCR binding mechanics" : "this dashboard view"}`}
+                    className={`px-2 py-1 border rounded-clinical font-mono text-[9px] font-bold transition-all shadow-sm flex items-center gap-1 cursor-pointer ${
+                      isCurrentActive
+                        ? "bg-accent-500 text-white border-accent-500"
+                        : "bg-accent-500/10 hover:bg-accent-500/25 border-accent-500/30 hover:border-accent-500/60 text-accent-400 hover:text-white"
+                    }`}
+                    title={isCurrentActive ? `Close explanation` : `Explain ${key === "receptor-occupancy" ? "GPCR binding mechanics" : "this dashboard view"}`}
                   >
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -294,8 +303,16 @@ export default function ClinicalPanel({
       )}
 
       {/* Main panel layout content */}
-      <div className="flex-grow min-h-0 flex flex-col overflow-hidden">
+      <div className="flex-grow min-h-0 flex flex-col overflow-hidden relative">
         {children}
+        {isExplainOpen && (
+          <ExplanationOverlay
+            componentId={selectedExplainKey}
+            isOpen={isExplainOpen}
+            onClose={() => setIsExplainOpen(false)}
+            inline={true}
+          />
+        )}
       </div>
 
       {/* Premium monospace biophysical telemetry narrative glossary feed */}
@@ -334,14 +351,6 @@ export default function ClinicalPanel({
             })}
           </div>
         </div>
-      )}
-
-      {isExplainOpen && (
-        <ExplanationOverlay
-          componentId={selectedExplainKey}
-          isOpen={isExplainOpen}
-          onClose={() => setIsExplainOpen(false)}
-        />
       )}
     </section>
   );

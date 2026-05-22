@@ -441,14 +441,18 @@ export default function HolographicDashboard() {
         </div>
       </div>
 
-      {/* Grid Layout for Scoreboard & Panels */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      {/* Draggable & Resizable Window Console (Desktop: Absolute Canvas, Mobile: Flow list) */}
+      <div className="relative w-full min-h-[920px] lg:h-[calc(100vh-140px)] select-none">
         
-        {/* LEFT COLUMN: THE SCOREBOARD (4 cols) */}
-        <div className="lg:col-span-4 space-y-6">
-          
-          {/* Generalization Score Panel */}
-          <div className="border border-line rounded-clinical bg-surface-50 p-4 space-y-4 shadow-sm backdrop-blur-md relative overflow-hidden">
+        {/* PANEL 1: Generalization Capacity Score Panel */}
+        <DraggablePanel
+          id="holographic-generalization"
+          title="Chung Generalization Capacity"
+          subtitle="Boundary-Bulk Population Metrics"
+          defaultPosition={{ x: 20, y: 10 }}
+          defaultSize={{ width: 360, height: 260 }}
+        >
+          <div className="p-4 space-y-4 relative overflow-hidden h-full">
             <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-accent-500/5 to-transparent rounded-full -mr-8 -mt-8 pointer-events-none" />
             <div className="flex items-center justify-between">
               <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-ink-muted">Generalization Capacity</div>
@@ -498,9 +502,17 @@ export default function HolographicDashboard() {
               </div>
             </div>
           </div>
+        </DraggablePanel>
 
-          {/* Manifold Integrity & QLDPC Syndrome Status */}
-          <div className="border border-line rounded-clinical bg-surface-50 p-4 space-y-3 shadow-sm backdrop-blur-md">
+        {/* PANEL 2: Manifold Integrity & QLDPC Syndrome Status */}
+        <DraggablePanel
+          id="holographic-integrity"
+          title="Manifold Integrity Status"
+          subtitle="QLDPC Parity-Check Stabilizers"
+          defaultPosition={{ x: 20, y: 285 }}
+          defaultSize={{ width: 360, height: 260 }}
+        >
+          <div className="p-4 space-y-3 h-full">
             <div className="flex items-center justify-between">
               <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-ink-muted">Manifold Integrity</div>
               <div className="flex items-center gap-1.5">
@@ -531,9 +543,17 @@ export default function HolographicDashboard() {
               )}
             </div>
           </div>
+        </DraggablePanel>
 
-          {/* Persistent Entropy Metrics */}
-          <div className="border border-line rounded-clinical bg-surface-50 p-4 space-y-3 shadow-sm backdrop-blur-md">
+        {/* PANEL 3: Persistent Entropy Metrics */}
+        <DraggablePanel
+          id="holographic-tda"
+          title="Persistent Homology Landscapes"
+          subtitle="TDA Persistent Entropy Cycles"
+          defaultPosition={{ x: 20, y: 560 }}
+          defaultSize={{ width: 360, height: 290 }}
+        >
+          <div className="p-4 space-y-3 h-full">
             <div className="flex justify-between items-center">
               <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-ink-muted">Persistent Homology</div>
               <span className="text-[10px] font-mono font-bold bg-accent-500/10 text-accent-400 border border-accent-500/20 px-2 py-0.5 rounded">TDA Landscape</span>
@@ -568,33 +588,20 @@ export default function HolographicDashboard() {
               ))}
             </div>
           </div>
+        </DraggablePanel>
 
-        </div>
-
-        {/* MIDDLE COLUMN: DUAL MANIFOLD VISUALIZER & 3D CONNECTOME (5 cols) */}
-        <div className="lg:col-span-5 space-y-6">
-          
-          {/* Dual Manifold Tab Bar */}
-          <div className="border border-line rounded-clinical bg-surface-50 p-1 flex justify-between gap-1 shadow-sm font-mono text-[10px]">
-            <button 
-              className={`flex-1 text-center py-2 uppercase tracking-widest2 transition-all ${activeTab === 'boundary' ? 'bg-accent-500/10 text-accent-400 font-bold border border-accent-500/20 rounded-sharp' : 'text-ink-muted hover:text-ink'}`}
-              onClick={() => setActiveTab('boundary')}
-            >
-              Boundary View (Functional)
-            </button>
-            <button 
-              className={`flex-1 text-center py-2 uppercase tracking-widest2 transition-all ${activeTab === 'bulk' ? 'bg-accent-500/10 text-accent-400 font-bold border border-accent-500/20 rounded-sharp' : 'text-ink-muted hover:text-ink'}`}
-              onClick={() => setActiveTab('bulk')}
-            >
-              Bulk View (Simplicial)
-            </button>
-          </div>
-
-          {/* Interactive Brain Map (Always visible in center) */}
-          <div className="border border-line rounded-clinical bg-surface-50 p-4 shadow-md backdrop-blur-md relative flex flex-col items-center">
-            <div className="absolute top-4 left-4 font-mono text-[10px] space-y-1 pointer-events-none z-10">
-              <div className="text-ink font-bold uppercase tracking-wider">3D WebGL Connectome</div>
-              <div className="text-ink-muted">Schaefer 200-ROI coordinates map</div>
+        {/* PANEL 4: 3D WebGL Connectome */}
+        <DraggablePanel
+          id="holographic-connectome"
+          title="3D WebGL Schaefer-200 Connectome"
+          subtitle="Functional Parcellation Coordination"
+          defaultPosition={{ x: 400, y: 10 }}
+          defaultSize={{ width: 480, height: 440 }}
+        >
+          <div className="p-4 flex flex-col items-center justify-between h-full">
+            <div className="flex justify-between w-full mb-2">
+              <span className="text-[10px] font-mono text-ink-muted">Schaefer 200-ROI coordinates map</span>
+              <span className="text-[10px] font-mono text-accent-400 font-bold">Yeo 7-Networks Mapping</span>
             </div>
             
             <canvas 
@@ -604,69 +611,98 @@ export default function HolographicDashboard() {
               className="w-full h-[320px] max-w-[400px] border border-line/40 rounded-clinical bg-canvas/30 shadow-inner"
             />
             
-            <div className="flex justify-between w-full mt-3 text-[9.5px] font-mono text-ink-muted border-t border-line/60 pt-3">
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-rose-500" /> Salience</span>
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-500" /> Control</span>
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-purple-500" /> DMN</span>
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-yellow-500" /> Attention</span>
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500" /> Visual</span>
+            <div className="flex justify-between w-full mt-3 text-[9px] font-mono text-ink-muted border-t border-line/60 pt-3">
+              <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-rose-500" /> Salience</span>
+              <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-blue-500" /> Control</span>
+              <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-purple-500" /> DMN</span>
+              <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-yellow-500" /> Attention</span>
+              <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Visual</span>
             </div>
           </div>
+        </DraggablePanel>
 
-          {/* Tab specifics */}
-          {activeTab === "boundary" ? (
-            <div className="border border-line rounded-clinical bg-surface-50 p-4 space-y-3 shadow-sm font-mono text-[11px]">
-              <div className="section-label">Mutual Information Heatmap (20x20 ROI Sample)</div>
-              <div className="grid grid-cols-20 gap-px bg-line/60 p-0.5 border border-line rounded overflow-x-auto min-w-[200px]">
-                {mutualInfoMatrix.map((row, r) => 
-                  row.map((val, c) => {
-                    const colorIntensity = Math.min(255, Math.floor(val * 350));
-                    return (
-                      <div 
-                        key={`${r},${c}`} 
-                        className="w-4 h-4 flex-shrink-0 transition-all hover:scale-125 hover:shadow cursor-pointer"
-                        style={{ backgroundColor: `rgb(${colorIntensity}, 31, ${255 - colorIntensity})` }}
-                        title={`I(ROI ${r} : ROI ${c}) = ${val.toFixed(4)} bits`}
-                      />
-                    );
-                  })
-                )}
-              </div>
-              <div className="flex items-center justify-between text-[10px] text-ink-muted mt-2 border-t border-line/40 pt-2">
-                <span>Gaussian Entanglement (A:B):</span>
-                <span className="text-accent-400 font-bold font-mono">{subnetworkEntanglement.toFixed(4)} bits</span>
-              </div>
+        {/* PANEL 5: Dual Boundary-Bulk Manifolds */}
+        <DraggablePanel
+          id="holographic-manifold"
+          title="Dual Boundary-Bulk Manifolds"
+          subtitle="Shannon MI vs Hodge Laplacians"
+          defaultPosition={{ x: 400, y: 465 }}
+          defaultSize={{ width: 480, height: 385 }}
+        >
+          <div className="p-4 space-y-3 h-full">
+            {/* Modular Tab Selector Inside Draggable Panel */}
+            <div className="border border-line rounded-sharp bg-surface-100 p-0.5 flex justify-between gap-1 shadow-sm font-mono text-[9.5px]">
+              <button 
+                className={`flex-grow text-center py-1.5 uppercase tracking-wider transition-all ${activeTab === 'boundary' ? 'bg-accent-500/10 text-accent-400 font-bold border border-accent-500/20 rounded-sharp' : 'text-ink-muted hover:text-ink'}`}
+                onClick={() => setActiveTab('boundary')}
+              >
+                Boundary View (Functional)
+              </button>
+              <button 
+                className={`flex-grow text-center py-1.5 uppercase tracking-wider transition-all ${activeTab === 'bulk' ? 'bg-accent-500/10 text-accent-400 font-bold border border-accent-500/20 rounded-sharp' : 'text-ink-muted hover:text-ink'}`}
+                onClick={() => setActiveTab('bulk')}
+              >
+                Bulk View (Simplicial)
+              </button>
             </div>
-          ) : (
-            <div className="border border-line rounded-clinical bg-surface-50 p-4 space-y-3 shadow-sm font-mono text-[11px]">
-              <div className="section-label">Hodge Laplacian k-Simplices & RT minimal cut</div>
-              <div className="p-3 border border-line bg-surface-100 rounded-clinical space-y-2 text-[10px]">
-                <div className="flex justify-between">
-                  <span>Simplicial Complex dimension</span>
-                  <span className="text-ink font-bold">Max 4D Complex</span>
+
+            {activeTab === "boundary" ? (
+              <div className="space-y-3 font-mono text-[11px] h-full">
+                <div className="section-label">Mutual Information Heatmap (20x20 ROI Sample)</div>
+                <div className="grid grid-cols-20 gap-px bg-line/60 p-0.5 border border-line rounded overflow-x-auto min-w-[200px]">
+                  {mutualInfoMatrix.map((row, r) => 
+                    row.map((val, c) => {
+                      const colorIntensity = Math.min(255, Math.floor(val * 350));
+                      return (
+                        <div 
+                          key={`${r},${c}`} 
+                          className="w-4 h-4 flex-shrink-0 transition-all hover:scale-125 hover:shadow cursor-pointer"
+                          style={{ backgroundColor: `rgb(${colorIntensity}, 31, ${255 - colorIntensity})` }}
+                          title={`I(ROI ${r} : ROI ${c}) = ${val.toFixed(4)} bits`}
+                        />
+                      );
+                    })
+                  )}
                 </div>
-                <div className="flex justify-between">
-                  <span>Euler Characteristic (Proxy)</span>
-                  <span className="text-accent-400 font-semibold">{cliqueComplex.simplices[0].length - cliqueComplex.simplices[1].length + cliqueComplex.simplices[2].length}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>RT Minimal Surface Energy</span>
-                  <span className="text-accent-400 font-bold">{rtCut.reduce((a, b) => a + b, 0).toFixed(4)}</span>
+                <div className="flex items-center justify-between text-[10px] text-ink-muted border-t border-line/40 pt-2">
+                  <span>Gaussian Entanglement (A:B):</span>
+                  <span className="text-accent-400 font-bold font-mono">{subnetworkEntanglement.toFixed(4)} bits</span>
                 </div>
               </div>
-              <div className="text-[10px] text-ink-muted leading-relaxed">
-                AdS/CFT bulk duality map: The Ryu-Takayanagi minimum surface cut vector matches functional boundary entanglement drop-offs.
+            ) : (
+              <div className="space-y-3 font-mono text-[11px] h-full">
+                <div className="section-label">Hodge Laplacian k-Simplices & RT minimal cut</div>
+                <div className="p-3 border border-line bg-surface-100 rounded-clinical space-y-2 text-[10px]">
+                  <div className="flex justify-between">
+                    <span>Simplicial Complex dimension</span>
+                    <span className="text-ink font-bold">Max 4D Complex</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Euler Characteristic (Proxy)</span>
+                    <span className="text-accent-400 font-semibold">{cliqueComplex.simplices[0].length - cliqueComplex.simplices[1].length + cliqueComplex.simplices[2].length}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>RT Minimal Surface Energy</span>
+                    <span className="text-accent-400 font-bold">{rtCut.reduce((a, b) => a + b, 0).toFixed(4)}</span>
+                  </div>
+                </div>
+                <div className="text-[10px] text-ink-muted leading-relaxed">
+                  AdS/CFT bulk duality map: The Ryu-Takayanagi minimum surface cut vector matches functional boundary entanglement drop-offs.
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
+        </DraggablePanel>
 
-        </div>
-
-        {/* RIGHT COLUMN: DIAGNOSTIC ML & INTERVENTIONS (3 cols) */}
-        <div className="lg:col-span-3 space-y-6">
-          
-          {/* Target Forge Classification Scorecard */}
-          <div className="border border-line rounded-clinical bg-surface-50 p-4 space-y-3 shadow-md backdrop-blur-md relative overflow-hidden">
+        {/* PANEL 6: Target Forge Classification Scorecard */}
+        <DraggablePanel
+          id="holographic-predictor"
+          title="Target Forge Classifier"
+          subtitle="Clinical Biomarker Predictor"
+          defaultPosition={{ x: 900, y: 10 }}
+          defaultSize={{ width: 360, height: 240 }}
+        >
+          <div className="p-4 space-y-3 h-full">
             <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-ink-muted">Target Forge Predictor</div>
             
             <div className="flex flex-col border border-line rounded-clinical p-3 bg-surface-100/50">
@@ -699,11 +735,19 @@ export default function HolographicDashboard() {
               </div>
             </div>
           </div>
+        </DraggablePanel>
 
-          {/* Sieve Feature Importances */}
-          <div className="border border-line rounded-clinical bg-surface-50 p-4 space-y-3 shadow-sm font-mono text-[10px]">
+        {/* PANEL 7: Sieve Feature Importances */}
+        <DraggablePanel
+          id="holographic-sieve"
+          title="Logos Sieve Importances"
+          subtitle="Spectral Channel Features"
+          defaultPosition={{ x: 900, y: 265 }}
+          defaultSize={{ width: 360, height: 290 }}
+        >
+          <div className="p-4 space-y-3 h-full font-mono text-[10px]">
             <div className="section-label">Logos Sieve Top-Importance Channels</div>
-            <div className="space-y-1.5 max-h-[220px] overflow-y-auto custom-scrollbar">
+            <div className="space-y-1.5 max-h-[200px] overflow-y-auto custom-scrollbar">
               {logosFeatures.map((feat, idx) => (
                 <div 
                   key={idx} 
@@ -723,10 +767,18 @@ export default function HolographicDashboard() {
               ))}
             </div>
           </div>
+        </DraggablePanel>
 
-          {/* Intervention Panel */}
-          <div className="border border-line rounded-clinical bg-surface-50 p-4 space-y-3 shadow-md backdrop-blur-md">
-            <div className="section-label-strong text-ink">Clinical Interventions</div>
+        {/* PANEL 8: Intervention Panel */}
+        <DraggablePanel
+          id="holographic-interventions"
+          title="Clinical Interventions"
+          subtitle="Topological & Molecular Patches"
+          defaultPosition={{ x: 900, y: 570 }}
+          defaultSize={{ width: 360, height: 280 }}
+        >
+          <div className="p-4 space-y-3 h-full">
+            <div className="section-label-strong text-ink font-mono text-[10px]">Clinical Interventions</div>
             <div className="flex flex-col gap-2 font-mono text-[11px]">
               <button 
                 className="btn-primary w-full py-2.5 shadow-md flex items-center justify-center gap-1.5" 
@@ -753,7 +805,7 @@ export default function HolographicDashboard() {
 
             {/* Patch logging */}
             {patchLog.length > 0 && (
-              <div className="border border-line/60 bg-surface-100 rounded p-2 max-h-[120px] overflow-y-auto custom-scrollbar font-mono text-[9px] text-ink-muted mt-3 space-y-1">
+              <div className="border border-line/60 bg-surface-100 rounded p-2 max-h-[100px] overflow-y-auto custom-scrollbar font-mono text-[9px] text-ink-muted mt-3 space-y-1">
                 {patchLog.map((log, idx) => (
                   <div key={idx} className={log.includes("SUCCESS") ? "text-clinical-400 font-bold" : log.includes("WELD") ? "text-accent-400" : ""}>
                     {log}
@@ -762,8 +814,7 @@ export default function HolographicDashboard() {
               </div>
             )}
           </div>
-
-        </div>
+        </DraggablePanel>
 
       </div>
 
