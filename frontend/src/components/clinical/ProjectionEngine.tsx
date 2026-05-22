@@ -9,7 +9,7 @@ import {
   KuramotoState 
 } from "@/lib/engine/kuramoto";
 import { getBaselineTopology, REGION_COLOR } from "@/lib/engine/topology";
-import { evaluateSubstanceToxicity, ProTox3Profile } from "@/lib/engines/toxicology";
+import { evaluateSubstanceToxicity, ProTox3Profile, analyzeNeurotoxicity } from "@/lib/engines/toxicology";
 import { calculateSyntheticViability, SynthesisRouteReport } from "@/lib/engines/synthesis";
 import { computeThermodynamicMicrostates, MolecularGraph } from "@/lib/engines/forge";
 import { molecules } from "@/data/molecules";
@@ -660,48 +660,79 @@ export default function ProjectionEngine({ moleculeId, vectors }: ProjectionEngi
         </div>
       )}
 
-      {activeTab === "toxicology" && (
-        <div className="clinical-card p-5 space-y-4">
-          <div className="flex justify-between items-center border-b border-line pb-2">
-            <h4 className="font-bold text-xs uppercase tracking-widest text-ink">ProTox-3.0 Mechanism-Aware Toxicology Diagnostics</h4>
-            <span className="text-[10px] font-mono text-ink-muted">Designed by Walter W. / Substr8 BioResearch</span>
-          </div>
+      {activeTab === "toxicology" && (() => {
+        const neuroTox = analyzeNeurotoxicity(moleculeId, selectedMol?.class);
+        return (
+          <div className="clinical-card p-5 space-y-4">
+            <div className="flex justify-between items-center border-b border-line pb-2">
+              <h4 className="font-bold text-xs uppercase tracking-widest text-ink">ProTox-3.0 Mechanism-Aware Toxicology Diagnostics</h4>
+              <span className="text-[10px] font-mono text-ink-muted">Designed by Walter W. / Substr8 BioResearch</span>
+            </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="p-3 bg-surface-100 rounded-clinical border border-line">
-              <span className="block text-[8px] uppercase tracking-widest text-ink-muted font-bold mb-1">Hepatotoxicity (DILI)</span>
-              <span className={`text-xs font-bold font-mono ${toxProfile.dili.active ? "text-crit" : "text-ok"}`}>
-                {toxProfile.dili.active ? `HAZARD (${(toxProfile.dili.confidence*100).toFixed(0)}%)` : `Safe (${(100 - toxProfile.dili.confidence*100).toFixed(0)}%)`}
-              </span>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="p-3 bg-surface-100 rounded-clinical border border-line">
+                <span className="block text-[8px] uppercase tracking-widest text-ink-muted font-bold mb-1">Hepatotoxicity (DILI)</span>
+                <span className={`text-xs font-bold font-mono ${toxProfile.dili.active ? "text-crit" : "text-ok"}`}>
+                  {toxProfile.dili.active ? `HAZARD (${(toxProfile.dili.confidence*100).toFixed(0)}%)` : `Safe (${(100 - toxProfile.dili.confidence*100).toFixed(0)}%)`}
+                </span>
+              </div>
+              <div className="p-3 bg-surface-100 rounded-clinical border border-line">
+                <span className="block text-[8px] uppercase tracking-widest text-ink-muted font-bold mb-1">Nephrotoxicity</span>
+                <span className={`text-xs font-bold font-mono ${toxProfile.nephro.active ? "text-crit" : "text-ok"}`}>
+                  {toxProfile.nephro.active ? `HAZARD (${(toxProfile.nephro.confidence*100).toFixed(0)}%)` : `Safe (${(100 - toxProfile.nephro.confidence*100).toFixed(0)}%)`}
+                </span>
+              </div>
+              <div className="p-3 bg-surface-100 rounded-clinical border border-line">
+                <span className="block text-[8px] uppercase tracking-widest text-ink-muted font-bold mb-1">Cardiotoxicity (QT)</span>
+                <span className={`text-xs font-bold font-mono ${toxProfile.cardio.active ? "text-crit" : "text-ok"}`}>
+                  {toxProfile.cardio.active ? `HAZARD (${(toxProfile.cardio.confidence*100).toFixed(0)}%)` : `Safe (${(100 - toxProfile.cardio.confidence*100).toFixed(0)}%)`}
+                </span>
+              </div>
+              <div className="p-3 bg-surface-100 rounded-clinical border border-line">
+                <span className="block text-[8px] uppercase tracking-widest text-ink-muted font-bold mb-1">Immunotoxicity</span>
+                <span className={`text-xs font-bold font-mono ${toxProfile.immuno.active ? (toxReport.overrideVerified ? "text-info" : "text-crit") : "text-ok"}`}>
+                  {toxProfile.immuno.active 
+                    ? (toxReport.overrideVerified ? `OVERRIDDEN (${(toxProfile.immuno.confidence*100).toFixed(0)}%)` : `HAZARD (${(toxProfile.immuno.confidence*100).toFixed(0)}%)`) 
+                    : `Safe (${(100 - toxProfile.immuno.confidence*100).toFixed(0)}%)`}
+                </span>
+              </div>
             </div>
-            <div className="p-3 bg-surface-100 rounded-clinical border border-line">
-              <span className="block text-[8px] uppercase tracking-widest text-ink-muted font-bold mb-1">Nephrotoxicity</span>
-              <span className={`text-xs font-bold font-mono ${toxProfile.nephro.active ? "text-crit" : "text-ok"}`}>
-                {toxProfile.nephro.active ? `HAZARD (${(toxProfile.nephro.confidence*100).toFixed(0)}%)` : `Safe (${(100 - toxProfile.nephro.confidence*100).toFixed(0)}%)`}
-              </span>
-            </div>
-            <div className="p-3 bg-surface-100 rounded-clinical border border-line">
-              <span className="block text-[8px] uppercase tracking-widest text-ink-muted font-bold mb-1">Cardiotoxicity (QT)</span>
-              <span className={`text-xs font-bold font-mono ${toxProfile.cardio.active ? "text-crit" : "text-ok"}`}>
-                {toxProfile.cardio.active ? `HAZARD (${(toxProfile.cardio.confidence*100).toFixed(0)}%)` : `Safe (${(100 - toxProfile.cardio.confidence*100).toFixed(0)}%)`}
-              </span>
-            </div>
-            <div className="p-3 bg-surface-100 rounded-clinical border border-line">
-              <span className="block text-[8px] uppercase tracking-widest text-ink-muted font-bold mb-1">Immunotoxicity</span>
-              <span className={`text-xs font-bold font-mono ${toxProfile.immuno.active ? (toxReport.overrideVerified ? "text-info" : "text-crit") : "text-ok"}`}>
-                {toxProfile.immuno.active 
-                  ? (toxReport.overrideVerified ? `OVERRIDDEN (${(toxProfile.immuno.confidence*100).toFixed(0)}%)` : `HAZARD (${(toxProfile.immuno.confidence*100).toFixed(0)}%)`) 
-                  : `Safe (${(100 - toxProfile.immuno.confidence*100).toFixed(0)}%)`}
-              </span>
-            </div>
-          </div>
 
-          <div className="p-3.5 bg-surface-200 border border-line rounded-clinical font-mono text-xs text-cyan-400 border-l-4 border-l-cyan-500">
-            <span className="text-slate-500 block uppercase tracking-wider text-[9px] mb-1 font-bold">ProTox-3.0 Engine Diagnostic Log:</span>
-            {toxReport.diagnosticOutput}
+            <div className="p-3.5 bg-[#0b1329]/80 border border-line rounded-clinical font-mono text-xs text-cyan-400 border-l-4 border-l-cyan-500">
+              <span className="text-slate-500 block uppercase tracking-wider text-[9px] mb-1 font-bold">ProTox-3.0 Engine Diagnostic Log:</span>
+              {toxReport.diagnosticOutput}
+            </div>
+
+            {/* Structural Neurotoxicity Analysis */}
+            <div className="p-4 bg-surface-100 border border-line rounded-clinical space-y-2">
+              <div className="flex items-center justify-between border-b border-line pb-1.5 mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-crit animate-pulse">⚡</span>
+                  <span className="text-xs uppercase font-extrabold tracking-widest text-ink font-mono">Structural Neurotoxicity Alert</span>
+                </div>
+                <span className={`text-[10px] font-mono font-extrabold uppercase px-2 py-0.5 rounded border ${
+                  neuroTox.riskLevel === 'Severe' ? 'bg-red-500/20 text-red-400 border-red-500/30' :
+                  neuroTox.riskLevel === 'High' ? 'bg-orange-500/20 text-orange-400 border-orange-500/30' :
+                  neuroTox.riskLevel === 'Moderate' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' :
+                  'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                }`}>
+                  RISK TIER: {neuroTox.riskLevel}
+                </span>
+              </div>
+              <div className="space-y-3 font-sans text-xs">
+                <div>
+                  <span className="text-slate-500 block font-mono text-[9px] uppercase tracking-wider font-extrabold">Identified Moiety Alert:</span>
+                  <span className="text-cyan-400 font-mono font-semibold text-xs">{neuroTox.structuralAlert}</span>
+                </div>
+                <div>
+                  <span className="text-slate-500 block font-mono text-[9px] uppercase tracking-wider font-extrabold">Mechanistic Explanation:</span>
+                  <p className="text-ink-subtle leading-relaxed mt-1">{neuroTox.explanation}</p>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {activeTab === "synthesis" && (
         <div className="clinical-card p-5 space-y-4">
