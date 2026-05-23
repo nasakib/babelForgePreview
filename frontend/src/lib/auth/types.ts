@@ -21,7 +21,8 @@ export type Role =
   | "owner"      // organization owner / billing admin
   | "clinician"  // can read/write patients + run sims
   | "researcher" // can run sims, read aggregate cohort only
-  | "viewer";    // read-only, no patient PHI
+  | "viewer"     // read-only, no patient PHI
+  | "patient";   // patient portal, read own data only
 
 export type Plan = "preview" | "clinical" | "enterprise";
 
@@ -72,7 +73,8 @@ export const CAPABILITIES = {
   "org.manage":     ["owner"] as Role[],
   "staff.write":    ["owner"] as Role[],
   "staff.read":     ["owner", "clinician"] as Role[],
-  "sim.run":        ["owner", "clinician", "researcher", "viewer"] as Role[],
+  "patient.self":   ["owner", "clinician", "patient"] as Role[],
+  "sim.run":        ["owner", "clinician", "researcher", "viewer", "patient"] as Role[],
 } as const;
 
 export type Capability = keyof typeof CAPABILITIES;

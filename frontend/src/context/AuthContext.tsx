@@ -9,6 +9,7 @@ const CODE_ROLES: Record<string, Role> = {
   "CLINIC-JOIN-2026": "clinician",
   "RESEARCH-JOIN-2026": "researcher",
   "AUDITOR-VIEW-2026": "viewer",
+  "PATIENT-VIEW-2026": "patient",
 };
 
 const VALID_CODES = Object.keys(CODE_ROLES);
@@ -68,6 +69,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refresh();
     return authClient.subscribe(refresh);
   }, [refresh]);
+
+  // Dynamic Halo character state pre-populator
+  useEffect(() => {
+    const clean = inviteCode.trim().toUpperCase();
+    if (clean === "PATIENT-VIEW-2026") {
+      setName("John Spartan-117");
+      setEmail("j.117@unsc.gov");
+    } else if (clean === "ADMIN-CREATE-2026") {
+      setName("Dr. Catherine Elizabeth Halsey");
+      setEmail("c.halsey@unsc.gov");
+      setOrgName("UNSC ONI Section III");
+    }
+  }, [inviteCode]);
 
   // Dynamically resolve role from active code input
   const cleanCode = inviteCode.trim().toUpperCase();
@@ -179,7 +193,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       owner: "Clinic Owner & Admin: Registers a new clinic workspace. Holds full billing and clinician staff controls.",
       clinician: "Standard Clinician (Doctor): Joins an existing clinic workspace. Can add/modify patient records and run Kuramoto simulations.",
       researcher: "Science Investigator: Joins an existing clinic. Run connectome simulations, read de-identified rosters, no administrative controls.",
-      viewer: "Regulatory Auditor: Joins a clinic workspace for read-only access. Auditing credentials only."
+      viewer: "Regulatory Auditor: Joins a clinic workspace for read-only access. Auditing credentials only.",
+      patient: "Patient Portal: Access your secure personal health chart, active clinical regimens, and diagnostics."
     };
 
     return (

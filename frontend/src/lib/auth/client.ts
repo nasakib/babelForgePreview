@@ -95,7 +95,7 @@ function readUsers(): User[] {
   try {
     const raw = window.localStorage.getItem(USERS_KEY);
     if (!raw) {
-      // Seed default Dr. Halsey admin user
+      // Seed default Dr. Halsey admin user and Master Chief patient user
       const seed: User[] = [
         {
           id: "usr_halsey",
@@ -103,6 +103,14 @@ function readUsers(): User[] {
           email: "c.halsey@unsc.gov",
           initials: "CH",
           role: "owner",
+          orgId: "org_unsc_oni",
+        },
+        {
+          id: "usr_masterchief",
+          name: "John Spartan-117",
+          email: "j.117@unsc.gov",
+          initials: "JS",
+          role: "patient",
           orgId: "org_unsc_oni",
         }
       ];

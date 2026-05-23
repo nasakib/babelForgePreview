@@ -34,7 +34,64 @@ function readAll(orgId: string): Patient[] {
   if (!orgId || typeof window === "undefined") return [];
   try {
     const raw = window.localStorage.getItem(getStorageKey(orgId));
-    if (!raw) return [];
+    if (!raw) {
+      if (orgId === "org_unsc_oni") {
+        // Pre-seed Spartan-117 de-identified cohort patient
+        const seed: Patient[] = [
+          {
+            id: "pt_spartan_117",
+            mrn: "SPARTAN-117",
+            initials: "J.S.",
+            ageRange: { min: 35, max: 44 },
+            sex: "male",
+            gender: "man",
+            handedness: "right",
+            pregnancy: "not_applicable",
+            weightKg: 130, // Spartan augmentations
+            heightCm: 208, // John-117 height
+            allergies: [],
+            medications: [
+              { name: "ZenBud", doseMg: 3, schedule: "QD" },
+              { name: "Sertraline", doseMg: 100, schedule: "QD" }
+            ],
+            region: "Epsilon Eridani",
+            notes: "Subject John-117 displays severe stress-induced rigidities from continuous covenant combat. DMN desynchronization locked. Responding successfully to synaptogenesis welds under active ZenBud pharmacodynamics.",
+            pathologies: [
+              { code: "PTSD", severity: "severe", onsetYear: 2547, priorResponse: 1 },
+              { code: "DEPRESSION", severity: "mild", onsetYear: 2552, priorResponse: 1 }
+            ],
+            scales: {
+              phq9: 12,
+              gad7: 15,
+              moca: 28,
+              pcl5: 58,
+              asrs: 6,
+              ygtss: 0,
+              auditc: 2
+            },
+            pgx: {
+              cyp2d6: "extensive",
+              cyp2c19: "intermediate",
+              cyp3a4: "extensive",
+              hlaB1502: false,
+              hlaB5701: false
+            },
+            vitals: {
+              heartRateBpm: 52,
+              bpSystolic: 115,
+              bpDiastolic: 70,
+              sleepHours: 5.5
+            },
+            clinician: "CH", // Dr. Halsey
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          }
+        ];
+        window.localStorage.setItem(getStorageKey(orgId), JSON.stringify(seed));
+        return seed;
+      }
+      return [];
+    }
     const v = JSON.parse(raw);
     return Array.isArray(v) ? (v as Patient[]) : [];
   } catch {

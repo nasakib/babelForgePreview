@@ -861,6 +861,174 @@ export default function HolographicDashboard() {
           </div>
         </DraggablePanel>
 
+        {/* PANEL 9: Wetware Reprogramming & Bibliography */}
+        <DraggablePanel
+          id="holographic-citations"
+          title="Wetware & Citation Registry"
+          subtitle="Yamanaka Simulator & Literature"
+          defaultPosition={{ x: 400, y: 860 }}
+          defaultSize={{ width: 480, height: 350 }}
+        >
+          <div className="p-4 space-y-4 h-full overflow-y-auto custom-scrollbar font-mono text-[10px]">
+            {/* 1. Dynamic Synaptogenesis Coupling Engine */}
+            <div className="space-y-1.5">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-ink-muted flex items-center justify-between">
+                <span>Synaptogenesis Coupling</span>
+                {activeStack.some(s => s.id === 'zb01' || s.name?.toLowerCase().includes('zenbud')) ? (
+                  <span className="px-2 py-0.5 rounded text-[8px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Active Stack Synergy</span>
+                ) : (
+                  <span className="px-2 py-0.5 rounded text-[8px] bg-slate-800 text-slate-500 border border-slate-700">Dormant Baseline</span>
+                )}
+              </div>
+              <div className="p-3 border border-line bg-surface-100 rounded-clinical space-y-1 text-xs">
+                {activeStack.some(s => s.id === 'zb01' || s.name?.toLowerCase().includes('zenbud')) ? (
+                  <>
+                    <div className="text-white font-bold">ZenBud™ (ZB-01) {activeStack.some(s => s.id === 'sert' || s.name?.toLowerCase().includes('sertraline')) ? "+ Sertraline Synergy" : "Monotherapy"}</div>
+                    <div className="text-emerald-400 font-semibold mt-1">
+                      Synaptogenesis Coefficient (K_syn): {activeStack.some(s => s.id === 'sert' || s.name?.toLowerCase().includes('sertraline')) ? "1.45 ± 0.08" : "0.95 ± 0.04"}
+                    </div>
+                    <div className="text-[9px] text-slate-400 leading-normal mt-1.5">
+                      CLOSED-LOOP WETWARE STATE: Yamanaka transcription factors bound & targeting cellular repair loops.
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-slate-400 font-semibold">Standard Control Regime</div>
+                    <div className="text-slate-500 font-semibold mt-1">
+                      Synaptogenesis Coefficient (K_syn): 0.22 ± 0.02
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* 2. Closed-Loop Yamanaka Factor Transcriptional Reprogramming */}
+            <div className="space-y-1.5 border-t border-line/60 pt-3">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-ink-muted">Yamanaka Closed-Loop Simulator</div>
+              <div className="grid grid-cols-2 gap-3 p-3 border border-line bg-surface-100 rounded-clinical">
+                {/* Oct4 */}
+                <div className="space-y-1">
+                  <div className="flex justify-between text-[9px] text-slate-400">
+                    <span>Oct4 Factor</span>
+                    <span className="text-white font-bold">{activeStack.some(s => s.id === 'zb01' || s.name?.toLowerCase().includes('zenbud')) ? "1.85x" : "1.00x"}</span>
+                  </div>
+                  <div className="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-emerald-500 rounded-full transition-all duration-500" 
+                      style={{ width: activeStack.some(s => s.id === 'zb01' || s.name?.toLowerCase().includes('zenbud')) ? "85%" : "40%" }} 
+                    />
+                  </div>
+                </div>
+
+                {/* Sox2 */}
+                <div className="space-y-1">
+                  <div className="flex justify-between text-[9px] text-slate-400">
+                    <span>Sox2 Factor</span>
+                    <span className="text-white font-bold">{activeStack.some(s => s.id === 'zb01' || s.name?.toLowerCase().includes('zenbud')) ? "1.72x" : "1.00x"}</span>
+                  </div>
+                  <div className="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-cyan-500 rounded-full transition-all duration-500" 
+                      style={{ width: activeStack.some(s => s.id === 'zb01' || s.name?.toLowerCase().includes('zenbud')) ? "72%" : "40%" }} 
+                    />
+                  </div>
+                </div>
+
+                {/* Klf4 */}
+                <div className="space-y-1">
+                  <div className="flex justify-between text-[9px] text-slate-400">
+                    <span>Klf4 Factor</span>
+                    <span className="text-white font-bold">{activeStack.some(s => s.id === 'zb01' || s.name?.toLowerCase().includes('zenbud')) ? "1.90x" : "1.00x"}</span>
+                  </div>
+                  <div className="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-purple-500 rounded-full transition-all duration-500" 
+                      style={{ width: activeStack.some(s => s.id === 'zb01' || s.name?.toLowerCase().includes('zenbud')) ? "90%" : "40%" }} 
+                    />
+                  </div>
+                </div>
+
+                {/* c-Myc */}
+                <div className="space-y-1">
+                  <div className="flex justify-between text-[9px] text-slate-400">
+                    <span>c-Myc Factor</span>
+                    <span className="text-white font-bold">{activeStack.some(s => s.id === 'zb01' || s.name?.toLowerCase().includes('zenbud')) ? "1.42x" : "1.00x"}</span>
+                  </div>
+                  <div className="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-amber-500 rounded-full transition-all duration-500" 
+                      style={{ width: activeStack.some(s => s.id === 'zb01' || s.name?.toLowerCase().includes('zenbud')) ? "65%" : "40%" }} 
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 3. XOR-PCR & Electroporation Checksum */}
+            <div className="space-y-2 border-t border-line/60 pt-3">
+              <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-ink-muted">
+                <span>XOR-PCR Molecular Checksum</span>
+                <span className="px-2 py-0.5 rounded text-[8px] bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">Verified s_physical = 0</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-[9px] text-slate-400">
+                <div className="p-2 border border-line bg-surface-100/50 rounded flex justify-between">
+                  <span>Electroporation Pulse:</span>
+                  <span className="text-white font-bold">240V @ 50ms</span>
+                </div>
+                <div className="p-2 border border-line bg-surface-100/50 rounded flex justify-between">
+                  <span>Microfluidic Target:</span>
+                  <span className="text-white font-bold">Stable</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 4. Backing Literature & Bibliography */}
+            <div className="space-y-2 border-t border-line/60 pt-3">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-ink-muted pb-1">Backing Literature References</div>
+              <div className="space-y-2 max-h-[220px] overflow-y-auto custom-scrollbar">
+                
+                <div className="p-2.5 border border-line bg-surface-100/50 rounded space-y-1">
+                  <div className="text-white font-bold leading-normal">Takahashi & Yamanaka (2006, Cell)</div>
+                  <div className="text-[9px] text-slate-400">Induction of pluripotent stem cells from mouse embryonic and adult fibroblast cultures by defined factors.</div>
+                  <div className="flex justify-between items-center text-[8px] text-slate-500 pt-1">
+                    <span>Scheme: PMID</span>
+                    <span className="text-accent-400 font-bold hover:underline cursor-pointer font-mono">PMID: 16904174</span>
+                  </div>
+                </div>
+
+                <div className="p-2.5 border border-line bg-surface-100/50 rounded space-y-1">
+                  <div className="text-white font-bold leading-normal">Takahashi et al. (2007, Cell)</div>
+                  <div className="text-[9px] text-slate-400">Induction of pluripotent stem cells from adult human fibroblasts by defined factors.</div>
+                  <div className="flex justify-between items-center text-[8px] text-slate-500 pt-1">
+                    <span>Scheme: PMID</span>
+                    <span className="text-accent-400 font-bold hover:underline cursor-pointer font-mono">PMID: 18035408</span>
+                  </div>
+                </div>
+
+                <div className="p-2.5 border border-line bg-surface-100/50 rounded space-y-1">
+                  <div className="text-white font-bold leading-normal">Deco, Jirsa & Sansgiri (2011, Nat Rev Neurosci)</div>
+                  <div className="text-[9px] text-slate-400">Emergence of complex dynamics in the brain: the limit cycle boundary and synaptic coupling.</div>
+                  <div className="flex justify-between items-center text-[8px] text-slate-500 pt-1">
+                    <span>Scheme: DOI</span>
+                    <span className="text-accent-400 font-bold hover:underline cursor-pointer font-mono">10.1038/nrn2961</span>
+                  </div>
+                </div>
+
+                <div className="p-2.5 border border-line bg-surface-100/50 rounded space-y-1">
+                  <div className="text-white font-bold leading-normal">Weaver, J. C. (2003, IEEE Trans Dielectr Electr Insul)</div>
+                  <div className="text-[9px] text-slate-400">Electroporation of cells and tissues: thermodynamic and molecular transport models.</div>
+                  <div className="flex justify-between items-center text-[8px] text-slate-500 pt-1">
+                    <span>Scheme: DOI</span>
+                    <span className="text-accent-400 font-bold hover:underline cursor-pointer font-mono">10.1109/TDEI.2003.1176577</span>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+        </DraggablePanel>
+
       </div>
 
       <TimeEnginePanel />

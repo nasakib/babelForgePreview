@@ -108,6 +108,16 @@ export default function PatientsPage() {
     });
   }, [patients, search, filterPathology]);
 
+  const isPatientUser = session?.user.role === "patient";
+  const patientData = useMemo(() => {
+    if (!isPatientUser) return null;
+    return patients.find(
+      (p) => 
+        p.mrn === "SPARTAN-117" || 
+        p.initials === session?.user.initials
+    ) || null;
+  }, [patients, isPatientUser, session?.user.initials]);
+
   if (!session) {
     return null;
   }
@@ -121,6 +131,243 @@ export default function PatientsPage() {
 
   const planLimits = PLAN_FEATURES[plan];
   const limitCount = planLimits.maxPatients;
+
+  if (session.user.role === "patient") {
+    return (
+      <div className="flex-1 w-full bg-slate-950 flex flex-col font-sans relative overflow-hidden select-none p-4 md:p-6 lg:p-8">
+        {/* Background Neon Gradients */}
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-cyan-500/5 rounded-full blur-[160px] pointer-events-none -translate-y-1/4 translate-x-1/4" />
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-purple-500/5 rounded-full blur-[160px] pointer-events-none translate-y-1/4 -translate-x-1/4" />
+        <div className="absolute inset-0 grid-bg opacity-5 pointer-events-none" />
+
+        <div className="w-full max-w-4xl mx-auto flex-1 flex flex-col gap-6 relative z-10">
+          
+          {/* Header area */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+            <div>
+              <div className="text-[10px] font-mono uppercase tracking-widest text-cyan-400 mb-0.5 animate-pulse">
+                🛡️ SECURE REGULATORY MEDICAL PORTAL
+              </div>
+              <h1 className="text-xl font-bold text-white flex items-center gap-2">
+                📋 Personal Health Registry Chart
+                <span className="text-xs font-mono font-medium px-2 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-slate-400">
+                  {session.org.name}
+                </span>
+              </h1>
+            </div>
+            <div className="text-right text-[10px] font-mono text-slate-500">
+              Biometric Link: SYNC-LOCKED
+            </div>
+          </div>
+
+          {/* HIPAA notice banner */}
+          <HipaaNotice defaultOpen={false} />
+
+          {patientData ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in">
+              
+              {/* Left Column: Demographics & Vitals */}
+              <div className="md:col-span-1 flex flex-col gap-6">
+                
+                {/* Biometrics Card */}
+                <div className="bg-slate-900/60 border border-slate-850 backdrop-blur-xl rounded-clinical p-4 flex flex-col gap-4">
+                  <h3 className="text-[10px] font-mono uppercase tracking-widest text-slate-400 border-b border-slate-800/80 pb-2">
+                    De-Identified Profile
+                  </h3>
+
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-cyan-600 to-purple-500 flex items-center justify-center text-white font-bold text-lg select-none shadow-[0_0_12px_rgba(6,182,212,0.2)] font-mono">
+                      {patientData.initials}
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-semibold text-white font-mono">{patientData.mrn}</h4>
+                      <p className="text-[10px] text-slate-500 uppercase font-mono tracking-wider">
+                        {patientData.ageRange.min} - {patientData.ageRange.max} yr range
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 text-xs bg-slate-950/40 border border-slate-850 rounded-clinical p-3 font-mono">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[8px] text-slate-500 uppercase">Sex / Gender</span>
+                      <span className="text-white font-semibold truncate capitalize">{patientData.sex} / {patientData.gender}</span>
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[8px] text-slate-500 uppercase">Body Mass Index</span>
+                      <span className="text-white font-semibold">30.0 kg/m²</span>
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[8px] text-slate-500 uppercase">Weight</span>
+                      <span className="text-white font-semibold">{patientData.weightKg} kg</span>
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[8px] text-slate-500 uppercase">Height</span>
+                      <span className="text-white font-semibold">{patientData.heightCm} cm</span>
+                    </div>
+                    <div className="flex flex-col gap-0.5 col-span-2">
+                      <span className="text-[8px] text-slate-500 uppercase">Regional Index</span>
+                      <span className="text-white font-semibold truncate">{patientData.region}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Vitals telemetry */}
+                <div className="bg-slate-900/60 border border-slate-850 backdrop-blur-xl rounded-clinical p-4 flex flex-col gap-4">
+                  <h3 className="text-[10px] font-mono uppercase tracking-widest text-slate-400 border-b border-slate-800/80 pb-2">
+                    Resting Vitals
+                  </h3>
+                  
+                  <div className="grid grid-cols-2 gap-3 text-xs font-mono">
+                    <div className="p-2.5 rounded bg-slate-950/40 border border-slate-850 flex flex-col gap-1">
+                      <span className="text-[8px] text-slate-500 uppercase">Heart Rate</span>
+                      <span className="text-white font-bold text-sm">{patientData.vitals.heartRateBpm} BPM</span>
+                    </div>
+                    <div className="p-2.5 rounded bg-slate-950/40 border border-slate-850 flex flex-col gap-1">
+                      <span className="text-[8px] text-slate-500 uppercase">Blood Pressure</span>
+                      <span className="text-white font-bold text-sm">{patientData.vitals.bpSystolic}/{patientData.vitals.bpDiastolic}</span>
+                    </div>
+                    <div className="p-2.5 rounded bg-slate-950/40 border border-slate-850 flex flex-col gap-1 col-span-2">
+                      <span className="text-[8px] text-slate-500 uppercase">Sleep Hours</span>
+                      <span className="text-white font-bold text-xs">{patientData.vitals.sleepHours} hrs REST CYCLE</span>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Center & Right Column: Treatments & Diagnostics */}
+              <div className="md:col-span-2 flex flex-col gap-6">
+                
+                {/* Recommendations & Regimen */}
+                <div className="bg-slate-900/60 border border-slate-850 backdrop-blur-xl rounded-clinical p-5 flex flex-col gap-4">
+                  <h3 className="text-[10px] font-mono uppercase tracking-widest text-slate-400 border-b border-slate-800/80 pb-2">
+                    Prescribed Treatment Regimen & Clinician Notes
+                  </h3>
+
+                  <div className="flex flex-col gap-2.5 font-mono">
+                    {patientData.medications.length === 0 ? (
+                      <div className="text-slate-500 text-xs italic p-3 text-center border border-slate-800 rounded bg-slate-950/20">
+                        No medications currently recommended by your practitioner.
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-3">
+                        {patientData.medications.map((m, idx) => (
+                          <div key={idx} className="p-3 rounded bg-slate-950/50 border border-cyan-500/20 shadow-[0_0_8px_rgba(6,182,212,0.05)] flex items-center justify-between">
+                            <div className="flex flex-col gap-0.5">
+                              <span className="font-bold text-white">{m.name}</span>
+                              <span className="text-[9px] text-slate-500 uppercase tracking-wide">prescribed {m.schedule || "QD"} schedule</span>
+                            </div>
+                            <span className="px-2 py-0.5 bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 rounded text-[9px] font-bold">
+                              {m.doseMg ? `${m.doseMg}mg` : "Active"}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-1.5 border-t border-slate-800/60 pt-3">
+                    <span className="text-[9px] font-mono uppercase text-slate-500">Treating Practitioner Notes (Dr. Catherine Halsey)</span>
+                    <p className="text-xs text-slate-300 leading-relaxed bg-slate-950/30 p-3 rounded border border-slate-850 font-sans italic">
+                      &ldquo;{patientData.notes}&rdquo;
+                    </p>
+                  </div>
+                </div>
+
+                {/* Scales & Genomics Card */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  
+                  {/* PHQ9 / GAD7 */}
+                  <div className="bg-slate-900/60 border border-slate-850 backdrop-blur-xl rounded-clinical p-4 flex flex-col gap-4 font-mono">
+                    <h3 className="text-[10px] uppercase tracking-widest text-slate-400 border-b border-slate-800/80 pb-2">
+                      Clinical Scales Tracker
+                    </h3>
+                    
+                    <div className="flex flex-col gap-3 text-xs">
+                      <div className="p-3 rounded bg-slate-950/40 border border-slate-850 flex flex-col gap-1">
+                        <div className="flex items-center justify-between text-[9px]">
+                          <span className="text-slate-500">PHQ-9 DEPRESSION SCORE</span>
+                          <span className="text-amber-400 font-bold">{phq9Band(patientData.scales.phq9)}</span>
+                        </div>
+                        <div className="flex items-baseline justify-between mt-1">
+                          <span className="text-lg font-bold text-white">{patientData.scales.phq9} / 27</span>
+                          <div className="w-24 h-1.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+                            <div className="h-full bg-amber-500" style={{ width: `${((patientData.scales.phq9 || 0)/27)*100}%` }} />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="p-3 rounded bg-slate-950/40 border border-slate-850 flex flex-col gap-1">
+                        <div className="flex items-center justify-between text-[9px]">
+                          <span className="text-slate-500">GAD-7 ANXIETY SCORE</span>
+                          <span className="text-rose-400 font-bold">{gad7Band(patientData.scales.gad7)}</span>
+                        </div>
+                        <div className="flex items-baseline justify-between mt-1">
+                          <span className="text-lg font-bold text-white">{patientData.scales.gad7} / 21</span>
+                          <div className="w-24 h-1.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+                            <div className="h-full bg-rose-500" style={{ width: `${((patientData.scales.gad7 || 0)/21)*100}%` }} />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Genomics CYP Card */}
+                  <div className="bg-slate-900/60 border border-slate-850 backdrop-blur-xl rounded-clinical p-4 flex flex-col gap-4 font-mono">
+                    <h3 className="text-[10px] uppercase tracking-widest text-slate-400 border-b border-slate-800/80 pb-2">
+                      Genomics Card (CYP450)
+                    </h3>
+
+                    <div className="flex flex-col gap-2.5 text-xs">
+                      {["cyp2d6", "cyp2c19"].map((geneKey) => {
+                        const gene = geneKey.toUpperCase();
+                        const pheno = patientData.pgx[geneKey as keyof typeof patientData.pgx] as CypPhenotype | undefined;
+                        const multiplier = cypDoseMultiplier(pheno);
+                        return (
+                          <div key={geneKey} className="p-2.5 rounded bg-slate-950/40 border border-slate-850 flex items-center justify-between text-[11px]">
+                            <div className="flex flex-col">
+                              <span className="font-semibold text-white">{gene}</span>
+                              <span className="text-[8px] text-slate-500 capitalize">{pheno} metabolizer</span>
+                            </div>
+                            <span className="px-1.5 py-0.5 bg-slate-800 border border-slate-700 text-slate-300 rounded text-[9px] font-bold">
+                              {multiplier}x dose
+                            </span>
+                          </div>
+                        );
+                      })}
+
+                      <div className="grid grid-cols-2 gap-2 text-[8px] uppercase tracking-wider border-t border-slate-800/80 pt-2 bg-slate-950/20 p-1.5 rounded">
+                        <div className="text-slate-500 flex justify-between">
+                          <span>HLA-B*15:02</span>
+                          <span className="font-bold text-slate-400">NEG</span>
+                        </div>
+                        <div className="text-slate-500 flex justify-between">
+                          <span>HLA-B*57:01</span>
+                          <span className="font-bold text-slate-400">NEG</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+
+              </div>
+
+            </div>
+          ) : (
+            <div className="flex-1 flex flex-col items-center justify-center text-center p-8 text-slate-600 border border-dashed border-slate-800 rounded-clinical bg-slate-950/20">
+              <span className="text-3xl mb-2 animate-pulse">📡</span>
+              <h3 className="text-base font-semibold text-slate-400">Connecting Biometric Security Keys...</h3>
+              <p className="max-w-md text-xs text-slate-500 font-mono leading-relaxed mt-1 uppercase tracking-wider">
+                Syncing with UNSC clinic databases. Please wait while the local biometric parcellation matrix resolves...
+              </p>
+            </div>
+          )}
+
+        </div>
+      </div>
+    );
+  }
 
   // Open modal for new patient
   const openNewModal = () => {
