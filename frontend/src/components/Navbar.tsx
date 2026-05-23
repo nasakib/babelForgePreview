@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
+import { useWindowContext } from '@/context/WindowContext';
 
 const NAV_ITEMS: { href: string; label: string; code: string }[] = [
   { href: '/',                  label: 'Console',         code: 'F1' },
@@ -19,6 +21,7 @@ const NAV_ITEMS: { href: string; label: string; code: string }[] = [
   { href: '/procedures',        label: 'Procedures',      code: 'F12' },
   { href: '/resources',         label: 'Resources',       code: 'F13' },
   { href: '/experience-simulator', label: 'Reaction Sim', code: 'F14' },
+  { href: '/patients',           label: 'Patients',       code: 'F15' },
 ];
 
 export default function Navbar() {
@@ -29,6 +32,10 @@ export default function Navbar() {
   const [uptime, setUptime] = useState(0);
   const pathname = usePathname();
   const isActive = (p: string) => p === '/' ? pathname === '/' : pathname.startsWith(p);
+
+  const { session, signOut } = useAuth();
+  const { updateWindow, bringToFront } = useWindowContext();
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
 
   useEffect(() => {
     const start = Date.now();
@@ -97,7 +104,7 @@ export default function Navbar() {
                 {item.label}
               </Link>
             ))}
-            <div className="flex items-center ml-2 border-l border-line/60 pl-2 gap-2">
+            <div className="flex items-center ml-2 border-l border-line/60 pl-2 gap-2 relative">
               <button
                 onClick={() => setTutorialOpen(true)}
                 className="px-3 py-1.5 bg-surface-100 hover:bg-surface-200 border border-line-strong rounded-clinical text-[10px] uppercase tracking-widest2 text-ink transition-colors shadow-sm flex items-center gap-2"
@@ -110,6 +117,72 @@ export default function Navbar() {
               >
                 Methodology
               </button>
+
+              {/* Clinician Account Menu Telemetry Dropdown */}
+              {session && (
+                <div className="relative ml-1">
+                  <button
+                    onClick={() => setAccountMenuOpen(!accountMenuOpen)}
+                    className="flex items-center gap-2 px-2.5 py-1.5 bg-slate-900/60 hover:bg-slate-800/80 border border-slate-850 rounded-clinical text-[10px] uppercase font-mono tracking-widest text-ink transition-colors shadow-sm select-none"
+                  >
+                    <span className="w-4 h-4 rounded-full bg-accent-500/20 text-accent-400 flex items-center justify-center font-bold text-[9px] border border-accent-400/30 font-mono">
+                      {session.user.initials}
+                    </span>
+                    <span className="hidden sm:inline text-white font-medium max-w-[80px] truncate">{session.user.name.split(" ")[0]}</span>
+                    <span className="text-[7px] text-slate-500">▼</span>
+                  </button>
+
+                  {accountMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-56 rounded-clinical bg-slate-950/95 border border-slate-850 backdrop-blur-xl shadow-2xl z-50 flex flex-col p-2 divide-y divide-slate-800/50 animate-fade-in text-[10px] tracking-wide uppercase font-mono">
+                      {/* Telemetry header */}
+                      <div className="p-2 text-[9px] text-slate-400 font-mono tracking-wide flex flex-col gap-0.5 normal-case">
+                        <div className="text-white font-semibold truncate">{session.user.name}</div>
+                        <div className="text-slate-500 text-[8px] truncate">{session.user.email}</div>
+                        <div className="mt-1 flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                          <span className="text-emerald-400 uppercase tracking-widest text-[8px] truncate">
+                            {session.org.name}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Options */}
+                      <div className="flex flex-col py-1.5 gap-0.5">
+                        <button
+                          onClick={() => {
+                            setAccountMenuOpen(false);
+                            updateWindow("console-profile-panel", { minimized: false });
+                            bringToFront("console-profile-panel");
+                          }}
+                          className="flex items-center gap-2 px-2.5 py-1.5 text-slate-300 hover:text-white hover:bg-slate-800/60 rounded text-left transition-colors"
+                        >
+                          👤 Clinical Profile
+                        </button>
+                        <Link
+                          href="/patients"
+                          onClick={() => setAccountMenuOpen(false)}
+                          className="flex items-center gap-2 px-2.5 py-1.5 text-slate-300 hover:text-white hover:bg-slate-800/60 rounded text-left transition-colors"
+                        >
+                          📋 Patient Cohorts
+                        </Link>
+                      </div>
+
+                      {/* Signout */}
+                      <div className="pt-1.5">
+                        <button
+                          onClick={async () => {
+                            setAccountMenuOpen(false);
+                            await signOut();
+                          }}
+                          className="w-full flex items-center gap-2 px-2.5 py-1.5 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded text-left transition-colors"
+                        >
+                          🚪 Sign Out Session
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 

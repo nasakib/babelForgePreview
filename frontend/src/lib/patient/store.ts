@@ -18,8 +18,8 @@
 
 import { Patient } from "./types";
 
-const STORAGE_KEY = "babelforge:patients:v1";
-const ACTIVE_KEY = "babelforge:patients:active:v1";
+const getStorageKey = (orgId: string) => `babelforge:patients:v1:${orgId}`;
+const getActiveKey = (orgId: string) => `babelforge:patients:active:v1:${orgId}`;
 
 type Listener = () => void;
 const listeners = new Set<Listener>();
@@ -30,10 +30,10 @@ function emit() {
   });
 }
 
-function readAll(): Patient[] {
-  if (typeof window === "undefined") return [];
+function readAll(orgId: string): Patient[] {
+  if (!orgId || typeof window === "undefined") return [];
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const raw = window.localStorage.getItem(getStorageKey(orgId));
     if (!raw) return [];
     const v = JSON.parse(raw);
     return Array.isArray(v) ? (v as Patient[]) : [];
@@ -42,10 +42,10 @@ function readAll(): Patient[] {
   }
 }
 
-function writeAll(rows: Patient[]) {
-  if (typeof window === "undefined") return;
+function writeAll(orgId: string, rows: Patient[]) {
+  if (!orgId || typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(rows));
+    window.localStorage.setItem(getStorageKey(orgId), JSON.stringify(rows));
   } catch {
     /* quota — ignore */
   }
@@ -66,17 +66,17 @@ export const patientStore = {
     return () => listeners.delete(listener);
   },
 
-  list(): Patient[] {
-    return readAll().sort(
+  list(orgId: string): Patient[] {
+    return readAll(orgId).sort(
       (a, b) => (b.updatedAt || "").localeCompare(a.updatedAt || "")
     );
   },
 
-  get(id: string): Patient | null {
-    return readAll().find((p) => p.id === id) ?? null;
+  get(orgId: string, id: string): Patient | null {
+    return readAll(orgId).find((p) => p.id === id) ?? null;
   },
 
-  create(draft: Omit<Patient, "id" | "createdAt" | "updatedAt">): Patient {
+  create(orgId: string, draft: Omit<Patient, "id" | "createdAt" | "updatedAt">): Patient {
     const now = new Date().toISOString();
     const patient: Patient = {
       ...draft,
@@ -84,15 +84,15 @@ export const patientStore = {
       createdAt: now,
       updatedAt: now,
     };
-    const rows = readAll();
+    const rows = readAll(orgId);
     rows.push(patient);
-    writeAll(rows);
+    writeAll(orgId, rows);
     emit();
     return patient;
   },
 
-  update(id: string, patch: Partial<Patient>): Patient | null {
-    const rows = readAll();
+  update(orgId: string, id: string, patch: Partial<Patient>): Patient | null {
+    const rows = readAll(orgId);
     const idx = rows.findIndex((p) => p.id === id);
     if (idx < 0) return null;
     const merged: Patient = {
@@ -103,49 +103,49 @@ export const patientStore = {
       updatedAt: new Date().toISOString(),
     };
     rows[idx] = merged;
-    writeAll(rows);
+    writeAll(orgId, rows);
     emit();
     return merged;
   },
 
-  remove(id: string): void {
-    const rows = readAll().filter((p) => p.id !== id);
-    writeAll(rows);
-    if (patientStore.getActiveId() === id) patientStore.setActive(null);
+  remove(orgId: string, id: string): void {
+    const rows = readAll(orgId).filter((p) => p.id !== id);
+    writeAll(orgId, rows);
+    if (patientStore.getActiveId(orgId) === id) patientStore.setActive(orgId, null);
     emit();
   },
 
-  getActiveId(): string | null {
-    if (typeof window === "undefined") return null;
-    return window.localStorage.getItem(ACTIVE_KEY);
+  getActiveId(orgId: string): string | null {
+    if (!orgId || typeof window === "undefined") return null;
+    return window.localStorage.getItem(getActiveKey(orgId));
   },
 
-  setActive(id: string | null): void {
-    if (typeof window === "undefined") return;
-    if (id) window.localStorage.setItem(ACTIVE_KEY, id);
-    else window.localStorage.removeItem(ACTIVE_KEY);
+  setActive(orgId: string, id: string | null): void {
+    if (!orgId || typeof window === "undefined") return;
+    if (id) window.localStorage.setItem(getActiveKey(orgId), id);
+    else window.localStorage.removeItem(getActiveKey(orgId));
     emit();
   },
 
-  getActive(): Patient | null {
-    const id = patientStore.getActiveId();
-    return id ? patientStore.get(id) : null;
+  getActive(orgId: string): Patient | null {
+    const id = patientStore.getActiveId(orgId);
+    return id ? patientStore.get(orgId, id) : null;
   },
 
   /**
    * Hard-clears all patient data. Surfaced in the UI as
    * "Purge local cohort" so clinicians can wipe a shared workstation.
    */
-  purgeAll(): void {
-    if (typeof window === "undefined") return;
-    window.localStorage.removeItem(STORAGE_KEY);
-    window.localStorage.removeItem(ACTIVE_KEY);
+  purgeAll(orgId: string): void {
+    if (!orgId || typeof window === "undefined") return;
+    window.localStorage.removeItem(getStorageKey(orgId));
+    window.localStorage.removeItem(getActiveKey(orgId));
     emit();
   },
 
   /** Export the cohort as a JSON Blob for clinician-controlled handoff. */
-  export(): Blob {
-    return new Blob([JSON.stringify(readAll(), null, 2)], {
+  export(orgId: string): Blob {
+    return new Blob([JSON.stringify(readAll(orgId), null, 2)], {
       type: "application/json",
     });
   },

@@ -5,7 +5,10 @@ import Navbar from '@/components/Navbar'
 import { AIProvider } from '@/context/AIContext'
 import { UserModeProvider } from '@/context/UserModeContext'
 import { WindowProvider } from '@/context/WindowContext'
+import { AuthProvider } from '@/context/AuthContext'
+import { PatientProvider } from '@/context/PatientContext'
 import AIAssistant from '@/components/AIAssistant'
+import ProfilePanel from '@/components/auth/ProfilePanel'
 import StatusBar from '@/components/palantir/StatusBar'
 import CommandPalette from '@/components/palantir/CommandPalette'
 import WindowDock from '@/components/palantir/WindowDock'
@@ -55,21 +58,26 @@ export default function RootLayout({
         <style id="forge-theme" dangerouslySetInnerHTML={{ __html: cssVarBlock() }} />
       </head>
       <body className="font-sans antialiased h-screen-dvh flex flex-col overflow-hidden bg-canvas text-ink">
-        <UserModeProvider>
-          <AIProvider>
-            <WindowProvider>
-              <MobileDisclaimer />
-              <Navbar />
-              <main className="flex-1 flex flex-col overflow-y-auto overflow-x-hidden relative bg-void">
-                {children}
-              </main>
-              <WindowDock />
-              <StatusBar />
-              <AIAssistant />
-              <CommandPalette />
-            </WindowProvider>
-          </AIProvider>
-        </UserModeProvider>
+        <AuthProvider>
+          <UserModeProvider>
+            <AIProvider>
+              <PatientProvider>
+                <WindowProvider>
+                  <MobileDisclaimer />
+                  <Navbar />
+                  <main className="flex-1 flex flex-col overflow-y-auto overflow-x-hidden relative bg-void">
+                    {children}
+                  </main>
+                  <WindowDock />
+                  <StatusBar />
+                  <AIAssistant />
+                  <ProfilePanel />
+                  <CommandPalette />
+                </WindowProvider>
+              </PatientProvider>
+            </AIProvider>
+          </UserModeProvider>
+        </AuthProvider>
       </body>
     </html>
   )

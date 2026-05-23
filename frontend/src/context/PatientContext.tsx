@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { patientStore } from "@/lib/patient/store";
 import { Patient, patientToPathologyCodes } from "@/lib/patient/types";
 import { useAI } from "@/context/AIContext";
+import { useAuth } from "@/context/AuthContext";
 
 interface PatientContextValue {
   patients: Patient[];
@@ -22,18 +23,27 @@ const PatientContext = createContext<PatientContextValue | undefined>(undefined)
  */
 export function PatientProvider({ children }: { children: ReactNode }) {
   const ai = useAI();
+  const { session } = useAuth();
+  const orgId = session?.org?.id || "";
+
   const [patients, setPatients] = useState<Patient[]>([]);
   const [activeId, setActiveIdState] = useState<string | null>(null);
 
   const refresh = () => {
-    setPatients(patientStore.list());
-    setActiveIdState(patientStore.getActiveId());
+    if (!orgId) {
+      setPatients([]);
+      setActiveIdState(null);
+      return;
+    }
+    setPatients(patientStore.list(orgId));
+    setActiveIdState(patientStore.getActiveId(orgId));
   };
 
   useEffect(() => {
     refresh();
     return patientStore.subscribe(refresh);
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orgId]);
 
   const active = activeId ? patients.find((p) => p.id === activeId) ?? null : null;
 
@@ -48,8 +58,10 @@ export function PatientProvider({ children }: { children: ReactNode }) {
     patients,
     active,
     setActiveId: (id) => {
-      patientStore.setActive(id);
-      refresh();
+      if (orgId) {
+        patientStore.setActive(orgId, id);
+        refresh();
+      }
     },
     refresh,
   };

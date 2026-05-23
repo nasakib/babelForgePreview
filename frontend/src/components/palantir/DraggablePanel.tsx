@@ -42,6 +42,7 @@ const PANEL_EXPLANATION_MAP: Record<string, string> = {
   "11d-projection-sidebar": "11d-projection-sidebar",
   "biophysical-animation": "biophysical-canvas",
   "console-compound-inspector": "biophysical-canvas",
+  "console-profile-panel": "clinical-profile",
 };
 
 export default function DraggablePanel({

@@ -119,6 +119,20 @@ export const authClient = {
     writeSession(null);
   },
 
+  async updateSession({ name, orgName }: { name?: string; orgName?: string }): Promise<Session> {
+    const s = readSession();
+    if (!s) throw new Error("No active session to update.");
+    if (name !== undefined) {
+      s.user.name = name.trim();
+      s.user.initials = initialsOf(name);
+    }
+    if (orgName !== undefined) {
+      s.org.name = orgName.trim();
+    }
+    writeSession(s);
+    return s;
+  },
+
   subscribe(listener: Listener): () => void {
     listeners.add(listener);
     return () => listeners.delete(listener);
