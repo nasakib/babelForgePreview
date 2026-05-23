@@ -250,18 +250,33 @@ ${stackTxt} ${pathTxt}`;
 The global system integrity is currently calculated at **Φ = ${integrity}%**. 
 
 * **Theoretical Framework:** This score represents the ratio of the active system's steady-state Kuramoto order parameter ($R$) compared to a healthy, unperturbed baseline connectome. 
-* **Dynamic Range:** Healthy homeostasis is maintained when $R \\approx 0.85$. Lower scores ($\Phi < 60\\%$) signal functional network fragmentation or topological cavity collapses.
+* **Dynamic Range:** Healthy homeostasis is maintained when $R \approx 0.85$. Lower scores ($\Phi < 60\%$) signal functional network fragmentation or topological cavity collapses.
 * **Absence/Stabilization:** High-chaos compounds (like methamphetamine) degrade this score by injecting high-frequency Gaussian noise into the phase loops, whereas selective stabilizers (like ZenBud or corrective molecules) restore coherence by smoothing the coupling coefficient $K^*$.
 
 ${stackTxt}`;
   }
-  // 3. Handle QLDPC / topological error correction
-  else if (lower.includes("qldpc") || lower.includes("stabilizer") || lower.includes("syndrome") || lower.includes("error")) {
-    response += `### [Local Engine] QLDPC Quantum Error Correction & Synaptic Stabilization
-The algebraic topology engine employs a **QLDPC (Quantum Low-Density Parity-Check)** stabilizer code to maintain synaptic integrity across the Schaefer-200 ROI parcellations.
+  // 3. Handle QLDPC / topological error correction / physical wetware / organoids / XOR-PCR
+  else if (
+    lower.includes("qldpc") || 
+    lower.includes("stabilizer") || 
+    lower.includes("syndrome") || 
+    lower.includes("error") || 
+    lower.includes("organoid") || 
+    lower.includes("microfluidic") || 
+    lower.includes("wetware") || 
+    lower.includes("electroporation") || 
+    lower.includes("xpr") || 
+    lower.includes("pcr") || 
+    lower.includes("checksum") || 
+    lower.includes("yamanaka") || 
+    lower.includes("genome")
+  ) {
+    response += `### [Local Engine] Bio-Computational Wetware & XOR-PCR Checksum Framework
+The algebraic topology engine extends past digital connectome simulations into physical **electroporation-enabled microfluidic brain organoid cultures** growing at a microfluidic Y-junction.
 
-* **Error Checking:** The system checks the boundary condition $\\partial_k \\cdot x = s$, where non-zero syndromes ($s \\neq 0$) represent synaptic degradation or age-related micro-fissures.
-* **Homology Reconstruction:** When syndromes are flagged, the local decoder utilizes global homology groups $H_k = \\ker(\\partial_k) / \\text{im}(\\partial_{k+1})$ to compute sparse welds (Ryu-Takayanagi minimal cut solutions) to patch the topological cavities.
+* **Topological Stabilization Loop:** The system enforces a **physical XOR-PCR (Polymerase Chain Reaction) molecular checksum** over target cellular genomes, ensuring that only cells with clean, mutation-free states ($s_{\text{physical}} = \vec{0}$) undergo closed-loop Yamanaka factor reprogramming (Oct4, Sox2, Klf4, c-Myc) and targeted genome synthesis/re-implantation.
+* **Isomorphism to QLDPC Code:** This physical check maps directly to the digital **QLDPC (Quantum Low-Density Parity-Check)** stabilizer code ($\partial_k \cdot x = s$), where the simplicial boundary operator $\partial_k$ serves as the molecular parity-check matrix.
+* **Holographic Boundary-to-Bulk Translation:** High-dimensional minimal structural welds ($\nabla_{ij}$) computed by the holographic Hodge Laplacian ($L_k$) are physically translated into targeted micro-electroporation stimulation coordinates ($V_m(t)$) at the Y-junction, steering structural neurite outgrowth.
 
 ${pathTxt}`;
   }

@@ -8,6 +8,7 @@ why, and in what order.
 | File | Purpose |
 |---|---|
 | [`BABELFORGE_MASTER_OPERATOR_MANUAL.md`](BABELFORGE_MASTER_OPERATOR_MANUAL.md) | **The Master Operator & Engineering Manual:** The single source of truth detailing the high-dimensional algebraic topology engine, Kuramoto dynamics, clinical optimization framework, ProTox-3.0 toxicity criteria, Yunnan mushroom kinetics, comparative diagnostics, and operational guidelines. |
+| [`BIO_COMPUTATIONAL_SUBSTRATE.md`](BIO_COMPUTATIONAL_SUBSTRATE.md) | **Bio-Computational Wetware Substrate Interface:** Architectural specification detailing electroporation-guided microfluidic organoid growth, physical XOR-PCR molecular checksums, and closed-loop genetic-reprogramming pipelines. |
 | [`auth-roadmap.md`](auth-roadmap.md) | How we evolve from anonymous → multi-tenant SaaS auth. Provider trade-offs, swap-out boundary, migration steps. |
 | [`clinical-compliance.md`](clinical-compliance.md) | HIPAA / GDPR / SOC 2 / 21 CFR Part 11 posture, gap analysis, controls roadmap. |
 | [`patient-feature-roadmap.md`](patient-feature-roadmap.md) | The patient module phased plan (cohort, scales, PGx, longitudinal). |
