@@ -110,6 +110,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [dynamicInviteOrgId]);
 
+  const handleGuestSignIn = async () => {
+    setErrorMsg("");
+    setLoading(true);
+    try {
+      await authClient.signIn({
+        name: "Guest Investigator",
+        email: "guest@babelforge.local",
+        isGuest: true,
+        role: "owner",
+        orgName: "Guest Sandbox Workspace",
+      });
+      refresh();
+    } catch (err: any) {
+      setErrorMsg(err.message || "Failed to establish guest session.");
+    }
+    setLoading(false);
+  };
+
   const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg("");
@@ -291,7 +309,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 value={name}
                 required
                 onChange={(e) => setName(e.target.value)}
-                disabled={isPreFilledCode}
                 placeholder="Dr. Catherine Elizabeth Halsey"
                 className="input-clinical w-full text-white bg-slate-950/60 border border-slate-800/80 focus:border-accent-500 disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-slate-950/30"
               />
@@ -304,7 +321,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 value={email}
                 required
                 onChange={(e) => setEmail(e.target.value)}
-                disabled={isPreFilledCode}
                 placeholder="c.halsey@unsc.gov"
                 className="input-clinical w-full text-white bg-slate-950/60 border border-slate-800/80 focus:border-accent-500 disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-slate-950/30"
               />
@@ -355,7 +371,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                       value={orgName}
                       required
                       onChange={(e) => setOrgName(e.target.value)}
-                      disabled={isPreFilledCode}
                       placeholder="UNSC ONI Section III"
                       className="input-clinical w-full text-white bg-slate-950/60 border border-slate-800/80 focus:border-accent-500 disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-slate-950/30"
                     />
@@ -436,6 +451,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               className="btn-primary w-full py-2.5 mt-2 bg-accent-600 hover:bg-accent-500 border-accent-400 text-white font-mono uppercase tracking-widest shadow-[0_0_15px_rgba(168,85,247,0.4)] disabled:opacity-40"
             >
               {loading ? "Establishing Link..." : (authTab === "register" ? "Initialise Workspace Session" : "Sync Local Session")}
+            </button>
+
+            <div className="relative flex py-1 items-center">
+              <div className="flex-grow border-t border-slate-800/50"></div>
+              <span className="flex-shrink mx-3 text-[9px] font-mono text-slate-500 uppercase tracking-widest">OR</span>
+              <div className="flex-grow border-t border-slate-800/50"></div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleGuestSignIn}
+              disabled={loading}
+              className="w-full py-2.5 bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-500/30 hover:border-emerald-400/50 text-emerald-400 font-mono uppercase tracking-widest rounded-clinical text-xs transition-all shadow-[0_0_15px_rgba(16,185,129,0.15)] flex items-center justify-center gap-2"
+            >
+              <svg className="w-4 h-4 text-emerald-400 animate-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+              Quick Access: Guest Mode (Zero Liability)
             </button>
 
             <div className="text-[9px] font-sans text-slate-500 leading-normal text-center mt-1 p-2 bg-slate-950/40 border border-slate-800/40 rounded">

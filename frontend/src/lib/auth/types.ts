@@ -46,6 +46,7 @@ export interface User {
   initials: string;
   role: Role;
   orgId: string;
+  isGuest?: boolean;
 }
 
 export interface Session {

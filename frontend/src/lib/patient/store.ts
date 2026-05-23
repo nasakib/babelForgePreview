@@ -35,7 +35,7 @@ function readAll(orgId: string): Patient[] {
   try {
     const raw = window.localStorage.getItem(getStorageKey(orgId));
     if (!raw) {
-      if (orgId === "org_unsc_oni") {
+      if (orgId === "org_unsc_oni" || orgId.startsWith("org_guest")) {
         // Pre-seed Spartan-117 de-identified cohort patient
         const seed: Patient[] = [
           {

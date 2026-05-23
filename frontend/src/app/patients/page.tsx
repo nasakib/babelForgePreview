@@ -90,6 +90,7 @@ export default function PatientsPage() {
     ADHD: { severity: "moderate", onsetYear: new Date().getFullYear(), priorResponse: 1 },
     TOURETTES: { severity: "moderate", onsetYear: new Date().getFullYear(), priorResponse: 1 },
     DEPRESSION: { severity: "moderate", onsetYear: new Date().getFullYear(), priorResponse: 1 },
+    CRPS: { severity: "moderate", onsetYear: new Date().getFullYear(), priorResponse: 1 },
   });
 
   // Clinical Scales
@@ -735,6 +736,7 @@ export default function PatientsPage() {
                   <option value="PTSD">PTSD</option>
                   <option value="ADHD">ADHD</option>
                   <option value="TOURETTES">Tourettes</option>
+                  <option value="CRPS">Complex Regional Pain (CRPS)</option>
                 </select>
                 
                 <div className="flex items-center justify-end text-slate-500">
@@ -1518,7 +1520,7 @@ export default function PatientsPage() {
                   </div>
 
                   <div className="flex flex-col gap-3 font-mono">
-                    {(["DEPRESSION", "PTSD", "ADHD", "TOURETTES"] as PathologyCode[]).map((code) => {
+                    {(["DEPRESSION", "PTSD", "ADHD", "TOURETTES", "CRPS"] as PathologyCode[]).map((code) => {
                       const activeState = activePathologyCodes.includes(code);
                       return (
                         <div

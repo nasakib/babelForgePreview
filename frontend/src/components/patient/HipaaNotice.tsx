@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 
 /**
  * Prominent privacy banner shown at the top of the patient pages.
@@ -9,6 +10,47 @@ import { useState } from "react";
  */
 export default function HipaaNotice({ defaultOpen = true }: { defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen);
+  const { session } = useAuth();
+  const isGuest = session?.user?.isGuest;
+
+  if (isGuest) {
+    return (
+      <div
+        role="region"
+        aria-label="HIPAA guest notice"
+        className="border border-emerald-500/40 bg-emerald-500/10 text-emerald-400 rounded-clinical p-3 lg:p-4 text-xs leading-relaxed"
+      >
+        <div className="flex items-start gap-2">
+          <svg className="w-4 h-4 mt-0.5 flex-none text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          </svg>
+          <div className="flex-1">
+            <div className="flex items-center justify-between gap-3">
+              <span className="font-bold uppercase tracking-widest text-[11px] text-emerald-300">
+                Guest Simulator active — Zero Liability Sandbox
+              </span>
+              <button
+                onClick={() => setOpen((o) => !o)}
+                className="text-[10px] font-mono uppercase tracking-widest text-emerald-400/85 hover:text-emerald-300 underline"
+              >
+                {open ? "Hide Details" : "Show Details"}
+              </button>
+            </div>
+            {open && (
+              <div className="mt-2 space-y-2 text-emerald-400/90 font-mono text-[11px]">
+                <p>
+                  You are logged in under **Guest Mode**. All patient profiles, Connectome simulation data, and phase dynamics in this session are 100% synthetic and simulated. No real Protected Health Information (PHI) is processed or cached, completely eliminating compliance liability.
+                </p>
+                <p className="text-[10px] uppercase tracking-widest text-emerald-500/70">
+                  ⚡ Unlimited Simulator access activated.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

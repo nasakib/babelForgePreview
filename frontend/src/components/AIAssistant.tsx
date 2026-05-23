@@ -232,8 +232,39 @@ function localFallback(q: string, ctx: any): string {
 
   let response = "";
 
+  // 0. Handle CRPS (Complex Regional Pain Syndrome)
+  if (lower.includes("crps") || lower.includes("allodynia") || lower.includes("reflex sympathetic") || lower.includes("sensitization") || lower.includes("pain")) {
+    response += `### [Local Engine] CRPS Computational Neuro-Medicine Diagnosis (Master Protocol)
+This diagnostic analysis interprets CRPS as a complex, multi-layered system—balancing high-dimensional network topology with biochemical variables and autonomic postganglionic tone.
+
+#### STAGE 1: CONNECTOME & NETWORK TOPOLOGY DIAGNOSIS
+* **Somatosensory Blurring (S1):** Expandable mechanical allodynia extending to mid-calf maps to cortical receptive field expansion and loss of lateral inhibition in the S1 lower-limb homunculus.
+* **Locked Pain Cliques:** Persistent NMDA-dependent long-term potentiation locks the ventroposterolateral (VPL) Thalamus, Anterior Cingulate Cortex (ACC), and Insula into a low-dimensional attractor state. Sensory inputs are recursively warped into agonizing 48-hour burning flares.
+
+#### STAGE 2: BIOCHEMICAL & AUTONOMIC PROFILING
+* **Active Phenotype:** Cold presentation (severe temperature drop, vasoconstriction, and cyanotic skin) indicates sympathetic postganglionic vaso-constrictive hyperactivity, leading to local hypoxia, tissue acidosis (stimulating TRPV1/TRPA1/ASICs), and localized cytokine pools (TNF-α, IL-1β, IL-6).
+* **Regimen Gaps:** Gabapentin (1200mg/day) downregulates presynaptic calcium entry, and nocturnal LDN (4.5mg) suppresses Toll-like Receptor 4 (TLR4) on microglia. However, localized hypoxic acidosis from persistent vasoconstriction is completely unaddressed. NSAIDs offer zero clinical utility here.
+
+#### STAGE 3: THERAPEUTIC SIMULATION SANDBOX
+* **NMDA Antagonist (Ketamine):** High-dose resets block the NMDA channel pore, breaking the dorsal horn wind-up loop and injecting stochastic noise to fragment locked pain cliques.
+* **Glial Stabilizers (LDN):** Predicted to reduce microglial cytokine output by 40-50% within a 60-day window, provided local ischemia is relieved.
+* **Neuromodulation / Blocks (LSB):** A Lumbar Sympathetic Block (LSB) at L2-L4 temporarily blocks sympathetic postganglionic vasoconstrictor tone, inducing immediate warm hyperemic reperfusion (+2°C to +5°C) and clearing acidic waste.
+
+#### STAGE 4: SENSORY-MOTOR RE-EDUCATION (CORTICAL UNBLURRING)
+* **Rule:** Immediately suspend direct touch desensitization to avoid wind-up.
+* *Phase 1:* Pure Implicit Motor Imagery (L/R Foot discrimination, 10 min 4x/day).
+* *Phase 2:* Explicit Mental Simulation (Imagined pain-free movement w/o S1 touch activation).
+* *Phase 3:* Mirror Visual Feedback (MVF) (Visual trick to override somatosensory errors).
+
+#### STAGE 5: CLINICAL TRIAGE & OBJECTIVE METRIC ENGINE
+* *Key Question:* "Can we perform a diagnostic Lumbar Sympathetic Block (LSB) to break the postganglionic vasoconstrictive loop and warm up the foot?"
+* *Metric 1:* **Thermal Recovery Rate** (Goal: Left vs. Right asymmetry stabilized to <0.5°C).
+* *Metric 2:* **Two-Point Discrimination** (Measure calf gap to track somatotopic unblurring).
+
+${stackTxt} ${pathTxt}`;
+  }
   // 1. Handle Jianshouqing / mushrooms
-  if (lower.includes("mushroom") || lower.includes("jianshouqing") || lower.includes("oneirogenic") || lower.includes("little people") || lower.includes("yunnan")) {
+  else if (lower.includes("mushroom") || lower.includes("jianshouqing") || lower.includes("oneirogenic") || lower.includes("little people") || lower.includes("yunnan")) {
     response += `### [Local Engine] Jianshouqing Mushroom (Lanmaoa asiatica) Diagnostic Analysis
 Based on Yunnan ethnopharmacological records and your active simulation settings, the Jianshouqing mushroom acts as a highly potent Default Mode Network (DMN) disruptor.
 

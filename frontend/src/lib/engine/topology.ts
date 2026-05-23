@@ -72,7 +72,8 @@ export const PATHOLOGIES = [
   "OCD",
   "GAD",
   "AUTISM",
-  "ADDICTION"
+  "ADDICTION",
+  "CRPS"
 ] as const;
 export type Pathology = (typeof PATHOLOGIES)[number];
 
@@ -156,6 +157,13 @@ export const PATHOLOGY_META: Record<
     tone: "Dopaminergic Hijacking",
     subjective:
       "Salience network strictly locked to substance-seeking, massive attenuation of baseline rewards.",
+  },
+  CRPS: {
+    label: "Complex Regional Pain (CRPS)",
+    region: "SomatoMotor",
+    tone: "S1 Somatotopy Blurring & Autonomic Dysregulation",
+    subjective:
+      "Severe mechanical allodynia, spatial blurring, localized vasoconstrictive/warm autonomic storms.",
   }
 };
 
@@ -351,6 +359,12 @@ export const MODIFIERS: Record<Pathology, ModifierSpec> = {
     addCliques: 15,
     maxAddedDim: 6,
     biasRegion: "Limbic",
+  },
+  CRPS: {
+    removeCliques: 10,
+    addCliques: 25,
+    maxAddedDim: 8,
+    biasRegion: "SomatoMotor",
   }
 };
 

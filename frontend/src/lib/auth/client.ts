@@ -143,6 +143,7 @@ export interface SignInInput {
   orgName?: string;
   role?: User["role"];
   orgId?: string; // Existing organization to join (for staff join codes)
+  isGuest?: boolean;
 }
 
 export const authClient = {
@@ -178,14 +179,42 @@ export const authClient = {
     return user;
   },
 
-  async signIn({ name, email, orgName, role = "clinician", orgId }: SignInInput): Promise<Session> {
+  async signIn({ name, email, orgName, role = "clinician", orgId, isGuest }: SignInInput): Promise<Session> {
     const now = new Date();
     const expires = new Date(now.getTime() + 1000 * 60 * 60 * 12); // 12h
 
     let targetOrg: Organization;
     let targetUser: User;
 
-    if (role === "owner") {
+    if (isGuest) {
+      // 0. QUICK ACCESS GUEST MODE SIMULATION
+      const guestOrgId = `org_guest_${uid("org")}`;
+      targetOrg = {
+        id: guestOrgId,
+        name: (orgName || "Guest Sandbox Workspace").trim(),
+        plan: "preview",
+        baaSigned: true, // Auto-signed for guest sandbox! Zero hassle!
+        createdAt: now.toISOString(),
+      };
+      
+      const orgs = readOrgs();
+      orgs.push(targetOrg);
+      writeOrgs(orgs);
+
+      targetUser = {
+        id: uid("usr"),
+        name: name.trim(),
+        email: email.trim(),
+        initials: initialsOf(name),
+        role: "owner",
+        orgId: guestOrgId,
+        isGuest: true,
+      };
+
+      const users = readUsers();
+      users.push(targetUser);
+      writeUsers(users);
+    } else if (role === "owner") {
       // 1. REGISTERING A NEW CLINICAL ORGANIZATION
       const newOrgId = uid("org");
       targetOrg = {

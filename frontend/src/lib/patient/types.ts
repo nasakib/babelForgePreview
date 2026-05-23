@@ -30,7 +30,7 @@ export type Gender =
   | "prefer_not_to_say";
 export type Handedness = "right" | "left" | "ambidextrous";
 export type PregnancyStatus = "not_applicable" | "none" | "pregnant" | "lactating" | "unknown";
-export type PathologyCode = "PTSD" | "ADHD" | "TOURETTES" | "DEPRESSION";
+export type PathologyCode = "PTSD" | "ADHD" | "TOURETTES" | "DEPRESSION" | "CRPS";
 export type Severity = "mild" | "moderate" | "severe";
 
 /** Pharmacogenomic CYP phenotypes used in dose adjustment heuristics. */
@@ -209,6 +209,7 @@ export const PATHOLOGY_LABELS: Record<PathologyCode, string> = {
   ADHD: "Attention-Deficit / Hyperactivity",
   TOURETTES: "Tourette Syndrome",
   DEPRESSION: "Major Depressive Disorder",
+  CRPS: "Complex Regional Pain (CRPS)",
 };
 
 export const AGE_RANGES: AgeRange[] = [
