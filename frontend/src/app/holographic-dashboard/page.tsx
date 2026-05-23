@@ -54,7 +54,7 @@ export default function HolographicDashboard() {
     return runDiagnosis(
       activePathologies as Pathology[],
       activeVectors,
-      { weightKg: 70, ageYears: startingAge, simulationTimeMonths },
+      { weightKg: 70, ageYears: startingAge, simulationTimeMonths, toleranceMonths: 0 },
       activeStack
     );
   }, [activePathologies, activeVectors, startingAge, simulationTimeMonths, activeStack]);
