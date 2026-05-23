@@ -50,6 +50,9 @@ export default function HipaaNotice({ defaultOpen = true }: { defaultOpen?: bool
               <p className="text-[10px] font-mono uppercase tracking-widest text-warn/70">
                 Roadmap: encrypted backend store, BAA-covered hosting, audit log, row-level access control.
               </p>
+              <div className="pt-2 border-t border-warn/20 text-[10px] leading-normal text-warn/80">
+                ⚠️ <strong>USER LIABILITY AGREEMENT:</strong> By inputs or registry, the operator acknowledges that babelForge provides no server-side HIPAA-guaranteed hosting or local at-rest encryption in this build. The practitioner/operator assumes 100% full and sole liability for ensuring all cached patient records comply with de-identification limits.
+              </div>
             </div>
           )}
         </div>

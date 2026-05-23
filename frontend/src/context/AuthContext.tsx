@@ -25,11 +25,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Form states for AuthGate
   const [authTab, setAuthTab] = useState<"login" | "register">("register");
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [orgName, setOrgName] = useState("");
-  const [role, setRole] = useState<Role>("clinician");
-  const [inviteCode, setInviteCode] = useState("");
+  const [name, setName] = useState("Dr. Catherine Elizabeth Halsey");
+  const [email, setEmail] = useState("c.halsey@unsc.gov");
+  const [orgName, setOrgName] = useState("UNSC ONI Section III");
+  const [role, setRole] = useState<Role>("owner");
+  const [inviteCode, setInviteCode] = useState("FORGE-2026");
   const [errorMsg, setErrorMsg] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -190,7 +190,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 value={name}
                 required
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Dr. Katherine Yeo"
+                placeholder="Dr. Catherine Elizabeth Halsey"
                 className="input-clinical w-full text-white bg-slate-950/60 border border-slate-800/80 focus:border-accent-500"
               />
             </div>
@@ -202,7 +202,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 value={email}
                 required
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="k.yeo@neuroscience.org"
+                placeholder="c.halsey@unsc.gov"
                 className="input-clinical w-full text-white bg-slate-950/60 border border-slate-800/80 focus:border-accent-500"
               />
             </div>
@@ -275,6 +275,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             >
               {loading ? "Establishing Link..." : (authTab === "register" ? "Initialise Secure Session" : "Sync Local Session")}
             </button>
+
+            <div className="text-[9px] font-sans text-slate-500 leading-normal text-center mt-1 p-2 bg-slate-950/40 border border-slate-800/40 rounded">
+              ⚠️ <strong>Liability & Compliance:</strong> babelForge is a research-only platform. The user assumes 100% sole liability for HIPAA de-identification compliance. By initiating a session, you agree that you are solely responsible for ensuring no Protected Health Information (PHI) is entered or stored in this local sandbox.
+            </div>
           </form>
         </div>
       </div>
