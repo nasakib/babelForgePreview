@@ -721,8 +721,8 @@ export default function ProfilePanel() {
 
                   <div className="border-t border-slate-800/80 pt-2 bg-slate-950/40 p-2.5 rounded border border-slate-900 leading-normal text-[9px]">
                     <strong className="text-white uppercase block mb-1">🏦 Cashier's Check Payment Instructions:</strong>
-                    1. Make checks payable to: <strong className="text-emerald-400">BabelForge Inc.</strong><br />
-                    2. Mail check to: <strong className="text-emerald-400">BabelForge treasury, 100 Main St, Suite 400, Boston, MA 02110</strong><br />
+                    1. Make checks payable to: <strong className="text-emerald-400">Najmos Sakib</strong><br />
+                    2. Mail check to: <strong className="text-emerald-400">Najmos Sakib, Connectome Treasury (Mailing address provided in your invoice email)</strong><br />
                     3. Important: Write the Invoice ID <strong className="text-white font-mono">{generatedInvoiceId}</strong> on the check memo line to secure license persistence.<br />
                     <span className="text-slate-500 block mt-1.5">* Net 30 terms apply. Sandbox boundaries have been fully upgraded and unlocked for instant workspace clinical access!</span>
                   </div>
