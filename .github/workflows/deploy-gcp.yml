@@ -71,9 +71,6 @@ jobs:
           image: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/backend:${{ github.sha }}
           env_vars: |
             ENVIRONMENT=production
-          secrets: |
-            STRIPE_SECRET_KEY=stripe-secret-key:latest
-            STRIPE_WEBHOOK_SECRET=stripe-webhook-secret:latest
 
 
   build-and-deploy-frontend:

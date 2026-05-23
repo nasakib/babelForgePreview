@@ -688,7 +688,7 @@ export default function ProfilePanel() {
                 </div>
                 <div className="flex justify-between text-[8.5px] text-slate-500 border-t border-slate-900 pt-1">
                   <span>Payment Terms:</span>
-                  <span className="text-slate-300 font-bold">NET 30 (Cashier's Check / ACH)</span>
+                  <span className="text-slate-300 font-bold">{"NET 30 (Cashier's Check / ACH)"}</span>
                 </div>
               </div>
 
@@ -720,7 +720,7 @@ export default function ProfilePanel() {
                   </div>
 
                   <div className="border-t border-slate-800/80 pt-2 bg-slate-950/40 p-2.5 rounded border border-slate-900 leading-normal text-[9px]">
-                    <strong className="text-white uppercase block mb-1">🏦 Cashier's Check Payment Instructions:</strong>
+                    <strong className="text-white uppercase block mb-1">{"🏦 Cashier's Check Payment Instructions:"}</strong>
                     1. Make checks payable to: <strong className="text-emerald-400">Najmos Sakib</strong><br />
                     2. Mail check to: <strong className="text-emerald-400">Najmos Sakib, 4341 Elvie Way, Hoschton, GA 30548</strong><br />
                     3. For billing inquiries or invoice copy requests, contact: <strong className="text-emerald-400">nat.sakib@gmail.com</strong><br />
@@ -762,10 +762,10 @@ export default function ProfilePanel() {
                     </div>
                   )}
 
-                  <div className="flex flex-col gap-1">
+                  <div className="flex flex-col gap-3">
                     <div className="flex justify-between items-baseline">
                       <label className="text-[8px] uppercase text-slate-500 font-bold">Purchase Order (PO) Number</label>
-                      <span className="text-[7.5px] text-slate-600">Enter 'PENDING' if PO in process</span>
+                      <span className="text-[7.5px] text-slate-600">{"Enter 'PENDING' if PO in process"}</span>
                     </div>
                     <input
                       type="text"
@@ -802,7 +802,7 @@ export default function ProfilePanel() {
                   </div>
 
                   <div className="p-2.5 rounded bg-slate-950/40 border border-slate-800/40 text-slate-500 leading-normal text-[8.5px] uppercase">
-                    🔒 Cashier's checks must be signed by authorized financial officers and referenced to unique Invoice IDs. Net 30 routing keys will lock workspace if check is not received by maturity date.
+                    {"🔒 Cashier's checks must be signed by authorized financial officers and referenced to unique Invoice IDs. Net 30 routing keys will lock workspace if check is not received by maturity date."}
                   </div>
 
                   <button
