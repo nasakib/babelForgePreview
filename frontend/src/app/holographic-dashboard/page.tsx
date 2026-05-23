@@ -13,6 +13,9 @@ import { useEffect, useState, useMemo, useRef } from "react";
 import { useAI } from "@/context/AIContext";
 import TimeEnginePanel from "@/components/palantir/TimeEnginePanel";
 import DraggablePanel from "@/components/palantir/DraggablePanel";
+import { computeStackVectors } from "@/lib/engine/stackVectors";
+import { runDiagnosis } from "@/lib/engine/diagnosis";
+import type { Pathology } from "@/lib/engine/topology";
 import {
   getSchaefer200ROIs,
   get32FrequencyBins,
@@ -43,7 +46,18 @@ import {
 } from "@/lib/core";
 
 export default function HolographicDashboard() {
-  const { startingAge, simulationTimeMonths } = useAI();
+  const { startingAge, simulationTimeMonths, activeStack, activePathologies } = useAI();
+
+  // Compute active pharmacodynamic vectors and combined diagnostics
+  const activeVectors = useMemo(() => computeStackVectors(activeStack), [activeStack]);
+  const activeReport = useMemo(() => {
+    return runDiagnosis(
+      activePathologies as Pathology[],
+      activeVectors,
+      { weightKg: 70, ageYears: startingAge, simulationTimeMonths },
+      activeStack
+    );
+  }, [activePathologies, activeVectors, startingAge, simulationTimeMonths, activeStack]);
 
   // Mathematical aging invariants
   // Interplay: older starting age accelerates biological aging drift over the simulation time horizon
@@ -122,13 +136,11 @@ export default function HolographicDashboard() {
   const biomarkerForge = useMemo(() => new BiomarkerForge(), []);
   const currentResistanceProbability = useMemo(() => {
     const baseProb = biomarkerForge.predictProbability(simulatedSubjectVector);
-    if (effectiveAge > 50) {
-      // subtly increase by a fraction of the distance to 1.0
-      const ageDelta = (effectiveAge - 50) * 0.002;
-      return Math.min(1.0, baseProb + ageDelta);
-    }
-    return baseProb;
-  }, [simulatedSubjectVector, biomarkerForge, effectiveAge]);
+    const ageDelta = effectiveAge > 50 ? (effectiveAge - 50) * 0.002 : 0;
+    // Physical compound stack heals the brain, dropping the resistance probability
+    const convergenceDrop = (activeReport.correctionConvergence / 100) * 0.4;
+    return Math.max(0.01, Math.min(1.0, baseProb + ageDelta - convergenceDrop));
+  }, [simulatedSubjectVector, biomarkerForge, effectiveAge, activeReport.correctionConvergence]);
 
   const logosFeatures = useMemo(() => {
     return extractLogosSieveImportances(simulatedSubjectVector);
@@ -153,18 +165,27 @@ export default function HolographicDashboard() {
     const T = 100;
     const data = Array.from({ length: N }, () => new Array(T).fill(0));
     
+    // Ingest compound pharmacodynamic vectors
+    const arousal = activeVectors.arousal;
+    const dampening = activeVectors.dampening;
+    const chaos = activeVectors.chaos;
+    
+    const freqMod = (1.0 + arousal * 0.15) * (1.0 - Math.min(0.6, dampening * 0.12));
+    const ampMod = (1.0 + arousal * 0.1) * (1.0 - Math.min(0.5, dampening * 0.1));
+    const noiseMod = 1.0 - Math.min(0.8, dampening * 0.25);
+    
     for (let i = 0; i < N; i++) {
-      const freq = 0.01 + (i % 5) * 0.02;
+      const freq = (0.01 + (i % 5) * 0.02) * freqMod;
       const isCollapsed = boundaryCollapse.collapsedNodes.includes(i);
-      const amp = (isCollapsed ? 0.2 : 1.0) * ageAtrophy;
+      const amp = (isCollapsed ? 0.2 : 1.0) * ageAtrophy * ampMod;
       
       for (let t = 0; t < T; t++) {
-        const noiseAmp = 0.1 + ageNoise;
+        const noiseAmp = (0.1 + ageNoise + chaos * 0.05) * noiseMod;
         data[i][t] = Math.sin(t * freq + (timeStep * 0.05)) * amp + (Math.random() - 0.5) * noiseAmp;
       }
     }
     return data;
-  }, [boundaryCollapse, timeStep, ageAtrophy, ageNoise]);
+  }, [boundaryCollapse, timeStep, ageAtrophy, ageNoise, activeVectors]);
 
   const mutualInfoMatrix = useMemo(() => {
     return computeMutualInformationMatrix(simulatedBOLD);
@@ -201,6 +222,14 @@ export default function HolographicDashboard() {
       x[3] = 0.75;
     }
     
+    // Physical compound repairs (e.g., from stack) heal the local synaptic errors
+    const repairFactor = activeVectors.repair;
+    if (repairFactor > 0) {
+      for (let i = 0; i < x.length; i++) {
+        x[i] = Math.max(0, x[i] - repairFactor * 0.4);
+      }
+    }
+    
     const syndrome = computeSyndrome(x, d_2);
     const hasSyndrome = syndrome.some(s => Math.abs(s) > 1e-4);
     
@@ -210,7 +239,7 @@ export default function HolographicDashboard() {
       dimension: 2,
       correction: hasSyndrome ? decodeQLDPCSyndrome(syndrome, d_2) : new Array(x.length).fill(0)
     };
-  }, [cliqueComplex, selectedSubjectLabel, effectiveAge]);
+  }, [cliqueComplex, selectedSubjectLabel, effectiveAge, activeVectors.repair]);
 
   const bettiRank = useMemo(() => {
     return computeBettiNumber(cliqueComplex, 1);
@@ -319,7 +348,13 @@ export default function HolographicDashboard() {
       const scale = 2.4;
       
       // Draw baseline brain parcellation nodes (rotated in 3D projection)
-      const t = timeStep * 0.015;
+      // Compound Arousal and Chaos accelerate the rotation speed
+      const chaosJitter = activeVectors.chaos;
+      const arousalSpeed = activeVectors.arousal;
+      const repairBoost = activeVectors.repair;
+      const dampeningFactor = activeVectors.dampening;
+      
+      const t = timeStep * (0.015 + arousalSpeed * 0.003 + chaosJitter * 0.005);
       
       const projected = rois.map(roi => {
         // Simple 3D rotation around Y and Z axis
@@ -327,9 +362,13 @@ export default function HolographicDashboard() {
         const z1 = roi.x * Math.sin(t) + roi.z * Math.cos(t);
         const y1 = roi.y * Math.cos(t * 0.5) - z1 * Math.sin(t * 0.5);
         
+        // Chaos introduces high-frequency visual coordinate jitters
+        const jitterX = chaosJitter > 0 ? (Math.random() - 0.5) * chaosJitter * 1.5 : 0;
+        const jitterY = chaosJitter > 0 ? (Math.random() - 0.5) * chaosJitter * 1.5 : 0;
+        
         return {
-          x: cx + x1 * scale,
-          y: cy + y1 * scale,
+          x: cx + x1 * scale + jitterX,
+          y: cy + y1 * scale + jitterY,
           z: z1,
           network: roi.network,
           id: roi.id,
@@ -339,7 +378,8 @@ export default function HolographicDashboard() {
       
       // Draw background network connection lines
       ctx.lineWidth = 0.5;
-      const bgOpacity = Math.max(0.01, 0.08 - (effectiveAge - 35) * 0.0008);
+      // Repair increases structural connectivity edge visibility (myelination/synaptogenesis)
+      const bgOpacity = Math.max(0.01, 0.08 - (effectiveAge - 35) * 0.0008) * (1.0 + repairBoost * 0.4);
       for (let i = 0; i < projected.length; i += 8) {
         const u = projected[i];
         const v = projected[(i + 15) % projected.length];
@@ -357,7 +397,8 @@ export default function HolographicDashboard() {
         const vNode = projected[edge.nodeV];
         if (!uNode || !vNode) return;
         
-        ctx.lineWidth = edge.weight * 2.0;
+        // Repair dynamically strengthens synaptic welds
+        ctx.lineWidth = edge.weight * (2.0 + repairBoost * 0.5);
         
         // Color-code active lines based on network types
         let strokeColor = "rgba(100, 116, 139, 0.4)";
@@ -381,7 +422,8 @@ export default function HolographicDashboard() {
       });
       
       // Draw nodes
-      const nonHotRadius = Math.max(1.0, 2.5 - (effectiveAge - 35) * 0.02);
+      // Repair swells cortical node thickness
+      const nonHotRadius = Math.max(1.0, 2.5 - (effectiveAge - 35) * 0.02 + repairBoost * 0.4);
       projected.forEach((node, idx) => {
         const isHotNode = boundaryCollapse.collapsedNodes.includes(idx);
         
@@ -399,8 +441,9 @@ export default function HolographicDashboard() {
         if (node.network === "Default") fill = "#a855f7";
         
         ctx.fillStyle = fill;
-        ctx.shadowColor = isHotNode ? fill : "transparent";
-        ctx.shadowBlur = isHotNode ? 10 : 0;
+        // Dampening applies a peaceful, cool cyan/blue shadow glow
+        ctx.shadowColor = isHotNode ? fill : (dampeningFactor > 0.5 ? "rgba(34, 211, 238, 0.6)" : "transparent");
+        ctx.shadowBlur = isHotNode ? 10 : (dampeningFactor > 0.5 ? 6 : 0);
         ctx.fill();
         ctx.shadowBlur = 0;
       });
@@ -410,7 +453,7 @@ export default function HolographicDashboard() {
     
     render();
     return () => cancelAnimationFrame(animId);
-  }, [rois, timeStep, activeTargetEdges, boundaryCollapse, effectiveAge]);
+  }, [rois, timeStep, activeTargetEdges, boundaryCollapse, effectiveAge, activeVectors]);
 
   return (
     <div className="w-full h-full relative lg:overflow-hidden overflow-y-auto bg-canvas p-6 space-y-6">
