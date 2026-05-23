@@ -1,27 +1,18 @@
 /**
- * Local-only "demo" auth client.
+ * Local-only "demo" multi-tenant auth database.
  *
  * SWAP-OUT BOUNDARY
  * ─────────────────
- * Replace the bodies of `signIn`, `signOut`, `getSession`, and
- * `subscribe` with a real provider when ready. The exported surface
- * (`authClient`) is the only thing consumed by the rest of the app
- * — do not import this file's internals anywhere else.
- *
- * Reference providers we have considered:
- *   - Auth0 (OIDC, BAA available on enterprise plans)
- *   - Clerk (multi-tenant orgs out of the box)
- *   - Supabase (Postgres + RLS)
- *   - Custom FastAPI + OIDC against the babelForge backend
- *
- * In demo mode the session is persisted in localStorage so the rest
- * of the SaaS UI (account menu, role gates, per-user patient namespacing)
- * can be exercised without a backend.
+ * This implements system-wide multi-tenancy in local storage.
+ * It manages persistent tables of Organizations and Users.
+ * Swapping for a real OIDC/SAML backend requires only updating this client.
  */
 
 import { Organization, Session, User } from "./types";
 
 const SESSION_KEY = "babelforge:auth:session:v1";
+const ORGS_KEY = "babelforge:auth:organizations:v2";
+const USERS_KEY = "babelforge:auth:users:v2";
 
 type Listener = () => void;
 const listeners = new Set<Listener>();
@@ -68,11 +59,75 @@ function initialsOf(name: string): string {
     .join("") || "??";
 }
 
+function readOrgs(): Organization[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(ORGS_KEY);
+    if (!raw) {
+      // Seed default UNSC clinical organization for Halsey reference
+      const seed: Organization[] = [
+        {
+          id: "org_unsc_oni",
+          name: "UNSC ONI Section III",
+          plan: "preview",
+          baaSigned: false,
+          createdAt: new Date().toISOString(),
+        }
+      ];
+      window.localStorage.setItem(ORGS_KEY, JSON.stringify(seed));
+      return seed;
+    }
+    return JSON.parse(raw) as Organization[];
+  } catch {
+    return [];
+  }
+}
+
+function writeOrgs(list: Organization[]) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(ORGS_KEY, JSON.stringify(list));
+  } catch { /* ignore */ }
+}
+
+function readUsers(): User[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(USERS_KEY);
+    if (!raw) {
+      // Seed default Dr. Halsey admin user
+      const seed: User[] = [
+        {
+          id: "usr_halsey",
+          name: "Dr. Catherine Elizabeth Halsey",
+          email: "c.halsey@unsc.gov",
+          initials: "CH",
+          role: "owner",
+          orgId: "org_unsc_oni",
+        }
+      ];
+      window.localStorage.setItem(USERS_KEY, JSON.stringify(seed));
+      return seed;
+    }
+    return JSON.parse(raw) as User[];
+  } catch {
+    return [];
+  }
+}
+
+function writeUsers(list: User[]) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(USERS_KEY, JSON.stringify(list));
+  } catch { /* ignore */ }
+}
+
 export interface SignInInput {
   name: string;
   email: string;
   orgName?: string;
   role?: User["role"];
+  orgId?: string; // Existing organization to join (for staff join codes)
 }
 
 export const authClient = {
@@ -80,34 +135,109 @@ export const authClient = {
     return readSession();
   },
 
-  /**
-   * Demo sign-in. Real implementation should redirect to OIDC and
-   * resolve a session from the resulting code exchange.
-   */
-  async signIn({ name, email, orgName, role = "clinician" }: SignInInput): Promise<Session> {
-    const orgId = uid("org");
-    const userId = uid("usr");
-    const now = new Date();
-    const expires = new Date(now.getTime() + 1000 * 60 * 60 * 12); // 12h
+  listOrganizations(): Organization[] {
+    return readOrgs();
+  },
 
-    const org: Organization = {
-      id: orgId,
-      name: (orgName || `${name.split(" ")[0] ?? "Personal"} Workspace`).trim(),
-      plan: "preview",
-      baaSigned: false,
-      createdAt: now.toISOString(),
-    };
+  listStaff(orgId: string): User[] {
+    return readUsers().filter((u) => u.orgId === orgId);
+  },
+
+  async createStaffUser(orgId: string, { name, email, role }: { name: string; email: string; role: User["role"] }): Promise<User> {
     const user: User = {
-      id: userId,
-      name: name.trim() || "Clinician",
-      email: email.trim() || "demo@babelforge.local",
+      id: uid("usr"),
+      name: name.trim(),
+      email: email.trim(),
       initials: initialsOf(name),
       role,
       orgId,
     };
+    const list = readUsers();
+    // Prevent duplicate emails within the same organization
+    if (list.some((u) => u.email.toLowerCase() === email.toLowerCase() && u.orgId === orgId)) {
+      throw new Error("A practitioner with this email is already registered in your organization.");
+    }
+    list.push(user);
+    writeUsers(list);
+    emit();
+    return user;
+  },
+
+  async signIn({ name, email, orgName, role = "clinician", orgId }: SignInInput): Promise<Session> {
+    const now = new Date();
+    const expires = new Date(now.getTime() + 1000 * 60 * 60 * 12); // 12h
+
+    let targetOrg: Organization;
+    let targetUser: User;
+
+    if (role === "owner") {
+      // 1. REGISTERING A NEW CLINICAL ORGANIZATION
+      const newOrgId = uid("org");
+      targetOrg = {
+        id: newOrgId,
+        name: (orgName || `${name.split(" ")[0] ?? "Personal"} Workspace`).trim(),
+        plan: "preview",
+        baaSigned: false,
+        createdAt: now.toISOString(),
+      };
+      
+      const orgs = readOrgs();
+      orgs.push(targetOrg);
+      writeOrgs(orgs);
+
+      targetUser = {
+        id: uid("usr"),
+        name: name.trim(),
+        email: email.trim() || `${name.replace(/\s+/g, "").toLowerCase()}@babelforge.local`,
+        initials: initialsOf(name),
+        role: "owner",
+        orgId: newOrgId,
+      };
+
+      const users = readUsers();
+      users.push(targetUser);
+      writeUsers(users);
+    } else {
+      // 2. JOINING AN EXISTING CLINICAL ORGANIZATION
+      if (!orgId) {
+        throw new Error("JOIN ERROR: You must select a registered Clinical Organization to join.");
+      }
+      
+      const orgs = readOrgs();
+      const foundOrg = orgs.find((o) => o.id === orgId);
+      if (!foundOrg) {
+        throw new Error("JOIN ERROR: The selected Clinical Organization could not be verified in the registry.");
+      }
+      targetOrg = foundOrg;
+
+      const users = readUsers();
+      let foundUser = users.find(
+        (u) => u.email.trim().toLowerCase() === email.trim().toLowerCase() && u.orgId === orgId
+      );
+
+      if (!foundUser) {
+        // Create user linking them to the chosen orgId
+        foundUser = {
+          id: uid("usr"),
+          name: name.trim(),
+          email: email.trim(),
+          initials: initialsOf(name),
+          role,
+          orgId,
+        };
+        users.push(foundUser);
+        writeUsers(users);
+      } else {
+        // Update role if logging back into this organization
+        foundUser.role = role;
+        writeUsers(users);
+      }
+      targetUser = foundUser;
+    }
+
     const session: Session = {
-      user,
-      org,
+      user: targetUser,
+      org: targetOrg,
       issuedAt: now.toISOString(),
       expiresAt: expires.toISOString(),
     };
@@ -119,16 +249,50 @@ export const authClient = {
     writeSession(null);
   },
 
-  async updateSession({ name, orgName }: { name?: string; orgName?: string }): Promise<Session> {
+  async updateSession({
+    name,
+    orgName,
+    plan,
+    baaSigned,
+  }: {
+    name?: string;
+    orgName?: string;
+    plan?: Organization["plan"];
+    baaSigned?: boolean;
+  }): Promise<Session> {
     const s = readSession();
     if (!s) throw new Error("No active session to update.");
+
+    // Update active user in session and users database
+    const users = readUsers();
+    const uIdx = users.findIndex((u) => u.id === s.user.id);
     if (name !== undefined) {
       s.user.name = name.trim();
       s.user.initials = initialsOf(name);
+      if (uIdx >= 0) {
+        users[uIdx].name = name.trim();
+        users[uIdx].initials = initialsOf(name);
+      }
     }
+    writeUsers(users);
+
+    // Update active org in session and organizations database
+    const orgs = readOrgs();
+    const oIdx = orgs.findIndex((o) => o.id === s.org.id);
     if (orgName !== undefined) {
       s.org.name = orgName.trim();
+      if (oIdx >= 0) orgs[oIdx].name = orgName.trim();
     }
+    if (plan !== undefined) {
+      s.org.plan = plan;
+      if (oIdx >= 0) orgs[oIdx].plan = plan;
+    }
+    if (baaSigned !== undefined) {
+      s.org.baaSigned = baaSigned;
+      if (oIdx >= 0) orgs[oIdx].baaSigned = baaSigned;
+    }
+
+    writeOrgs(orgs);
     writeSession(s);
     return s;
   },

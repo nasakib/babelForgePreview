@@ -69,6 +69,9 @@ export const CAPABILITIES = {
   "patient.purge":  ["owner"] as Role[],
   "billing.manage": ["owner"] as Role[],
   "org.invite":     ["owner"] as Role[],
+  "org.manage":     ["owner"] as Role[],
+  "staff.write":    ["owner"] as Role[],
+  "staff.read":     ["owner", "clinician"] as Role[],
   "sim.run":        ["owner", "clinician", "researcher", "viewer"] as Role[],
 } as const;
 

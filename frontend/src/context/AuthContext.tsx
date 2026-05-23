@@ -2,16 +2,28 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
 import { authClient } from "@/lib/auth/client";
-import { Session, AuthStatus, Capability, can, Role } from "@/lib/auth/types";
+import { Session, AuthStatus, Capability, can, Role, Organization } from "@/lib/auth/types";
 
-const VALID_CODES = ["FORGE-2026", "CLINIC-ALPHA", "NEURO-SECURE", "ADMIN-ACCESS"];
+const CODE_ROLES: Record<string, Role> = {
+  "ADMIN-CREATE-2026": "owner",
+  "CLINIC-JOIN-2026": "clinician",
+  "RESEARCH-JOIN-2026": "researcher",
+  "AUDITOR-VIEW-2026": "viewer",
+};
+
+const VALID_CODES = Object.keys(CODE_ROLES);
 
 interface AuthContextValue {
   status: AuthStatus;
   session: Session | null;
   signIn: (input: Parameters<typeof authClient.signIn>[0]) => Promise<void>;
   signOut: () => Promise<void>;
-  updateSession: (input: { name?: string; orgName?: string }) => Promise<void>;
+  updateSession: (input: {
+    name?: string;
+    orgName?: string;
+    plan?: Organization["plan"];
+    baaSigned?: boolean;
+  }) => Promise<void>;
   /** Convenience: capability check against the current role. */
   allows: (capability: Capability) => boolean;
 }
@@ -28,15 +40,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [name, setName] = useState("Dr. Catherine Elizabeth Halsey");
   const [email, setEmail] = useState("c.halsey@unsc.gov");
   const [orgName, setOrgName] = useState("UNSC ONI Section III");
-  const [role, setRole] = useState<Role>("owner");
-  const [inviteCode, setInviteCode] = useState("FORGE-2026");
+  const [inviteCode, setInviteCode] = useState("ADMIN-CREATE-2026");
+  const [selectedOrgId, setSelectedOrgId] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Registry organizations listing for staff dropdown
+  const [registeredOrgs, setRegisteredOrgs] = useState<Organization[]>([]);
 
   const refresh = useCallback(() => {
     const s = authClient.getSession();
     setSession(s);
     setStatus(s ? "authenticated" : "anonymous");
+    
+    // Load clinics list for dropdown
+    if (typeof window !== "undefined") {
+      const clinics = authClient.listOrganizations();
+      setRegisteredOrgs(clinics);
+      // Auto-select first clinic as fallback
+      if (clinics.length > 0) {
+        setSelectedOrgId((prev) => prev || clinics[0].id);
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -44,40 +69,64 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return authClient.subscribe(refresh);
   }, [refresh]);
 
+  // Dynamically resolve role from active code input
+  const cleanCode = inviteCode.trim().toUpperCase();
+  const resolvedRole = CODE_ROLES[cleanCode] || null;
+
   const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg("");
     setLoading(true);
 
     if (authTab === "register") {
-      if (!name.trim() || !email.trim() || !orgName.trim() || !inviteCode.trim()) {
-        setErrorMsg("All security registry fields are required.");
+      if (!name.trim() || !email.trim() || !inviteCode.trim()) {
+        setErrorMsg("Name, Email, and Invite Code are required fields.");
         setLoading(false);
         return;
       }
       
-      const cleanCode = inviteCode.trim().toUpperCase();
-      if (!VALID_CODES.includes(cleanCode)) {
+      if (!resolvedRole) {
         setErrorMsg("INVALID AUTHENTICATION INVITE CODE. CONTACT CLINIC ADMINISTRATOR.");
         setLoading(false);
         return;
       }
 
       try {
-        await authClient.signIn({
-          name: name.trim(),
-          email: email.trim(),
-          orgName: orgName.trim(),
-          role,
-        });
+        if (resolvedRole === "owner") {
+          // Admin registers a brand new organization
+          if (!orgName.trim()) {
+            setErrorMsg("A New Clinic / Organization Name is required to initialize workspace.");
+            setLoading(false);
+            return;
+          }
+          await authClient.signIn({
+            name: name.trim(),
+            email: email.trim(),
+            orgName: orgName.trim(),
+            role: "owner",
+          });
+        } else {
+          // Doctor/staff joins an existing organization selected from dropdown
+          if (!selectedOrgId) {
+            setErrorMsg("A registered Clinic Organization must be selected to join.");
+            setLoading(false);
+            return;
+          }
+          await authClient.signIn({
+            name: name.trim(),
+            email: email.trim(),
+            role: resolvedRole,
+            orgId: selectedOrgId,
+          });
+        }
         refresh();
       } catch (err: any) {
         setErrorMsg(err.message || "Failed to establish secure session.");
       }
     } else {
-      // Login mode - mock matching existing or fallback
-      if (!name.trim() || !email.trim()) {
-        setErrorMsg("Name and Security Email are required to sync local keys.");
+      // Login mode - match email and connect session
+      if (!name.trim() || !email.trim() || !selectedOrgId) {
+        setErrorMsg("Name, Email, and Organization Selection are required to sync local keys.");
         setLoading(false);
         return;
       }
@@ -85,8 +134,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await authClient.signIn({
           name: name.trim(),
           email: email.trim(),
-          orgName: orgName.trim() || undefined,
-          role: "clinician",
+          role: "clinician", // joins as clinician fallback
+          orgId: selectedOrgId,
         });
         refresh();
       } catch (err: any) {
@@ -127,10 +176,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // 2. AuthGate Lockdown Screen
   if (status === "anonymous") {
     const roleDescriptions: Record<Role, string> = {
-      owner: "Organization Owner: Full read/write + billing and administrative control.",
-      clinician: "Standard Clinician: Read/write patient cohorts, run simulations and prescribe.",
-      researcher: "Scientific Researcher: Run connectome simulations, read aggregate cohorts only.",
-      viewer: "Auditor/Viewer: Read-only access to dashboards, no patient PHI visible."
+      owner: "Clinic Owner & Admin: Registers a new clinic workspace. Holds full billing and clinician staff controls.",
+      clinician: "Standard Clinician (Doctor): Joins an existing clinic workspace. Can add/modify patient records and run Kuramoto simulations.",
+      researcher: "Science Investigator: Joins an existing clinic. Run connectome simulations, read de-identified rosters, no administrative controls.",
+      viewer: "Regulatory Auditor: Joins a clinic workspace for read-only access. Auditing credentials only."
     };
 
     return (
@@ -140,7 +189,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-cyan-500/5 rounded-full blur-[140px] pointer-events-none translate-y-1/3 -translate-x-1/4" />
         <div className="absolute inset-0 grid-bg opacity-10 pointer-events-none" />
 
-        <div className="w-full max-w-[440px] bg-slate-900/80 border border-slate-800/80 backdrop-blur-xl rounded-clinical shadow-2xl p-6 sm:p-8 flex flex-col gap-6 relative z-10 animate-fade-in-up">
+        <div className="w-full max-w-[460px] bg-slate-900/80 border border-slate-800/80 backdrop-blur-xl rounded-clinical shadow-2xl p-6 sm:p-8 flex flex-col gap-5 relative z-10 animate-fade-in-up">
           {/* Header */}
           <div className="flex flex-col items-center text-center gap-1.5">
             <svg className="w-10 h-10 text-accent-500 drop-shadow-[0_0_12px_rgba(168,85,247,0.6)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -172,11 +221,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           <div className="flex items-start gap-2.5 p-3 rounded-clinical bg-yellow-500/5 border border-yellow-500/20 text-[10px] leading-relaxed text-yellow-200/90 font-mono">
             <span className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse mt-1" />
             <span>
-              SECURE SECTOR ACCESS GATED. ALL TRANSACTIONS ARE AUDIT-LOGGED IN COMPLIANCE WITH 21 CFR PART 11.
+              SECURE REGULATION ACCESS GATED. USER REGISTRATION BOUNDARIES REQUIRE EXPLICIT CLINICAL INVITE ROLES.
             </span>
           </div>
 
-          <form onSubmit={handleAuthSubmit} className="flex flex-col gap-4 text-xs">
+          <form onSubmit={handleAuthSubmit} className="flex flex-col gap-4 text-xs font-sans">
             {errorMsg && (
               <div className="p-3 rounded-clinical bg-rose-500/10 border border-rose-500/30 text-[10px] font-mono leading-relaxed text-rose-400 uppercase tracking-wide">
                 ⚠️ ERROR: {errorMsg}
@@ -210,61 +259,85 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             {authTab === "register" && (
               <>
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-mono uppercase tracking-wider text-slate-400">Clinic / Organization Name</label>
+                  <label className="text-[10px] font-mono uppercase tracking-wider text-rose-400 font-bold">Secure Signup Invite Code</label>
                   <input
                     type="text"
-                    value={orgName}
+                    value={inviteCode}
                     required
-                    onChange={(e) => setOrgName(e.target.value)}
-                    placeholder="Yeo Cognitive Research Lab"
-                    className="input-clinical w-full text-white bg-slate-950/60 border border-slate-800/80 focus:border-accent-500"
+                    onChange={(e) => setInviteCode(e.target.value)}
+                    placeholder="ADMIN-XXXX or CLINIC-XXXX"
+                    className="input-clinical w-full text-white bg-slate-950/60 border border-rose-500/20 focus:border-accent-500 uppercase tracking-widest font-mono text-center"
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-mono uppercase tracking-wider text-slate-400">Regulatory Role</label>
-                    <select
-                      value={role}
-                      onChange={(e) => setRole(e.target.value as Role)}
-                      className="bg-slate-950 border border-slate-800/80 text-white rounded px-2.5 py-1.5 outline-none font-mono focus:border-accent-500 text-xs"
-                    >
-                      <option value="clinician">Clinician</option>
-                      <option value="owner">Owner / Admin</option>
-                      <option value="researcher">Researcher</option>
-                      <option value="viewer">Viewer</option>
-                    </select>
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-mono uppercase tracking-wider text-rose-400 font-bold">Signup Invite Code</label>
+                {resolvedRole === "owner" ? (
+                  /* Admin creating a new organization */
+                  <div className="flex flex-col gap-1.5 animate-fade-in-up">
+                    <label className="text-[10px] font-mono uppercase tracking-wider text-slate-400">New Clinic / Organization Name</label>
                     <input
                       type="text"
-                      value={inviteCode}
+                      value={orgName}
                       required
-                      onChange={(e) => setInviteCode(e.target.value)}
-                      placeholder="FORGE-XXXX"
-                      className="input-clinical w-full text-white bg-slate-950/60 border border-rose-500/20 focus:border-accent-500 uppercase tracking-widest font-mono text-center"
+                      onChange={(e) => setOrgName(e.target.value)}
+                      placeholder="UNSC ONI Section III"
+                      className="input-clinical w-full text-white bg-slate-950/60 border border-slate-800/80 focus:border-accent-500"
                     />
                   </div>
-                </div>
+                ) : resolvedRole ? (
+                  /* Doctors/staff joining an existing organization */
+                  <div className="flex flex-col gap-1.5 animate-fade-in-up font-mono">
+                    <label className="text-[10px] uppercase tracking-wider text-slate-400">Select Clinical Workspace to Join</label>
+                    <select
+                      value={selectedOrgId}
+                      required
+                      onChange={(e) => setSelectedOrgId(e.target.value)}
+                      className="bg-slate-950 border border-slate-800/80 text-white rounded px-2.5 py-1.5 outline-none focus:border-accent-500 text-xs"
+                    >
+                      {registeredOrgs.length === 0 ? (
+                        <option value="">No Clinical Workspaces Registered yet.</option>
+                      ) : (
+                        registeredOrgs.map((o) => (
+                          <option key={o.id} value={o.id}>
+                            {o.name}
+                          </option>
+                        ))
+                      )}
+                    </select>
+                  </div>
+                ) : (
+                  <div className="p-2.5 rounded bg-slate-950/40 border border-slate-800/30 text-[9px] font-mono text-slate-500 leading-relaxed uppercase tracking-wider text-center">
+                    Enter Invite Code to unlock Clinic Roster Options.
+                  </div>
+                )}
 
-                <div className="text-[10px] font-mono text-slate-500 leading-relaxed bg-slate-950/40 p-2.5 rounded border border-slate-800/30">
-                  {roleDescriptions[role]}
-                </div>
+                {resolvedRole && (
+                  <div className="text-[9px] font-mono text-slate-500 leading-relaxed bg-slate-950/40 p-2.5 rounded border border-slate-800/30">
+                    🔐 RESOLVED ROLE: <strong className="text-white uppercase">{resolvedRole}</strong><br />
+                    {roleDescriptions[resolvedRole]}
+                  </div>
+                )}
               </>
             )}
 
             {authTab === "login" && (
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-mono uppercase tracking-wider text-slate-500">Optional Workspace Ref (To Restore Key Cache)</label>
-                <input
-                  type="text"
-                  value={orgName}
-                  onChange={(e) => setOrgName(e.target.value)}
-                  placeholder="Optional Clinic Workspace Name"
-                  className="input-clinical w-full text-white bg-slate-950/60 border border-slate-800/80 focus:border-accent-500"
-                />
+              <div className="flex flex-col gap-1.5 font-mono">
+                <label className="text-[10px] uppercase tracking-wider text-slate-400">Select Workspace Clinic to Access</label>
+                <select
+                  value={selectedOrgId}
+                  required
+                  onChange={(e) => setSelectedOrgId(e.target.value)}
+                  className="bg-slate-950 border border-slate-800/80 text-white rounded px-2.5 py-1.5 outline-none focus:border-accent-500 text-xs"
+                >
+                  {registeredOrgs.length === 0 ? (
+                    <option value="">No Clinical Workspaces Registered yet.</option>
+                  ) : (
+                    registeredOrgs.map((o) => (
+                      <option key={o.id} value={o.id}>
+                        {o.name}
+                      </option>
+                    ))
+                  )}
+                </select>
               </div>
             )}
 
@@ -273,7 +346,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               disabled={loading}
               className="btn-primary w-full py-2.5 mt-2 bg-accent-600 hover:bg-accent-500 border-accent-400 text-white font-mono uppercase tracking-widest shadow-[0_0_15px_rgba(168,85,247,0.4)] disabled:opacity-40"
             >
-              {loading ? "Establishing Link..." : (authTab === "register" ? "Initialise Secure Session" : "Sync Local Session")}
+              {loading ? "Establishing Link..." : (authTab === "register" ? "Initialise Workspace Session" : "Sync Local Session")}
             </button>
 
             <div className="text-[9px] font-sans text-slate-500 leading-normal text-center mt-1 p-2 bg-slate-950/40 border border-slate-800/40 rounded">
