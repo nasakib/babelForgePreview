@@ -165,3 +165,32 @@ const report: NeuroToxAnalysis = analyzeQSARNeurotoxicity(
   - `structuralAlert` (`string`): Monospace tag detailing the identified chemical moiety (e.g. *4-chlorophenyl-4-piperidinol moiety*).
   - `explanation` (`string`): Comprehensive mechanistic explanation including the required peer comparison clause: *"This part of the compound is what makes it more or less neurotoxic than other compounds of its class"*.
   - `riskLevel` (`'Low' | 'Moderate' | 'High' | 'Severe'`): dynamic HSL tier rating.
+
+---
+
+## 🔬 7. Bio-Computational Wetware Substrate API
+
+### `evaluateWetwareChecksum`
+Performs molecular XOR-PCR checksum evaluations over cell templates to verify physical genomic sequence integrity against off-target perturbations.
+
+```typescript
+import { evaluateWetwareChecksum, ChecksumReport } from "@babelforge/wetware";
+
+const report: ChecksumReport = evaluateWetwareChecksum(
+  targetGenome: string,
+  primerSet: string[],
+  mutationalVector: number[]
+);
+```
+
+#### Parameters:
+- `targetGenome` (`string`): Reference DNA/RNA genomic coordinate sequence.
+- `primerSet` (`string[]`): Multiplexed PCR primer set identifiers representing the parity-check matrix rows.
+- `mutationalVector` (`number[]`): Environmental or replication perturbation indicators.
+
+#### Returns:
+- `ChecksumReport`: Object containing:
+  - `syndrome` (`number[]`): Binary syndrome vector $s_{\text{physical}} = H \cdot (x \oplus p) \pmod 2$.
+  - `passed` (`boolean`): True if $s_{\text{physical}} = \vec{0}$ (no active error amplicon peaks), granting permission for closed-loop Yamanaka factor reprogramming and synthesis.
+  - `alertLoci` (`number[]`): Array of genomic coordinates where primer mismatch-induced failures occurred.
+
