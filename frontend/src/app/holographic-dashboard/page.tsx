@@ -46,7 +46,9 @@ export default function HolographicDashboard() {
   const { startingAge, simulationTimeMonths } = useAI();
 
   // Mathematical aging invariants
-  const effectiveAge = startingAge + (simulationTimeMonths / 12);
+  // Interplay: older starting age accelerates biological aging drift over the simulation time horizon
+  const biologicalAgingAcceleration = 1.0 + Math.max(0, (startingAge - 45) / 15);
+  const effectiveAge = startingAge + (simulationTimeMonths / 12) * biologicalAgingAcceleration;
   const ageNoise = effectiveAge > 60 ? (effectiveAge - 60) * 0.003 : 0;
   const ageAtrophy = Math.max(0.5, 1.0 - (effectiveAge > 45 ? (effectiveAge - 45) * 0.005 : 0));
   const ageFactor = Math.max(0.3, 1.0 - (effectiveAge - 35) * 0.006);

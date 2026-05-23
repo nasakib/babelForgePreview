@@ -81,7 +81,9 @@ export function runDiagnosis(
   const topo = composeTopology(states);
   
   // Temporal Engine Integration
-  const effectiveAge = patient.ageYears + (patient.simulationTimeMonths / 12);
+  // Interplay: older starting age accelerates biological aging drift over the simulation time horizon
+  const biologicalAgingAcceleration = 1.0 + Math.max(0, (patient.ageYears - 45) / 15);
+  const effectiveAge = patient.ageYears + (patient.simulationTimeMonths / 12) * biologicalAgingAcceleration;
   const prolongedExposure = patient.simulationTimeMonths;
   
   // Tolerance grows over time if compounds are present

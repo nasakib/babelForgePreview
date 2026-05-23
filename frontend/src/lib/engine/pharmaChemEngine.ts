@@ -521,13 +521,15 @@ for (const drugId in COMPOUND_DATABASE) {
 // ----------------------------------------------------------------------------
 export function calculatePlasmaConcentrations(
   stack: any[],
-  patient: { weightKg: number; ageYears: number; profile?: PatientProfile },
+  patient: { weightKg: number; ageYears: number; simulationTimeMonths?: number; profile?: PatientProfile },
   elapsedHrs = 0
 ): Record<string, number> {
   const concentrations: Record<string, number> = {};
 
   const weightFactor = 70 / Math.max(40, patient.weightKg);
-  const effectiveAge = patient.ageYears;
+  // Interplay: older starting age accelerates biological aging drift over the simulation time horizon
+  const biologicalAgingAcceleration = 1.0 + Math.max(0, (patient.ageYears - 45) / 15);
+  const effectiveAge = patient.ageYears + ((patient.simulationTimeMonths ?? 0) / 12) * biologicalAgingAcceleration;
 
   // Retrieve patient CYP pgx settings
   const pgx = patient.profile?.pgx ?? {};
@@ -1088,7 +1090,7 @@ export function translateReceptorsToVectors(
 // ----------------------------------------------------------------------------
 export function computePharmaChemVectors(
   stack: any[],
-  patient: { weightKg: number; ageYears: number; profile?: PatientProfile },
+  patient: { weightKg: number; ageYears: number; simulationTimeMonths?: number; profile?: PatientProfile },
   elapsedHrs = 0
 ): { vectors: PharmaVectors; occupancies: OccupancyResult } {
   const concentrations = calculatePlasmaConcentrations(stack, patient, elapsedHrs);
