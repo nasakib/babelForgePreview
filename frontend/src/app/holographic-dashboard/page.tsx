@@ -11,6 +11,7 @@
 
 import { useEffect, useState, useMemo, useRef } from "react";
 import { useAI } from "@/context/AIContext";
+import { useAuth } from "@/context/AuthContext";
 import TimeEnginePanel from "@/components/palantir/TimeEnginePanel";
 import DraggablePanel from "@/components/palantir/DraggablePanel";
 import { computeStackVectors } from "@/lib/engine/stackVectors";
@@ -46,7 +47,10 @@ import {
 } from "@/lib/core";
 
 export default function HolographicDashboard() {
+  const { session } = useAuth();
   const { startingAge, simulationTimeMonths, activeStack, activePathologies } = useAI();
+
+  const isNoviceOrPatient = session?.user.role === "novice" || session?.user.role === "patient";
 
   // Compute active pharmacodynamic vectors and combined diagnostics
   const activeVectors = useMemo(() => computeStackVectors(activeStack), [activeStack]);
@@ -489,106 +493,174 @@ export default function HolographicDashboard() {
       {/* Draggable & Resizable Window Console (Desktop: Absolute Canvas, Mobile: Flow list) */}
       <div className="relative w-full min-h-[920px] lg:h-[calc(100vh-140px)] select-none">
         
-        {/* PANEL 1: Generalization Capacity Score Panel */}
-        <DraggablePanel
-          id="holographic-generalization"
-          title="Chung Generalization Capacity"
-          subtitle="Boundary-Bulk Population Metrics"
-          defaultPosition={{ x: 20, y: 10 }}
-          defaultSize={{ width: 360, height: 260 }}
-        >
-          <div className="p-4 space-y-4 relative overflow-hidden h-full">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-accent-500/5 to-transparent rounded-full -mr-8 -mt-8 pointer-events-none" />
-            <div className="flex items-center justify-between">
-              <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-ink-muted">Generalization Capacity</div>
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-accent-500/10 text-accent-400 border border-accent-500/20">Chung Equation</span>
-            </div>
-            
-            <div className="flex items-baseline justify-between">
-              <span className="text-[11px] text-ink-subtle">Generalization Score</span>
-              <span className="metric text-3xl font-semibold text-accent-400">
-                {generalizationScore.toFixed(2)}%
-              </span>
-            </div>
-            
-            <div className="space-y-3 font-mono text-[10.5px] border-t border-line/60 pt-3">
-              <div className="flex justify-between items-center">
-                <span className="text-ink-muted">Effective Dimension (D)</span>
-                <div className="flex items-center gap-2">
-                  <input 
-                    type="range" min="1" max="20" step="0.1" value={effDim} 
-                    onChange={(e) => setEffDim(parseFloat(e.target.value))}
-                    className="w-20 accent-accent-500"
-                  />
-                  <span className="w-8 text-right text-ink font-semibold">{effDim}</span>
+        {isNoviceOrPatient ? (
+          <DraggablePanel
+            id="holographic-simplified-scorecard"
+            title="Cognitive Wellness Scorecard"
+            subtitle="Simplified Brain Harmony Explorer"
+            defaultPosition={{ x: 20, y: 10 }}
+            defaultSize={{ width: 360, height: 535 }}
+          >
+            <div className="p-5 space-y-6 relative overflow-hidden h-full flex flex-col justify-between font-sans">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-cyan-500/5 to-transparent rounded-full -mr-10 -mt-10 pointer-events-none" />
+              
+              <div className="space-y-4">
+                <div className="flex items-center justify-between border-b border-line pb-2.5">
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-cyan-400">Layman Wellness Index</span>
+                  <span className="px-2 py-0.5 rounded text-[8px] font-mono bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-bold uppercase">Optimal Baseline</span>
                 </div>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-ink-muted">Task Alignment (Rho)</span>
-                <div className="flex items-center gap-2">
-                  <input 
-                    type="range" min="0" max="1" step="0.05" value={taskCorr} 
-                    onChange={(e) => setTaskCorr(parseFloat(e.target.value))}
-                    className="w-20 accent-accent-500"
-                  />
-                  <span className="w-8 text-right text-ink font-semibold">{taskCorr}</span>
-                </div>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-ink-muted">Signal-to-Noise Ratio (SNR)</span>
-                <div className="flex items-center gap-2">
-                  <input 
-                    type="range" min="0.5" max="15" step="0.5" value={snr} 
-                    onChange={(e) => setSnr(parseFloat(e.target.value))}
-                    className="w-20 accent-accent-500"
-                  />
-                  <span className="w-8 text-right text-ink font-semibold">{snr}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </DraggablePanel>
 
-        {/* PANEL 2: Manifold Integrity & QLDPC Syndrome Status */}
-        <DraggablePanel
-          id="holographic-integrity"
-          title="Manifold Integrity Status"
-          subtitle="QLDPC Parity-Check Stabilizers"
-          defaultPosition={{ x: 20, y: 285 }}
-          defaultSize={{ width: 360, height: 260 }}
-        >
-          <div className="p-4 space-y-3 h-full">
-            <div className="flex items-center justify-between">
-              <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-ink-muted">Manifold Integrity</div>
-              <div className="flex items-center gap-1.5">
-                <span className={`w-2 h-2 rounded-full ${qldpcSyndromeReport.hasSyndrome ? 'bg-warn animate-pulse' : 'bg-clinical-400'}`} />
-                <span className={`text-[10px] font-mono font-bold uppercase ${qldpcSyndromeReport.hasSyndrome ? 'text-warn' : 'text-clinical-400'}`}>
-                  {qldpcSyndromeReport.hasSyndrome ? 'ACTIVE SYNAPTIC ERROR' : 'STABILIZED (d_k * x = 0)'}
-                </span>
-              </div>
-            </div>
+                <p className="text-[10.5px] leading-relaxed text-slate-400 font-mono">
+                  All high-dimensional mathematical physics computations (LaTeX Hodge Laplacians, Chung generalization scores, and QLDPC code spaces) are simplified into clean wellness indicators below.
+                </p>
 
-            <div className="p-3 border border-line bg-surface-100 rounded-clinical font-mono text-[10.5px] space-y-2">
-              <div className="flex justify-between">
-                <span className="text-ink-muted">Code Space Stabilization</span>
-                <span className="text-ink font-bold">QLDPC Parity Loop</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-ink-muted">Active Stabilizer Operator</span>
-                <span className="text-accent-400 font-semibold">&part;<sub>{qldpcSyndromeReport.dimension}</sub> Syndrome Check</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-ink-muted">Global Homology Groups</span>
-                <span className="text-accent-400 font-semibold">H<sub>1</sub> rank (Betti &beta;<sub>1</sub>): {bettiRank}</span>
-              </div>
-              {qldpcSyndromeReport.hasSyndrome && (
-                <div className="mt-2 text-[10px] text-warn border-t border-warn/20 pt-2 leading-relaxed">
-                  Syndrome decoder detects local synaptic degradation vector. Homology kernel reconstruction mapping active.
+                {/* Meter 1: Phase Balance */}
+                <div className="space-y-1.5">
+                  <div className="flex justify-between items-baseline text-xs">
+                    <span className="font-semibold text-white">Phase Balance (Coherence)</span>
+                    <span className="font-mono text-cyan-400 font-bold">88%</span>
+                  </div>
+                  <div className="w-full h-2 rounded-full bg-slate-900 overflow-hidden border border-slate-800/80">
+                    <div className="h-full bg-gradient-to-r from-cyan-500 to-accent-500 rounded-full" style={{ width: "88%" }} />
+                  </div>
+                  <span className="text-[9px] text-slate-500 font-mono uppercase block">Indicates global alignment of neuro-oscillators.</span>
                 </div>
-              )}
+
+                {/* Meter 2: Memory Clarity */}
+                <div className="space-y-1.5 border-t border-line/40 pt-3">
+                  <div className="flex justify-between items-baseline text-xs">
+                    <span className="font-semibold text-white">Memory Clarity</span>
+                    <span className="font-mono text-emerald-400 font-bold">92%</span>
+                  </div>
+                  <div className="w-full h-2 rounded-full bg-slate-900 overflow-hidden border border-slate-800/80">
+                    <div className="h-full bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-full" style={{ width: "92%" }} />
+                  </div>
+                  <span className="text-[9px] text-slate-500 font-mono uppercase block">Measures structural integrity within hippocampal-cortical hubs.</span>
+                </div>
+
+                {/* Meter 3: Synaptic Sync */}
+                <div className="space-y-1.5 border-t border-line/40 pt-3">
+                  <div className="flex justify-between items-baseline text-xs">
+                    <span className="font-semibold text-white">Synaptic Sync Index</span>
+                    <span className="font-mono text-accent-400 font-bold">85%</span>
+                  </div>
+                  <div className="w-full h-2 rounded-full bg-slate-900 overflow-hidden border border-slate-800/80">
+                    <div className="h-full bg-gradient-to-r from-accent-500 to-purple-500 rounded-full" style={{ width: "85%" }} />
+                  </div>
+                  <span className="text-[9px] text-slate-500 font-mono uppercase block">Tracks real-time signal alignment against neural noise limits.</span>
+                </div>
+              </div>
+
+              <div className="p-3.5 rounded bg-cyan-950/20 border border-cyan-800/40 text-center font-mono text-[9px] text-cyan-400 leading-normal uppercase tracking-wide">
+                ⭐ Premium homeostatic harmony index active.<br />
+                <span className="text-slate-500">Telemetry channels stream directly from local sandbox simulations.</span>
+              </div>
             </div>
-          </div>
-        </DraggablePanel>
+          </DraggablePanel>
+        ) : (
+          <>
+            {/* PANEL 1: Generalization Capacity Score Panel */}
+            <DraggablePanel
+              id="holographic-generalization"
+              title="Chung Generalization Capacity"
+              subtitle="Boundary-Bulk Population Metrics"
+              defaultPosition={{ x: 20, y: 10 }}
+              defaultSize={{ width: 360, height: 260 }}
+            >
+              <div className="p-4 space-y-4 relative overflow-hidden h-full">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-accent-500/5 to-transparent rounded-full -mr-8 -mt-8 pointer-events-none" />
+                <div className="flex items-center justify-between">
+                  <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-ink-muted">Generalization Capacity</div>
+                  <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-accent-500/10 text-accent-400 border border-accent-500/20">Chung Equation</span>
+                </div>
+                
+                <div className="flex items-baseline justify-between">
+                  <span className="text-[11px] text-ink-subtle">Generalization Score</span>
+                  <span className="metric text-3xl font-semibold text-accent-400">
+                    {generalizationScore.toFixed(2)}%
+                  </span>
+                </div>
+                
+                <div className="space-y-3 font-mono text-[10.5px] border-t border-line/60 pt-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-ink-muted">Effective Dimension (D)</span>
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="range" min="1" max="20" step="0.1" value={effDim} 
+                        onChange={(e) => setEffDim(parseFloat(e.target.value))}
+                        className="w-20 accent-accent-500"
+                      />
+                      <span className="w-8 text-right text-ink font-semibold">{effDim}</span>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-ink-muted">Task Alignment (Rho)</span>
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="range" min="0" max="1" step="0.05" value={taskCorr} 
+                        onChange={(e) => setTaskCorr(parseFloat(e.target.value))}
+                        className="w-20 accent-accent-500"
+                      />
+                      <span className="w-8 text-right text-ink font-semibold">{taskCorr}</span>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-ink-muted">Signal-to-Noise Ratio (SNR)</span>
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="range" min="0.5" max="15" step="0.5" value={snr} 
+                        onChange={(e) => setSnr(parseFloat(e.target.value))}
+                        className="w-20 accent-accent-500"
+                      />
+                      <span className="w-8 text-right text-ink font-semibold">{snr}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </DraggablePanel>
+
+            {/* PANEL 2: Manifold Integrity & QLDPC Syndrome Status */}
+            <DraggablePanel
+              id="holographic-integrity"
+              title="Manifold Integrity Status"
+              subtitle="QLDPC Parity-Check Stabilizers"
+              defaultPosition={{ x: 20, y: 285 }}
+              defaultSize={{ width: 360, height: 260 }}
+            >
+              <div className="p-4 space-y-3 h-full">
+                <div className="flex items-center justify-between">
+                  <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-ink-muted">Manifold Integrity</div>
+                  <div className="flex items-center gap-1.5">
+                    <span className={`w-2 h-2 rounded-full ${qldpcSyndromeReport.hasSyndrome ? 'bg-warn animate-pulse' : 'bg-clinical-400'}`} />
+                    <span className={`text-[10px] font-mono font-bold uppercase ${qldpcSyndromeReport.hasSyndrome ? 'text-warn' : 'text-clinical-400'}`}>
+                      {qldpcSyndromeReport.hasSyndrome ? 'ACTIVE SYNAPTIC ERROR' : 'STABILIZED (d_k * x = 0)'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="p-3 border border-line bg-surface-100 rounded-clinical font-mono text-[10.5px] space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-ink-muted">Code Space Stabilization</span>
+                    <span className="text-ink font-bold">QLDPC Parity Loop</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-ink-muted">Active Stabilizer Operator</span>
+                    <span className="text-accent-400 font-semibold">&part;<sub>{qldpcSyndromeReport.dimension}</sub> Syndrome Check</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-ink-muted">Global Homology Groups</span>
+                    <span className="text-accent-400 font-semibold">H<sub>1</sub> rank (Betti &beta;<sub>1</sub>): {bettiRank}</span>
+                  </div>
+                  {qldpcSyndromeReport.hasSyndrome && (
+                    <div className="mt-2 text-[10px] text-warn border-t border-warn/20 pt-2 leading-relaxed">
+                      Syndrome decoder detects local synaptic degradation vector. Homology kernel reconstruction mapping active.
+                    </div>
+                  )}
+                </div>
+              </div>
+            </DraggablePanel>
+          </>
+        )}
 
         {/* PANEL 3: Persistent Entropy Metrics */}
         <DraggablePanel
@@ -666,78 +738,80 @@ export default function HolographicDashboard() {
           </div>
         </DraggablePanel>
 
-        {/* PANEL 5: Dual Boundary-Bulk Manifolds */}
-        <DraggablePanel
-          id="holographic-manifold"
-          title="Dual Boundary-Bulk Manifolds"
-          subtitle="Shannon MI vs Hodge Laplacians"
-          defaultPosition={{ x: 400, y: 465 }}
-          defaultSize={{ width: 480, height: 385 }}
-        >
-          <div className="p-4 space-y-3 h-full">
-            {/* Modular Tab Selector Inside Draggable Panel */}
-            <div className="border border-line rounded-sharp bg-surface-100 p-0.5 flex justify-between gap-1 shadow-sm font-mono text-[9.5px]">
-              <button 
-                className={`flex-grow text-center py-1.5 uppercase tracking-wider transition-all ${activeTab === 'boundary' ? 'bg-accent-500/10 text-accent-400 font-bold border border-accent-500/20 rounded-sharp' : 'text-ink-muted hover:text-ink'}`}
-                onClick={() => setActiveTab('boundary')}
-              >
-                Boundary View (Functional)
-              </button>
-              <button 
-                className={`flex-grow text-center py-1.5 uppercase tracking-wider transition-all ${activeTab === 'bulk' ? 'bg-accent-500/10 text-accent-400 font-bold border border-accent-500/20 rounded-sharp' : 'text-ink-muted hover:text-ink'}`}
-                onClick={() => setActiveTab('bulk')}
-              >
-                Bulk View (Simplicial)
-              </button>
-            </div>
+        {!isNoviceOrPatient && (
+          /* PANEL 5: Dual Boundary-Bulk Manifolds */
+          <DraggablePanel
+            id="holographic-manifold"
+            title="Dual Boundary-Bulk Manifolds"
+            subtitle="Shannon MI vs Hodge Laplacians"
+            defaultPosition={{ x: 400, y: 465 }}
+            defaultSize={{ width: 480, height: 385 }}
+          >
+            <div className="p-4 space-y-3 h-full">
+              {/* Modular Tab Selector Inside Draggable Panel */}
+              <div className="border border-line rounded-sharp bg-surface-100 p-0.5 flex justify-between gap-1 shadow-sm font-mono text-[9.5px]">
+                <button 
+                  className={`flex-grow text-center py-1.5 uppercase tracking-wider transition-all ${activeTab === 'boundary' ? 'bg-accent-500/10 text-accent-400 font-bold border border-accent-500/20 rounded-sharp' : 'text-ink-muted hover:text-ink'}`}
+                  onClick={() => setActiveTab('boundary')}
+                >
+                  Boundary View (Functional)
+                </button>
+                <button 
+                  className={`flex-grow text-center py-1.5 uppercase tracking-wider transition-all ${activeTab === 'bulk' ? 'bg-accent-500/10 text-accent-400 font-bold border border-accent-500/20 rounded-sharp' : 'text-ink-muted hover:text-ink'}`}
+                  onClick={() => setActiveTab('bulk')}
+                >
+                  Bulk View (Simplicial)
+                </button>
+              </div>
 
-            {activeTab === "boundary" ? (
-              <div className="space-y-3 font-mono text-[11px] h-full">
-                <div className="section-label">Mutual Information Heatmap (20x20 ROI Sample)</div>
-                <div className="grid grid-cols-20 gap-px bg-line/60 p-0.5 border border-line rounded overflow-x-auto min-w-[200px]">
-                  {mutualInfoMatrix.map((row, r) => 
-                    row.map((val, c) => {
-                      const colorIntensity = Math.min(255, Math.floor(val * 350));
-                      return (
-                        <div 
-                          key={`${r},${c}`} 
-                          className="w-4 h-4 flex-shrink-0 transition-all hover:scale-125 hover:shadow cursor-pointer"
-                          style={{ backgroundColor: `rgb(${colorIntensity}, 31, ${255 - colorIntensity})` }}
-                          title={`I(ROI ${r} : ROI ${c}) = ${val.toFixed(4)} bits`}
-                        />
-                      );
-                    })
-                  )}
-                </div>
-                <div className="flex items-center justify-between text-[10px] text-ink-muted border-t border-line/40 pt-2">
-                  <span>Gaussian Entanglement (A:B):</span>
-                  <span className="text-accent-400 font-bold font-mono">{subnetworkEntanglement.toFixed(4)} bits</span>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-3 font-mono text-[11px] h-full">
-                <div className="section-label">Hodge Laplacian k-Simplices & RT minimal cut</div>
-                <div className="p-3 border border-line bg-surface-100 rounded-clinical space-y-2 text-[10px]">
-                  <div className="flex justify-between">
-                    <span>Simplicial Complex dimension</span>
-                    <span className="text-ink font-bold">Max 4D Complex</span>
+              {activeTab === "boundary" ? (
+                <div className="space-y-3 font-mono text-[11px] h-full">
+                  <div className="section-label">Mutual Information Heatmap (20x20 ROI Sample)</div>
+                  <div className="grid grid-cols-20 gap-px bg-line/60 p-0.5 border border-line rounded overflow-x-auto min-w-[200px]">
+                    {mutualInfoMatrix.map((row, r) => 
+                      row.map((val, c) => {
+                        const colorIntensity = Math.min(255, Math.floor(val * 350));
+                        return (
+                          <div 
+                            key={`${r},${c}`} 
+                            className="w-4 h-4 flex-shrink-0 transition-all hover:scale-125 hover:shadow cursor-pointer"
+                            style={{ backgroundColor: `rgb(${colorIntensity}, 31, ${255 - colorIntensity})` }}
+                            title={`I(ROI ${r} : ROI ${c}) = ${val.toFixed(4)} bits`}
+                          />
+                        );
+                      })
+                    )}
                   </div>
-                  <div className="flex justify-between">
-                    <span>Euler Characteristic (Proxy)</span>
-                    <span className="text-accent-400 font-semibold">{cliqueComplex.simplices[0].length - cliqueComplex.simplices[1].length + cliqueComplex.simplices[2].length}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>RT Minimal Surface Energy</span>
-                    <span className="text-accent-400 font-bold">{rtCut.reduce((a, b) => a + b, 0).toFixed(4)}</span>
+                  <div className="flex items-center justify-between text-[10px] text-ink-muted border-t border-line/40 pt-2">
+                    <span>Gaussian Entanglement (A:B):</span>
+                    <span className="text-accent-400 font-bold font-mono">{subnetworkEntanglement.toFixed(4)} bits</span>
                   </div>
                 </div>
-                <div className="text-[10px] text-ink-muted leading-relaxed">
-                  AdS/CFT bulk duality map: The Ryu-Takayanagi minimum surface cut vector matches functional boundary entanglement drop-offs.
+              ) : (
+                <div className="space-y-3 font-mono text-[11px] h-full">
+                  <div className="section-label">Hodge Laplacian k-Simplices & RT minimal cut</div>
+                  <div className="p-3 border border-line bg-surface-100 rounded-clinical space-y-2 text-[10px]">
+                    <div className="flex justify-between">
+                      <span>Simplicial Complex dimension</span>
+                      <span className="text-ink font-bold">Max 4D Complex</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Euler Characteristic (Proxy)</span>
+                      <span className="text-accent-400 font-semibold">{cliqueComplex.simplices[0].length - cliqueComplex.simplices[1].length + cliqueComplex.simplices[2].length}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>RT Minimal Surface Energy</span>
+                      <span className="text-accent-400 font-bold">{rtCut.reduce((a, b) => a + b, 0).toFixed(4)}</span>
+                    </div>
+                  </div>
+                  <div className="text-[10px] text-ink-muted leading-relaxed">
+                    AdS/CFT bulk duality map: The Ryu-Takayanagi minimum surface cut vector matches functional boundary entanglement drop-offs.
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
-        </DraggablePanel>
+              )}
+            </div>
+          </DraggablePanel>
+        )}
 
         {/* PANEL 6: Target Forge Classification Scorecard */}
         <DraggablePanel

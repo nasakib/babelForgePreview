@@ -70,22 +70,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return authClient.subscribe(refresh);
   }, [refresh]);
 
+  // Dynamically resolve role from active code input
+  const cleanCode = inviteCode.trim().toUpperCase();
+  
+  // 1. Resolve standard codes
+  let resolvedRole = CODE_ROLES[cleanCode] || null;
+  let dynamicInviteOrgId: string | null = null;
+  
+  // 2. Resolve dynamic organization invite codes from client database
+  if (!resolvedRole && cleanCode && typeof window !== "undefined") {
+    const dynamicInv = authClient.validateOrgInvite(cleanCode);
+    if (dynamicInv) {
+      resolvedRole = dynamicInv.role;
+      dynamicInviteOrgId = dynamicInv.orgId;
+    }
+  }
+
+  // 3. Novice (no code required)
+  const isNoviceSignup = !inviteCode.trim();
+
+  const isPreFilledCode = cleanCode === "PATIENT-VIEW-2026" || cleanCode === "ADMIN-CREATE-2026";
+
   // Dynamic Halo character state pre-populator
   useEffect(() => {
-    const clean = inviteCode.trim().toUpperCase();
-    if (clean === "PATIENT-VIEW-2026") {
+    if (cleanCode === "PATIENT-VIEW-2026") {
       setName("John Spartan-117");
       setEmail("j.117@unsc.gov");
-    } else if (clean === "ADMIN-CREATE-2026") {
+    } else if (cleanCode === "ADMIN-CREATE-2026") {
       setName("Dr. Catherine Elizabeth Halsey");
       setEmail("c.halsey@unsc.gov");
       setOrgName("UNSC ONI Section III");
     }
-  }, [inviteCode]);
+  }, [cleanCode]);
 
-  // Dynamically resolve role from active code input
-  const cleanCode = inviteCode.trim().toUpperCase();
-  const resolvedRole = CODE_ROLES[cleanCode] || null;
+  // Auto-lock selectedOrgId when dynamic invite is verified
+  useEffect(() => {
+    if (dynamicInviteOrgId) {
+      setSelectedOrgId(dynamicInviteOrgId);
+    }
+  }, [dynamicInviteOrgId]);
 
   const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,20 +116,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(true);
 
     if (authTab === "register") {
-      if (!name.trim() || !email.trim() || !inviteCode.trim()) {
-        setErrorMsg("Name, Email, and Invite Code are required fields.");
+      if (!name.trim() || !email.trim()) {
+        setErrorMsg("Name and Email are required fields.");
         setLoading(false);
         return;
       }
       
-      if (!resolvedRole) {
+      if (!isNoviceSignup && !resolvedRole) {
         setErrorMsg("INVALID AUTHENTICATION INVITE CODE. CONTACT CLINIC ADMINISTRATOR.");
         setLoading(false);
         return;
       }
 
       try {
-        if (resolvedRole === "owner") {
+        if (isNoviceSignup) {
+          // Novice signup, joins Sandbox Workspace automatically
+          await authClient.signIn({
+            name: name.trim(),
+            email: email.trim(),
+            role: "novice",
+            orgId: "org_sandbox",
+          });
+        } else if (resolvedRole === "owner") {
           // Admin registers a brand new organization
           if (!orgName.trim()) {
             setErrorMsg("A New Clinic / Organization Name is required to initialize workspace.");
@@ -120,17 +151,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             role: "owner",
           });
         } else {
-          // Doctor/staff joins an existing organization selected from dropdown
-          if (!selectedOrgId) {
-            setErrorMsg("A registered Clinic Organization must be selected to join.");
+          // Doctor/staff joins an existing organization selected from dropdown (or locked invite)
+          const targetOrgId = dynamicInviteOrgId || selectedOrgId;
+          if (!targetOrgId) {
+            setErrorMsg("A registered Clinic Workspace must be selected to join.");
             setLoading(false);
             return;
           }
           await authClient.signIn({
             name: name.trim(),
             email: email.trim(),
-            role: resolvedRole,
-            orgId: selectedOrgId,
+            role: resolvedRole!,
+            orgId: targetOrgId,
           });
         }
         refresh();
@@ -145,10 +177,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
       try {
+        const staff = authClient.listStaff(selectedOrgId);
+        const match = staff.find(u => u.email.toLowerCase() === email.toLowerCase());
+        const role = match ? match.role : "clinician";
+
         await authClient.signIn({
           name: name.trim(),
           email: email.trim(),
-          role: "clinician", // joins as clinician fallback
+          role: role,
           orgId: selectedOrgId,
         });
         refresh();
@@ -194,7 +230,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       clinician: "Standard Clinician (Doctor): Joins an existing clinic workspace. Can add/modify patient records and run Kuramoto simulations.",
       researcher: "Science Investigator: Joins an existing clinic. Run connectome simulations, read de-identified rosters, no administrative controls.",
       viewer: "Regulatory Auditor: Joins a clinic workspace for read-only access. Auditing credentials only.",
-      patient: "Patient Portal: Access your secure personal health chart, active clinical regimens, and diagnostics."
+      patient: "Patient Portal: Access your secure personal health chart, active clinical regimens, and diagnostics.",
+      novice: "Novice Portal: Educational and sandbox access. Simplified views and wellness sliders, no codes required."
     };
 
     return (
@@ -236,7 +273,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           <div className="flex items-start gap-2.5 p-3 rounded-clinical bg-yellow-500/5 border border-yellow-500/20 text-[10px] leading-relaxed text-yellow-200/90 font-mono">
             <span className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse mt-1" />
             <span>
-              SECURE REGULATION ACCESS GATED. USER REGISTRATION BOUNDARIES REQUIRE EXPLICIT CLINICAL INVITE ROLES.
+              SECURE REGULATION ACCESS GATED. USER REGISTRATION BOUNDARIES REQUIRE EXPLICIT CLINICAL INVITE ROLES OR FREE NOVICE SIGNUP.
             </span>
           </div>
 
@@ -248,14 +285,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             )}
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-mono uppercase tracking-wider text-slate-400">Clinician Full Name</label>
+              <label className="text-[10px] font-mono uppercase tracking-wider text-slate-400">Full Name</label>
               <input
                 type="text"
                 value={name}
                 required
                 onChange={(e) => setName(e.target.value)}
+                disabled={isPreFilledCode}
                 placeholder="Dr. Catherine Elizabeth Halsey"
-                className="input-clinical w-full text-white bg-slate-950/60 border border-slate-800/80 focus:border-accent-500"
+                className="input-clinical w-full text-white bg-slate-950/60 border border-slate-800/80 focus:border-accent-500 disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-slate-950/30"
               />
             </div>
 
@@ -266,19 +304,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 value={email}
                 required
                 onChange={(e) => setEmail(e.target.value)}
+                disabled={isPreFilledCode}
                 placeholder="c.halsey@unsc.gov"
-                className="input-clinical w-full text-white bg-slate-950/60 border border-slate-800/80 focus:border-accent-500"
+                className="input-clinical w-full text-white bg-slate-950/60 border border-slate-800/80 focus:border-accent-500 disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-slate-950/30"
               />
             </div>
 
             {authTab === "register" && (
               <>
+                <div className="flex flex-col gap-1.5 animate-fade-in-up">
+                  <label className="text-[10px] font-mono uppercase tracking-wider text-cyan-400 font-bold">Quick-Select Demo Invite Code</label>
+                  <select
+                    onChange={(e) => {
+                      setInviteCode(e.target.value);
+                      setErrorMsg("");
+                    }}
+                    value={VALID_CODES.includes(cleanCode) ? cleanCode : ""}
+                    className="bg-slate-950 border border-slate-800 text-white rounded px-2.5 py-1.5 outline-none focus:border-accent-500 text-xs font-mono"
+                  >
+                    <option value="">Select a Demo Role / Custom Code...</option>
+                    <option value="ADMIN-CREATE-2026">Dr. Halsey (Owner/Admin) [ADMIN-CREATE-2026]</option>
+                    <option value="CLINIC-JOIN-2026">Clinician (Doctor) [CLINIC-JOIN-2026]</option>
+                    <option value="RESEARCH-JOIN-2026">Science Researcher [RESEARCH-JOIN-2026]</option>
+                    <option value="AUDITOR-VIEW-2026">Regulatory Auditor [AUDITOR-VIEW-2026]</option>
+                    <option value="PATIENT-VIEW-2026">Master Chief (Patient Portal) [PATIENT-VIEW-2026]</option>
+                    <option value="">Novice Sandbox Mode [Leave Blank]</option>
+                  </select>
+                </div>
+
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-mono uppercase tracking-wider text-rose-400 font-bold">Secure Signup Invite Code</label>
+                  <div className="flex justify-between items-baseline">
+                    <label className="text-[10px] font-mono uppercase tracking-wider text-rose-400 font-bold">Secure Signup Invite Code</label>
+                    <span className="text-[8px] text-slate-500 font-mono">Leave blank for Novice Sandbox</span>
+                  </div>
                   <input
                     type="text"
                     value={inviteCode}
-                    required
                     onChange={(e) => setInviteCode(e.target.value)}
                     placeholder="ADMIN-XXXX or CLINIC-XXXX"
                     className="input-clinical w-full text-white bg-slate-950/60 border border-rose-500/20 focus:border-accent-500 uppercase tracking-widest font-mono text-center"
@@ -294,8 +355,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                       value={orgName}
                       required
                       onChange={(e) => setOrgName(e.target.value)}
+                      disabled={isPreFilledCode}
                       placeholder="UNSC ONI Section III"
-                      className="input-clinical w-full text-white bg-slate-950/60 border border-slate-800/80 focus:border-accent-500"
+                      className="input-clinical w-full text-white bg-slate-950/60 border border-slate-800/80 focus:border-accent-500 disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-slate-950/30"
                     />
                   </div>
                 ) : resolvedRole ? (
@@ -306,7 +368,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                       value={selectedOrgId}
                       required
                       onChange={(e) => setSelectedOrgId(e.target.value)}
-                      className="bg-slate-950 border border-slate-800/80 text-white rounded px-2.5 py-1.5 outline-none focus:border-accent-500 text-xs"
+                      disabled={!!dynamicInviteOrgId}
+                      className="bg-slate-950 border border-slate-800/80 text-white rounded px-2.5 py-1.5 outline-none focus:border-accent-500 text-xs disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                       {registeredOrgs.length === 0 ? (
                         <option value="">No Clinical Workspaces Registered yet.</option>
@@ -319,16 +382,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                       )}
                     </select>
                   </div>
+                ) : isNoviceSignup ? (
+                  /* Novice registration mode (No code) */
+                  <div className="p-2.5 rounded bg-cyan-500/5 border border-cyan-500/20 text-[9px] font-mono text-cyan-400 leading-relaxed uppercase tracking-wider text-center animate-fade-in-up">
+                    🔓 NOVICE PREVIEW MODE UNLOCKED - NO CODE REQUIRED.<br/>
+                    <span className="text-slate-500 text-[8px]">Auto-routed to the Novice Sandbox Workspace.</span>
+                  </div>
                 ) : (
                   <div className="p-2.5 rounded bg-slate-950/40 border border-slate-800/30 text-[9px] font-mono text-slate-500 leading-relaxed uppercase tracking-wider text-center">
                     Enter Invite Code to unlock Clinic Roster Options.
                   </div>
                 )}
 
-                {resolvedRole && (
-                  <div className="text-[9px] font-mono text-slate-500 leading-relaxed bg-slate-950/40 p-2.5 rounded border border-slate-800/30">
-                    🔐 RESOLVED ROLE: <strong className="text-white uppercase">{resolvedRole}</strong><br />
-                    {roleDescriptions[resolvedRole]}
+                {(resolvedRole || isNoviceSignup) && (
+                  <div className="text-[9px] font-mono text-slate-500 leading-relaxed bg-slate-950/40 p-2.5 rounded border border-slate-800/30 animate-fade-in-up">
+                    🔐 RESOLVED ROLE: <strong className="text-white uppercase">{resolvedRole || "novice"}</strong><br />
+                    {dynamicInviteOrgId && (
+                      <span className="text-cyan-400 font-bold block mb-1">
+                        ● VERIFIED SECURE INVITE - LOCKED TO {registeredOrgs.find(o => o.id === dynamicInviteOrgId)?.name}
+                      </span>
+                    )}
+                    {roleDescriptions[resolvedRole || "novice"]}
                   </div>
                 )}
               </>

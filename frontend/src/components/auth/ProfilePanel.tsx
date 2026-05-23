@@ -30,42 +30,32 @@ export default function ProfilePanel() {
   const [staffError, setStaffError] = useState("");
   const [staffSuccess, setStaffSuccess] = useState(false);
 
-  // Payment Gateway states
+  // Dynamic staff invites state
+  const [activeStaffInvites, setActiveStaffInvites] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (session) {
+      setActiveStaffInvites(authClient.listOrgInvites(session.org.id).filter((inv: any) => inv.role === "clinician" || inv.role === "researcher"));
+    }
+  }, [session]);
+
+  const handleGenerateStaffInvite = (role: "clinician" | "researcher") => {
+    if (!session) return;
+    authClient.generateOrgInvite(session.org.id, role);
+    setActiveStaffInvites(authClient.listOrgInvites(session.org.id).filter((inv: any) => inv.role === "clinician" || inv.role === "researcher"));
+  };
+
+  // Payment Gateway states (B2B Procurement Invoicing)
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [pendingPlan, setPendingPlan] = useState<typeof plan | null>(null);
-  const [cardNumber, setCardNumber] = useState("");
-  const [cardExpiry, setCardExpiry] = useState("");
-  const [cardCvv, setCardCvv] = useState("");
-  const [cardName, setCardName] = useState("");
+  const [poNumber, setPoNumber] = useState("");
+  const [billingEmail, setBillingEmail] = useState("");
+  const [billingAddress, setBillingAddress] = useState("");
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [paymentError, setPaymentError] = useState("");
   const [paymentLogs, setPaymentLogs] = useState<string[]>([]);
-
-  const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value;
-    const clean = raw.replace(/\D/g, "").slice(0, 16);
-    const parts = [];
-    for (let i = 0; i < clean.length; i += 4) {
-      parts.push(clean.substring(i, i + 4));
-    }
-    setCardNumber(parts.join(" "));
-  };
-
-  const handleCardExpiryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value;
-    const clean = raw.replace(/\D/g, "").slice(0, 4);
-    if (clean.length > 2) {
-      setCardExpiry(`${clean.slice(0, 2)}/${clean.slice(2)}`);
-    } else {
-      setCardExpiry(clean);
-    }
-  };
-
-  const handleCardCvvChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value;
-    setCardCvv(raw.replace(/\D/g, "").slice(0, 4));
-  };
+  const [generatedInvoiceId, setGeneratedInvoiceId] = useState("");
 
   // Synchronize state when session loads/updates
   useEffect(() => {
@@ -132,14 +122,14 @@ export default function ProfilePanel() {
       }
     } else {
       setPendingPlan(nextPlan);
-      setCardNumber("");
-      setCardExpiry("");
-      setCardCvv("");
-      setCardName(user.name);
+      setPoNumber("PO-" + org.name.replace(/\s+/g, "-").toUpperCase() + "-" + Math.floor(1000 + Math.random() * 9000));
+      setBillingEmail(user.email);
+      setBillingAddress("");
       setPaymentError("");
       setPaymentSuccess(false);
       setIsProcessingPayment(false);
       setPaymentLogs([]);
+      setGeneratedInvoiceId("");
       setShowPaymentModal(true);
     }
   };
@@ -149,36 +139,30 @@ export default function ProfilePanel() {
     if (!pendingPlan) return;
     setPaymentError("");
     
-    const cleanCard = cardNumber.replace(/\s+/g, "");
-    if (cleanCard.length < 16 || !/^\d+$/.test(cleanCard)) {
-      setPaymentError("VALIDATION ERROR: Credit card number must be a valid 16-digit sequence.");
+    if (!poNumber.trim()) {
+      setPaymentError("VALIDATION ERROR: Purchase Order (PO) Number cannot be blank. Enter 'PENDING' if PO is in process.");
       return;
     }
 
-    if (!/^\d{2}\/\d{2}$/.test(cardExpiry)) {
-      setPaymentError("VALIDATION ERROR: Expiration date must follow the MM/YY layout.");
+    if (!billingEmail.trim()) {
+      setPaymentError("VALIDATION ERROR: Billing Department Email is required.");
       return;
     }
 
-    if (cardCvv.length < 3 || cardCvv.length > 4 || !/^\d+$/.test(cardCvv)) {
-      setPaymentError("VALIDATION ERROR: Security CVV code must be 3 or 4 digits.");
-      return;
-    }
-
-    if (!cardName.trim()) {
-      setPaymentError("VALIDATION ERROR: Cardholder name cannot be blank.");
+    if (!billingAddress.trim()) {
+      setPaymentError("VALIDATION ERROR: Billing Mailing Address is required for paper invoice routing.");
       return;
     }
 
     setIsProcessingPayment(true);
     
     const logs = [
-      "Establishing TLS 1.3 encrypted handshake with Stripe nodes...",
-      "Routing session packet via PCI-DSS Level 1 tokenized pipeline...",
-      "Checking BAA compliance key synchronization...",
-      "Authorizing pre-authorization charge on card networks...",
-      "Broadcasting cryptographic signature check to secure ledger...",
-      "Transaction approved! Upgraded clinical nodes provisioned successfully."
+      "Contacting B2B billing ledger registry...",
+      "Validating Yamanaka Simulator licensing allocations...",
+      "Generating institutional BAA compliance token...",
+      "Registering cashier's check Net-30 payment agreement terms...",
+      "Generating unique Invoice ID...",
+      "B2B procurement invoice successfully registered under PENDING status!"
     ];
 
     for (let i = 0; i < logs.length; i++) {
@@ -187,16 +171,16 @@ export default function ProfilePanel() {
     }
 
     try {
+      const invId = "INV-BF-2026-" + Math.floor(100000 + Math.random() * 900000);
+      setGeneratedInvoiceId(invId);
+      
+      // Auto-upgrade session plan immediately while cashier's check is processing!
       await updateSession({
         plan: pendingPlan,
       });
       setPaymentSuccess(true);
-      setTimeout(() => {
-        setShowPaymentModal(false);
-        setPendingPlan(null);
-      }, 1000);
     } catch (err: any) {
-      setPaymentError(err.message || "Failed to update subscription credentials.");
+      setPaymentError(err.message || "Failed to upgrade license tier.");
       setIsProcessingPayment(false);
     }
   };
@@ -242,6 +226,7 @@ export default function ProfilePanel() {
     "staff.write": "Directly provision / add clinical staff",
     "staff.read": "Audit organization clinician rosters",
     "patient.self": "View & monitor own personal chart telemetry",
+    "novice.lite": "Access simplified educational Sandbox views",
     "sim.run": "Solve Kuramoto oscillator simulations",
   };
 
@@ -251,6 +236,7 @@ export default function ProfilePanel() {
     researcher: "Neuroscience Researcher",
     viewer: "Regulatory Auditor",
     patient: "Patient Portal Access",
+    novice: "Novice Portal Access",
   };
 
   return (
@@ -375,79 +361,95 @@ export default function ProfilePanel() {
               </form>
 
               {/* Quotas & Licensing */}
-              <div className="flex flex-col gap-3">
-                <h4 className="text-[10px] font-mono uppercase tracking-widest text-slate-400 border-b border-slate-800 pb-1.5 flex items-center justify-between">
-                  <span>Licensing, Quotas & BAA Controls</span>
-                  {org.baaSigned ? (
-                    <span className="text-[8px] text-emerald-400 font-mono tracking-widest uppercase flex items-center gap-1">
-                      ● BAA ACTIVE
+              {user.role === "novice" ? (
+                <div className="flex flex-col gap-3">
+                  <h4 className="text-[10px] font-mono uppercase tracking-widest text-slate-400 border-b border-slate-800 pb-1.5">
+                    Novice Sandbox Preview
+                  </h4>
+                  <div className="p-4 rounded-clinical bg-cyan-950/20 border border-cyan-800/40 text-cyan-400 font-mono space-y-2 text-[10px] leading-relaxed uppercase">
+                    <span className="font-bold text-white block">● Active Sandbox Workspace:</span>
+                    🔓 Unlimited simulation trials enabled in Sandbox mode.<br />
+                    🔒 Clinical features, HIPAA BAA registration, and staff roster provisioning are disabled.<br />
+                    <span className="text-slate-500 text-[8.5px] font-sans normal-case block mt-2">
+                      To explore medical rosters or full-scale multi-tenant networks, sign out and register with an institutional invite code.
                     </span>
-                  ) : (
-                    <span className="text-[8px] text-rose-400 font-mono tracking-widest uppercase flex items-center gap-1 animate-pulse">
-                      ● PHI RESTRICTED
-                    </span>
-                  )}
-                </h4>
-
-                <div className="p-4 rounded-clinical bg-slate-950/40 border border-slate-800/60 space-y-4">
-                  {/* Utilization metrics */}
-                  <div className="space-y-1.5 font-mono text-[10px]">
-                    <div className="flex justify-between items-baseline text-slate-400">
-                      <span>Workspace Roster Space</span>
-                      <span className="text-white font-bold">
-                        {currentCount} / {limitCount === Infinity ? "∞" : limitCount} Patients
-                      </span>
-                    </div>
-                    <div className="w-full h-1.5 rounded-full bg-slate-900 overflow-hidden border border-slate-800/80">
-                      <div
-                        className={`h-full rounded-full transition-all duration-500 ${
-                          pct >= 90 ? "bg-rose-500" : pct >= 70 ? "bg-amber-500" : "bg-gradient-to-r from-accent-500 to-cyan-400"
-                        }`}
-                        style={{ width: `${limitCount === Infinity ? 10 : pct}%` }}
-                      />
-                    </div>
                   </div>
-
-                  {/* Administrative licensing selectors (Owner only) */}
-                  {canManageOrg ? (
-                    <div className="flex flex-col gap-3 border-t border-slate-800/60 pt-3">
-                      
-                      {/* Subscription tier */}
-                      <div className="flex flex-col gap-1.5 font-mono text-[10px]">
-                        <label className="text-[9px] uppercase tracking-wider text-slate-400">Workspace License Tier</label>
-                        <select
-                          value={plan}
-                          onChange={(e) => handlePlanChange(e.target.value as typeof plan)}
-                          className="bg-slate-950 border border-slate-800/80 text-white rounded px-2 py-1 outline-none text-[10px] w-full"
-                        >
-                          <option value="preview">Research Preview (Max 5 patients)</option>
-                          <option value="clinical">Standard Clinical (Max 250 patients)</option>
-                          <option value="enterprise">Clinical Enterprise (Unlimited patients)</option>
-                        </select>
-                      </div>
-
-                      {/* BAA execution */}
-                      <label className="flex items-center gap-2.5 p-2.5 rounded bg-slate-950/40 border border-slate-800/60 cursor-pointer select-none">
-                        <input
-                          type="checkbox"
-                          checked={org.baaSigned}
-                          onChange={handleBaaToggle}
-                          className="w-3.5 h-3.5 accent-accent-500 rounded border-slate-800"
-                        />
-                        <div className="flex flex-col">
-                          <span className="text-[10px] font-semibold text-white">Sign Business Associate Agreement (BAA)</span>
-                          <span className="text-[8px] text-slate-500 font-mono">Unlocks secure regulatory PHI patient intake controls.</span>
-                        </div>
-                      </label>
-
-                    </div>
-                  ) : (
-                    <div className="text-[9px] font-mono text-slate-500 text-center leading-normal">
-                      * License tier changes and HIPAA legal BAA execution require organization Owner administrative credentials.
-                    </div>
-                  )}
                 </div>
-              </div>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  <h4 className="text-[10px] font-mono uppercase tracking-widest text-slate-400 border-b border-slate-800 pb-1.5 flex items-center justify-between">
+                    <span>Licensing, Quotas & BAA Controls</span>
+                    {org.baaSigned ? (
+                      <span className="text-[8px] text-emerald-400 font-mono tracking-widest uppercase flex items-center gap-1">
+                        ● BAA ACTIVE
+                      </span>
+                    ) : (
+                      <span className="text-[8px] text-rose-400 font-mono tracking-widest uppercase flex items-center gap-1 animate-pulse">
+                        ● PHI RESTRICTED
+                      </span>
+                    )}
+                  </h4>
+
+                  <div className="p-4 rounded-clinical bg-slate-950/40 border border-slate-800/60 space-y-4">
+                    {/* Utilization metrics */}
+                    <div className="space-y-1.5 font-mono text-[10px]">
+                      <div className="flex justify-between items-baseline text-slate-400">
+                        <span>Workspace Roster Space</span>
+                        <span className="text-white font-bold">
+                          {currentCount} / {limitCount === Infinity ? "∞" : limitCount} Patients
+                        </span>
+                      </div>
+                      <div className="w-full h-1.5 rounded-full bg-slate-900 overflow-hidden border border-slate-800/80">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${
+                            pct >= 90 ? "bg-rose-500" : pct >= 70 ? "bg-amber-500" : "bg-gradient-to-r from-accent-500 to-cyan-400"
+                          }`}
+                          style={{ width: `${limitCount === Infinity ? 10 : pct}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Administrative licensing selectors (Owner only) */}
+                    {canManageOrg ? (
+                      <div className="flex flex-col gap-3 border-t border-slate-800/60 pt-3">
+                        
+                        {/* Subscription tier */}
+                        <div className="flex flex-col gap-1.5 font-mono text-[10px]">
+                          <label className="text-[9px] uppercase tracking-wider text-slate-400">Workspace License Tier</label>
+                          <select
+                            value={plan}
+                            onChange={(e) => handlePlanChange(e.target.value as typeof plan)}
+                            className="bg-slate-950 border border-slate-800/80 text-white rounded px-2 py-1 outline-none text-[10px] w-full"
+                          >
+                            <option value="preview">Research Preview (Max 5 patients)</option>
+                            <option value="clinical">Standard Clinical (Max 250 patients)</option>
+                            <option value="enterprise">Clinical Enterprise (Unlimited patients)</option>
+                          </select>
+                        </div>
+
+                        {/* BAA execution */}
+                        <label className="flex items-center gap-2.5 p-2.5 rounded bg-slate-950/40 border border-slate-800/60 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={org.baaSigned}
+                            onChange={handleBaaToggle}
+                            className="w-3.5 h-3.5 accent-accent-500 rounded border-slate-800"
+                          />
+                          <div className="flex flex-col">
+                            <span className="text-[10px] font-semibold text-white">Sign Business Associate Agreement (BAA)</span>
+                            <span className="text-[8px] text-slate-500 font-mono">Unlocks secure regulatory PHI patient intake controls.</span>
+                          </div>
+                        </label>
+
+                      </div>
+                    ) : (
+                      <div className="text-[9px] font-mono text-slate-500 text-center leading-normal">
+                        * License tier changes and HIPAA legal BAA execution require organization Owner administrative credentials.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
             </div>
           )}
@@ -522,6 +524,58 @@ export default function ProfilePanel() {
                   </div>
                 </form>
               )}
+
+              {/* Dynamic Practitioner Invites Generator */}
+              <div className="flex flex-col gap-3 p-3.5 bg-slate-950/40 border border-slate-800/60 rounded-clinical font-mono text-[10px]">
+                <h4 className="text-[10px] uppercase tracking-widest text-slate-400 border-b border-slate-800 pb-1.5 flex justify-between items-center">
+                  <span>Practitioner Invite Link Generator</span>
+                  <span className="text-[8px] text-cyan-400">ORG-CLINIC / ORG-RESEARCH</span>
+                </h4>
+                
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleGenerateStaffInvite("clinician")}
+                    className="flex-1 py-1.5 bg-cyan-600/10 hover:bg-cyan-600/20 border border-cyan-500/30 hover:border-cyan-500/50 text-cyan-400 font-bold rounded uppercase tracking-wider text-[8.5px] transition-all animate-fade-in"
+                  >
+                    + Invite Clinician (Doctor)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleGenerateStaffInvite("researcher")}
+                    className="flex-1 py-1.5 bg-purple-600/10 hover:bg-purple-600/20 border border-purple-500/30 hover:border-purple-500/50 text-purple-400 font-bold rounded uppercase tracking-wider text-[8.5px] transition-all animate-fade-in"
+                  >
+                    + Invite Researcher
+                  </button>
+                </div>
+
+                {activeStaffInvites.length > 0 ? (
+                  <div className="max-h-24 overflow-y-auto custom-scrollbar flex flex-col gap-1.5 border-t border-slate-800/60 pt-2">
+                    {activeStaffInvites.map((inv) => (
+                      <div key={inv.code} className="flex justify-between items-center bg-slate-950 p-2 border border-slate-800 rounded">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-white font-bold tracking-widest uppercase">{inv.code}</span>
+                          <span className="text-[8px] text-slate-500 capitalize">{inv.role} invite</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(inv.code);
+                            alert(`COPIED CODE: ${inv.code}`);
+                          }}
+                          className="px-2 py-0.5 bg-slate-900 border border-slate-800 hover:text-white text-slate-400 rounded text-[8px] uppercase font-bold"
+                        >
+                          Copy
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-[8px] text-slate-500 text-center leading-normal italic">
+                    No active practitioner invites generated yet.
+                  </div>
+                )}
+              </div>
 
               {/* Roster list */}
               <div className="flex flex-col gap-3">
@@ -599,21 +653,21 @@ export default function ProfilePanel() {
 
         </div>
 
-        {/* PAYMENT MODAL OVERLAY */}
+        {/* PAYMENT MODAL OVERLAY (B2B INVOICE PROCUREMENT) */}
         {showPaymentModal && pendingPlan && (
           <div className="absolute inset-0 z-50 bg-slate-950/98 backdrop-blur-xl p-5 flex flex-col justify-between overflow-y-auto custom-scrollbar animate-fade-in select-none">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-slate-800 pb-2">
               <div>
-                <span className="text-[8px] font-mono text-accent-400 uppercase tracking-widest block">🔒 PCI-DSS LEVEL 1 SECURE CONNECTION</span>
-                <h3 className="text-sm font-bold text-white tracking-wide">Secure Billing Upgrades</h3>
+                <span className="text-[8px] font-mono text-accent-400 uppercase tracking-widest block">🔒 SECURE INSTITUTIONAL B2B PROCUREMENT GATEWAY</span>
+                <h3 className="text-sm font-bold text-white tracking-wide">Procurement Invoice Request</h3>
               </div>
               <button 
                 onClick={() => setShowPaymentModal(false)}
-                disabled={isProcessingPayment}
+                disabled={isProcessingPayment && !paymentSuccess}
                 className="text-slate-500 hover:text-white text-xs font-mono disabled:opacity-30"
               >
-                ✕ CANCEL
+                ✕ CLOSE
               </button>
             </div>
 
@@ -628,52 +682,67 @@ export default function ProfilePanel() {
                 </div>
                 <div className="flex justify-between text-slate-400">
                   <span>Recurring Charge:</span>
-                  <span className="text-accent-400 font-bold">
+                  <span className="text-accent-400 font-bold font-mono">
                     {pendingPlan === "clinical" ? "$149.00 / month" : "$499.00 / month"}
                   </span>
                 </div>
                 <div className="flex justify-between text-[8.5px] text-slate-500 border-t border-slate-900 pt-1">
-                  <span>HIPAA Compliant Processing:</span>
-                  <span>$0.00 / free</span>
+                  <span>Payment Terms:</span>
+                  <span className="text-slate-300 font-bold">NET 30 (Cashier's Check / ACH)</span>
                 </div>
               </div>
 
-              {/* Glowing Credit Card Mock */}
-              <div className="relative rounded-xl p-4 bg-gradient-to-tr from-accent-600/35 to-cyan-500/25 border border-accent-400/30 text-white font-mono shadow-lg h-36 flex flex-col justify-between overflow-hidden">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-xl pointer-events-none" />
-                
-                {/* Brand & Chip */}
-                <div className="flex items-center justify-between">
-                  <div className="w-8 h-6 rounded bg-amber-500/20 border border-amber-500/30 flex items-center justify-center font-bold text-[8px] text-amber-300">
-                    CHIP
+              {/* B2B INVOICE RECEIPT DISPLAY (Once Generated) */}
+              {paymentSuccess && generatedInvoiceId ? (
+                <div className="flex-grow flex flex-col gap-3 p-4 border border-emerald-500/30 bg-emerald-950/10 rounded-clinical font-mono text-[9.5px] text-slate-300 animate-fade-in">
+                  <div className="flex justify-between items-center border-b border-emerald-500/20 pb-2">
+                    <span className="text-emerald-400 font-bold uppercase text-[10px]">✓ INVOICE REGISTERED & PROVISIONED</span>
+                    <span className="text-white font-bold text-xs">{generatedInvoiceId}</span>
                   </div>
-                  <span className="text-xs font-bold italic tracking-widest text-cyan-300">VISA</span>
-                </div>
 
-                {/* Card Number */}
-                <div className="text-sm font-semibold tracking-widest text-center py-1">
-                  {cardNumber || "•••• •••• •••• ••••"}
-                </div>
-
-                {/* Expiry & Name */}
-                <div className="flex justify-between items-end text-[8.5px]">
-                  <div className="flex flex-col min-w-0 pr-3">
-                    <span className="text-slate-400 text-[6.5px] uppercase">Cardholder</span>
-                    <span className="font-bold truncate max-w-[200px]">{cardName || "DR. HALSEY"}</span>
+                  <div className="grid grid-cols-2 gap-3 leading-relaxed">
+                    <div>
+                      <span className="text-[7.5px] text-slate-500 uppercase block">Billing Organization</span>
+                      <span className="text-white font-bold">{org.name}</span>
+                    </div>
+                    <div>
+                      <span className="text-[7.5px] text-slate-500 uppercase block">Purchase Order (PO)</span>
+                      <span className="text-white font-bold">{poNumber}</span>
+                    </div>
+                    <div>
+                      <span className="text-[7.5px] text-slate-500 uppercase block">Billing Email</span>
+                      <span className="text-white font-bold truncate block">{billingEmail}</span>
+                    </div>
+                    <div>
+                      <span className="text-[7.5px] text-slate-500 uppercase block">Billing Address</span>
+                      <span className="text-white font-bold truncate block">{billingAddress}</span>
+                    </div>
                   </div>
-                  <div className="flex flex-col items-end flex-shrink-0">
-                    <span className="text-slate-400 text-[6.5px] uppercase">Expires</span>
-                    <span className="font-bold">{cardExpiry || "MM/YY"}</span>
-                  </div>
-                </div>
-              </div>
 
-              {/* Input Form or Processing Terminal */}
-              {isProcessingPayment ? (
-                <div className="flex-1 flex flex-col justify-between p-3 border border-slate-800 bg-slate-950 rounded-clinical h-36 font-mono text-[9px] text-slate-400">
+                  <div className="border-t border-slate-800/80 pt-2 bg-slate-950/40 p-2.5 rounded border border-slate-900 leading-normal text-[9px]">
+                    <strong className="text-white uppercase block mb-1">🏦 Cashier's Check Payment Instructions:</strong>
+                    1. Make checks payable to: <strong className="text-emerald-400">BabelForge Inc.</strong><br />
+                    2. Mail check to: <strong className="text-emerald-400">BabelForge treasury, 100 Main St, Suite 400, Boston, MA 02110</strong><br />
+                    3. Important: Write the Invoice ID <strong className="text-white font-mono">{generatedInvoiceId}</strong> on the check memo line to secure license persistence.<br />
+                    <span className="text-slate-500 block mt-1.5">* Net 30 terms apply. Sandbox boundaries have been fully upgraded and unlocked for instant workspace clinical access!</span>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setShowPaymentModal(false);
+                      setPendingPlan(null);
+                    }}
+                    className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold uppercase tracking-wider rounded border border-emerald-400/30 text-center font-mono mt-1 text-[10px]"
+                  >
+                    Close & Enter Upgraded Workspace
+                  </button>
+                </div>
+              ) : isProcessingPayment ? (
+                /* PROCESSING TERMINAL */
+                <div className="flex-1 flex flex-col justify-between p-4 border border-slate-800 bg-slate-950 rounded-clinical h-48 font-mono text-[9px] text-slate-400">
                   <div className="flex items-center gap-2 text-[10px] text-accent-400 animate-pulse border-b border-slate-900 pb-1.5 font-bold">
                     <span className="w-1.5 h-1.5 rounded-full bg-accent-500 animate-ping" />
-                    PROCESSING SUBMISSION...
+                    GENERATING INVOICE...
                   </div>
                   <div className="flex-grow overflow-y-auto custom-scrollbar py-2 space-y-1 text-slate-500">
                     {paymentLogs.map((log, idx) => (
@@ -682,74 +751,64 @@ export default function ProfilePanel() {
                       </div>
                     ))}
                   </div>
-                  {paymentSuccess && (
-                    <div className="text-emerald-400 font-bold uppercase text-[10px] border-t border-slate-900 pt-1.5 text-center flex items-center justify-center gap-1">
-                      ✓ UPGRADE COMPLETED SUCCESSFULLY
-                    </div>
-                  )}
                 </div>
               ) : (
-                <form onSubmit={executePaymentMock} className="flex flex-col gap-2.5">
+                /* INVOICE REGISTRY REQUEST FORM */
+                <form onSubmit={executePaymentMock} className="flex flex-col gap-3 font-mono text-[9.5px]">
                   {paymentError && (
-                    <div className="p-2 rounded bg-rose-500/10 border border-rose-500/20 text-[8.5px] font-mono text-rose-400 uppercase leading-relaxed">
+                    <div className="p-2.5 rounded bg-rose-500/10 border border-rose-500/20 text-[8.5px] font-mono text-rose-400 uppercase leading-relaxed">
                       ⚠️ ERROR: {paymentError}
                     </div>
                   )}
 
                   <div className="flex flex-col gap-1">
-                    <label className="text-[8px] font-mono uppercase text-slate-500">Cardholder Name</label>
+                    <div className="flex justify-between items-baseline">
+                      <label className="text-[8px] uppercase text-slate-500 font-bold">Purchase Order (PO) Number</label>
+                      <span className="text-[7.5px] text-slate-600">Enter 'PENDING' if PO in process</span>
+                    </div>
                     <input
                       type="text"
                       required
-                      value={cardName}
-                      onChange={(e) => setCardName(e.target.value.toUpperCase())}
-                      placeholder="DR. CATHERINE ELIZABETH HALSEY"
+                      value={poNumber}
+                      onChange={(e) => setPoNumber(e.target.value.toUpperCase())}
+                      placeholder="PO-UNSC-2026-X"
                       className="input-clinical w-full text-white bg-slate-950 border border-slate-800 px-2 py-1 text-[10px]"
                     />
                   </div>
 
                   <div className="flex flex-col gap-1">
-                    <label className="text-[8px] font-mono uppercase text-slate-500">Card Number</label>
+                    <label className="text-[8px] uppercase text-slate-500 font-bold">Institutional Billing Email</label>
                     <input
-                      type="text"
+                      type="email"
                       required
-                      value={cardNumber}
-                      onChange={handleCardNumberChange}
-                      placeholder="4111 2222 3333 4444"
+                      value={billingEmail}
+                      onChange={(e) => setBillingEmail(e.target.value)}
+                      placeholder="finance@unsc.gov"
                       className="input-clinical w-full text-white bg-slate-950 border border-slate-800 px-2 py-1 text-[10px]"
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="flex flex-col gap-1">
-                      <label className="text-[8px] font-mono uppercase text-slate-500">Expiration Date</label>
-                      <input
-                        type="text"
-                        required
-                        value={cardExpiry}
-                        onChange={handleCardExpiryChange}
-                        placeholder="MM/YY"
-                        className="input-clinical w-full text-white bg-slate-950 border border-slate-800 px-2 py-1 text-[10px] text-center"
-                      />
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <label className="text-[8px] font-mono uppercase text-slate-500">Security CVV</label>
-                      <input
-                        type="password"
-                        required
-                        value={cardCvv}
-                        onChange={handleCardCvvChange}
-                        placeholder="•••"
-                        className="input-clinical w-full text-white bg-slate-950 border border-slate-800 px-2 py-1 text-[10px] text-center"
-                      />
-                    </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[8px] uppercase text-slate-500 font-bold">Billing Dept mailing Address</label>
+                    <textarea
+                      required
+                      value={billingAddress}
+                      onChange={(e) => setBillingAddress(e.target.value)}
+                      rows={2}
+                      placeholder="UNSC ONI HQ, Treasury Wing, Reach"
+                      className="input-clinical w-full text-white bg-slate-950 border border-slate-800 px-2 py-1 text-[10px] resize-none"
+                    />
+                  </div>
+
+                  <div className="p-2.5 rounded bg-slate-950/40 border border-slate-800/40 text-slate-500 leading-normal text-[8.5px] uppercase">
+                    🔒 Cashier's checks must be signed by authorized financial officers and referenced to unique Invoice IDs. Net 30 routing keys will lock workspace if check is not received by maturity date.
                   </div>
 
                   <button
                     type="submit"
-                    className="btn-primary py-2.5 mt-2 bg-accent-600 hover:bg-accent-500 border-accent-400 text-white font-mono uppercase tracking-widest text-[9px] shadow-[0_0_12px_rgba(168,85,247,0.3)] transition-all"
+                    className="btn-primary py-2.5 mt-2 bg-accent-600 hover:bg-accent-500 border-accent-400 text-white font-mono uppercase tracking-widest text-[9.5px] shadow-[0_0_12px_rgba(168,85,247,0.3)] transition-all"
                   >
-                    Pay & Activate Subscription
+                    Request B2B Invoice & Unlock Workspace
                   </button>
                 </form>
               )}

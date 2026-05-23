@@ -22,7 +22,8 @@ export type Role =
   | "clinician"  // can read/write patients + run sims
   | "researcher" // can run sims, read aggregate cohort only
   | "viewer"     // read-only, no patient PHI
-  | "patient";   // patient portal, read own data only
+  | "patient"    // patient portal, read own data only
+  | "novice";    // novice user, simplified educational features only
 
 export type Plan = "preview" | "clinical" | "enterprise";
 
@@ -65,16 +66,17 @@ export type AuthStatus = "unknown" | "anonymous" | "authenticated";
  */
 export const CAPABILITIES = {
   "patient.read":   ["owner", "clinician", "researcher"] as Role[],
-  "patient.write":  ["owner", "clinician"] as Role[],
-  "patient.export": ["owner", "clinician"] as Role[],
+  "patient.write":  ["owner", "clinician", "researcher"] as Role[],
+  "patient.export": ["owner", "clinician", "researcher"] as Role[],
   "patient.purge":  ["owner"] as Role[],
   "billing.manage": ["owner"] as Role[],
   "org.invite":     ["owner"] as Role[],
   "org.manage":     ["owner"] as Role[],
   "staff.write":    ["owner"] as Role[],
-  "staff.read":     ["owner", "clinician"] as Role[],
-  "patient.self":   ["owner", "clinician", "patient"] as Role[],
-  "sim.run":        ["owner", "clinician", "researcher", "viewer", "patient"] as Role[],
+  "staff.read":     ["owner", "clinician", "researcher"] as Role[],
+  "patient.self":   ["owner", "clinician", "researcher", "patient"] as Role[],
+  "novice.lite":    ["owner", "clinician", "researcher", "novice"] as Role[],
+  "sim.run":        ["owner", "clinician", "researcher", "viewer", "patient", "novice"] as Role[],
 } as const;
 
 export type Capability = keyof typeof CAPABILITIES;

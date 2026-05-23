@@ -64,11 +64,18 @@ function readOrgs(): Organization[] {
   try {
     const raw = window.localStorage.getItem(ORGS_KEY);
     if (!raw) {
-      // Seed default UNSC clinical organization for Halsey reference
+      // Seed default UNSC clinical organization and Novice Sandbox Workspace
       const seed: Organization[] = [
         {
           id: "org_unsc_oni",
           name: "UNSC ONI Section III",
+          plan: "preview",
+          baaSigned: false,
+          createdAt: new Date().toISOString(),
+        },
+        {
+          id: "org_sandbox",
+          name: "Novice Sandbox Workspace",
           plan: "preview",
           baaSigned: false,
           createdAt: new Date().toISOString(),
@@ -309,4 +316,58 @@ export const authClient = {
     listeners.add(listener);
     return () => listeners.delete(listener);
   },
+
+  listOrgInvites(orgId: string): OrgInvite[] {
+    return readInvites().filter(inv => inv.orgId === orgId);
+  },
+
+  generateOrgInvite(orgId: string, role: "clinician" | "researcher" | "patient"): OrgInvite {
+    const rand = Math.random().toString(36).substring(2, 6).toUpperCase();
+    const prefix = role === "clinician" ? "ORG-CLINIC" : role === "researcher" ? "ORG-RESEARCH" : "ORG-PATIENT";
+    const code = `${prefix}-${rand}`;
+    const invite: OrgInvite = {
+      code,
+      orgId,
+      role,
+      createdAt: new Date().toISOString()
+    };
+    const list = readInvites();
+    list.push(invite);
+    writeInvites(list);
+    emit();
+    return invite;
+  },
+
+  validateOrgInvite(code: string): OrgInvite | null {
+    const clean = code.trim().toUpperCase();
+    const list = readInvites();
+    return list.find(inv => inv.code === clean) || null;
+  },
 };
+
+const INVITES_KEY = "babelforge:auth:invites:v2";
+
+export interface OrgInvite {
+  code: string;
+  orgId: string;
+  role: "clinician" | "researcher" | "patient";
+  createdAt: string;
+}
+
+function readInvites(): OrgInvite[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(INVITES_KEY);
+    if (!raw) return [];
+    return JSON.parse(raw) as OrgInvite[];
+  } catch {
+    return [];
+  }
+}
+
+function writeInvites(list: OrgInvite[]) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(INVITES_KEY, JSON.stringify(list));
+  } catch { /* ignore */ }
+}

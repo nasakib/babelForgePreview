@@ -71,6 +71,9 @@ jobs:
           image: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/backend:${{ github.sha }}
           env_vars: |
             ENVIRONMENT=production
+          secrets: |
+            STRIPE_SECRET_KEY=stripe-secret-key:latest
+            STRIPE_WEBHOOK_SECRET=stripe-webhook-secret:latest
 
 
   build-and-deploy-frontend:
@@ -95,6 +98,8 @@ jobs:
       - name: Build Next.js (Static Export)
         working-directory: ./frontend
         # Requires output: 'export' in next.config.js
+        env:
+          NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ secrets.STRIPE_PUBLISHABLE_KEY }}
         run: npm run build
 
       - name: Google Auth

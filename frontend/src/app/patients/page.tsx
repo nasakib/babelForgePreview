@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { usePatient } from "@/context/PatientContext";
 import { patientStore } from "@/lib/patient/store";
+import { authClient } from "@/lib/auth/client";
 import { PLAN_FEATURES } from "@/lib/auth/types";
 import HipaaNotice from "@/components/patient/HipaaNotice";
 import {
@@ -38,6 +39,21 @@ export default function PatientsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editPatientId, setEditPatientId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<FormTab>("demographics");
+
+  // Load active Patient invite codes
+  const [activeInvites, setActiveInvites] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (session?.org.id && allows("staff.read")) {
+      setActiveInvites(authClient.listOrgInvites(session.org.id).filter((inv: any) => inv.role === "patient"));
+    }
+  }, [session, allows]);
+
+  const handleGeneratePatientInvite = () => {
+    if (!session?.org.id) return;
+    authClient.generateOrgInvite(session.org.id, "patient");
+    setActiveInvites(authClient.listOrgInvites(session.org.id).filter((inv: any) => inv.role === "patient"));
+  };
 
   // Form local state
   const [mrn, setMrn] = useState("");
@@ -131,6 +147,10 @@ export default function PatientsPage() {
 
   const planLimits = PLAN_FEATURES[plan];
   const limitCount = planLimits.maxPatients;
+
+  if (session.user.role === "novice") {
+    return <NoviceLitePortal name={session.user.name} orgName={session.org.name} signOut={() => authClient.signOut()} />;
+  }
 
   if (session.user.role === "patient") {
     return (
@@ -831,6 +851,47 @@ export default function PatientsPage() {
                 })
               )}
             </div>
+
+            {/* Cohort Patient Registration Invites generator (Clinicians / Researchers / Owners) */}
+            {allows("staff.read") && (
+              <div className="border-t border-slate-800/80 pt-4 mt-2 flex flex-col gap-3 font-mono text-[10px]">
+                <h4 className="text-[10px] font-mono uppercase tracking-widest text-slate-400 border-b border-slate-800/40 pb-1.5 flex items-center justify-between">
+                  <span>Patient Intake Invites</span>
+                  <span className="text-[8px] text-accent-400 font-bold tracking-widest">SECURE PORTAL</span>
+                </h4>
+                <p className="text-[9px] text-slate-500 leading-normal uppercase">
+                  Generate organization-tied codes to invite de-identified patient subjects securely.
+                </p>
+
+                <button
+                  onClick={handleGeneratePatientInvite}
+                  className="w-full py-2 rounded bg-accent-500/10 hover:bg-accent-500/20 border border-accent-500/20 hover:border-accent-500/40 text-accent-400 font-mono uppercase text-[9px] font-bold tracking-widest transition-all"
+                >
+                  ➕ Generate Patient Invite Code
+                </button>
+
+                {activeInvites.length > 0 && (
+                  <div className="flex flex-col border border-slate-850 rounded max-h-32 overflow-y-auto custom-scrollbar divide-y divide-slate-850 bg-slate-950/30">
+                    {activeInvites.map((inv) => (
+                      <div key={inv.code} className="flex justify-between items-center p-2 text-[9px]">
+                        <span className="font-bold text-white tracking-widest select-all">{inv.code}</span>
+                        <button
+                          onClick={() => {
+                            if (typeof navigator !== "undefined") {
+                              navigator.clipboard.writeText(inv.code);
+                              alert(`Invite Code ${inv.code} copied to clipboard!`);
+                            }
+                          }}
+                          className="px-2 py-0.5 bg-slate-900 border border-slate-800 text-slate-400 hover:text-white rounded text-[8px] uppercase tracking-wider font-mono"
+                        >
+                          Copy
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Right panel: focus patient details card */}
@@ -1756,6 +1817,178 @@ export default function PatientsPage() {
         </div>
       )}
 
+    </div>
+  );
+}
+
+interface NoviceLitePortalProps {
+  name: string;
+  orgName: string;
+  signOut: () => void;
+}
+
+function NoviceLitePortal({ name, orgName, signOut }: NoviceLitePortalProps) {
+  const [arousal, setArousal] = useState(6);
+  const [dampening, setDampening] = useState(2);
+  const [selectedMolecule, setSelectedMolecule] = useState("zb");
+
+  const rValue = 0.85 * (arousal / 10) * (1.0 - (dampening / 10));
+
+  const getStatusDesc = (r: number) => {
+    if (r >= 0.6) return "⚡ Hyper-Synchronous: Dynamic high-coupling focus. Perfect for rapid cognitive welds.";
+    if (r >= 0.35) return "🟢 Optimal Coherence: Peak flexibility and homeostatic baseline active.";
+    return "⚠️ Dissociated state: High fatigue or stress rigidities locked.";
+  };
+
+  const molecules = {
+    zb: {
+      name: "ZenBud™ (ZB-01)",
+      class: "Novel Neuroplastogen",
+      desc: "An advanced compound targeting parasympathetic stabilization. Direct action on M1 muscarinic pathways calms the brain's alarm circuits and prompts long-term synaptic repair.",
+      cortexImpact: "Salience network hyper-alert drops by 45%. Myelination / synaptogenesis boosted by 35%."
+    },
+    sert: {
+      name: "Sertraline (SSRI)",
+      class: "Classic Antidepressant",
+      desc: "Inhibits serotonin reuptake, gradually strengthening frontoparietal control loops over 2-6 weeks to alleviate depressive rumination.",
+      cortexImpact: "Default-Mode Network hyperactivity reduced. Structural coherence restored."
+    }
+  };
+
+  const mol = molecules[selectedMolecule as keyof typeof molecules];
+
+  return (
+    <div className="flex-1 w-full bg-slate-950 flex flex-col font-sans relative overflow-hidden select-none p-4 md:p-6 lg:p-8">
+      {/* Visual background glows */}
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-cyan-500/5 rounded-full blur-[160px] pointer-events-none -translate-y-1/4 translate-x-1/4" />
+      <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-purple-500/5 rounded-full blur-[160px] pointer-events-none translate-y-1/4 -translate-x-1/4" />
+      <div className="absolute inset-0 grid-bg opacity-5 pointer-events-none" />
+
+      <div className="w-full max-w-4xl mx-auto flex-1 flex flex-col gap-6 relative z-10">
+        {/* Header bar */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+          <div>
+            <div className="text-[10px] font-mono uppercase tracking-widest text-cyan-400 mb-0.5 animate-pulse">
+              🎓 NOVICE EDUCATIONAL SANDBOX PORTAL
+            </div>
+            <h1 className="text-xl font-bold text-white flex items-center gap-2">
+              🧠 Connectome Sandbox Explorer
+              <span className="text-xs font-mono font-medium px-2 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-slate-400">
+                {orgName}
+              </span>
+            </h1>
+          </div>
+          <button 
+            onClick={signOut}
+            className="px-3 py-1 bg-slate-900 border border-slate-800 text-slate-400 hover:text-white rounded text-[10px] font-mono uppercase tracking-wider"
+          >
+            Sign Out
+          </button>
+        </div>
+
+        {/* Introduction */}
+        <div className="bg-slate-900/60 border border-slate-850 backdrop-blur-xl rounded-clinical p-4 font-mono text-[10.5px] leading-relaxed text-slate-300">
+          <p>
+            Welcome to the <strong>babelForge Sandbox Explorer</strong>, {name}! 
+            This portal is configured for novice practitioners to explore the fundamentals of brain coordinate engineering without requiring clinical credentials or invite codes. 
+            All clinical cohort registry tools are gated; explore the dynamic neuro-simulators below to understand how brain networks lock in harmony!
+          </p>
+        </div>
+
+        {/* Portal Core Split */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          
+          {/* Box 1: Simplified fMRI Phase Coherence Simulator */}
+          <div className="bg-slate-900/60 border border-slate-850 backdrop-blur-xl rounded-clinical p-5 flex flex-col gap-4">
+            <h3 className="text-xs font-mono uppercase tracking-widest text-slate-300 border-b border-slate-800 pb-2">
+              Default Mode Phase Coherence (R)
+            </h3>
+            
+            <div className="space-y-4 font-mono text-[10.5px]">
+              <div className="flex flex-col gap-1.5">
+                <div className="flex justify-between text-slate-400">
+                  <span>Brain Arousal Dial</span>
+                  <span className="text-white font-bold">{arousal} / 10</span>
+                </div>
+                <input 
+                  type="range" min="1" max="10" value={arousal} 
+                  onChange={(e) => setArousal(Number(e.target.value))}
+                  className="w-full accent-cyan-400 bg-slate-950 rounded-lg appearance-none cursor-pointer"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <div className="flex justify-between text-slate-400">
+                  <span>Brain Calmness Dial</span>
+                  <span className="text-white font-bold">{dampening} / 10</span>
+                </div>
+                <input 
+                  type="range" min="0" max="9" value={dampening} 
+                  onChange={(e) => setDampening(Number(e.target.value))}
+                  className="w-full accent-purple-400 bg-slate-950 rounded-lg appearance-none cursor-pointer"
+                />
+              </div>
+            </div>
+
+            {/* Scoreboard display */}
+            <div className="p-4 rounded-clinical bg-slate-950/60 border border-slate-850 flex flex-col gap-2 text-center mt-2 font-mono">
+              <span className="text-[9px] text-slate-500 uppercase tracking-widest">Calculated Coherence Score</span>
+              <span className="text-3xl font-bold text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.3)]">
+                {rValue.toFixed(4)}
+              </span>
+              <span className="text-[9.5px] text-slate-300 leading-normal mt-1">
+                {getStatusDesc(rValue)}
+              </span>
+            </div>
+          </div>
+
+          {/* Box 2: Simplified Regimen Explorer */}
+          <div className="bg-slate-900/60 border border-slate-850 backdrop-blur-xl rounded-clinical p-5 flex flex-col gap-4">
+            <h3 className="text-xs font-mono uppercase tracking-widest text-slate-300 border-b border-slate-800 pb-2">
+              Substance Action Directory
+            </h3>
+
+            <div className="flex gap-2 font-mono text-[9px]">
+              <button 
+                onClick={() => setSelectedMolecule("zb")}
+                className={`px-3 py-1.5 rounded transition ${selectedMolecule === "zb" ? "bg-accent-500/10 text-accent-400 border border-accent-500/20" : "bg-slate-950 border border-slate-850 text-slate-500"}`}
+              >
+                ZenBud™ (ZB-01)
+              </button>
+              <button 
+                onClick={() => setSelectedMolecule("sert")}
+                className={`px-3 py-1.5 rounded transition ${selectedMolecule === "sert" ? "bg-accent-500/10 text-accent-400 border border-accent-500/20" : "bg-slate-950 border border-slate-850 text-slate-500"}`}
+              >
+                Sertraline
+              </button>
+            </div>
+
+            <div className="p-4 rounded bg-slate-950/40 border border-slate-850 space-y-3 font-mono text-[10.5px]">
+              <div>
+                <span className="text-[8px] text-slate-500 uppercase block">Substance Name / Class</span>
+                <span className="text-white font-bold">{mol.name}</span>
+                <span className="ml-2 text-[9px] text-accent-400 font-bold px-1.5 py-0.5 rounded bg-accent-500/5 border border-accent-500/20">{mol.class}</span>
+              </div>
+              <div>
+                <span className="text-[8px] text-slate-500 uppercase block">Mechanism of Action</span>
+                <p className="text-slate-300 leading-normal mt-0.5">{mol.desc}</p>
+              </div>
+              <div className="pt-2 border-t border-slate-900">
+                <span className="text-[8px] text-emerald-400 uppercase block font-bold">Simulated Cortex Impact</span>
+                <p className="text-emerald-300 font-bold leading-normal mt-0.5">{mol.cortexImpact}</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Billing/Upgrade Info */}
+        <div className="p-4 rounded bg-rose-500/5 border border-rose-500/10 text-center font-mono text-[9px] uppercase tracking-wider text-slate-500 mt-4 leading-normal">
+          🔒 CLINICAL PATIENT COHORT INTAKE & COMPREHENSIVE RECEPTOR MATRIX BINDINGS GATED.<br />
+          <span className="text-rose-400/70">Requires executing a Business Associate Agreement (BAA) and a clinical workspace subscription.</span>
+        </div>
+
+      </div>
     </div>
   );
 }
