@@ -183,6 +183,7 @@ export function runDiagnosis(
   const hasDepression = states.includes("DEPRESSION");
   const hasPTSD = states.includes("PTSD");
   const hasAddiction = states.includes("ADDICTION") || states.includes("WITHDRAWAL_OPIOID");
+  const hasCRPS = states.includes("CRPS");
   
   if (hasDepression && hasCBT) {
     activeCorrections.push({
@@ -215,6 +216,24 @@ export function runDiagnosis(
         factor: activeCures.join(" + "),
         value: 50,
         description: "Connectome Correction: Actively returning receptor structures to baseline."
+      });
+    }
+  }
+
+  if (hasCRPS) {
+    const activeCures: string[] = [];
+    let value = 0;
+    if (activeMols.has("ketamine")) { activeCures.push("Ketamine"); value += 35; }
+    if (activeMols.has("clonidine")) { activeCures.push("Clonidine"); value += 30; }
+    if (hasBreathwork) { activeCures.push("Somatic Breathwork"); value += 15; }
+    if (activeMols.has("agmatine")) { activeCures.push("Agmatine Sulfate"); value += 10; }
+    
+    if (activeCures.length > 0) {
+      activeCorrections.push({
+        target: "SomatoMotor & Autonomic Pathways",
+        factor: activeCures.join(" + "),
+        value: Math.min(85, value),
+        description: "Central Sensitization & Sympathetic Blockade: Reducing S1 somatotopy blurring and down-regulating postganglionic tone."
       });
     }
   }

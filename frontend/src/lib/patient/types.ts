@@ -76,6 +76,7 @@ export interface ClinicalScales {
   ygtss?: number;  // 0..100  (Tourette tic severity)
   auditc?: number; // 0..12   (alcohol use)
   moca?: number;   // 0..30   (cognitive)
+  budapest?: number; // 0..17 (CRPS Budapest criteria checkboxes)
 }
 
 export const SCALE_BOUNDS: Record<keyof ClinicalScales, [number, number]> = {
@@ -86,6 +87,7 @@ export const SCALE_BOUNDS: Record<keyof ClinicalScales, [number, number]> = {
   ygtss:  [0, 100],
   auditc: [0, 12],
   moca:   [0, 30],
+  budapest: [0, 17],
 };
 
 export interface Pharmacogenomics {
@@ -176,6 +178,14 @@ export function gad7Band(v: number | undefined): string {
   if (v <= 9) return "Mild";
   if (v <= 14) return "Moderate";
   return "Severe";
+}
+
+export function budapestBand(v: number | undefined): string {
+  if (v === undefined) return "—";
+  if (v <= 4) return "Unlikely CRPS";
+  if (v <= 9) return "Mild CRPS Criteria Met";
+  if (v <= 13) return "Moderate CRPS";
+  return "Severe Refractory CRPS";
 }
 
 /**

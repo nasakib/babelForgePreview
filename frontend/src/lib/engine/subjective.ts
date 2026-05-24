@@ -56,6 +56,7 @@ export function translateSubjective(
   if (states.includes("ADDICTION")) focus -= 15;
   if (states.includes("WITHDRAWAL_OPIOID")) focus -= 30;
   if (states.includes("PTSD")) focus -= 10;
+  if (states.includes("CRPS")) focus -= 15;
   
   // Specific stimulant bonuses
   if (activeIds.has("modaf") || activeIds.has("armodaf")) focus += 18;
@@ -110,6 +111,7 @@ export function translateSubjective(
   valence -= states.includes("PTSD") ? 20 : 0;
   valence -= states.includes("WITHDRAWAL_OPIOID") ? 40 : 0;
   valence -= states.includes("ADDICTION") ? 10 : 0;
+  valence -= states.includes("CRPS") ? 25 : 0;
 
   valence += vectors.repair * 15; // neuroplasticity boosts valence long-term
   valence += vectors.arousal * 4;  // dopamine booster
@@ -132,6 +134,9 @@ export function translateSubjective(
   }
   if (psych.pcl5 !== undefined && psych.pcl5 >= 33) {
     valence -= 12; // PTSD hyper-vigilance burden
+  }
+  if (psych.budapest !== undefined && psych.budapest > 4) {
+    valence -= Math.min(25, Math.round(psych.budapest * 1.5)); // Budapest criteria chronic pain emotional burden
   }
   if (labs.vitD !== undefined && labs.vitD < 30) {
     valence -= 8; // sub-optimal vitamin D lowers baseline serotonin synthesis
@@ -182,6 +187,7 @@ export function translateSubjective(
   autonomic -= vectors.dampening * 20;
   if (states.includes("PTSD")) autonomic += 20;
   if (states.includes("WITHDRAWAL_OPIOID")) autonomic += 35;
+  if (states.includes("CRPS")) autonomic += 25;
   
   // Specific mitigators
   if (activeIds.has("clonidine")) autonomic -= 18;
@@ -219,6 +225,9 @@ export function translateSubjective(
   if (psych.pcl5 !== undefined && psych.pcl5 >= 38) {
     autonomic += 12;
   }
+  if (psych.budapest !== undefined && psych.budapest > 4) {
+    autonomic += Math.min(20, Math.round((psych.budapest - 4) * 1.5)); // Budapest criteria sympathetic activation
+  }
   if (lifestyle.caffeineMgPerDay !== undefined && lifestyle.caffeineMgPerDay > 400) {
     autonomic += 10; // caffeinism sympathetic shift
   }
@@ -249,6 +258,9 @@ export function translateSubjective(
   } else if (states.includes("PTSD") && autonomic > 68 && vectors.dampening < 0.4) {
     qualiaClass = "Hyper-Sensitized Amygdaloid Resonance";
     qualiaDescription = "Sensory integration centers exhibit pathological coupling to threat-detection sub-networks. Autonomic instability.";
+  } else if (states.includes("CRPS") && autonomic > 65 && vectors.dampening < 0.4) {
+    qualiaClass = "Allodynic Somatosensory Blurring";
+    qualiaDescription = "S1 somatotopy exhibiting localized receptive field blurring. Severe autonomic sympathetic hyperarousal locked with pain-entrained somatic circuits.";
   } else if (reportData.R > 0.85 && reportData.integrity > 85 && vectors.repair > 0.8 && vectors.chaos < 0.4) {
     qualiaClass = "Optimal Synaptic Integration (Flow State)";
     qualiaDescription = "Maximum entrainment of structural and functional connectome layers. Widened Arnold tongues with optimized neuroplastic growth.";
@@ -272,6 +284,12 @@ export function translateSubjective(
   if (autonomic < 28) tags.push("Soporific");
   if (autonomic >= 42 && autonomic <= 58) tags.push("Autonomic Balance");
   if (states.length > 0 && reportData.integrity < 40) tags.push("Connectome Decay");
+  if (states.includes("CRPS")) {
+    tags.push("Mechanical Allodynia");
+    tags.push("Somatotopy Blurring");
+    tags.push("Autonomic Storms");
+  }
+  if (psych.budapest !== undefined && psych.budapest >= 10) tags.push("Refractory Pain Lock");
   if (activeIds.has("sr17") || activeIds.has("nrg01")) tags.push("Active Repair Reversion");
   if (activeIds.has("spur01")) {
     tags.push("TrkB Agonism");
@@ -307,6 +325,9 @@ export function translateSubjective(
     if (states.includes("PTSD")) {
       narrative += "Limbic hyper-resonance hyper-sensitizes the autonomic nervous system, leading to sustained adrenergic over-firing and autonomic tension. ";
     }
+    if (states.includes("CRPS")) {
+      narrative += "The S1 somatotopic representation blurs, disrupting localized tactile-sensory complexes, while postganglionic autonomic dysregulation propagates vasoconstrictive or temperature storms across peripheral channels. ";
+    }
     if (states.includes("WITHDRAWAL_OPIOID") || states.includes("ADDICTION")) {
       narrative += "Dopaminergic and GABAergic receptor structures are heavily dysregulated due to chronic exogenous ligand exposure, resulting in structural edge-atrophy and reward pathway fragmentation. ";
     }
@@ -333,6 +354,9 @@ export function translateSubjective(
     }
     if (psych.gad7 !== undefined && psych.gad7 >= 12) {
       patientDetails.push(`An elevated GAD-7 score of ${psych.gad7} highlights active generalized anxiety, maintaining high phase noise and sensory hyper-sensitivity.`);
+    }
+    if (psych.budapest !== undefined && psych.budapest >= 5) {
+      patientDetails.push(`A validated Budapest Criteria score of ${psych.budapest} confirms active CRPS, reflecting profound hyper-sensitization of somatosensory pathways and autonomic postganglionic dysregulation.`);
     }
 
     // Labs & deficiencies analysis
@@ -410,6 +434,13 @@ export function translateSubjective(
     }
     if (hasClonidine && hasBreathwork) {
       narrative += "The autonomic rebalancing synergy of Clonidine and Somatic Breathwork actively suppresses hyper-adrenergic distress, re-entraining cardiac and limbic sympathetic tone. ";
+    }
+    const hasKetamine = activeIds.has("ketamine");
+    if (hasKetamine && hasClonidine) {
+      narrative += "Co-administration of Ketamine and Clonidine provides profound synergic relief; NMDA blockade quietens central sensory sensitization while alpha-2 adrenergic agonism directly breaks the sympathetic-sensory coupling loop. ";
+    }
+    if (hasKetamine && states.includes("CRPS")) {
+      narrative += "Active Ketamine NMDA antagonist infusions act to disconnect locked pain cliques, blocking dorsal horn wind-up and starting structural S1 unblurring. ";
     }
 
     // Lifestyle standard effects

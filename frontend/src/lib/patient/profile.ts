@@ -161,6 +161,8 @@ export interface PatientPsychometric {
   who5?: number;
   /** MoCA (0..30). */
   moca?: number;
+  /** Latest Budapest Criteria (CRPS) score (0..17). */
+  budapest?: number;
 }
 
 export interface IngestionHistoryLog {

@@ -67,7 +67,8 @@ function readAll(orgId: string): Patient[] {
               pcl5: 58,
               asrs: 6,
               ygtss: 0,
-              auditc: 2
+              auditc: 2,
+              budapest: 0
             },
             pgx: {
               cyp2d6: "extensive",

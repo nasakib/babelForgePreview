@@ -23,6 +23,7 @@ import {
   cypDoseMultiplier,
   phq9Band,
   gad7Band,
+  budapestBand,
   PATHOLOGY_LABELS,
   SCALE_BOUNDS,
   bmi,
@@ -101,6 +102,7 @@ export default function PatientsPage() {
   const [asrs, setAsrs] = useState<string>("");
   const [ygtss, setYgtss] = useState<string>("");
   const [auditc, setAuditc] = useState<string>("");
+  const [budapest, setBudapest] = useState<string>("");
 
   // Pharmacogenomics (PGx)
   const [cyp2d6, setCyp2d6] = useState<CypPhenotype>("unknown");
@@ -330,6 +332,21 @@ export default function PatientsPage() {
                           </div>
                         </div>
                       </div>
+
+                      {patientData.scales.budapest !== undefined && (
+                        <div className="p-3 rounded bg-slate-950/40 border border-slate-850 flex flex-col gap-1">
+                          <div className="flex items-center justify-between text-[9px]">
+                            <span className="text-slate-500">BUDAPEST CRITERIA (CRPS)</span>
+                            <span className="text-cyan-400 font-bold">{budapestBand(patientData.scales.budapest)}</span>
+                          </div>
+                          <div className="flex items-baseline justify-between mt-1">
+                            <span className="text-lg font-bold text-white">{patientData.scales.budapest} / 17</span>
+                            <div className="w-24 h-1.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+                              <div className="h-full bg-cyan-500" style={{ width: `${((patientData.scales.budapest || 0)/17)*100}%` }} />
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -422,6 +439,7 @@ export default function PatientsPage() {
     setAsrs("");
     setYgtss("");
     setAuditc("");
+    setBudapest("");
     setCyp2d6("unknown");
     setCyp2c19("unknown");
     setCyp3a4("unknown");
@@ -485,6 +503,7 @@ export default function PatientsPage() {
     setAsrs(p.scales.asrs !== undefined ? String(p.scales.asrs) : "");
     setYgtss(p.scales.ygtss !== undefined ? String(p.scales.ygtss) : "");
     setAuditc(p.scales.auditc !== undefined ? String(p.scales.auditc) : "");
+    setBudapest(p.scales.budapest !== undefined ? String(p.scales.budapest) : "");
 
     // PGx
     setCyp2d6(p.pgx.cyp2d6 || "unknown");
@@ -558,6 +577,7 @@ export default function PatientsPage() {
       ygtss: parseScaleVal(ygtss, ...SCALE_BOUNDS.ygtss),
       auditc: parseScaleVal(auditc, ...SCALE_BOUNDS.auditc),
       moca: parseScaleVal(moca, ...SCALE_BOUNDS.moca),
+      budapest: parseScaleVal(budapest, ...SCALE_BOUNDS.budapest),
     };
 
     // Build pathologies list
@@ -1091,6 +1111,15 @@ export default function PatientsPage() {
                             <span className="text-[8px] text-slate-500 uppercase">PTSD scale</span>
                           </div>
                         </div>
+                        {active.scales.budapest !== undefined && (
+                          <div className="p-2.5 rounded bg-slate-950/40 border border-slate-850 flex flex-col justify-between">
+                            <span className="text-[9px] text-slate-500 uppercase">Budapest Criteria</span>
+                            <div className="flex items-baseline justify-between mt-1">
+                              <span className="text-sm font-bold text-white">{active.scales.budapest}</span>
+                              <span className="text-[8px] text-cyan-400 font-sans">{budapestBand(active.scales.budapest)}</span>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -1709,6 +1738,24 @@ export default function PatientsPage() {
                         value={auditc}
                         onChange={(e) => setAuditc(e.target.value)}
                         placeholder="AUDIT-C"
+                        className="input-clinical w-full text-white bg-slate-950 border border-slate-800 text-xs px-2 py-1 mt-1"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-1.5 p-2.5 rounded bg-slate-950/40 border border-slate-850">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[9px] uppercase tracking-wider text-slate-400">Budapest Criteria Score (0-17)</label>
+                        <span className="text-[8px] text-slate-500 font-sans">{budapestBand(budapest ? parseInt(budapest, 10) : undefined)}</span>
+                      </div>
+                      <input
+                        type="number"
+                        min={0}
+                        max={17}
+                        value={budapest}
+                        onChange={(e) => setBudapest(e.target.value)}
+                        placeholder="Budapest Score"
                         className="input-clinical w-full text-white bg-slate-950 border border-slate-800 text-xs px-2 py-1 mt-1"
                       />
                     </div>

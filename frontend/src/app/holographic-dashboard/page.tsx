@@ -847,8 +847,8 @@ export default function HolographicDashboard() {
                     onChange={(e) => setSelectedSubjectLabel(Number(e.target.value) as 0 | 1)}
                     className="bg-surface-50 border border-line rounded px-1 text-[9.5px] text-ink font-semibold"
                   >
-                    <option value={1}>PTSD resistant (1)</option>
-                    <option value={0}>PTSD responsive (0)</option>
+                    <option value={1}>Pathology Resistant (1)</option>
+                    <option value={0}>Pathology Responsive (0)</option>
                   </select>
                 </div>
               </div>
