@@ -1,0 +1,15 @@
+# Firebase App Hosting configuration file
+# See documentation: https://firebase.google.com/docs/app-hosting
+
+headers:
+  - glob: "**/*.{js,css,png,jpg,jpeg,gif,svg,ico}"
+    headers:
+      - key: Cache-Control
+        value: "public, max-age=31536000, immutable"
+
+settings:
+  nodeVersion: 20
+
+env:
+  - variable: NEXT_PUBLIC_API_URL
+    value: "https://babelforge-backend-6zvkkshyoq-uc.a.run.app"

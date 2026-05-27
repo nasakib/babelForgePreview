@@ -16,12 +16,13 @@ const NAV_ITEMS: { href: string; label: string; code: string }[] = [
   { href: '/anomaly-scan',      label: 'Anomaly Scan',    code: 'F7' },
   { href: '/11d-projection',    label: '11D Topology',    code: 'F8' },
   { href: '/pharma-projection', label: 'Pharma Projection',code: 'F9'},
-  { href: '/studies',           label: 'Validation',      code: 'F10' },
-  { href: '/fourier',           label: 'Fourier',         code: 'F11' },
-  { href: '/procedures',        label: 'Procedures',      code: 'F12' },
-  { href: '/resources',         label: 'Resources',       code: 'F13' },
-  { href: '/experience-simulator', label: 'Reaction Sim', code: 'F14' },
-  { href: '/patients',           label: 'Patients',       code: 'F15' },
+  { href: '/bio-monitor',        label: 'Bio Monitor',     code: 'F10' },
+  { href: '/studies',           label: 'Validation',      code: 'F11' },
+  { href: '/fourier',           label: 'Fourier',         code: 'F12' },
+  { href: '/procedures',        label: 'Procedures',      code: 'F13' },
+  { href: '/resources',         label: 'Resources',       code: 'F14' },
+  { href: '/experience-simulator', label: 'Reaction Sim', code: 'F15' },
+  { href: '/patients',           label: 'Patients',       code: 'F16' },
 ];
 
 export default function Navbar() {
