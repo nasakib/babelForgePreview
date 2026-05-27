@@ -1,5 +1,6 @@
 # Firebase App Hosting configuration file
 # See documentation: https://firebase.google.com/docs/app-hosting
+# Deploy retry trigger: 2026-05-27T17:14:00Z
 
 headers:
   - glob: "**/*.{js,css,png,jpg,jpeg,gif,svg,ico}"
