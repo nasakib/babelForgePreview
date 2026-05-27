@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+// @ts-ignore
 import { Rnd } from "react-rnd";
 import { useWindowContext } from "@/context/WindowContext";
 import ExplanationOverlay from "@/components/clinical/ExplanationOverlay";
@@ -184,10 +185,10 @@ export default function DraggablePanel({
         height: win.minimized ? 50 : win.height,
       }}
       position={{ x: win.x, y: win.y }}
-      onDragStop={(e, d) => {
+      onDragStop={(e: any, d: any) => {
         updateWindow(id, { x: d.x, y: d.y });
       }}
-      onResizeStop={(e, direction, ref, delta, position) => {
+      onResizeStop={(e: any, direction: any, ref: any, delta: any, position: any) => {
         updateWindow(id, {
           width: ref.style.width,
           height: ref.style.height,

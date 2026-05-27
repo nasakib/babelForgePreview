@@ -275,6 +275,42 @@ Based on Yunnan ethnopharmacological records and your active simulation settings
 
 ${stackTxt} ${pathTxt}`;
   }
+  // 1.5 Handle Biological Lentiviral & Conformational Kinetics
+  else if (
+    lower.includes("biology") || 
+    lower.includes("virus") || 
+    lower.includes("lentivir") || 
+    lower.includes("conformation") || 
+    lower.includes("ph") || 
+    lower.includes("monitor") || 
+    lower.includes("mutagenesis") || 
+    lower.includes("loop")
+  ) {
+    response += `### [Local Engine] Lentiviral Integration & Conformational Kinetics Telemetry
+This computational model expands the Spatio-Temporal Graph Neural Network (ST-GNN) engine to simulate retroviral insertion and dynamic ligand kinetics under environmental logic gates.
+
+#### 🧬 MODEL 1: LENTIVIRAL INTEGRATION & NODE-SPLITTING
+* **Integration Vector:** Emulates an HIV-like delivery mechanism invadin target host assemblies. Rather than standard edge insertion, it executes a **somatic node-splitting operation**—dividing a target node in 3D, displacing the daughter node by $\epsilon = 3.0$ units, and placing a glowing viral vector node between them with fresh integration edges.
+* **Cellular Clearance:** Higher clearance velocities simulate cellular immune responses that successfully prune active viral vectors and rewire target loops.
+
+#### ⚠️ MODEL 2: INSERTIONAL MUTAGENESIS LOOP-RISK
+* **Feedback Cycle Disruption:** Tracks high-dimensional closed feedback loops (3-simplices and 4-simplices) acting as homeostasis or tumor-suppressor gene analogs.
+* **Shannon Loop Entropy:** Evaluates loop participation distribution across nodes:
+  $$H = -\sum p_i \log_2(p_i)$$
+  Disruptions and random insertions lower system entropy, indicating localized cycle bottlenecks.
+* **Oncological Risk Index:** Combines the ratio of broken baseline loops with Shannon entropy decay to compute a real-time risk metric.
+
+#### 🧪 MODEL 3: CONFORMATIONAL LOGIC GATES
+* **Environmental Trigger Gate:** Evaluates local variables as a binary logic gate:
+  $$\text{IF } \text{pH} < 6.5 \quad \text{AND} \quad \text{clique\_density} > 0.25 \rightarrow \text{Transition to State B}$$
+  State B (active conformation) exposes molecular binders, instantly magnifying outgoing directed edge coupling weights by up to 8.0x.
+
+#### 💾 MODEL 4: PINECONE & FIRESTORE DATA LAKE SYNC
+* **Dense State Vector (128-D):** Synthesizes degree distributions, loop entropy, coordinates barycenters, and Kuramoto harmonic wave frequencies into a dense 128-element float array for similarity search indexing.
+* **Firestore Schema:** Catalogs parameters (mutation rates, clearance, affinity) in Firestore collections for cohort tracking.
+
+${stackTxt}`;
+  }
   // 2. Handle integrity / scores / topological metrics
   else if (lower.includes("integrity") || lower.includes("score") || lower.includes("phi") || lower.includes("coherence")) {
     response += `### [Local Engine] Topological Integrity (Φ) & Coherence Analysis
