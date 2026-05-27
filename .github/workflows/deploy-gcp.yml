@@ -16,6 +16,7 @@ env:
   BACKEND_SERVICE: babelforge-backend
   REPO_NAME: babelforge-backend-repo
   FRONTEND_BUCKET: babelforge-frontend-prod
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   build-and-deploy-backend:
