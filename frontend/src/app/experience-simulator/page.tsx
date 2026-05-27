@@ -62,6 +62,7 @@ export default function ExperienceSimulator() {
     } catch (err) {
       console.error("Dynamic simulation update failed:", err);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [elapsedHrs, activePathologies, profile, hydrated, startingAge]);
 
   const handleSimulate = async () => {

@@ -75,7 +75,7 @@ export default function StackSimulator() {
     } finally {
       setHydrated(true);
     }
-  }, []);
+  }, [setStartingAge]);
 
   useEffect(() => {
     if (!hydrated) return;
