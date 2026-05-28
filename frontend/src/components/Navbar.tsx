@@ -26,6 +26,29 @@ const NAV_ITEMS: { href: string; label: string; code: string }[] = [
   { href: '/patients',           label: 'Patients',       code: 'F16' },
 ];
 
+const PRIMARY_NAV_ITEMS = [
+  { href: '/',                  label: 'Console',         code: 'F1' },
+  { href: '/holographic-dashboard', label: 'Holographic DB', code: 'F2' },
+  { href: '/stack-simulator',   label: 'Stack Builder',   code: 'F3' },
+  { href: '/compounds',         label: 'Compound Library',code: 'F4' },
+  { href: '/anomaly-scan',      label: 'Anomaly Scan',    code: 'F7' },
+  { href: '/council',           label: 'Clinical Council',code: 'F17' },
+  { href: '/bio-monitor',        label: 'Bio Monitor',     code: 'F10' },
+];
+
+const MORE_NAV_ITEMS = [
+  { href: '/signal-analyzer',   label: 'Signal Analyzer', code: 'F5' },
+  { href: '/fmri-analysis',     label: 'fMRI Ingest',     code: 'F6' },
+  { href: '/11d-projection',    label: '11D Topology',    code: 'F8' },
+  { href: '/pharma-projection', label: 'Pharma Projection',code: 'F9'},
+  { href: '/studies',           label: 'Validation',      code: 'F11' },
+  { href: '/fourier',           label: 'Fourier',         code: 'F12' },
+  { href: '/procedures',        label: 'Procedures',      code: 'F13' },
+  { href: '/resources',         label: 'Resources',       code: 'F14' },
+  { href: '/experience-simulator', label: 'Reaction Sim', code: 'F15' },
+  { href: '/patients',           label: 'Patients',       code: 'F16' },
+];
+
 export default function Navbar() {
   const [methodOpen, setMethodOpen] = useState(false);
   const [tutorialOpen, setTutorialOpen] = useState(false);
@@ -38,6 +61,9 @@ export default function Navbar() {
   const { session, signOut } = useAuth();
   const { updateWindow, bringToFront } = useWindowContext();
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+
+  const isMoreActive = MORE_NAV_ITEMS.some((item) => isActive(item.href));
 
   useEffect(() => {
     const start = Date.now();
@@ -90,7 +116,7 @@ export default function Navbar() {
 
           {/* Primary nav */}
           <div className="hidden xl:flex items-center gap-0 h-full">
-            {NAV_ITEMS.map((item) => (
+            {PRIMARY_NAV_ITEMS.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
@@ -106,6 +132,46 @@ export default function Navbar() {
                 {item.label}
               </Link>
             ))}
+
+            {/* More Tools Dropdown */}
+            <div
+              className="relative h-full flex items-center border-r border-line/60"
+              onMouseEnter={() => setMoreMenuOpen(true)}
+              onMouseLeave={() => setMoreMenuOpen(false)}
+            >
+              <button
+                className={`h-full flex items-center px-3 text-[10px] uppercase tracking-widest2 transition-colors focus:outline-none ${
+                  isMoreActive
+                    ? 'text-accent-400 bg-accent-500/5 font-bold'
+                    : 'text-ink-muted hover:text-ink hover:bg-surface-50'
+                }`}
+              >
+                {isMoreActive && (
+                  <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-accent-500 shadow-[0_0_8px_rgba(31,109,255,0.8)]" />
+                )}
+                More Tools <span className="text-[7px] ml-1.5 opacity-60">▼</span>
+              </button>
+
+              {moreMenuOpen && (
+                <div className="absolute top-full left-0 w-44 rounded-b-clinical bg-surface-0 border-x border-b border-line shadow-2xl z-50 flex flex-col p-1 animate-fade-in divide-y divide-line/20">
+                  {MORE_NAV_ITEMS.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setMoreMenuOpen(false)}
+                      className={`px-3.5 py-2 text-[9px] uppercase tracking-widest2 rounded-sm transition-colors text-left ${
+                        isActive(item.href)
+                          ? 'text-accent-400 bg-accent-500/10 font-bold'
+                          : 'text-ink-subtle hover:text-ink hover:bg-surface-50'
+                      }`}
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <div className="flex items-center ml-2 border-l border-line/60 pl-2 gap-2 relative">
               <button
                 onClick={() => setTutorialOpen(true)}
