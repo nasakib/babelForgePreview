@@ -14,6 +14,7 @@ const NAV_ITEMS: { href: string; label: string; code: string }[] = [
   { href: '/signal-analyzer',   label: 'Signal Analyzer', code: 'F5' },
   { href: '/fmri-analysis',     label: 'fMRI Ingest',     code: 'F6' },
   { href: '/anomaly-scan',      label: 'Anomaly Scan',    code: 'F7' },
+  { href: '/council',           label: 'Clinical Council',code: 'F17' },
   { href: '/11d-projection',    label: '11D Topology',    code: 'F8' },
   { href: '/pharma-projection', label: 'Pharma Projection',code: 'F9'},
   { href: '/bio-monitor',        label: 'Bio Monitor',     code: 'F10' },
