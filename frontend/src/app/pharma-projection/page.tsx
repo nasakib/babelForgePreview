@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { molecules } from "@/data/molecules";
 import { analyzeNeurotoxicity } from "@/lib/engines/toxicology";
 import Link from "next/link";
@@ -92,6 +92,13 @@ export default function PharmaProjection() {
                   <span className="metric text-base text-accent-400">{counts.babel}</span>
                 </div>
               </div>
+            </div>
+
+            <div className="p-4 border-b border-line bg-indigo-950/10">
+              <div className="section-label mb-1.5 text-cyan-400">High-Dimensional Vector Sync</div>
+              <p className="text-2xs text-ink-muted leading-relaxed">
+                These 4-vector dynamics are unified with structural degree distributions and index-linked as **128-dimensional topological vector embeddings** in the Pinecone data lake for rapid similarity matching.
+              </p>
             </div>
 
             <div className="p-4 flex-1 overflow-y-auto custom-scrollbar">

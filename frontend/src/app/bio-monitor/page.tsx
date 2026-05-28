@@ -175,6 +175,11 @@ export default function BioMonitorPage() {
     };
   }, [activeTopology, baselineLoops]);
 
+  // 3b. Real-time Console Telemetry Output (enabled by default)
+  useEffect(() => {
+    console.log(`[ST-GNN Telemetry] Nodes: ${activeTopology.N} | Edges: ${activeTopology.edges.length} | Entropy: ${stats.loopEntropy.toFixed(3)} bits | Risk: ${stats.mutagenesisRisk.toFixed(1)}% | Conformation B: ${stats.stateBPercentage}% | Coherence: ${stats.coherence}`);
+  }, [activeTopology, stats]);
+
   // ---------------------------------------------------------------------------
   // 4. 3D SVG Orthographic Interactive Renderer States
   // ---------------------------------------------------------------------------
