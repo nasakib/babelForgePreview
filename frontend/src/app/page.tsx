@@ -28,6 +28,7 @@ import NodeFilterPanel from "@/components/palantir/NodeFilterPanel";
 import SEEResultsPanel from "@/components/palantir/SEEResultsPanel";
 import { evaluateSubstanceToxicity, analyzeNeurotoxicity, type ProTox3Profile } from "@/lib/engines/toxicology";
 import { citationUrl } from "@/lib/wisdom/select";
+import { computeTherapyProjection } from "@/lib/engine/therapy";
 
 const VIEW_MODES = [
   { id: "topology", label: "Topology", desc: "Region tint · amplitude pulse" },
@@ -58,6 +59,7 @@ export default function ConsolePage() {
 
   const [selectedCompoundId, setSelectedCompoundId] = useState<string | null>(null);
   const [expandedPathology, setExpandedPathology] = useState<Pathology | null>(null);
+  const [cdsTab, setCdsTab] = useState<"baseline" | "conventional" | "experimental" | "trajectory">("baseline");
 
   const selectedCompound = useMemo(() => {
     if (!selectedCompoundId) return null;
@@ -155,6 +157,14 @@ export default function ConsolePage() {
   const [computing, setComputing] = useState(false);
   const [log, setLog] = useState<string[]>([]);
   const [liveR, setLiveR] = useState<number | null>(null);
+
+  const therapyProjection = useMemo(() => {
+    return computeTherapyProjection(
+      activePathologies as Pathology[],
+      activeStack.length,
+      report?.integrity ?? 100
+    );
+  }, [activePathologies, activeStack.length, report?.integrity]);
 
   useEffect(() => {
     setCurrentModule("dashboard");
@@ -560,6 +570,231 @@ export default function ConsolePage() {
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* TOPOLOGICAL CLINICAL DECISION SUPPORT (CDS) */}
+        {report && (
+          <div className="p-4 border-b border-line space-y-4 bg-surface-0/60 backdrop-blur-md">
+            <div className="flex items-center justify-between">
+              <div className="section-label">Topological Decision Support (CDS)</div>
+              <span className="text-[9px] font-mono bg-indigo-500/25 border border-indigo-500/40 text-indigo-300 px-1.5 py-0.5 rounded font-bold uppercase">
+                4D State-Space Engine
+              </span>
+            </div>
+
+            {/* Tab Selectors */}
+            <div className="flex border border-line rounded bg-slate-950 p-0.5">
+              {(["baseline", "conventional", "experimental", "trajectory"] as const).map((tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => setCdsTab(tab)}
+                  className={`flex-1 text-center py-1 rounded text-[9.5px] font-mono uppercase tracking-wider transition-all ${
+                    cdsTab === tab
+                      ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-bold"
+                      : "text-ink-muted hover:text-ink"
+                  }`}
+                >
+                  {tab === "baseline" ? "Baseline" : tab === "conventional" ? "Conv" : tab === "experimental" ? "Exper" : "Traj"}
+                </button>
+              ))}
+            </div>
+
+            {/* Tab Contents */}
+            <div className="space-y-3">
+              {cdsTab === "baseline" && (
+                <div className="space-y-2 animate-fade-in">
+                  <div className="text-[10px] font-bold text-ink-muted uppercase tracking-widest font-mono">
+                    Rigid Network Cliques & Cavities
+                  </div>
+                  <div className="space-y-1.5">
+                    {therapyProjection.baselineCliques.map((c, idx) => (
+                      <div
+                        key={idx}
+                        className="p-2.5 rounded border border-crit/20 bg-crit/5 text-[11px] leading-relaxed text-ink-subtle flex gap-2 items-start"
+                      >
+                        <span className="status-dot crit mt-1.5 flex-shrink-0" />
+                        <span>{c}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {cdsTab === "conventional" && (
+                <div className="space-y-2.5 animate-fade-in">
+                  <div>
+                    <div className="text-[10px] font-bold text-ink-muted uppercase tracking-widest font-mono">
+                      Conventional Pathway
+                    </div>
+                    <div className="text-[12.5px] font-bold text-white mt-1">
+                      {therapyProjection.conventional.name}
+                    </div>
+                    <div className="text-[10.5px] text-ink-muted mt-0.5">
+                      {therapyProjection.conventional.clinicalEfficacy}
+                    </div>
+                  </div>
+
+                  <div className="p-2.5 rounded bg-slate-950/60 border border-line space-y-2">
+                    <div className="flex justify-between text-[10.5px] font-mono">
+                      <span className="text-ink-muted">Target Nodes:</span>
+                      <span className="text-indigo-400 font-bold">
+                        {therapyProjection.conventional.targetNodes.join(", ")}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-[10.5px] font-mono">
+                      <span className="text-ink-muted">Cliques Disrupted:</span>
+                      <span className="text-emerald-400 font-bold">
+                        {therapyProjection.conventional.metrics.cliquesDisrupted}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-[10.5px] font-mono">
+                      <span className="text-ink-muted">Coupling Shift:</span>
+                      <span className="text-amber-400 font-bold">
+                        {therapyProjection.conventional.metrics.couplingShift}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* vmPFC-Amygdala delta correlation progress */}
+                  <div className="space-y-1 bg-slate-950/40 p-2.5 rounded border border-line/50">
+                    <div className="flex justify-between text-[10.5px] font-mono">
+                      <span className="text-ink-muted">vmPFC-Amygdala Correlation:</span>
+                      <span className="text-emerald-400 font-bold">
+                        Δr = +{therapyProjection.conventional.metrics.deltaR.toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="w-full bg-slate-900 rounded-full h-1 border border-line/30">
+                      <div
+                        className="bg-emerald-500 h-full rounded-full"
+                        style={{ width: `${therapyProjection.conventional.metrics.deltaR * 100}%` }}
+                      />
+                    </div>
+                    <p className="text-[9.5px] text-ink-muted leading-tight mt-1 font-sans">
+                      {therapyProjection.conventional.expectedTopologicalShift}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {cdsTab === "experimental" && (
+                <div className="space-y-2.5 animate-fade-in">
+                  <div>
+                    <div className="text-[10px] font-bold text-ink-muted uppercase tracking-widest font-mono">
+                      Experimental Pathway (Held to Identical Rigor)
+                    </div>
+                    <div className="text-[12.5px] font-bold text-white mt-1">
+                      {therapyProjection.experimental.name}
+                    </div>
+                  </div>
+
+                  {/* Coordinates & E-field constraints */}
+                  <div className="p-2.5 rounded bg-indigo-950/20 border border-indigo-500/20 space-y-1.5">
+                    <div className="text-[9.5px] font-bold uppercase tracking-wider text-indigo-400 font-mono">
+                      Target Stereotaxic Coordinates
+                    </div>
+                    <div className="text-[11px] font-semibold text-white font-mono bg-indigo-500/10 p-1.5 rounded border border-indigo-500/25">
+                      {therapyProjection.experimental.stereotaxicCoordinates}
+                    </div>
+                    <p className="text-[9.5px] text-indigo-300/80 leading-normal italic">
+                      {therapyProjection.experimental.biophysicalConstraints}
+                    </p>
+                  </div>
+
+                  {/* High precision topological metrics */}
+                  <div className="space-y-1.5">
+                    <div className="text-[10px] font-bold text-ink-muted uppercase tracking-widest font-mono">
+                      Topological State-Space Metrics
+                    </div>
+                    <div className="space-y-1 text-[11px] font-mono bg-slate-950 p-2 rounded border border-line/60">
+                      <div className="flex flex-col border-b border-line/40 pb-1">
+                        <span className="text-[9px] uppercase text-ink-muted font-bold">Node Centrality Shift</span>
+                        <span className="text-white leading-normal mt-0.5">
+                          {therapyProjection.experimental.topologicalMetrics.nodeCentrality}
+                        </span>
+                      </div>
+                      <div className="flex flex-col border-b border-line/40 py-1">
+                        <span className="text-[9px] uppercase text-ink-muted font-bold">Mean Path Length</span>
+                        <span className="text-white leading-normal mt-0.5">
+                          {therapyProjection.experimental.topologicalMetrics.meanPathLength}
+                        </span>
+                      </div>
+                      <div className="flex flex-col pt-1">
+                        <span className="text-[9px] uppercase text-ink-muted font-bold">Homological Persistence</span>
+                        <span className="text-white leading-normal mt-0.5">
+                          {therapyProjection.experimental.topologicalMetrics.homologicalPersistence}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {cdsTab === "trajectory" && (
+                <div className="space-y-3 animate-fade-in">
+                  <div className="flex justify-between items-baseline">
+                    <div>
+                      <div className="text-[10px] font-bold text-ink-muted uppercase tracking-widest font-mono">
+                        Trajectory Projection
+                      </div>
+                      <div className={`text-[12px] font-bold mt-0.5 ${therapyProjection.trajectory.projectedDistance < 5 ? "text-emerald-400" : "text-amber-400"}`}>
+                        {therapyProjection.trajectory.status}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[9px] text-ink-muted uppercase font-bold block">Rate / Mo</span>
+                      <span className="text-[12.5px] font-mono font-bold text-indigo-400">
+                        +{therapyProjection.trajectory.convergenceRate}%
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Trajectory simulation steps list */}
+                  <div className="p-3 rounded bg-slate-950 border border-line space-y-2.5">
+                    <span className="text-[9.5px] font-bold uppercase tracking-widest text-ink-muted font-mono block">
+                      Topological Distance to Remission
+                    </span>
+                    <div className="space-y-2">
+                      {therapyProjection.trajectory.steps.map((step) => (
+                        <div key={step.month} className="space-y-1">
+                          <div className="flex justify-between text-[10px] font-mono">
+                            <span className="text-white font-medium">Month {step.month}</span>
+                            <span className="text-ink-muted">
+                              Dist: <span className="text-indigo-400 font-bold">{step.distanceToRemission}%</span> • Φ: <span className="text-emerald-400 font-bold">{step.integrity}</span>
+                            </span>
+                          </div>
+                          <div className="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden border border-line/30 flex">
+                            <div
+                              className="bg-indigo-500 h-full rounded-full transition-all"
+                              style={{ width: `${100 - step.distanceToRemission}%` }}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Comorbid Alert */}
+                  {therapyProjection.trajectory.isHighVariance && (
+                    <div className="border border-warn/30 bg-warn/[0.05] rounded-clinical p-2.5 space-y-1">
+                      <div className="flex items-center gap-1.5 text-[10.5px] font-bold text-warn font-mono uppercase tracking-wider">
+                        <span className="status-dot warn flex-shrink-0" />
+                        <span>High Variance Projection</span>
+                      </div>
+                      <p className="text-[10px] text-ink-subtle leading-normal">
+                        Comorbid conditions detected. To achieve exact validation and eliminate trajectory variance, output the following missing parameters:
+                      </p>
+                      <ul className="list-disc list-inside text-[9.5px] text-warn/80 font-mono space-y-0.5 mt-1">
+                        {therapyProjection.trajectory.missingValidationMetrics.map((m, idx) => (
+                          <li key={idx}>{m}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
