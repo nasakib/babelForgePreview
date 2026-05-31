@@ -39,6 +39,16 @@ export default function ProjectionEngine({ moleculeId, vectors }: ProjectionEngi
   const eegRef = useRef<HTMLCanvasElement | null>(null);
   const kuramotoStateRef = useRef<KuramotoState | null>(null);
   const historyRef = useRef<number[]>([]);
+  const frameCountRef = useRef<number>(0);
+  const [kinematics, setKinematics] = useState({
+    velocity: 0,
+    acceleration: 0,
+    entropy: 0,
+    momentum: 0,
+    lambda: 0,
+    dimension: 0,
+    narrative: "Awaiting simulator ignition..."
+  });
 
   // Find the selected molecule configuration
   const selectedMol = useMemo(() => molecules.find(m => m.id === moleculeId), [moleculeId]);
@@ -336,6 +346,8 @@ export default function ProjectionEngine({ moleculeId, vectors }: ProjectionEngi
     const eegCtx = eegCanvas.getContext("2d");
     if (!ctx || !eegCtx) return;
 
+    const K = effectiveCoupling(vectors);
+    const noise = effectiveNoise(vectors);
     const topo = getBaselineTopology();
     let frameId: number;
 
@@ -351,6 +363,65 @@ export default function ProjectionEngine({ moleculeId, vectors }: ProjectionEngi
         historyRef.current.push(kuramotoStateRef.current.R);
         if (historyRef.current.length > 100) {
           historyRef.current.shift();
+        }
+
+        // Connectome Phase-Space Kinematics Engine calculations (throttled to 15 frames)
+        frameCountRef.current++;
+        if (frameCountRef.current % 15 === 0) {
+          const history = historyRef.current;
+          const len = history.length;
+          
+          const rCurrent = kuramotoStateRef.current.R;
+          const rPrev = len > 1 ? history[len - 2] : rCurrent;
+          const velocity = rCurrent - rPrev;
+          
+          const rPrev2 = len > 2 ? history[len - 3] : rPrev;
+          const prevVelocity = rPrev - rPrev2;
+          const acceleration = velocity - prevVelocity;
+          
+          const binCount = 8;
+          const bins = new Array(binCount).fill(0);
+          for (let i = 0; i < kuramotoStateRef.current.N; i++) {
+            const angle = ((kuramotoStateRef.current.theta[i] % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+            const binIdx = Math.min(binCount - 1, Math.floor(angle / (Math.PI / 4)));
+            bins[binIdx]++;
+          }
+          let entropy = 0;
+          for (let i = 0; i < binCount; i++) {
+            if (bins[i] > 0) {
+              const p = bins[i] / kuramotoStateRef.current.N;
+              entropy -= p * Math.log(p);
+            }
+          }
+          const normEntropy = entropy / Math.log(binCount);
+          const momentum = K * velocity * 2.5;
+          const lambda = K / (noise + 0.05);
+          const dimension = 1.0 + (noise * 2.0) / (K + 0.2);
+          
+          let narrative = "";
+          if (vectors.dampening > 1.8) {
+            narrative = "Global amplitude collapse. Trajectory captured by a stable fixed-point node attractor.";
+          } else if (normEntropy > 0.75) {
+            narrative = `High-dimensional phase diffusion. Connectome exhibiting high-entropy topological chaos (Df ≈ ${dimension.toFixed(2)}).`;
+          } else if (kuramotoStateRef.current.R > 0.75) {
+            narrative = `Phase-locking lock-in. System converged into a rigid, low-degree limit-cycle orbital attractor (R ≈ ${kuramotoStateRef.current.R.toFixed(3)}).`;
+          } else if (Math.abs(velocity) < 0.005) {
+            narrative = "Homeostatic phase equilibrium. Connectome orbits stabilized within safe limit-cycle boundaries.";
+          } else if (velocity > 0.005) {
+            narrative = "Accelerating synchronization trajectory. Arnold tongue boundaries expanding under structural coupling.";
+          } else {
+            narrative = "Phase dissipation drift. System undergoing structural connectome relaxation toward baseline.";
+          }
+          
+          setKinematics({
+            velocity,
+            acceleration,
+            entropy: normEntropy,
+            momentum,
+            lambda,
+            dimension,
+            narrative
+          });
         }
       }
 
@@ -406,6 +477,19 @@ export default function ProjectionEngine({ moleculeId, vectors }: ProjectionEngi
               ctx.moveTo(nodeCoords[i].x, nodeCoords[i].y);
               ctx.lineTo(nodeCoords[j].x, nodeCoords[j].y);
               ctx.stroke();
+
+              // Action potential pulse wavefront animation
+              if (isSimulating) {
+                const t = Date.now() * 0.002 * (1 + vectors.arousal * 0.5); // speed scaled by arousal
+                const pulseProgress = (t + i * 0.4) % 1.0;
+                const px = nodeCoords[i].x + (nodeCoords[j].x - nodeCoords[i].x) * pulseProgress;
+                const py = nodeCoords[i].y + (nodeCoords[j].y - nodeCoords[i].y) * pulseProgress;
+                
+                ctx.fillStyle = `rgba(192, 132, 252, ${coherence * 0.6})`; // glow matching phase lock
+                ctx.beginPath();
+                ctx.arc(px, py, 1.2, 0, Math.PI * 2);
+                ctx.fill();
+              }
             }
           }
         }
@@ -451,8 +535,12 @@ export default function ProjectionEngine({ moleculeId, vectors }: ProjectionEngi
       const eH = eegCanvas.height;
       eegCtx.clearRect(0, 0, eW, eH);
 
+      // Draw black background
+      eegCtx.fillStyle = "#090d1a";
+      eegCtx.fillRect(0, 0, eW, eH);
+
       // Back grid for EEG
-      eegCtx.strokeStyle = "rgba(71, 85, 105, 0.1)";
+      eegCtx.strokeStyle = "rgba(71, 85, 105, 0.05)";
       eegCtx.lineWidth = 1;
       for (let x = 0; x < eW; x += 20) {
         eegCtx.beginPath(); eegCtx.moveTo(x, 0); eegCtx.lineTo(x, eH); eegCtx.stroke();
@@ -461,17 +549,28 @@ export default function ProjectionEngine({ moleculeId, vectors }: ProjectionEngi
         eegCtx.beginPath(); eegCtx.moveTo(0, y); eegCtx.lineTo(eW, y); eegCtx.stroke();
       }
 
-      // Draw rolling EEG trace representing global connectome fluctuations
+      // Draw splitting border in the center
+      const midX = eW / 2;
+      eegCtx.strokeStyle = "rgba(71, 85, 105, 0.2)";
+      eegCtx.beginPath();
+      eegCtx.moveTo(midX, 0);
+      eegCtx.lineTo(midX, eH);
+      eegCtx.stroke();
+
+      // LEFT SIDE: rolling EEG trace representing global connectome fluctuations
+      const eegW = midX - 10;
       eegCtx.strokeStyle = "#34c997"; // sage teal
       eegCtx.lineWidth = 1.5;
       eegCtx.beginPath();
       
       const len = historyRef.current.length;
       if (len > 1) {
-        for (let i = 0; i < len; i++) {
-          const x = (i / 100) * eW;
-          // Scale order parameter (0..1) to fit vertical center
-          const y = eH - 10 - historyRef.current[i] * (eH - 20);
+        // Draw last 50 points in the left half
+        const pointsCount = Math.min(50, len);
+        for (let i = 0; i < pointsCount; i++) {
+          const idx = len - pointsCount + i;
+          const x = (i / (pointsCount - 1)) * eegW + 5;
+          const y = eH - 15 - historyRef.current[idx] * (eH - 30);
           
           if (i === 0) eegCtx.moveTo(x, y);
           else eegCtx.lineTo(x, y);
@@ -479,19 +578,73 @@ export default function ProjectionEngine({ moleculeId, vectors }: ProjectionEngi
         eegCtx.stroke();
       } else {
         // Draw standard baseline wave in idle
-        eegCtx.strokeStyle = "rgba(71, 85, 105, 0.4)";
+        eegCtx.strokeStyle = "rgba(71, 85, 105, 0.3)";
         eegCtx.beginPath();
-        for (let x = 0; x < eW; x++) {
-          const y = eH / 2 + Math.sin(x * 0.05) * 8;
-          if (x === 0) eegCtx.moveTo(x, y);
+        for (let x = 5; x < eegW; x++) {
+          const y = eH / 2 + Math.sin(x * 0.08) * 6;
+          if (x === 5) eegCtx.moveTo(x, y);
           else eegCtx.lineTo(x, y);
         }
         eegCtx.stroke();
       }
 
       eegCtx.fillStyle = "rgba(212, 218, 229, 0.7)";
-      eegCtx.font = "bold 9px monospace";
-      eegCtx.fillText("EEG GLOBAL ENTRAINMENT WAVEFORM", 10, 15);
+      eegCtx.font = "bold 8px monospace";
+      eegCtx.fillText("EEG ENTRAINMENT WAVEFORM", 10, 15);
+
+      // RIGHT SIDE: Delay Embedding Plot (R(t) vs R(t - tau))
+      const portraitLeft = midX + 10;
+      const portraitW = eW - portraitLeft - 10;
+      const portraitH = eH - 30;
+
+      // Draw phase portrait grid box
+      eegCtx.strokeStyle = "rgba(71, 85, 105, 0.15)";
+      eegCtx.strokeRect(portraitLeft, 15, portraitW, portraitH);
+
+      eegCtx.fillStyle = "rgba(212, 218, 229, 0.7)";
+      eegCtx.font = "bold 8px monospace";
+      eegCtx.fillText("PHASE-SPACE ATTRACTOR", midX + 10, 15);
+
+      // We plot delay embedding using historyRef.current
+      if (len > 12) {
+        eegCtx.strokeStyle = "#a855f7"; // purple accent
+        eegCtx.lineWidth = 1.0;
+        eegCtx.beginPath();
+        
+        const tau = 8; // delay steps
+        const drawPts = Math.min(60, len - tau - 1);
+        
+        for (let i = 0; i < drawPts; i++) {
+          const idxCurrent = len - drawPts + i;
+          const idxDelayed = idxCurrent - tau;
+          
+          const rCur = historyRef.current[idxCurrent];
+          const rDel = historyRef.current[idxDelayed];
+          
+          const px = portraitLeft + rCur * portraitW;
+          const py = eH - 15 - rDel * portraitH;
+          
+          if (i === 0) eegCtx.moveTo(px, py);
+          else eegCtx.lineTo(px, py);
+        }
+        eegCtx.stroke();
+
+        // Draw active state dot
+        const headIdx = len - 1;
+        const delayedHeadIdx = headIdx - tau;
+        const pxHead = portraitLeft + historyRef.current[headIdx] * portraitW;
+        const pyHead = eH - 15 - historyRef.current[delayedHeadIdx] * portraitH;
+        eegCtx.fillStyle = "#c084fc";
+        eegCtx.beginPath();
+        eegCtx.arc(pxHead, pyHead, 3, 0, Math.PI * 2);
+        eegCtx.fill();
+      } else {
+        // Draw static attractor reference in idle
+        eegCtx.strokeStyle = "rgba(71, 85, 105, 0.2)";
+        eegCtx.beginPath();
+        eegCtx.arc(portraitLeft + portraitW / 2, 15 + portraitH / 2, 12, 0, Math.PI * 2);
+        eegCtx.stroke();
+      }
 
       if (isSimulating) {
         frameId = requestAnimationFrame(mainLoop);
@@ -521,26 +674,37 @@ export default function ProjectionEngine({ moleculeId, vectors }: ProjectionEngi
         ctx2.font = "12px monospace";
         ctx2.textAlign = "center";
         ctx2.fillText("Simulation Engine Idle. Awaiting Trigger...", canvas.width / 2, canvas.height / 2);
-      }
-
-      const eegCtx2 = eegCanvas.getContext("2d");
-      if (eegCtx2) {
-        eegCtx2.fillStyle = "#0b1329";
-        eegCtx2.fillRect(0, 0, eegCanvas.width, eegCanvas.height);
         
-        eegCtx2.strokeStyle = "rgba(71, 85, 105, 0.1)";
-        eegCtx2.lineWidth = 1;
-        for (let x = 0; x < eegCanvas.width; x += 20) {
-          eegCtx2.beginPath(); eegCtx2.moveTo(x, 0); eegCtx2.lineTo(x, eegCanvas.height); eegCtx2.stroke();
-        }
-        for (let y = 0; y < eegCanvas.height; y += 20) {
-          eegCtx2.beginPath(); eegCtx2.moveTo(0, y); eegCtx2.lineTo(eegCanvas.width, y); eegCtx2.stroke();
-        }
+        const eegCtx2 = eegCanvas.getContext("2d");
+        if (eegCtx2) {
+          eegCtx2.fillStyle = "#0b1329";
+          eegCtx2.fillRect(0, 0, eegCanvas.width, eegCanvas.height);
+          
+          eegCtx2.strokeStyle = "rgba(71, 85, 105, 0.05)";
+          eegCtx2.lineWidth = 1;
+          for (let x = 0; x < eegCanvas.width; x += 20) {
+            eegCtx2.beginPath(); eegCtx2.moveTo(x, 0); eegCtx2.lineTo(x, eegCanvas.height); eegCtx2.stroke();
+          }
+          for (let y = 0; y < eegCanvas.height; y += 20) {
+            eegCtx2.beginPath(); eegCtx2.moveTo(0, y); eegCtx2.lineTo(eegCanvas.width, y); eegCtx2.stroke();
+          }
 
-        eegCtx2.fillStyle = "#475569";
-        eegCtx2.font = "10px monospace";
-        eegCtx2.textAlign = "center";
-        eegCtx2.fillText("Attractor Monitor Off", eegCanvas.width / 2, eegCanvas.height / 2);
+          const midX = eegCanvas.width / 2;
+          eegCtx2.strokeStyle = "rgba(71, 85, 105, 0.2)";
+          eegCtx2.beginPath();
+          eegCtx2.moveTo(midX, 0);
+          eegCtx2.lineTo(midX, eegCanvas.height);
+          eegCtx2.stroke();
+
+          eegCtx2.fillStyle = "#475569";
+          eegCtx2.font = "bold 8px monospace";
+          eegCtx2.fillText("EEG ENTRAINMENT WAVEFORM", 10, 15);
+          eegCtx2.fillText("PHASE-SPACE ATTRACTOR", midX + 10, 15);
+
+          eegCtx2.font = "10px monospace";
+          eegCtx2.textAlign = "center";
+          eegCtx2.fillText("Attractor Monitor Off", eegCanvas.width / 2, eegCanvas.height / 2 + 10);
+        }
       }
     }
 
@@ -643,18 +807,75 @@ export default function ProjectionEngine({ moleculeId, vectors }: ProjectionEngi
 
       {/* 3. Tab Contents */}
       {activeTab === "projection" && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 clinical-card p-4 flex flex-col justify-between h-[320px] relative overflow-hidden bg-[#0b1329] border-slate-800">
-            <canvas ref={canvasRef} width={480} height={280} className="w-full h-full object-contain rounded-clinical" />
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 clinical-card p-4 flex flex-col justify-between h-[320px] relative overflow-hidden bg-[#0b1329] border-slate-800">
+              <canvas ref={canvasRef} width={480} height={280} className="w-full h-full object-contain rounded-clinical" />
+            </div>
+            <div className="clinical-card p-4 flex flex-col justify-between h-[320px] bg-[#0b1329] border-slate-800">
+              <canvas ref={eegRef} width={260} height={160} className="w-full h-[160px] object-contain rounded-clinical mb-4" />
+              <div className="flex-grow space-y-2 font-mono text-[10px] text-ink-subtle border-t border-slate-800 pt-3">
+                <div className="flex justify-between"><span>Bioavailability (F):</span><span className="text-cyan-400">{bioF * 100}%</span></div>
+                <div className="flex justify-between"><span>Vol. of Distr (Vd):</span><span className="text-cyan-400">{vd} L/kg</span></div>
+                <div className="flex justify-between"><span>Molecular Weight:</span><span className="text-cyan-400">{mw} Da</span></div>
+                <div className="flex justify-between"><span>Polar Surface Area (TPSA):</span><span className="text-cyan-400">{tpsa} Å²</span></div>
+                <div className="flex justify-between"><span>Dynamic Synchrony (R):</span><span className="text-emerald-400">{synchrony.toFixed(4)}</span></div>
+              </div>
+            </div>
           </div>
-          <div className="clinical-card p-4 flex flex-col justify-between h-[320px] bg-[#0b1329] border-slate-800">
-            <canvas ref={eegRef} width={260} height={160} className="w-full h-[160px] object-contain rounded-clinical mb-4" />
-            <div className="flex-grow space-y-2 font-mono text-[10px] text-ink-subtle border-t border-slate-800 pt-3">
-              <div className="flex justify-between"><span>Bioavailability (F):</span><span className="text-cyan-400">{bioF * 100}%</span></div>
-              <div className="flex justify-between"><span>Vol. of Distr (Vd):</span><span className="text-cyan-400">{vd} L/kg</span></div>
-              <div className="flex justify-between"><span>Molecular Weight:</span><span className="text-cyan-400">{mw} Da</span></div>
-              <div className="flex justify-between"><span>Polar Surface Area (TPSA):</span><span className="text-cyan-400">{tpsa} Å²</span></div>
-              <div className="flex justify-between"><span>Dynamic Synchrony (R):</span><span className="text-emerald-400">{synchrony.toFixed(4)}</span></div>
+
+          {/* Connectome Phase-Space Kinematics HUD */}
+          <div className="clinical-card p-5 bg-[#0b1329]/95 border-slate-800 space-y-4">
+            <div className="flex justify-between items-center border-b border-slate-800 pb-2">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+                <h4 className="font-bold text-xs uppercase tracking-widest text-indigo-300 font-mono">Connectome Phase-Space Kinematics Engine</h4>
+              </div>
+              <span className="text-[9px] font-mono text-slate-500 uppercase font-extrabold tracking-widest">Real-time Hamiltonian Dynamics</span>
+            </div>
+            
+            <div className="grid grid-cols-2 md:grid-cols-6 gap-4 font-mono text-[10.5px]">
+              <div className="p-3 bg-[#070d1a] border border-slate-800 rounded-clinical">
+                <span className="block text-[8px] uppercase tracking-widest text-slate-500 font-bold mb-1">Trajectory Velocity (dR/dt)</span>
+                <span className={`text-xs font-bold ${kinematics.velocity >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                  {kinematics.velocity >= 0 ? "+" : ""}{kinematics.velocity.toFixed(6)}
+                </span>
+              </div>
+              <div className="p-3 bg-[#070d1a] border border-slate-800 rounded-clinical">
+                <span className="block text-[8px] uppercase tracking-widest text-slate-500 font-bold mb-1">Trajectory Accel. (d²R/dt²)</span>
+                <span className={`text-xs font-bold ${kinematics.acceleration >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                  {kinematics.acceleration >= 0 ? "+" : ""}{kinematics.acceleration.toFixed(6)}
+                </span>
+              </div>
+              <div className="p-3 bg-[#070d1a] border border-slate-800 rounded-clinical">
+                <span className="block text-[8px] uppercase tracking-widest text-slate-500 font-bold mb-1">Phase Entropy (H_θ)</span>
+                <span className="text-xs font-bold text-violet-400">
+                  {kinematics.entropy.toFixed(4)}
+                </span>
+              </div>
+              <div className="p-3 bg-[#070d1a] border border-slate-800 rounded-clinical">
+                <span className="block text-[8px] uppercase tracking-widest text-slate-500 font-bold mb-1">Topological Momentum (p_topo)</span>
+                <span className="text-xs font-bold text-sky-400">
+                  {kinematics.momentum.toFixed(4)} rad/s
+                </span>
+              </div>
+              <div className="p-3 bg-[#070d1a] border border-slate-800 rounded-clinical">
+                <span className="block text-[8px] uppercase tracking-widest text-slate-500 font-bold mb-1">Bifurcation Lambda (β)</span>
+                <span className="text-xs font-bold text-cyan-400">
+                  {kinematics.lambda.toFixed(4)}
+                </span>
+              </div>
+              <div className="p-3 bg-[#070d1a] border border-slate-800 rounded-clinical">
+                <span className="block text-[8px] uppercase tracking-widest text-slate-500 font-bold mb-1">Attractor Dimension (Df)</span>
+                <span className="text-xs font-bold text-amber-400">
+                  {kinematics.dimension.toFixed(3)}
+                </span>
+              </div>
+            </div>
+            
+            <div className="p-3 bg-[#070d1a] border border-slate-800 rounded-clinical font-mono text-[11px] text-cyan-400 border-l-4 border-l-cyan-500 leading-relaxed">
+              <span className="text-slate-500 block uppercase tracking-wider text-[8.5px] mb-1 font-bold">Kinematic Explanation & Attractor Narrative:</span>
+              {kinematics.narrative}
             </div>
           </div>
         </div>
