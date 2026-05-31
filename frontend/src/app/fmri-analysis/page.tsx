@@ -15,7 +15,7 @@ import dynamic from "next/dynamic";
 const NeuroCanvas = dynamic(() => import("@/components/NeuroCanvas"), { ssr: false });
 import { useAI } from "@/context/AIContext";
 import type { Pathology } from "@/lib/engine/topology";
-import { PATHOLOGIES } from "@/lib/engine/topology";
+import { PATHOLOGIES, PATHOLOGY_META } from "@/lib/engine/topology";
 import { parseBackendResponse, validateDataset, type FmriDataset, type Parcel } from "@/lib/fmri/dataset";
 import PanelHeader from "@/components/palantir/PanelHeader";
 import DraggablePanel from "@/components/palantir/DraggablePanel";
@@ -115,9 +115,12 @@ export default function FMRIAnalysis() {
       setFmriDataset(ds);
 
       const knownSet = new Set<string>(PATHOLOGIES as readonly string[]);
-      const detected = (data.diagnostic_profile ?? []).filter((p: string) =>
-        knownSet.has(p),
-      ) as Pathology[];
+      const detected = (data.diagnostic_profile ?? [])
+        .map((p: string) => {
+          const u = p.toUpperCase();
+          return u === "ANXIETY" ? "GAD" : u;
+        })
+        .filter((p: string) => knownSet.has(p)) as Pathology[];
       setActivePathologies(detected);
       setTab("topology");
     } catch (error: any) {
@@ -131,9 +134,12 @@ export default function FMRIAnalysis() {
         setFmriDataset(ds);
 
         const knownSet = new Set<string>(PATHOLOGIES as readonly string[]);
-        const detected = ds.diagnosticProfile.filter((p: string) =>
-          knownSet.has(p)
-        ) as Pathology[];
+        const detected = ds.diagnosticProfile
+          .map((p: string) => {
+            const u = p.toUpperCase();
+            return u === "ANXIETY" ? "GAD" : u;
+          })
+          .filter((p: string) => knownSet.has(p)) as Pathology[];
         setActivePathologies(detected);
         setTab("topology");
       } catch (fallbackError: any) {
@@ -316,15 +322,27 @@ function DatasetHeadline({ ds, results }: { ds: FmriDataset; results: EngineResu
         )}
         <div>
           <span className="block text-[9px] uppercase font-bold text-ink-muted mb-1">
-            Detected Pathologies
+            Detected Pathologies (DSM-5 Mapped)
           </span>
-          <div className="flex flex-wrap gap-1 mt-1">
+          <div className="flex flex-col gap-1.5 mt-1">
             {ds.diagnosticProfile.length > 0 ? (
-              ds.diagnosticProfile.map((path, i) => (
-                <span key={i} className="bg-crit/20 text-crit text-[9px] font-bold px-2 py-1 rounded">
-                  {path}
-                </span>
-              ))
+              ds.diagnosticProfile.map((path, i) => {
+                const upperPath = path.toUpperCase() as Pathology;
+                const meta = PATHOLOGY_META[upperPath];
+                const criteriaText = meta ? `DSM-5 Criteria:\n${meta.dsm5Criteria.map(c => `• ${c}`).join('\n')}` : '';
+                return (
+                  <span
+                    key={i}
+                    className="bg-crit/20 text-crit text-[10px] font-bold px-2.5 py-1.5 rounded flex justify-between items-center cursor-help border border-crit/30 hover:brightness-110 transition"
+                    title={meta ? `${meta.subjective}\n\n${criteriaText}` : undefined}
+                  >
+                    <span>{meta?.label ?? path}</span>
+                    <span className="font-mono text-[9px] bg-crit/30 px-1 rounded text-white font-semibold ml-2">
+                      {meta?.dsm5Code ?? ""}
+                    </span>
+                  </span>
+                );
+              })
             ) : (
               <span className="text-xs text-ink-muted">None detected</span>
             )}

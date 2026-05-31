@@ -77,16 +77,34 @@ export const PATHOLOGIES = [
 ] as const;
 export type Pathology = (typeof PATHOLOGIES)[number];
 
-export const PATHOLOGY_META: Record<
-  Pathology,
-  { label: string; region: Region; tone: string; subjective: string }
-> = {
+export interface PathologyMeta {
+  label: string;
+  region: Region;
+  tone: string;
+  subjective: string;
+  dsm5Code: string;
+  dsm5Criteria: string[];
+}
+
+export const PATHOLOGY_META: Record<Pathology, PathologyMeta> = {
   DEPRESSION: {
     label: "Major Depressive Disorder",
     region: "Default",
     tone: "DMN Hyper-stability",
     subjective:
       "Profound 'Grey' loss of emotional contrast; rumination loops; reward circuit blunting.",
+    dsm5Code: "F32.9",
+    dsm5Criteria: [
+      "Depressed mood most of the day, nearly every day",
+      "Markedly diminished interest or pleasure in all, or almost all, activities",
+      "Significant weight loss or gain, or decrease or increase in appetite",
+      "Insomnia or hypersomnia nearly every day",
+      "Psychomotor agitation or retardation nearly every day",
+      "Fatigue or loss of energy nearly every day",
+      "Feelings of worthlessness or excessive or inappropriate guilt",
+      "Diminished ability to think or concentrate, or indecisiveness",
+      "Recurrent thoughts of death, recurrent suicidal ideation"
+    ]
   },
   PTSD: {
     label: "Post-Traumatic Stress Disorder",
@@ -94,6 +112,15 @@ export const PATHOLOGY_META: Record<
     tone: "Limbic Hyperarousal",
     subjective:
       "'Time collapse', intrusive somatic recall, hypervigilance, autonomic instability.",
+    dsm5Code: "F43.10",
+    dsm5Criteria: [
+      "Exposure to actual or threatened death, serious injury, or sexual violence",
+      "Presence of intrusion symptoms (e.g., distressing memories, nightmares, flashbacks)",
+      "Persistent avoidance of stimuli associated with the traumatic event",
+      "Negative alterations in cognitions and mood associated with the traumatic event",
+      "Marked alterations in arousal and reactivity associated with the traumatic event",
+      "Duration of the disturbance is more than 1 month"
+    ]
   },
   ADHD: {
     label: "Attention-Deficit / Hyperactivity",
@@ -101,6 +128,14 @@ export const PATHOLOGY_META: Record<
     tone: "Frontoparietal Hypo-connectivity",
     subjective:
       "Effortful focus 'wading through static'; rapid task-set switching; latent boredom intolerance.",
+    dsm5Code: "F90.2",
+    dsm5Criteria: [
+      "Persistent pattern of inattention and/or hyperactivity-impulsivity that interferes with functioning",
+      "Inattention: 6 or more symptoms (e.g., fails to give close attention, difficulty sustaining attention, easily distracted)",
+      "Hyperactivity/Impulsivity: 6 or more symptoms (e.g., fidgets, unable to remain seated, talks excessively, interrupts)",
+      "Several symptoms present prior to age 12 years",
+      "Several symptoms present in two or more settings"
+    ]
   },
   TOURETTES: {
     label: "Tourette Syndrome",
@@ -108,6 +143,13 @@ export const PATHOLOGY_META: Record<
     tone: "Motor Loop Rigidity",
     subjective:
       "Premonitory urge; pressure requiring motor discharge; tic-rebound after suppression.",
+    dsm5Code: "F95.2",
+    dsm5Criteria: [
+      "Both multiple motor and one or more vocal tics have been present at some time during the illness",
+      "Tics may wax and wane in frequency but have persisted for more than 1 year",
+      "Onset is before age 18 years",
+      "The disturbance is not attributable to the physiological effects of a substance or another medical condition"
+    ]
   },
   WITHDRAWAL_OPIOID: {
     label: "Opioid Withdrawal",
@@ -115,6 +157,14 @@ export const PATHOLOGY_META: Record<
     tone: "Reward Circuit Debt",
     subjective:
       "Anhedonia, autonomic storm, dysphoria, locus coeruleus hyperactivity.",
+    dsm5Code: "F11.23",
+    dsm5Criteria: [
+      "Presence of either cessation/reduction in opioid use, or administration of an opioid antagonist",
+      "Three or more symptoms developing within minutes to several days (e.g., dysphoric mood, nausea/vomiting, muscle aches)",
+      "Lacrimation or rhinorrhea, pupillary dilation, piloerection, or sweating",
+      "Diarrhea, yawning, fever, insomnia",
+      "Symptoms cause clinically significant distress or impairment"
+    ]
   },
   SCHIZOPHRENIA: {
     label: "Schizophrenia",
@@ -122,6 +172,14 @@ export const PATHOLOGY_META: Record<
     tone: "Global Dysconnectivity",
     subjective:
       "Disorganized thought vectors, reality fracturing, salient misattribution.",
+    dsm5Code: "F20.9",
+    dsm5Criteria: [
+      "Two or more active-phase symptoms present for a significant portion of time during a 1-month period",
+      "At least one symptom must be delusions, hallucinations, or disorganized speech",
+      "Other symptoms include grossly disorganized or catatonic behavior, and negative symptoms (e.g., diminished emotional expression)",
+      "Level of functioning in one or more major areas is markedly below the level achieved prior to onset",
+      "Continuous signs of the disturbance persist for at least 6 months"
+    ]
   },
   BIPOLAR: {
     label: "Bipolar Disorder (Type I/II)",
@@ -129,6 +187,13 @@ export const PATHOLOGY_META: Record<
     tone: "Cyclic Phase-Locking",
     subjective:
       "Rapid cycling between expansive hyperarousal (mania) and profound DMN collapse (depression).",
+    dsm5Code: "F31.9",
+    dsm5Criteria: [
+      "Met criteria for at least one manic episode",
+      "Manic episode: abnormally and persistently elevated, expansive, or irritable mood and increased activity/energy lasting at least 1 week",
+      "Three or more symptoms present (e.g., inflated self-esteem, decreased need for sleep, flight of ideas, distractibility)",
+      "The manic episode causes severe impairment or requires hospitalization"
+    ]
   },
   OCD: {
     label: "Obsessive-Compulsive Disorder",
@@ -136,6 +201,13 @@ export const PATHOLOGY_META: Record<
     tone: "CSTC Loop Hyperactivity",
     subjective:
       "Intrusive persistent thoughts triggering ritualistic motor discharge to relieve tension.",
+    dsm5Code: "F42.2",
+    dsm5Criteria: [
+      "Presence of obsessions, compulsions, or both",
+      "Obsessions: recurrent and persistent thoughts, urges, or images that are intrusive and unwanted, causing anxiety or distress",
+      "Compulsions: repetitive behaviors or mental acts that the individual feels driven to perform in response to an obsession",
+      "The obsessions or compulsions are time-consuming (take more than 1 hour per day) or cause significant distress"
+    ]
   },
   GAD: {
     label: "Generalized Anxiety Disorder",
@@ -143,6 +215,13 @@ export const PATHOLOGY_META: Record<
     tone: "Ventral Attention Hyper-vigilance",
     subjective:
       "Constant hum of threat detection, inability to downregulate autonomic arousal.",
+    dsm5Code: "F41.1",
+    dsm5Criteria: [
+      "Excessive anxiety and worry, occurring more days than not for at least 6 months, about a number of events or activities",
+      "The individual finds it difficult to control the worry",
+      "The anxiety and worry are associated with three or more of six symptoms (e.g., restlessness, easily fatigued, muscle tension)",
+      "The anxiety, worry, or physical symptoms cause clinically significant distress or impairment"
+    ]
   },
   AUTISM: {
     label: "Autism Spectrum",
@@ -150,6 +229,14 @@ export const PATHOLOGY_META: Record<
     tone: "Local Hyperconnectivity",
     subjective:
       "Intense local sensory processing at the cost of global integration, high bottom-up data density.",
+    dsm5Code: "F84.0",
+    dsm5Criteria: [
+      "Persistent deficits in social communication and social interaction across multiple contexts",
+      "Deficits in social-emotional reciprocity, nonverbal communicative behaviors, and developing/maintaining relationships",
+      "Restricted, repetitive patterns of behavior, interests, or activities (at least two symptoms)",
+      "Symptoms must be present in the early developmental period",
+      "Symptoms cause clinically significant impairment in social, occupational, or other important areas"
+    ]
   },
   ADDICTION: {
     label: "Substance Use Disorder",
@@ -157,6 +244,15 @@ export const PATHOLOGY_META: Record<
     tone: "Dopaminergic Hijacking",
     subjective:
       "Salience network strictly locked to substance-seeking, massive attenuation of baseline rewards.",
+    dsm5Code: "F19.20",
+    dsm5Criteria: [
+      "A problematic pattern of substance use leading to clinically significant impairment or distress, manifested by at least two symptoms within a 12-month period",
+      "Substance is often taken in larger amounts or over a longer period than intended",
+      "Persistent desire or unsuccessful efforts to cut down or control use",
+      "Great deal of time spent in activities necessary to obtain, use, or recover from substance",
+      "Craving, or a strong desire or urge to use",
+      "Tolerance and/or withdrawal symptoms"
+    ]
   },
   CRPS: {
     label: "Complex Regional Pain (CRPS)",
@@ -164,6 +260,13 @@ export const PATHOLOGY_META: Record<
     tone: "S1 Somatotopy Blurring & Autonomic Dysregulation",
     subjective:
       "Severe mechanical allodynia, spatial blurring, localized vasoconstrictive/warm autonomic storms.",
+    dsm5Code: "G90.50",
+    dsm5Criteria: [
+      "Continuing pain, which is disproportionate to any inciting event",
+      "Must report at least one symptom in three of four categories: sensory, vasomotor, sudomotor/edema, motor/trophic",
+      "Must display at least one sign at time of evaluation in two or more of those categories",
+      "No other diagnosis can better explain the signs and symptoms"
+    ]
   }
 };
 

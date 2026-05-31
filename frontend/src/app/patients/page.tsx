@@ -29,6 +29,8 @@ import {
   bmi,
 } from "@/lib/patient/types";
 
+import { PATHOLOGY_META, type Pathology } from "@/lib/engine/topology";
+
 type FormTab = "demographics" | "vitals" | "diagnostics" | "scales" | "pgx";
 
 export default function PatientsPage() {
@@ -965,27 +967,42 @@ export default function PatientsPage() {
                         <div className="text-slate-500 text-xs italic">No current pathological deformations configured.</div>
                       ) : (
                         <div className="flex flex-col gap-2">
-                          {active.pathologies.map((path) => (
-                            <div key={path.code} className="p-2.5 rounded bg-slate-950/40 border border-slate-850 flex items-center justify-between text-xs font-mono">
-                              <div className="flex flex-col gap-0.5">
-                                <span className="font-bold text-white">{PATHOLOGY_LABELS[path.code]}</span>
-                                <span className="text-[9px] text-slate-500">
-                                  Onset Year: {path.onsetYear || "Unknown"} • Prior Response: {
-                                    path.priorResponse === 2 ? "Remission" : path.priorResponse === 1 ? "Partial" : "Refractory"
-                                  }
+                          {active.pathologies.map((path) => {
+                            const meta = PATHOLOGY_META[path.code as Pathology];
+                            const criteriaText = meta ? `DSM-5 Criteria:\n${meta.dsm5Criteria.map((c: string) => `• ${c}`).join('\n')}` : '';
+                            return (
+                              <div
+                                key={path.code}
+                                className="p-2.5 rounded bg-slate-950/40 border border-slate-850 flex items-center justify-between text-xs font-mono cursor-help hover:border-slate-700 transition"
+                                title={meta ? `${meta.subjective}\n\n${criteriaText}` : undefined}
+                              >
+                                <div className="flex flex-col gap-0.5">
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="font-bold text-white">{PATHOLOGY_LABELS[path.code]}</span>
+                                    {meta && (
+                                      <span className="text-[9px] font-semibold bg-accent-500/20 text-accent-400 border border-accent-500/30 px-1 rounded">
+                                        {meta.dsm5Code}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <span className="text-[9px] text-slate-500">
+                                    Onset Year: {path.onsetYear || "Unknown"} • Prior Response: {
+                                      path.priorResponse === 2 ? "Remission" : path.priorResponse === 1 ? "Partial" : "Refractory"
+                                    }
+                                  </span>
+                                </div>
+                                <span className={`px-2 py-0.5 rounded text-[8px] uppercase tracking-wider ${
+                                  path.severity === "severe"
+                                    ? "bg-rose-500/10 text-rose-400 border border-rose-500/20"
+                                    : path.severity === "moderate"
+                                    ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                                    : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                                }`}>
+                                  {path.severity}
                                 </span>
                               </div>
-                              <span className={`px-2 py-0.5 rounded text-[8px] uppercase tracking-wider ${
-                                path.severity === "severe"
-                                  ? "bg-rose-500/10 text-rose-400 border border-rose-500/20"
-                                  : path.severity === "moderate"
-                                  ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
-                                  : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                              }`}>
-                                {path.severity}
-                              </span>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       )}
                     </div>

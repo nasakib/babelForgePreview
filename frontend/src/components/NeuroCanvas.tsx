@@ -330,10 +330,11 @@ export default function NeuroCanvas({
                 return (
                   <span
                     key={p}
-                    className="px-1.5 py-0.5 rounded border border-crit/40 bg-crit/10 text-crit w-full text-right"
-                    title={meta?.subjective ?? p}
+                    className="px-1.5 py-1 rounded border border-crit/40 bg-crit/10 text-crit w-full flex justify-between items-center"
+                    title={`${meta?.label ?? p} [DSM-5: ${meta?.dsm5Code ?? ''}] - ${meta?.subjective ?? ''}`}
                   >
-                    {meta?.label ?? p}
+                    <span className="truncate">{meta?.label ?? p}</span>
+                    <span className="font-bold shrink-0 ml-1">[{meta?.dsm5Code ?? ''}]</span>
                   </span>
                 );
               })}

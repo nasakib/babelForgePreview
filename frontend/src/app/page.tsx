@@ -57,6 +57,7 @@ export default function ConsolePage() {
   const [profile, setProfile] = useState<PatientProfile>(EMPTY_PROFILE);
 
   const [selectedCompoundId, setSelectedCompoundId] = useState<string | null>(null);
+  const [expandedPathology, setExpandedPathology] = useState<Pathology | null>(null);
 
   const selectedCompound = useMemo(() => {
     if (!selectedCompoundId) return null;
@@ -292,38 +293,75 @@ export default function ConsolePage() {
         defaultPosition={{ x: 20, y: 20 }}
         defaultSize={{ width: 340, height: 600 }}
       >
-        <div className="p-4 border-b border-line space-y-2.5">
+        <div className="p-4 border-b border-line space-y-2.5 overflow-y-auto max-h-[400px] custom-scrollbar">
           {PATHOLOGIES.map((p) => {
             const meta = PATHOLOGY_META[p];
             const active = activePathologies.includes(p);
+            const isExpanded = expandedPathology === p;
             return (
-              <label
+              <div
                 key={p}
-                className={`group flex items-start gap-3 p-2.5 rounded-clinical border cursor-pointer transition-all ${
+                className={`group flex flex-col p-2.5 rounded-clinical border transition-all ${
                   active
                     ? "border-accent-500/60 bg-accent-500/[0.06]"
                     : "border-line hover:border-line-strong"
                 }`}
               >
-                <input
-                  type="checkbox"
-                  className="checkbox-clinical mt-0.5"
-                  checked={active}
-                  onChange={() => togglePathology(p)}
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[12.5px] text-ink font-medium">{meta.label}</span>
-                    <span
-                      className="w-1.5 h-1.5 rounded-sm flex-shrink-0"
-                      style={{ background: REGION_COLOR[meta.region] }}
-                    />
+                <div className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    className="checkbox-clinical mt-1 cursor-pointer"
+                    checked={active}
+                    onChange={() => togglePathology(p)}
+                  />
+                  <div className="flex-1 min-w-0 cursor-pointer" onClick={() => togglePathology(p)}>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[12.5px] text-ink font-medium">
+                        {meta.label}{" "}
+                        <span className="text-accent-400 font-mono text-[10.5px] ml-1">
+                          [{meta.dsm5Code}]
+                        </span>
+                      </span>
+                      <span
+                        className="w-1.5 h-1.5 rounded-sm flex-shrink-0"
+                        style={{ background: REGION_COLOR[meta.region] }}
+                      />
+                    </div>
+                    <div className="text-[9.5px] font-mono uppercase tracking-widest2 text-ink-muted mt-0.5">
+                      {meta.tone}
+                    </div>
                   </div>
-                  <div className="text-[10px] font-mono uppercase tracking-widest2 text-ink-muted mt-0.5">
-                    {meta.tone}
-                  </div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setExpandedPathology(isExpanded ? null : p);
+                    }}
+                    className={`p-1 rounded text-ink-muted hover:text-ink hover:bg-slate-800 transition ${
+                      isExpanded ? "text-accent-400" : ""
+                    }`}
+                    title="View DSM-5 Criteria"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </button>
                 </div>
-              </label>
+                {isExpanded && (
+                  <div className="mt-2.5 pt-2.5 border-t border-line/60 text-[10.5px] text-ink-subtle space-y-1.5">
+                    <div className="font-bold text-[9px] uppercase tracking-widest text-accent-400 font-mono">
+                      DSM-5 Diagnostic Criteria:
+                    </div>
+                    <ul className="list-disc list-inside space-y-1 pl-1">
+                      {meta.dsm5Criteria.map((c, idx) => (
+                        <li key={idx} className="leading-relaxed">
+                          {c}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
             );
           })}
         </div>
