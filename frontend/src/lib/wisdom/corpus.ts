@@ -478,4 +478,110 @@ export const WISDOM_CORPUS: Insight[] = [
       },
     ],
   },
+  {
+    id: "depression-sgacc-hypercoherence",
+    claim:
+      "Major depressive disorder (MDD) is classified by subgenual anterior cingulate cortex (sgACC) hyper-coherence within the Default Mode Network (DMN). Stanford SAINT (accelerated iTBS) targeting the Left dlPFC resolves this by up-regulating top-down fronto-subgenual inhibitory control.",
+    category: "neuroscience",
+    evidence: "rct",
+    confidence: 0.9,
+    contexts: [
+      { kind: "pathology", pathology: "DEPRESSION" },
+      { kind: "module", module: "fmri-analysis" },
+    ],
+    citations: [
+      {
+        label: "Cole et al., 2020, Am J Psychiatry",
+        id: "10.1176/appi.ajp.2019.19070720",
+        scheme: "doi",
+        year: 2020,
+      },
+    ],
+  },
+  {
+    id: "ptsd-limbic-extinction-vns",
+    claim:
+      "PTSD is classified by persistent limbic-to-default network coupling and amygdala hyperreactivity. Coupling trauma-focused exposure therapy with non-invasive Vagus Nerve Stimulation (nVNS) enhances extinction learning by promoting long-term depression (LTD) in fear-memory circuits.",
+    category: "neuroscience",
+    evidence: "meta-analysis",
+    confidence: 0.85,
+    contexts: [
+      { kind: "pathology", pathology: "PTSD" },
+      { kind: "module", module: "fmri-analysis" },
+    ],
+    citations: [
+      {
+        label: "Etkin & Wager, 2007, Am J Psychiatry",
+        id: "10.1176/appi.ajp.2007.07030504",
+        scheme: "doi",
+        year: 2007,
+      },
+      {
+        label: "Carreno & Frazer, 2017, Front Integrative Neurosci",
+        id: "10.3389/fnint.2017.00017",
+        scheme: "doi",
+        year: 2017,
+      },
+    ],
+  },
+  {
+    id: "schizophrenia-fpn-dmn-anticorrelation",
+    claim:
+      "Schizophrenia is classified by the collapse of functional boundary anticorrelations between the Frontoparietal Control Network (FPN) and the Default Mode Network (DMN). Frontotemporal tDCS (anodal Left dlPFC, cathodal Left TPJ) restores this boundary, directly suppressing auditory-verbal hallucinations.",
+    category: "neuroscience",
+    evidence: "rct",
+    confidence: 0.88,
+    contexts: [
+      { kind: "pathology", pathology: "SCHIZOPHRENIA" },
+      { kind: "module", module: "fmri-analysis" },
+    ],
+    citations: [
+      {
+        label: "Brunelin et al., 2012, Am J Psychiatry",
+        id: "10.1176/appi.ajp.2012.11091461",
+        scheme: "doi",
+        year: 2012,
+      },
+    ],
+  },
+  {
+    id: "adhd-dmn-suppression-centrality",
+    claim:
+      "ADHD is characterized by deficient task-induced suppression of the DMN and persistent hyperconnectivity between the Control and Visual/Ventral Attention networks. Methylphenidate restores salience and control node centrality by blocking dopamine/norepinephrine transporters.",
+    category: "neuroscience",
+    evidence: "meta-analysis",
+    confidence: 0.85,
+    contexts: [
+      { kind: "pathology", pathology: "ADHD" },
+      { kind: "module", module: "fmri-analysis" },
+    ],
+    citations: [
+      {
+        label: "Cortese et al., 2012, Am J Psychiatry",
+        id: "10.1176/appi.ajp.2011.11060961",
+        scheme: "doi",
+        year: 2012,
+      },
+    ],
+  },
+  {
+    id: "crps-s1-somatotopic-blurring",
+    claim:
+      "Complex Regional Pain Syndrome (CRPS) is characterized by somatotopic map blurring in the primary somatosensory cortex (S1) and salience network hyperconnectivity. Sub-anesthetic intravenous Ketamine combined with targeted iTBS stimulates rapid dendritic remodeling and resets centralized pain amplification loops.",
+    category: "neuroscience",
+    evidence: "cohort",
+    confidence: 0.8,
+    contexts: [
+      { kind: "pathology", pathology: "CRPS" },
+      { kind: "module", module: "fmri-analysis" },
+    ],
+    citations: [
+      {
+        label: "Sigtermans et al., 2009, Pain",
+        id: "10.1016/j.pain.2009.06.012",
+        scheme: "doi",
+        year: 2009,
+      },
+    ],
+  },
 ];
