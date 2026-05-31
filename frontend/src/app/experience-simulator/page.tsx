@@ -11,6 +11,7 @@ import { runDiagnosis } from "@/lib/engine/diagnosis";
 import type { Pathology } from "@/lib/engine/topology";
 import { EMPTY_PROFILE, type PatientProfile } from "@/lib/patient/profile";
 import ReceptorOccupancy from "@/components/clinical/ReceptorOccupancy";
+import { molecules } from "@/data/molecules";
 
 const STORAGE_KEY = "babelforge:experience-simulator:v1";
 
@@ -354,6 +355,152 @@ export default function ExperienceSimulator() {
   );
 }
 
+interface DrugMetadata {
+  id: string;
+  keywords: string[];
+  defaultDose: number; // in unit
+  unit: string;
+}
+
+const DRUG_METADATA_LIST: DrugMetadata[] = [
+  { id: "seriphadine", keywords: ["seriphadine"], defaultDose: 15, unit: "mg" },
+  { id: "spur_mtdl", keywords: ["spur_mtdl", "spur-mtdl", "spur mtdl"], defaultDose: 15, unit: "mg" },
+  { id: "spur01", keywords: ["spur01", "spur-01", "spur 01", "spur-1", "spur 1"], defaultDose: 15, unit: "mg" },
+  { id: "zb01", keywords: ["zb01", "zb-01", "zb 01", "zenbud"], defaultDose: 10, unit: "mg" },
+  { id: "ll07", keywords: ["ll07", "ll-07", "ll 07", "limbiclink"], defaultDose: 10, unit: "mg" },
+  { id: "ss20", keywords: ["ss20", "ss-20", "ss 20", "synaptostim"], defaultDose: 10, unit: "mg" },
+  { id: "dr02", keywords: ["dr02", "dr-02", "dr 02", "dopareg"], defaultDose: 10, unit: "mg" },
+  { id: "nx44", keywords: ["nx44", "nx-44", "nx 44", "neurox"], defaultDose: 10, unit: "mg" },
+  { id: "psilo", keywords: ["psilocybin", "shroom", "mushroom", "psilocin"], defaultDose: 15, unit: "mg" },
+  { id: "lsd", keywords: ["lsd", "acid"], defaultDose: 0.15, unit: "mg" },
+  { id: "jianshouqing", keywords: ["jianshouqing", "yunnan mushroom", "little people", "little green men", "variegatic acid", "boletaceae", "boletus"], defaultDose: 50, unit: "g" },
+  { id: "mdma", keywords: ["mdma", "ecstasy", "molly", "empathogen"], defaultDose: 100, unit: "mg" },
+  { id: "ketamine", keywords: ["ketamine", "special k"], defaultDose: 50, unit: "mg" },
+  { id: "sert", keywords: ["sertraline", "sert", "zoloft"], defaultDose: 100, unit: "mg" },
+  { id: "fluox", keywords: ["fluoxetine", "prozac", "fluox"], defaultDose: 40, unit: "mg" },
+  { id: "escit", keywords: ["escitalopram", "lexapro", "escit"], defaultDose: 10, unit: "mg" },
+  { id: "venla", keywords: ["venlafaxine", "effexor", "venla"], defaultDose: 75, unit: "mg" },
+  { id: "dulox", keywords: ["duloxetine", "cymbalta", "dulox"], defaultDose: 60, unit: "mg" },
+  { id: "citalo", keywords: ["citalopram", "celexa", "citalo"], defaultDose: 20, unit: "mg" },
+  { id: "parox", keywords: ["paroxetine", "paxil", "parox"], defaultDose: 20, unit: "mg" },
+  { id: "fluvox", keywords: ["fluvoxamine", "luvox", "fluvox"], defaultDose: 100, unit: "mg" },
+  { id: "bupropion", keywords: ["bupropion", "wellbutrin", "zyban"], defaultDose: 150, unit: "mg" },
+  { id: "mirtaz", keywords: ["mirtazapine", "remeron", "mirtaz"], defaultDose: 30, unit: "mg" },
+  { id: "traz", keywords: ["trazodone", "oleptro", "traz"], defaultDose: 150, unit: "mg" },
+  { id: "amph", keywords: ["amphetamine", "adderall", "dextroamphetamine", "dexedrine"], defaultDose: 20, unit: "mg" },
+  { id: "mph", keywords: ["methylphenidate", "ritalin", "concerta", "mph"], defaultDose: 20, unit: "mg" },
+  { id: "lisdexamph", keywords: ["lisdexamfetamine", "vyvanse"], defaultDose: 50, unit: "mg" },
+  { id: "dexmph", keywords: ["dexmethylphenidate", "focalin"], defaultDose: 10, unit: "mg" },
+  { id: "modaf", keywords: ["modafinil", "provigil"], defaultDose: 200, unit: "mg" },
+  { id: "armodaf", keywords: ["armodafinil", "nuvigil"], defaultDose: 150, unit: "mg" },
+  { id: "caffeine", keywords: ["caffeine", "coffee", "cappuccino", "espresso", "latte", "energy drink", "red bull"], defaultDose: 100, unit: "mg" },
+  { id: "nicotine", keywords: ["nicotine", "cigarette", "vape", "tobacco", "cigar"], defaultDose: 2, unit: "mg" },
+  { id: "meth", keywords: ["methamphetamine", "meth", "crystal meth", "desoxyn"], defaultDose: 10, unit: "mg" },
+  { id: "coke", keywords: ["cocaine", "coke", "crack"], defaultDose: 50, unit: "mg" },
+  { id: "queti", keywords: ["quetiapine", "seroquel"], defaultDose: 50, unit: "mg" },
+  { id: "olan", keywords: ["olanzapine", "zyprexa"], defaultDose: 10, unit: "mg" },
+  { id: "cloz", keywords: ["clozapine", "clozaril"], defaultDose: 100, unit: "mg" },
+  { id: "risper", keywords: ["risperidone", "risperdal"], defaultDose: 2, unit: "mg" },
+  { id: "arip", keywords: ["aripiprazole", "abilify"], defaultDose: 10, unit: "mg" },
+  { id: "halo", keywords: ["haloperidol", "haldol"], defaultDose: 5, unit: "mg" },
+  { id: "alpraz", keywords: ["alprazolam", "xanax", "alpraz"], defaultDose: 1, unit: "mg" },
+  { id: "clonaz", keywords: ["clonazepam", "klonopin", "clonaz"], defaultDose: 1, unit: "mg" },
+  { id: "diaz", keywords: ["diazepam", "valium", "diaz"], defaultDose: 5, unit: "mg" },
+  { id: "loraz", keywords: ["lorazepam", "ativan", "loraz"], defaultDose: 1, unit: "mg" },
+  { id: "zolp", keywords: ["zolpidem", "ambien", "zolp"], defaultDose: 10, unit: "mg" },
+  { id: "zopic", keywords: ["zopiclone", "imovane"], defaultDose: 7.5, unit: "mg" },
+  { id: "pregab", keywords: ["pregabalin", "lyrica"], defaultDose: 150, unit: "mg" },
+  { id: "gaba", keywords: ["gabapentin", "neurontin"], defaultDose: 300, unit: "mg" },
+  { id: "alc", keywords: ["ethanol", "alcohol", "beer", "wine", "whiskey", "vodka", "tequila", "gin", "rum", "drink"], defaultDose: 30, unit: "g" },
+  { id: "fent", keywords: ["fentanyl", "duragesic"], defaultDose: 0.1, unit: "mg" },
+  { id: "oxy", keywords: ["oxycodone", "oxycontin", "percocet", "oxy"], defaultDose: 15, unit: "mg" },
+  { id: "methadone", keywords: ["methadone", "dolophine"], defaultDose: 20, unit: "mg" },
+  { id: "buprenorphine", keywords: ["buprenorphine", "suboxone", "subutex"], defaultDose: 4, unit: "mg" },
+  { id: "sr17", keywords: ["sr17", "sr17-018", "sr17018"], defaultDose: 10, unit: "mg" },
+  { id: "nrg01", keywords: ["nrg-01", "nrg01", "doparestore"], defaultDose: 10, unit: "mg" },
+  { id: "clonidine", keywords: ["clonidine", "catapres"], defaultDose: 0.1, unit: "mg" },
+  { id: "acamprosate", keywords: ["acamprosate", "campral"], defaultDose: 666, unit: "mg" },
+  { id: "flumazenil", keywords: ["flumazenil", "romazicon"], defaultDose: 0.5, unit: "mg" },
+  { id: "nac", keywords: ["nac", "n-acetylcysteine", "acetylcysteine"], defaultDose: 600, unit: "mg" },
+  { id: "agmatine", keywords: ["agmatine", "agmatine sulfate"], defaultDose: 500, unit: "mg" },
+  { id: "galantamine", keywords: ["galantamine", "razadyne"], defaultDose: 8, unit: "mg" },
+  { id: "thc", keywords: ["thc", "cannabis", "marijuana", "weed", "pot", "hash", "gummies", "gummy"], defaultDose: 10, unit: "mg" },
+  { id: "cbd", keywords: ["cbd", "cannabidiol"], defaultDose: 25, unit: "mg" },
+  { id: "cbt", keywords: ["cbt", "therapy", "cognitive behavioral therapy"], defaultDose: 1, unit: "session" },
+  { id: "sleep", keywords: ["sleep", "sleeping", "napping", "nap"], defaultDose: 8, unit: "hours" },
+  { id: "meditation", keywords: ["meditation", "meditate", "meditating", "mindfulness"], defaultDose: 30, unit: "minutes" },
+  { id: "z2cardio", keywords: ["cardio", "run", "running", "jogging", "exercise", "workout", "workout out", "marathon", "hiit", "lifting"], defaultDose: 45, unit: "minutes" },
+  { id: "hbot", keywords: ["hbot", "hyperbaric", "hyperbaric oxygen"], defaultDose: 60, unit: "minutes" },
+  { id: "coldplunge", keywords: ["cold plunge", "cold water", "ice bath", "sauna"], defaultDose: 5, unit: "minutes" },
+  { id: "tms", keywords: ["tms", "transcranial magnetic"], defaultDose: 1, unit: "session" },
+  { id: "dbs", keywords: ["dbs", "deep brain stimulation"], defaultDose: 1, unit: "session" },
+  { id: "vns", keywords: ["vns", "vagus nerve stimulation", "tVNS", "taVNS"], defaultDose: 1, unit: "session" },
+  { id: "ect", keywords: ["ect", "electroconvulsive"], defaultDose: 1, unit: "session" },
+  { id: "tcca", keywords: ["tcca"], defaultDose: 1, unit: "session" },
+  { id: "donepezil", keywords: ["donepezil", "aricept"], defaultDose: 5, unit: "mg" }
+];
+
+function parseDoseWithUnit(text: string, keywords: string[]): { value: number; unit: string } | null {
+  for (const kw of keywords) {
+    const escapedKw = kw.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    
+    const prevRegex = new RegExp(`(\\d+(?:\\.\\d+)?)\\s*(mg|g|mcg|ml|min|minutes|hr|hrs|hours)?\\s*(?:of|at)?\\s+${escapedKw}`, "i");
+    let match = text.match(prevRegex);
+    if (match && match[1]) {
+      return { value: parseFloat(match[1]), unit: (match[2] || "").toLowerCase() };
+    }
+    
+    const postRegex = new RegExp(`${escapedKw}\\s*(?:at|dose|of)?\\s*\\(?\\s*(\\d+(?:\\.\\d+)?)\\s*(mg|g|mcg|ml|min|minutes|hr|hrs|hours)?\\)?`, "i");
+    match = text.match(postRegex);
+    if (match && match[1]) {
+      return { value: parseFloat(match[1]), unit: (match[2] || "").toLowerCase() };
+    }
+  }
+  return null;
+}
+
+function mapParsedDoseToIntensity(id: string, parsed: { value: number; unit: string } | null, defaultDose: number): number {
+  let val = defaultDose;
+  let unit = "";
+  
+  if (parsed) {
+    val = parsed.value;
+    unit = parsed.unit;
+  }
+  
+  if (id === "jianshouqing") {
+    if (unit === "mg") val = val / 1000.0;
+    return val / 50.0;
+  }
+  
+  if (id === "lsd") {
+    if (unit === "mcg") val = val / 1000.0;
+    return val / 0.15;
+  }
+  
+  if (id === "sleep") {
+    return val / 8.0;
+  }
+  
+  if (["meditation", "breathwork", "coldplunge", "z2cardio", "hbot"].includes(id)) {
+    let mins = val;
+    if (unit === "hr" || unit === "hrs" || unit === "hours") mins = val * 60;
+    
+    const standardMins: Record<string, number> = {
+      meditation: 30,
+      breathwork: 15,
+      coldplunge: 5,
+      z2cardio: 45,
+      hbot: 60
+    };
+    return mins / (standardMins[id] || 30);
+  }
+  
+  if (unit === "mcg") val = val / 1000.0;
+  if (unit === "g") val = val * 1000.0;
+  return val / 10.0;
+}
+
 interface Archetype {
   keywords: string[];
   arousal: number;
@@ -463,6 +610,18 @@ function localSimulateFallback(experience: string, pathologies: string[], profil
     pathText = ` Comorbid pathologies active: ${pathologies.join(", ")}.`;
   }
 
+  const matchedDrugs: DrugMetadata[] = [];
+  const stack: any[] = [];
+
+  for (const drug of DRUG_METADATA_LIST) {
+    if (drug.keywords.some(keyword => text.includes(keyword))) {
+      matchedDrugs.push(drug);
+      const parsed = parseDoseWithUnit(text, drug.keywords);
+      const intensity = mapParsedDoseToIntensity(drug.id, parsed, drug.defaultDose);
+      stack.push({ id: drug.id, dose: intensity });
+    }
+  }
+
   let blendedArousal = 0.1;
   let blendedDampening = 0.1;
   let blendedChaos = 0.0;
@@ -471,7 +630,33 @@ function localSimulateFallback(experience: string, pathologies: string[], profil
   let blendedDesc = `Linguistic input parsed locally. The brain shifts its topological phase parameters deterministically to maintain homeostatic equilibrium.${pathText}`;
   let blendedSubj = "A subtle shift in baseline cognitive focus, normal sensory flow, and steady homeostatic adaptation.";
 
-  if (matches.length > 0) {
+  const matchedMols = matchedDrugs
+    .map(d => molecules.find(m => m.id === d.id))
+    .filter((m): m is any => !!m);
+
+  if (matchedMols.length > 0) {
+    let arousal = 0;
+    let dampening = 0;
+    let chaos = 0;
+    let repair = 0;
+    
+    matchedMols.forEach(m => {
+      arousal += m.effects.arousal ?? 0;
+      dampening += m.effects.dampening ?? 0;
+      chaos += m.effects.chaos ?? 0;
+      repair += m.effects.repair ?? 0;
+    });
+
+    const count = matchedMols.length;
+    blendedArousal = +(arousal / count).toFixed(2);
+    blendedDampening = +(dampening / count).toFixed(2);
+    blendedChaos = +(chaos / count).toFixed(2);
+    blendedRepair = +(repair / count).toFixed(2);
+
+    blendedLabel = "Direct " + matchedMols.map(m => m.name).join(" + ") + " Administration";
+    blendedDesc = "Rigorous simulation of " + matchedMols.map(m => `${m.name} (${m.classLabel})`).join(", ") + " using physical PK/PD multi-receptor modeling." + pathText;
+    blendedSubj = "Acute biological onset of " + matchedMols.map(m => m.name).join(" and ") + " with localized cortical receptor occupancy shifts.";
+  } else if (matches.length > 0) {
     let arousal = 0;
     let dampening = 0;
     let chaos = 0;
@@ -507,34 +692,6 @@ function localSimulateFallback(experience: string, pathologies: string[], profil
     chaos: blendedChaos,
     repair: blendedRepair
   };
-
-  const stack: any[] = [];
-  if (text.includes("psilocybin") || text.includes("shroom")) stack.push({ id: "psilo", dose: 1 });
-  if (text.includes("lsd") || text.includes("acid")) stack.push({ id: "lsd", dose: 1 });
-  if (text.includes("jianshouqing") || text.includes("yunnan") || text.includes("little people") || text.includes("little green men")) stack.push({ id: "jianshouqing", dose: 1 });
-  if (text.includes("mdma") || text.includes("empathogen")) stack.push({ id: "mdma", dose: 1 });
-  if (text.includes("ketamine")) stack.push({ id: "ketamine", dose: 1 });
-  if (text.includes("xanax") || text.includes("alprazolam")) stack.push({ id: "alpraz", dose: 1 });
-  if (text.includes("valium") || text.includes("diazepam")) stack.push({ id: "clonaz", dose: 1 });
-  if (text.includes("alcohol") || text.includes("beer") || text.includes("wine") || text.includes("whiskey") || text.includes("drink")) stack.push({ id: "alcohol", dose: 1 });
-  if (text.includes("amphetamine") || text.includes("adderall")) stack.push({ id: "amph", dose: 1 });
-  if (text.includes("ritalin") || text.includes("methylphenidate")) stack.push({ id: "mph", dose: 1 });
-  if (text.includes("coffee") || text.includes("caffeine") || text.includes("cappuccino") || text.includes("espresso")) stack.push({ id: "caffeine", dose: 1 });
-  if (text.includes("modafinil")) stack.push({ id: "modaf", dose: 1 });
-  if (text.includes("fentanyl") || text.includes("oxy") || text.includes("heroin") || text.includes("opiate") || text.includes("opioid")) stack.push({ id: "opioid", dose: 1 });
-  if (text.includes("thc") || text.includes("cannabis") || text.includes("marijuana") || text.includes("weed")) stack.push({ id: "thc", dose: 1 });
-  if (text.includes("meditat")) stack.push({ id: "meditation", dose: 1 });
-  if (text.includes("breathwork")) stack.push({ id: "breathwork", dose: 1 });
-  if (text.includes("sleep")) stack.push({ id: "sleep", dose: 1 });
-  if (text.includes("cold plunge") || text.includes("sauna") || text.includes("cold water") || text.includes("ice bath")) stack.push({ id: "coldplunge", dose: 1 });
-  if (text.includes("nrg-01") || text.includes("nrg01")) stack.push({ id: "nrg01", dose: 1 });
-  if (text.includes("nac")) stack.push({ id: "nac", dose: 1 });
-  if (text.includes("nx-44") || text.includes("nx44")) stack.push({ id: "nx44", dose: 1 });
-  if (text.includes("lion's mane") || text.includes("lionmane") || text.includes("lions mane")) stack.push({ id: "lionmane", dose: 1 });
-  if (text.includes("clonidine")) stack.push({ id: "clonidine", dose: 1 });
-  if (text.includes("sr17") || text.includes("sr17-018")) stack.push({ id: "sr17", dose: 1 });
-  if (text.includes("cbt") || text.includes("therapy")) stack.push({ id: "cbt", dose: 1 });
-  if (text.includes("hbot")) stack.push({ id: "hbot", dose: 1 });
 
   const patientParams = {
     weightKg: profile.demographics?.weightKg ?? 70,

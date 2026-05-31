@@ -275,7 +275,16 @@ def simulate_experience(req: SimulateRequest):
         prompt = (
             "You are babelForge's simulation engine. The user has described a subjective experience, intervention, or state. "
             "You must map this experience into exactly 4 pharmacological/topological vectors (arousal, dampening, chaos, repair) "
-            "each ranging from -2.0 to 3.0. "
+            "each ranging from -2.0 to 3.0.\n\n"
+            "Here is the canonical reference specification of our proprietary compounds to guide your vector mapping:\n"
+            "- Seriphadine (Oneirogenic Anxiolytic): arousal: -0.4, dampening: 1.2, chaos: 0.8, repair: 0.4\n"
+            "- SPUR-MTDL (Epigenetic Neuroplastogen): arousal: -0.2, dampening: 0.5, chaos: -1.8, repair: 3.5\n"
+            "- ZenBud (ZB-01) (Anxiolytic Ligand): arousal: -0.4, dampening: 1.0, chaos: -0.5, repair: 0.6\n"
+            "- LimbicLink (LL-07) (DMN Modulator): arousal: -0.2, dampening: 0.3, chaos: 0.4, repair: 1.2\n"
+            "- SynaptoStim (SS-20) (Targeted DRI): arousal: 1.5, dampening: 0.0, chaos: -0.2, repair: 0.5\n"
+            "- DopaReg (DR-02) (Precision Antagonist): arousal: -0.5, dampening: 1.2, chaos: -0.4, repair: 0.2\n"
+            "- NeuroX (NX-44) (BDNF Enhancer): arousal: 0.2, dampening: 0.1, chaos: -0.5, repair: 2.5\n"
+            "- Jianshouqing Mushroom (Oneirogenic Hallucinogen): arousal: 0.1, dampening: 0.3, chaos: 1.8, repair: 0.8\n\n"
             "You must also provide a short 'label' (e.g. 'Acute Stress Response'), a 'desc' (objective topological description), "
             "and a 'subj' (projected subjective feeling). "
             f"User Experience: {req.experience}\n"
@@ -357,11 +366,10 @@ async def analyze_fmri(file: UploadFile = File(...)):
     Accept an fMRI upload and return a structured dataset the frontend
     engines can apply functions to.
 
-    Real-data path: if the upload is a CSV with shape (n_regions x n_TR)
-    or (n_TR x n_regions), we parse it directly as a BOLD matrix.
-    Otherwise we synthesize a physiologically plausible BOLD dataset via
-    coupled-oscillator dynamics + HRF convolution biased by detected
-    pathologies. Either way, the returned payload includes:
+    Real-data path: if the upload is a CSV, TSV, TXT or JSON containing numerical
+    BOLD matrix, we parse it directly. Otherwise we synthesize a physiologically
+    plausible BOLD dataset via coupled-oscillator dynamics + HRF convolution
+    biased by detected pathologies. Either way, the returned payload includes:
 
       - parcels        : list of parcel metadata (id, name, network, MNI,
                          dominant frequency, hemi).
@@ -371,46 +379,90 @@ async def analyze_fmri(file: UploadFile = File(...)):
       - fc_matrix      : Pearson functional connectivity [n][n].
       - topology       : legacy node/edge structure for NeuroCanvas.
       - diagnostic_profile : pathology labels for AIContext routing.
-
-    All numerical work uses only the Python stdlib so the Cloud Run image
-    stays minimal; upgrade to numpy/nilearn when real .nii.gz support is
-    needed.
     """
     import asyncio
     await asyncio.sleep(1.0)
 
     raw = await file.read()
 
-    # ----- Parse CSV if applicable ------------------------------------------
+    # ----- Parse CSV/TSV/TXT/JSON if applicable ------------------------------
     parsed_bold: Optional[List[List[float]]] = None
-    if file.filename and file.filename.lower().endswith(".csv"):
+    filename_lower = file.filename.lower() if file.filename else ""
+    
+    if filename_lower.endswith((".csv", ".tsv", ".txt")):
         try:
             text = raw.decode("utf-8", errors="replace")
-            reader = csv.reader(io.StringIO(text))
+            lines = [line.strip() for line in text.splitlines() if line.strip()]
             rows: List[List[float]] = []
-            for row in reader:
-                vals: List[float] = []
-                for cell in row:
-                    cell = cell.strip()
-                    if not cell:
+            
+            # Detect separator
+            separator = ","
+            if lines:
+                first_line = lines[0]
+                if "\t" in first_line:
+                    separator = "\t"
+                elif ";" in first_line:
+                    separator = ";"
+                elif " " in first_line and "," not in first_line:
+                    separator = None
+            
+            for line in lines:
+                if separator is None:
+                    parts = line.split()
+                else:
+                    parts = line.split(separator)
+                
+                vals = []
+                for p in parts:
+                    p = p.strip()
+                    if not p:
                         continue
                     try:
-                        vals.append(float(cell))
+                        vals.append(float(p))
                     except ValueError:
-                        vals = []
-                        break
+                        pass
                 if vals:
                     rows.append(vals)
+            
             if rows and len(rows) >= 2 and len(rows[0]) >= 2:
-                # Heuristic: if rows are short and many, assume (TR x regions)
-                # and transpose so we always end up (regions x TR).
                 n_rows = len(rows)
                 n_cols = len(rows[0])
                 if n_cols > n_rows:
-                    parsed_bold = rows  # already (regions x TR)
+                    parsed_bold = rows
                 else:
                     parsed_bold = [[rows[t][r] for t in range(n_rows)] for r in range(n_cols)]
-        except Exception:
+        except Exception as e:
+            print(f"Backend parsing text BOLD matrix failed: {e}")
+            parsed_bold = None
+            
+    elif filename_lower.endswith(".json"):
+        try:
+            import json
+            text = raw.decode("utf-8", errors="replace")
+            obj = json.loads(text)
+            matrix = None
+            if isinstance(obj, list) and len(obj) >= 2 and isinstance(obj[0], list):
+                matrix = obj
+            elif isinstance(obj, dict):
+                for k in ["time_series", "timeSeries", "data", "bold", "matrix"]:
+                    if k in obj and isinstance(obj[k], list) and len(obj[k]) >= 2 and isinstance(obj[k][0], list):
+                        matrix = obj[k]
+                        break
+            
+            if matrix:
+                n_rows = len(matrix)
+                n_cols = len(matrix[0])
+                num_matrix = [[float(v) for v in row if not isinstance(v, str)] for row in matrix]
+                num_matrix = [row for row in num_matrix if row]
+                if num_matrix and len(num_matrix) >= 2 and len(num_matrix[0]) >= 2:
+                    n_rows = len(num_matrix)
+                    n_cols = len(num_matrix[0])
+                    if n_cols > n_rows:
+                        parsed_bold = num_matrix
+                    else:
+                        parsed_bold = [[num_matrix[t][r] for t in range(n_rows)] for r in range(n_cols)]
+        except Exception as e:
+            print(f"Backend parsing JSON BOLD matrix failed: {e}")
             parsed_bold = None
 
     # ----- Parcels (real Yeo-7 inspired layout, 32 ROIs) ---------------------
@@ -427,19 +479,24 @@ async def analyze_fmri(file: UploadFile = File(...)):
     tr = 2.0
     n_tr = 150
     if parsed_bold is not None:
-        # Reshape parsed BOLD to n_parcels x n_tr using simple averaging /
-        # truncation. This is a placeholder until real parcel-level
-        # extraction (nilearn NiftiLabelsMasker) lands.
         src = parsed_bold
         src_n_regions = len(src)
-        src_n_tr = len(src[0])
         time_series: List[List[float]] = []
         for p in range(n_parcels):
             src_idx = int(p * src_n_regions / n_parcels)
-            row = src[src_idx][:n_tr]
-            if len(row) < n_tr:
-                row = row + [row[-1]] * (n_tr - len(row))
-            time_series.append(row)
+            src_row = src[src_idx] if src_idx < src_n_regions else src[-1]
+            if not src_row:
+                row = [0.0] * n_tr
+            elif len(src_row) < n_tr:
+                row = list(src_row) + [src_row[-1]] * (n_tr - len(src_row))
+            else:
+                row = src_row[:n_tr]
+            
+            # z-score the row
+            mu = sum(row) / len(row)
+            var = sum((v - mu) ** 2 for v in row) / len(row)
+            sd = math.sqrt(var) if var > 0 else 1.0
+            time_series.append([round((v - mu) / sd, 4) for v in row])
     else:
         time_series = _synthesize_bold(parcels, n_tr, tr, detected_pathologies)
 
