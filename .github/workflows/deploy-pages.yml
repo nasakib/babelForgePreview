@@ -31,7 +31,8 @@ jobs:
 
       - name: Prepare Static Site
         run: |
-          mkdir -p gh-pages-site
+          mkdir -p gh-pages-site/data
+          cp -r data/* gh-pages-site/data/
           cp legacy_index.html gh-pages-site/index.html
           cp legacy_stack.html gh-pages-site/stack.html
 

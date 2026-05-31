@@ -422,6 +422,18 @@ export default function ProjectionEngine({ moleculeId, vectors }: ProjectionEngi
             dimension,
             narrative
           });
+
+          console.log(
+            `[Connectome Phase-Space Kinematics] ` +
+            `R: ${kuramotoStateRef.current.R.toFixed(4)} | ` +
+            `Velocity (dR/dt): ${velocity >= 0 ? "+" : ""}${velocity.toFixed(6)} | ` +
+            `Accel (d2R/dt2): ${acceleration >= 0 ? "+" : ""}${acceleration.toFixed(6)} | ` +
+            `Entropy (H_theta): ${normEntropy.toFixed(4)} | ` +
+            `Momentum (p_topo): ${momentum.toFixed(4)} | ` +
+            `Lambda (beta): ${lambda.toFixed(4)} | ` +
+            `Df: ${dimension.toFixed(3)} | ` +
+            `Status: ${narrative}`
+          );
         }
       }
 
