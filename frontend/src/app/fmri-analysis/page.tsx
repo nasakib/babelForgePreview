@@ -53,6 +53,7 @@ export default function FMRIAnalysis() {
     fmriDataset,
     setFmriDataset,
     setIntegrityScore,
+    activePathologies,
   } = useAI();
 
   const [file, setFile] = useState<File | null>(null);
