@@ -219,7 +219,47 @@
 
             <!-- Right Panel: 3D Visualization -->
         <div class="flex-grow bg-white border border-slate-200 rounded-2xl p-1 shadow-sm flex flex-col relative min-h-[500px] lg:min-h-full">
-            <div id="canvas-container" class="w-full h-full min-h-[500px] lg:min-h-[auto] cursor-crosshair rounded-xl overflow-hidden bg-[#030008]"></div>
+            <div id="canvas-container" class="w-full h-full min-h-[500px] lg:min-h-[auto] cursor-crosshair rounded-xl overflow-hidden bg-[#030008] relative">
+                <!-- Kinematics Engine HUD -->
+                <div id="kinematics-hud" class="absolute top-4 left-4 z-10 bg-slate-900/85 border border-indigo-900/30 rounded-xl p-3.5 backdrop-blur-md pointer-events-auto w-64 shadow-2xl transition-all duration-300">
+                    <div class="flex items-center justify-between mb-2 pb-1.5 border-b border-slate-700/50">
+                        <div class="flex items-center gap-1.5">
+                            <div class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></div>
+                            <h4 class="font-bold text-[9px] uppercase tracking-widest text-cyan-400 font-mono">Phase Kinematics</h4>
+                        </div>
+                        <span class="text-[8px] font-mono bg-cyan-500/10 text-cyan-400 px-1 py-0.5 rounded uppercase tracking-wider">Live telemetry</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-x-2 gap-y-1.5 text-[10px] text-slate-300 mb-2">
+                        <div class="bg-slate-800/40 p-1.5 rounded border border-slate-700/20">
+                            <span class="block text-[7px] text-slate-500 uppercase font-bold tracking-widest">Coherence (R)</span>
+                            <span id="hud-r" class="font-mono font-bold text-cyan-400">0.0000</span>
+                        </div>
+                        <div class="bg-slate-800/40 p-1.5 rounded border border-slate-700/20">
+                            <span class="block text-[7px] text-slate-500 uppercase font-bold tracking-widest">Velocity (dR/dt)</span>
+                            <span id="hud-velocity" class="font-mono font-bold text-emerald-400">+0.000000</span>
+                        </div>
+                        <div class="bg-slate-800/40 p-1.5 rounded border border-slate-700/20">
+                            <span class="block text-[7px] text-slate-500 uppercase font-bold tracking-widest">Accel (d²R/dt²)</span>
+                            <span id="hud-acceleration" class="font-mono font-bold text-emerald-400">+0.000000</span>
+                        </div>
+                        <div class="bg-slate-800/40 p-1.5 rounded border border-slate-700/20">
+                            <span class="block text-[7px] text-slate-500 uppercase font-bold tracking-widest">Entropy (H_θ)</span>
+                            <span id="hud-entropy" class="font-mono font-bold text-amber-400">0.0000</span>
+                        </div>
+                        <div class="bg-slate-800/40 p-1.5 rounded border border-slate-700/20">
+                            <span class="block text-[7px] text-slate-500 uppercase font-bold tracking-widest">Momentum (p_topo)</span>
+                            <span id="hud-momentum" class="font-mono font-bold text-purple-400">0.0000</span>
+                        </div>
+                        <div class="bg-slate-800/40 p-1.5 rounded border border-slate-700/20">
+                            <span class="block text-[7px] text-slate-500 uppercase font-bold tracking-widest">Dimension (Df)</span>
+                            <span id="hud-dimension" class="font-mono font-bold text-indigo-400">1.000</span>
+                        </div>
+                    </div>
+                    <div class="bg-slate-950/80 p-2 rounded-lg border border-slate-800 text-[8px] text-indigo-300/90 leading-normal font-mono" id="hud-narrative">
+                        Homeostatic phase equilibrium. Connectome orbits stabilized within safe limit-cycle boundaries.
+                    </div>
+                </div>
+            </div>
             <!-- Target Area Overlay -->
             <div id="target-overlay" class="absolute bottom-6 right-6 z-10 bg-slate-900/80 border border-slate-700 rounded-xl p-3 backdrop-blur-md pointer-events-none w-64 hidden transition-opacity duration-300">
                 <div class="flex items-center gap-2 mb-2 border-b border-slate-700 pb-1">
@@ -526,6 +566,78 @@
         let hoveredNode = null;
         let selectedNode = null;
 
+        // Kuramoto & Connectome Kinematics Engine State
+        let kuramoto = {
+            N: 120,
+            theta: new Float32Array(120),
+            omega: new Float32Array(120),
+            R: 0,
+            psi: 0,
+            K: 1.0,
+            noise: 0.05
+        };
+        for (let i = 0; i < 120; i++) {
+            kuramoto.theta[i] = Math.random() * Math.PI * 2;
+            kuramoto.omega[i] = 1.0 + (Math.random() - 0.5) * 0.2;
+        }
+        let adjacencyMatrix = new Uint8Array(120 * 120);
+        let history = [];
+        let frameCount = 0;
+        let kinematics = {
+            velocity: 0,
+            acceleration: 0,
+            entropy: 0,
+            momentum: 0,
+            lambda: 0,
+            dimension: 0,
+            narrative: "System initialized at healthy baseline."
+        };
+
+        function stepKuramoto(dt) {
+            const cv = currentVectors || { arousal: 0, dampening: 0, chaos: 0, repair: 0 };
+            const balance = 1 + 0.25 * cv.repair - 0.30 * cv.chaos;
+            const tone = 1 + 0.10 * (cv.arousal - cv.dampening);
+            const K = Math.max(0.05, 0.85 * balance * tone);
+            const noise = Math.max(0.01, 0.05 + 0.18 * cv.chaos + 0.04 * Math.max(0, cv.arousal));
+            
+            kuramoto.K = K;
+            kuramoto.noise = noise;
+            
+            const N = kuramoto.N;
+            const theta = kuramoto.theta;
+            const omega = kuramoto.omega;
+            const next = new Float32Array(N);
+            const invN = 1 / N;
+            
+            for (let i = 0; i < N; i++) {
+                let sum = 0;
+                const ti = theta[i];
+                const row = i * N;
+                for (let j = 0; j < N; j++) {
+                    if (adjacencyMatrix[row + j]) {
+                        sum += Math.sin(theta[j] - ti);
+                    }
+                }
+                const xi = noise * (Math.random() * 2 - 1);
+                next[i] = ti + dt * (omega[i] + K * invN * sum + xi);
+            }
+            
+            for (let i = 0; i < N; i++) {
+                theta[i] = next[i];
+            }
+            
+            let cx = 0, cy = 0;
+            for (let i = 0; i < N; i++) {
+                cx += Math.cos(theta[i]);
+                cy += Math.sin(theta[i]);
+            }
+            cx *= invN;
+            cy *= invN;
+            
+            kuramoto.R = Math.sqrt(cx * cx + cy * cy);
+            kuramoto.psi = Math.atan2(cy, cx);
+        }
+
         function toggleComparison() {
             isComparing = !isComparing;
             document.getElementById('btn-comp').classList.toggle('bg-indigo-600', isComparing);
@@ -668,6 +780,17 @@
             const packetMat = new THREE.PointsMaterial({ color: 0x38bdf8, size: 1.5, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending });
             packetSystem = new THREE.Points(packetGeo, packetMat);
             scene.add(packetSystem);
+
+            // Populate adjacency matrix for Kuramoto model
+            adjacencyMatrix.fill(0);
+            edges.forEach(e => {
+                const s = e.userData.source;
+                const t = e.userData.target;
+                if (s >= 0 && s < 120 && t >= 0 && t < 120) {
+                    adjacencyMatrix[s * 120 + t] = 1;
+                    adjacencyMatrix[t * 120 + s] = 1;
+                }
+            });
 
             // Lights
             scene.add(new THREE.AmbientLight(0x150830));
@@ -912,15 +1035,117 @@
             controls.update();
             const time = Date.now() * 0.001;
 
-            const v = currentVectors;
+            const v = currentVectors || { arousal: 0, dampening: 0, chaos: 0, repair: 0 };
+
+            // Advance Kuramoto Connectome Simulation
+            stepKuramoto(0.04);
+            
+            // Throttled Connectome Phase-Space Kinematics telemetry
+            frameCount++;
+            if (frameCount % 15 === 0) {
+                history.push(kuramoto.R);
+                if (history.length > 100) history.shift();
+                
+                const len = history.length;
+                const rCurrent = kuramoto.R;
+                const rPrev = len > 1 ? history[len - 2] : rCurrent;
+                const velocity = rCurrent - rPrev;
+                
+                const rPrev2 = len > 2 ? history[len - 3] : rPrev;
+                const prevVelocity = rPrev - rPrev2;
+                const acceleration = velocity - prevVelocity;
+                
+                const binCount = 8;
+                const bins = new Array(binCount).fill(0);
+                for (let i = 0; i < kuramoto.N; i++) {
+                    const angle = ((kuramoto.theta[i] % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+                    const binIdx = Math.min(binCount - 1, Math.floor(angle / (Math.PI / 4)));
+                    bins[binIdx]++;
+                }
+                let entropy = 0;
+                for (let i = 0; i < binCount; i++) {
+                    if (bins[i] > 0) {
+                        const p = bins[i] / kuramoto.N;
+                        entropy -= p * Math.log(p);
+                    }
+                }
+                const normEntropy = entropy / Math.log(binCount);
+                const K = kuramoto.K;
+                const noise = kuramoto.noise;
+                const momentum = K * velocity * 2.5;
+                const lambda = K / (noise + 0.05);
+                const dimension = 1.0 + (noise * 2.0) / (K + 0.2);
+                
+                let narrative = "";
+                if (v.dampening > 1.8) {
+                    narrative = "Global amplitude collapse. Trajectory captured by a stable fixed-point node attractor.";
+                } else if (normEntropy > 0.75) {
+                    narrative = `High-dimensional phase diffusion. Connectome exhibiting high-entropy topological chaos (Df ≈ ${dimension.toFixed(2)}).`;
+                } else if (rCurrent > 0.75) {
+                    narrative = `Phase-locking lock-in. Connectome converged into a rigid, low-degree limit-cycle orbital attractor (R ≈ ${rCurrent.toFixed(3)}).`;
+                } else if (Math.abs(velocity) < 0.005) {
+                    narrative = "Homeostatic phase equilibrium. Connectome orbits stabilized within safe limit-cycle boundaries.";
+                } else if (velocity > 0.005) {
+                    narrative = "Accelerating synchronization trajectory. Connectome phase space expanding under structural coupling.";
+                } else {
+                    narrative = "Phase dissipation drift. System undergoing structural connectome relaxation toward baseline.";
+                }
+                
+                kinematics = {
+                    velocity,
+                    acceleration,
+                    entropy: normEntropy,
+                    momentum,
+                    lambda,
+                    dimension,
+                    narrative
+                };
+
+                // Update HTML HUD elements
+                const hudREl = document.getElementById('hud-r');
+                const hudVelEl = document.getElementById('hud-velocity');
+                const hudAccEl = document.getElementById('hud-acceleration');
+                const hudEntEl = document.getElementById('hud-entropy');
+                const hudMomEl = document.getElementById('hud-momentum');
+                const hudDimEl = document.getElementById('hud-dimension');
+                const hudNarrEl = document.getElementById('hud-narrative');
+
+                if (hudREl) hudREl.innerText = rCurrent.toFixed(4);
+                if (hudVelEl) {
+                    hudVelEl.innerText = (velocity >= 0 ? "+" : "") + velocity.toFixed(6);
+                    hudVelEl.className = `font-mono font-bold ${velocity >= 0 ? "text-emerald-400" : "text-rose-400"}`;
+                }
+                if (hudAccEl) {
+                    hudAccEl.innerText = (acceleration >= 0 ? "+" : "") + acceleration.toFixed(6);
+                    hudAccEl.className = `font-mono font-bold ${acceleration >= 0 ? "text-emerald-400" : "text-rose-400"}`;
+                }
+                if (hudEntEl) hudEntEl.innerText = normEntropy.toFixed(4);
+                if (hudMomEl) hudMomEl.innerText = momentum.toFixed(4) + " rad/s";
+                if (hudDimEl) hudDimEl.innerText = dimension.toFixed(3);
+                if (hudNarrEl) hudNarrEl.innerText = narrative;
+                
+                // Log to browser developer console
+                console.log(
+                    `[Connectome Phase-Space Kinematics] ` +
+                    `R: ${rCurrent.toFixed(4)} | ` +
+                    `Velocity (dR/dt): ${velocity >= 0 ? "+" : ""}${velocity.toFixed(6)} | ` +
+                    `Accel (d2R/dt2): ${acceleration >= 0 ? "+" : ""}${acceleration.toFixed(6)} | ` +
+                    `Entropy (H_theta): ${normEntropy.toFixed(4)} | ` +
+                    `Momentum (p_topo): ${momentum.toFixed(4)} | ` +
+                    `Lambda (beta): ${lambda.toFixed(4)} | ` +
+                    `Df: ${dimension.toFixed(3)} | ` +
+                    `Status: ${narrative}`
+                );
+            }
 
             const speed = Math.max(0.5, 4 + v.arousal * 2 - v.dampening * 1.5);
             const scaleBase = Math.max(0.1, 1.0 + v.arousal * 0.2 - v.dampening * 0.4 + v.repair * 0.3);
             const jitterBase = Math.max(0, v.chaos * 6 + Math.max(0, v.arousal - 1.5) * 4);
 
             baseNodes.forEach((node, i) => {
-                const dist = node.userData.origin.length();
-                const wave = Math.sin(dist * 0.05 - time * speed);
+                const nodeIdx = node.userData.id;
+                const phase = kuramoto.theta[nodeIdx];
+                const wave = Math.sin(phase);
                 
                 // Position
                 let jx = (Math.random() - 0.5) * jitterBase;
