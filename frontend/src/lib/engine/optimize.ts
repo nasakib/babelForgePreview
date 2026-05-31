@@ -61,7 +61,7 @@ export function autoOptimizeIdeal(
       m.isLifestyle ||
       (m.class === "stimulant" && ["modaf", "armodaf", "mph", "dexmph", "lisdexamph", "caffeine"].includes(m.id)) ||
       (m.class === "cannabinoid" && ["cbd", "cbg", "cbga", "cbdv", "cbdp", "cbc", "cbl", "cbn"].includes(m.id)) ||
-      (m.class === "depressant" && ["gaba", "pregab", "donepezil", "memantine", "dextro"].includes(m.id))
+      (m.class === "depressant" && ["gaba", "pregab", "donepezil", "memantine", "dextro", "methadone", "buprenorphine"].includes(m.id))
     );
   });
 
@@ -118,10 +118,10 @@ export function autoOptimizeLeastResistance(
       m.isLifestyle ||
       m.class === "ssri" ||
       m.class === "antipsychotic" ||
-      (m.class === "corrective" && ["clonidine", "acamprosate", "nac", "agmatine", "galantamine", "methadone", "buprenorphine"].includes(m.id)) ||
+      (m.class === "corrective" && ["clonidine", "acamprosate", "nac", "agmatine", "galantamine"].includes(m.id)) ||
       (m.class === "stimulant" && ["modaf", "armodaf", "mph", "dexmph", "lisdexamph", "caffeine"].includes(m.id)) ||
       (m.class === "cannabinoid" && ["cbd", "cbg", "cbga", "cbdv", "cbdp", "cbc", "cbl", "cbn"].includes(m.id)) ||
-      (m.class === "depressant" && ["gaba", "pregab", "donepezil", "memantine", "dextro"].includes(m.id))
+      (m.class === "depressant" && ["gaba", "pregab", "donepezil", "memantine", "dextro", "methadone", "buprenorphine"].includes(m.id))
     );
   });
 

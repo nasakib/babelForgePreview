@@ -121,6 +121,13 @@ export function translateSubjective(
   if (activeIds.has("mdma")) valence += 35;   // Empathogen
   if (activeIds.has("psilo")) valence += 15;  // Classic psychedelic mood lift
   if (activeIds.has("cbt") && states.includes("DEPRESSION")) valence += 15; // CBT therapy
+  
+  // Opioid corrective mood lifts in withdrawal
+  if (states.includes("WITHDRAWAL_OPIOID")) {
+    if (activeIds.has("sr17")) valence += 35;
+    if (activeIds.has("buprenorphine")) valence += 30;
+    if (activeIds.has("methadone")) valence += 28;
+  }
 
   // Deep Patient Profile Modifiers for Valence
   if (psych.phq9 !== undefined) {
@@ -195,6 +202,9 @@ export function translateSubjective(
   if (activeIds.has("meditation")) autonomic -= 8;
   if (activeIds.has("sleep")) autonomic -= 10;
   if (activeIds.has("alpraz") || activeIds.has("clonaz") || activeIds.has("loraz")) autonomic -= 25;
+  if (activeIds.has("sr17")) autonomic -= 25;
+  if (activeIds.has("buprenorphine")) autonomic -= 22;
+  if (activeIds.has("methadone")) autonomic -= 20;
 
   // Deep Patient Profile Modifiers for Autonomic Tone
   if (vitals.hrRest !== undefined) {

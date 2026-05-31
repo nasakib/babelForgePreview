@@ -328,6 +328,7 @@ ${stackTxt} ${pathTxt}`;
 * **ZenBud (ZB-01):** High-affinity modulation at GABA-A sites, increasing chloride influx to lower phase noise.
 * **Ibogaine / Noribogaine:** Atypical NMDA channel antagonist, Kappa-opioid agonist, and Sigma receptor chaperone, driving robust mesolimbic GDNF/BDNF expression.
 * **Variegatic Acid (Jianshouqing):** Highly specific muscarinic M1 agonist paired with moderate 5-HT2A displacement, causing visual coordinate transformations.
+* **SR17-018:** G-protein biased Mu-opioid receptor agonist (MOR Kd: 10 nM, efficacy: 0.6) that selectively recruits G-protein signaling while avoiding beta-arrestin-2 pathways, achieving high-efficacy connectome stabilization and micro-structural limbic repair without inducing respiratory depression or fatal overdose risks.
 
 #### ⚠️ PROTOX-3.0 SAFETY & TOXICITY SCHEMAS
 * **Exclusions:** Greedily rejects high-toxicity recreational stimulants (cocaine, methamphetamine) due to auto-oxidation, severe vasoconscriptive hypoxia, and rapid transporter reversal.
@@ -345,6 +346,7 @@ ${stackTxt}`;
 * PTSD [DSM-5: F43.10] - characterized by limbic persistent cavities, hyper-vigilance, and chronological time collapse.
 * ADHD [DSM-5: F90.2] - characterized by Control network deficits and latent effortful focus static.
 * CRPS [DSM-5: G90.50] - characterized by Budapest criteria sensory/vasomotor autonomic storms.
+* Opioid Withdrawal [DSM-5: F11.23] - characterized by autonomic dysregulation, reward-circuitry edge collapse, and extreme negative valence.
 
 #### 📈 PSYCHOMETRIC & CLINICAL SCALE EQUIVALENTS
 * PHQ-9 Equivalent: ${integrity > 85 ? "Minimal (0-4)" : integrity > 65 ? "Mild to Moderate (5-14)" : "Severe Refractory Depression (15-27)"}
