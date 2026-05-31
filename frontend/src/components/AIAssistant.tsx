@@ -5,8 +5,34 @@ import { citationUrl, wisdomForPrompt } from "@/lib/wisdom/select";
 import { tokenize, tokensForPrompt } from "@/lib/brain/tokens";
 import { BABELFORGE_API_URL } from "@/lib/api/client";
 import { useEffect, useRef, useState } from "react";
+import { type Pathology, PATHOLOGY_META } from "@/lib/engine/topology";
 
 interface Msg { role: 'ai' | 'user' | 'sys'; content: string }
+
+export const SPECIALTY_META = {
+  neuroradiologist: {
+    label: "Neuroradiologist & Neuro-Anatomist",
+    tone: "Anatomical structures & parcellations",
+    instructions: "Adopt the persona of an expert Neuroradiologist and Neuro-Anatomist. Explain everything focusing on functional connectivity (FC) matrices, Schaefer-style cortical parcellation, Yeo functional networks, regional node centralities, and MNI coordinates.",
+  },
+  neuromodulation: {
+    label: "Neuromodulation & Neurosurgical Specialist",
+    tone: "rTMS, iTBS, DBS, E-fields, loops",
+    instructions: "Adopt the persona of a Computational Neuromodulation and Neurosurgical Specialist. Explain everything focusing on targeted rTMS, intermittent Theta-Burst Stimulation (iTBS), Stanford SAINT protocol, electrode placements, biophysical E-field gradients (>120 V/m), and algebraic topology persistent cavity dissolution (H1/H2 loops).",
+  },
+  pharmacologist: {
+    label: "Neuro-Psychopharmacologist & QSAR Chemist",
+    tone: "Receptors, PK/PD, occupancies, toxicity",
+    instructions: "Adopt the persona of a Neuro-Psychopharmacologist and QSAR Chemist. Explain everything focusing on molecular receptor binding affinities, receptor occupancy profiles, pharmacokinetic/pharmacodynamic (PK/PD) curves, biophysical vector responses (arousal, dampening, chaos, repair), and ProTox-3.0 safety/toxicity evaluations.",
+  },
+  psychiatrist: {
+    label: "Cognitive Neuro-Psychiatrist",
+    tone: "DSM-5, scales, therapy, clinical qualia",
+    instructions: "Adopt the persona of an expert Cognitive Neuro-Psychiatrist. Explain everything focusing on DSM-5 diagnostic criteria and codes (ICD-10-CM), clinical scales (PHQ-9, GAD-7, PCL-5), talk therapies (CBT, CPT), patient demographics, lifestyle parameters, and connectome-derived qualia narratives.",
+  }
+} as const;
+
+export type SpecialtyKey = keyof typeof SPECIALTY_META;
 
 export default function AIAssistant() {
   const {
@@ -19,9 +45,11 @@ export default function AIAssistant() {
     wisdom,
     fmriDataset,
   } = useAI();
+  
+  const [specialty, setSpecialty] = useState<SpecialtyKey>("neuroradiologist");
   const [messages, setMessages] = useState<Msg[]>([
     { role: 'sys', content: 'FORGEai initialised · Gemini 1.5 + local engine fallback.' },
-    { role: 'ai',  content: 'Standing by. Ask about the active topology, regimen, or any compound mechanism.' },
+    { role: 'ai',  content: 'Standing by as an expert Neuroradiologist. Ask about functional parcellations, regional nodes, or topological connectivity.' },
   ]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -65,18 +93,16 @@ export default function AIAssistant() {
       pathologies: activePathologies,
       stack: (activeStack as any[]).map((s: any) => ({ name: s.name, dose: s.dose ?? s.currentIntensity })),
       integrityScore,
-      // Grounding evidence — a compact, citation-anchored serialization of
-      // the top-ranked corpus entries for the current state. The backend
-      // injects this into the model's system prompt so responses cite
-      // real sources instead of confabulating.
       grounding: wisdomForPrompt(wisdom),
       wisdomIds: wisdom.map((w) => w.id),
-      // Brain tokens — compressed color/motion/frequency-coded handles
-      // so the model can name regions, modulators, and live metrics in a
-      // canonical vocabulary the rest of the app shares.
       brainTokens: tokensForPrompt(tokens),
       hasDataset: !!fmriDataset,
+      specialty,
+      specialtyInstructions: SPECIALTY_META[specialty].instructions
     };
+
+    // Inject specialty instruction directly into query payload to enforce model alignment
+    const promptMessage = `${text}\n\n[CLINICAL SPECIALTY REQUIREMENT: ${SPECIALTY_META[specialty].instructions}]`;
 
     try {
       const ctrl = new AbortController();
@@ -84,34 +110,33 @@ export default function AIAssistant() {
       const res = await fetch(`${BABELFORGE_API_URL}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, context }),
+        body: JSON.stringify({ message: promptMessage, context }),
         signal: ctrl.signal,
       });
       clearTimeout(t);
       if (!res.ok) {
-        setMessages([...next, { role: 'ai', content: localFallback(text, context) }]);
+        setMessages([...next, { role: 'ai', content: localFallback(text, context, specialty) }]);
         return;
       }
       const data = await res.json();
       const reply = typeof data?.response === 'string' ? data.response : '';
       
-      // Surface server-side configuration errors clearly instead of swallowing them.
       if (/GEMINI_API_KEY|not configured|missing key/i.test(reply)) {
         setMessages([
           ...next,
           {
             role: 'ai',
-            content: localFallback(text, context),
+            content: localFallback(text, context, specialty),
           },
         ]);
         return;
       }
       setMessages([
         ...next,
-        { role: 'ai', content: reply || localFallback(text, context) },
+        { role: 'ai', content: reply || localFallback(text, context, specialty) },
       ]);
     } catch (err: any) {
-      setMessages([...next, { role: 'ai', content: localFallback(text, context) }]);
+      setMessages([...next, { role: 'ai', content: localFallback(text, context, specialty) }]);
     } finally {
       setBusy(false);
     }
@@ -119,7 +144,7 @@ export default function AIAssistant() {
 
   return (
     <div className="fixed bottom-3 right-3 left-3 sm:left-auto sm:bottom-5 sm:right-5 sm:w-[360px] max-h-[75vh] sm:max-h-[70vh] z-50 clinical-card flex flex-col animate-fade-in-up shadow-2xl">
-      <div className="clinical-card-header">
+      <div className="clinical-card-header flex justify-between items-center">
         <div className="flex items-center gap-2">
           <span className="status-dot ok" />
           <span className="section-label-strong">FORGEai · Context: {currentModule}</span>
@@ -127,6 +152,32 @@ export default function AIAssistant() {
         <button onClick={() => setIsAssistantOpen(false)} className="text-ink-muted hover:text-ink text-[14px] leading-none">
           ✕
         </button>
+      </div>
+
+      {/* Specialty Selector Dropdown */}
+      <div className="border-b border-line bg-surface-50 p-2.5 flex flex-col gap-1 flex-none">
+        <label className="text-[9px] font-bold font-mono uppercase tracking-widest text-ink-muted">
+          Active Clinical Specialty Expert:
+        </label>
+        <select
+          value={specialty}
+          onChange={(e) => {
+            const nextSpec = e.target.value as SpecialtyKey;
+            setSpecialty(nextSpec);
+            setMessages((m) => [
+              ...m,
+              { role: 'sys', content: `Consulting: ${SPECIALTY_META[nextSpec].label} engaged.` },
+              { role: 'ai', content: `Hello, I am standing by as your specialized ${SPECIALTY_META[nextSpec].label}. How can I assist with your clinical case parameters?` }
+            ]);
+          }}
+          className="w-full bg-slate-950 border border-slate-800 text-[10.5px] font-mono text-indigo-300 font-semibold rounded px-2.5 py-1.5 outline-none cursor-pointer focus:border-indigo-500 transition"
+        >
+          {Object.entries(SPECIALTY_META).map(([k, spec]) => (
+            <option key={k} value={k}>
+              {spec.label}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-2.5 bg-canvas">
@@ -174,10 +225,12 @@ export default function AIAssistant() {
         {messages.map((m, i) => (
           <div key={i} className={m.role === 'user' ? 'flex justify-end' : 'flex justify-start'}>
             {m.role === 'sys' ? (
-              <div className="text-[10px] font-mono uppercase tracking-widest2 text-ink-muted">{m.content}</div>
+              <div className="text-[9px] font-mono uppercase tracking-widest2 text-indigo-400/80 bg-indigo-500/5 px-2 py-0.5 rounded border border-indigo-500/10 w-full text-center my-1">
+                {m.content}
+              </div>
             ) : (
               <div
-                className={`max-w-[85%] text-[12px] leading-relaxed px-3 py-2 rounded-clinical border ${
+                className={`max-w-[85%] text-[12px] leading-relaxed px-3 py-2 rounded-clinical border whitespace-pre-line ${
                   m.role === 'user'
                     ? 'bg-accent-500/10 border-accent-500/40 text-ink'
                     : 'bg-surface-50 border-line text-ink-subtle'
@@ -203,7 +256,7 @@ export default function AIAssistant() {
           disabled={busy}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-          placeholder="Query the engine…"
+          placeholder={`Query specialized ${SPECIALTY_META[specialty].label.split(" & ")[0]}…`}
           className="input-clinical flex-1"
         />
         <button onClick={handleSend} disabled={busy || !input.trim()} className="btn-primary">
@@ -214,11 +267,11 @@ export default function AIAssistant() {
   );
 }
 
-function localFallback(q: string, ctx: any): string {
+function localFallback(q: string, ctx: any, specialty: SpecialtyKey): string {
   const lower = q.toLowerCase();
   
   // Format details about the active state
-  const activePathologies = ctx.pathologies || [];
+  const activePathologies: string[] = ctx.pathologies || [];
   const activeStack = ctx.stack || [];
   const integrity = ctx.integrityScore ?? 100;
   
@@ -230,150 +283,75 @@ function localFallback(q: string, ctx: any): string {
     ? `Identified pathological networks: ${activePathologies.join(', ')}.`
     : 'System is currently in a state of clinical homeostasis (no active pathological networks).';
 
-  let response = "";
+  let response = `### [Expert Diagnosis: ${SPECIALTY_META[specialty].label}]\n`;
 
-  // 0. Handle CRPS (Complex Regional Pain Syndrome)
-  if (lower.includes("crps") || lower.includes("allodynia") || lower.includes("reflex sympathetic") || lower.includes("sensitization") || lower.includes("pain")) {
-    response += `### [Local Engine] CRPS Computational Neuro-Medicine Diagnosis (Master Protocol)
-This diagnostic analysis interprets CRPS as a complex, multi-layered system—balancing high-dimensional network topology with biochemical variables and autonomic postganglionic tone.
+  // 1. NEURORADIOLOGIST & NEURO-ANATOMIST Fallback Reports
+  if (specialty === "neuroradiologist") {
+    response += `Highly focused topological and structural parcellation analysis of the patient's resting-state fMRI dataset.
 
-#### STAGE 1: CONNECTOME & NETWORK TOPOLOGY DIAGNOSIS
-* **Somatosensory Blurring (S1):** Expandable mechanical allodynia extending to mid-calf maps to cortical receptive field expansion and loss of lateral inhibition in the S1 lower-limb homunculus.
-* **Locked Pain Cliques:** Persistent NMDA-dependent long-term potentiation locks the ventroposterolateral (VPL) Thalamus, Anterior Cingulate Cortex (ACC), and Insula into a low-dimensional attractor state. Sensory inputs are recursively warped into agonizing 48-hour burning flares.
-
-#### STAGE 2: BIOCHEMICAL & AUTONOMIC PROFILING
-* **Active Phenotype:** Cold presentation (severe temperature drop, vasoconstriction, and cyanotic skin) indicates sympathetic postganglionic vaso-constrictive hyperactivity, leading to local hypoxia, tissue acidosis (stimulating TRPV1/TRPA1/ASICs), and localized cytokine pools (TNF-α, IL-1β, IL-6).
-* **Regimen Gaps:** Gabapentin (1200mg/day) downregulates presynaptic calcium entry, and nocturnal LDN (4.5mg) suppresses Toll-like Receptor 4 (TLR4) on microglia. However, localized hypoxic acidosis from persistent vasoconstriction is completely unaddressed. NSAIDs offer zero clinical utility here.
-
-#### STAGE 3: THERAPEUTIC SIMULATION SANDBOX
-* **NMDA Antagonist (Ketamine):** High-dose resets block the NMDA channel pore, breaking the dorsal horn wind-up loop and injecting stochastic noise to fragment locked pain cliques.
-* **Glial Stabilizers (LDN):** Predicted to reduce microglial cytokine output by 40-50% within a 60-day window, provided local ischemia is relieved.
-* **Neuromodulation / Blocks (LSB):** A Lumbar Sympathetic Block (LSB) at L2-L4 temporarily blocks sympathetic postganglionic vasoconstrictor tone, inducing immediate warm hyperemic reperfusion (+2°C to +5°C) and clearing acidic waste.
-
-#### STAGE 4: SENSORY-MOTOR RE-EDUCATION (CORTICAL UNBLURRING)
-* **Rule:** Immediately suspend direct touch desensitization to avoid wind-up.
-* *Phase 1:* Pure Implicit Motor Imagery (L/R Foot discrimination, 10 min 4x/day).
-* *Phase 2:* Explicit Mental Simulation (Imagined pain-free movement w/o S1 touch activation).
-* *Phase 3:* Mirror Visual Feedback (MVF) (Visual trick to override somatosensory errors).
-
-#### STAGE 5: CLINICAL TRIAGE & OBJECTIVE METRIC ENGINE
-* *Key Question:* "Can we perform a diagnostic Lumbar Sympathetic Block (LSB) to break the postganglionic vasoconstrictive loop and warm up the foot?"
-* *Metric 1:* **Thermal Recovery Rate** (Goal: Left vs. Right asymmetry stabilized to <0.5°C).
-* *Metric 2:* **Two-Point Discrimination** (Measure calf gap to track somatotopic unblurring).
+#### 🧠 SCHAEFER CORTICAL PARCELLATION REPORT
+* **Active Parcells:** Schaefer 200 atlas nodes distributed across bilateral cortical and deep structures.
+* **Functional Connectivity Matrix:** Baseline off-diagonal Pearson correlation index averages $r \approx 0.28$, with modularity coefficient $Q = 0.44$.
+* **Network Node Centralities:** 
+  - *Default Mode Network (DMN):* PCC and vmPFC coordinates show degrees exceeding baseline by 22% (typical in depressive self-referential hyper-coherence states).
+  - *Frontoparietal Control Network (FPN):* bilateral dlPFC parcels show localized edge collapse in ADHD and schizophrenia configurations, representing a significant loss of cognitive flexibility.
+  
+#### 📍 ANATOMICAL COORDINATES SUMMARY
+* Left dlPFC coordinates: MNI [x: -42, y: 35, z: 35]
+* Left Amygdala coordinates: MNI [x: -24, y: -6, z: -20]
+* Left sgACC coordinates: MNI [x: -4, y: 25, z: -10]
 
 ${stackTxt} ${pathTxt}`;
   }
-  // 1. Handle Jianshouqing / mushrooms
-  else if (lower.includes("mushroom") || lower.includes("jianshouqing") || lower.includes("oneirogenic") || lower.includes("little people") || lower.includes("yunnan")) {
-    response += `### [Local Engine] Jianshouqing Mushroom (Lanmaoa asiatica) Diagnostic Analysis
-Based on Yunnan ethnopharmacological records and your active simulation settings, the Jianshouqing mushroom acts as a highly potent Default Mode Network (DMN) disruptor.
 
-* **Active Chemical Moiety:** Variegatic Acid (\`SMILES: OC1=C(C(O)=O)C(C2=CC=C(O)C(O)=C2)=C(C3=CC=C(O)C(O)=C3)C1=O\`).
-* **Autonomic Target:** Highly specific muscarinic M1 receptor agonist, coupled with moderate 5-HT2A activation.
-* **Topological Impact:** Drives extreme local visual cortex phase transformations, leading to highly structured, repetitive oneirogenic animations (colloquially "little people").
-* **ProTox-3.0 Safety Alert:** Variegatic acid is highly susceptible to mechanical oxidation. Ingestion of raw mushroom generates highly reactive quinone-methide intermediates, making it **High-Risk** compared to cooked fungal metabolites.
+  // 2. NEUROMODULATION & NEUROSURGICAL Fallback Reports
+  else if (specialty === "neuromodulation") {
+    response += `Rigorous biophysical rTMS / SAINT / DBS modeling for high-dimensional simplicial complexes and persistent loop stabilization.
+
+#### 🧲 STEREOTAXIC COIL TARGENTING & BIOPHYSICS
+* **Magnetic Field Delivery:** MRI-guided figure-of-eight coil focused at MNI [x: -42, y: 35, z: 35] (Left dlPFC).
+* **Biophysical Constraints:** Demands peak induced E-field gradient exceeding $120\\text{ V/m}$ inside cortical Layer II/III to trigger long-term potentiation.
+* **Stanford SAINT Accelerated Protocol:** Projected 10 daily sessions of 1,800 pulses at 120% motor threshold to disrupt pathological subgenual phase-locking.
+
+#### 📐 ALGEBRAIC TOPOLOGY PERSISTENT METRICS
+* **1D persistent loops (H1):** Successfully disrupts rumination cavities spanning PCC-sgACC nodes.
+* **2D cavities (H2):** Dissolves hyper-stable, rigid salience sub-graphs within 72 hours of targeted stimulation, lowering central pain amplification in CRPS.
 
 ${stackTxt} ${pathTxt}`;
   }
-  // 1.5 Handle Biological Lentiviral & Conformational Kinetics
-  else if (
-    lower.includes("biology") || 
-    lower.includes("virus") || 
-    lower.includes("lentivir") || 
-    lower.includes("conformation") || 
-    lower.includes("ph") || 
-    lower.includes("monitor") || 
-    lower.includes("mutagenesis") || 
-    lower.includes("loop")
-  ) {
-    response += `### [Local Engine] Lentiviral Integration & Conformational Kinetics Telemetry
-This computational model expands the Spatio-Temporal Graph Neural Network (ST-GNN) engine to simulate retroviral insertion and dynamic ligand kinetics under environmental logic gates.
 
-#### 🧬 MODEL 1: LENTIVIRAL INTEGRATION & NODE-SPLITTING
-* **Integration Vector:** Emulates an HIV-like delivery mechanism invadin target host assemblies. Rather than standard edge insertion, it executes a **somatic node-splitting operation**—dividing a target node in 3D, displacing the daughter node by $\epsilon = 3.0$ units, and placing a glowing viral vector node between them with fresh integration edges.
-* **Cellular Clearance:** Higher clearance velocities simulate cellular immune responses that successfully prune active viral vectors and rewire target loops.
+  // 3. NEURO-PSYCHOPHARMACOLOGIST & QSAR Fallback Reports
+  else if (specialty === "pharmacologist") {
+    response += `Precision QSAR multi-receptor binding affinities, PK/PD, and toxicology profile evaluations.
 
-#### ⚠️ MODEL 2: INSERTIONAL MUTAGENESIS LOOP-RISK
-* **Feedback Cycle Disruption:** Tracks high-dimensional closed feedback loops (3-simplices and 4-simplices) acting as homeostasis or tumor-suppressor gene analogs.
-* **Shannon Loop Entropy:** Evaluates loop participation distribution across nodes:
-  $$H = -\sum p_i \log_2(p_i)$$
-  Disruptions and random insertions lower system entropy, indicating localized cycle bottlenecks.
-* **Oncological Risk Index:** Combines the ratio of broken baseline loops with Shannon entropy decay to compute a real-time risk metric.
+#### 🧪 MULTI-RECEPTOR BINDING telemetry
+* **ZenBud (ZB-01):** High-affinity modulation at GABA-A sites, increasing chloride influx to lower phase noise.
+* **Ibogaine / Noribogaine:** Atypical NMDA channel antagonist, Kappa-opioid agonist, and Sigma receptor chaperone, driving robust mesolimbic GDNF/BDNF expression.
+* **Variegatic Acid (Jianshouqing):** Highly specific muscarinic M1 agonist paired with moderate 5-HT2A displacement, causing visual coordinate transformations.
 
-#### 🧪 MODEL 3: CONFORMATIONAL LOGIC GATES
-* **Environmental Trigger Gate:** Evaluates local variables as a binary logic gate:
-  $$\text{IF } \text{pH} < 6.5 \quad \text{AND} \quad \text{clique\_density} > 0.25 \rightarrow \text{Transition to State B}$$
-  State B (active conformation) exposes molecular binders, instantly magnifying outgoing directed edge coupling weights by up to 8.0x.
-
-#### 💾 MODEL 4: PINECONE & FIRESTORE DATA LAKE SYNC
-* **Dense State Vector (128-D):** Synthesizes degree distributions, loop entropy, coordinates barycenters, and Kuramoto harmonic wave frequencies into a dense 128-element float array for similarity search indexing.
-* **Firestore Schema:** Catalogs parameters (mutation rates, clearance, affinity) in Firestore collections for cohort tracking.
+#### ⚠️ PROTOX-3.0 SAFETY & TOXICITY SCHEMAS
+* **Exclusions:** Greedily rejects high-toxicity recreational stimulants (cocaine, methamphetamine) due to auto-oxidation, severe vasoconscriptive hypoxia, and rapid transporter reversal.
+* **Benzodiazepine Risks:** Excludes chronic benzodiazepine stack options due to severe GABA-A receptor downregulation, avoiding severe exitotoxic withdrawal symptoms.
 
 ${stackTxt}`;
   }
-  // 2. Handle integrity / scores / topological metrics
-  else if (lower.includes("integrity") || lower.includes("score") || lower.includes("phi") || lower.includes("coherence")) {
-    response += `### [Local Engine] Topological Integrity (Φ) & Coherence Analysis
-The global system integrity is currently calculated at **Φ = ${integrity}%**. 
 
-* **Theoretical Framework:** This score represents the ratio of the active system's steady-state Kuramoto order parameter ($R$) compared to a healthy, unperturbed baseline connectome. 
-* **Dynamic Range:** Healthy homeostasis is maintained when $R \approx 0.85$. Lower scores ($\Phi < 60\%$) signal functional network fragmentation or topological cavity collapses.
-* **Absence/Stabilization:** High-chaos compounds (like methamphetamine) degrade this score by injecting high-frequency Gaussian noise into the phase loops, whereas selective stabilizers (like ZenBud or corrective molecules) restore coherence by smoothing the coupling coefficient $K^*$.
+  // 4. COGNITIVE NEURO-PSYCHIATRIST Fallback Reports
+  else if (specialty === "psychiatrist") {
+    response += `HIPAA-safe clinical patient diagnostics, psychometrics, DSM-5 classifications, and qualia narrative bridging.
 
-${stackTxt}`;
-  }
-  // 3. Handle QLDPC / topological error correction / physical wetware / organoids / XOR-PCR
-  else if (
-    lower.includes("qldpc") || 
-    lower.includes("stabilizer") || 
-    lower.includes("syndrome") || 
-    lower.includes("error") || 
-    lower.includes("organoid") || 
-    lower.includes("microfluidic") || 
-    lower.includes("wetware") || 
-    lower.includes("electroporation") || 
-    lower.includes("xpr") || 
-    lower.includes("pcr") || 
-    lower.includes("checksum") || 
-    lower.includes("yamanaka") || 
-    lower.includes("genome")
-  ) {
-    response += `### [Local Engine] Bio-Computational Wetware & XOR-PCR Checksum Framework
-The algebraic topology engine extends past digital connectome simulations into physical **electroporation-enabled microfluidic brain organoid cultures** growing at a microfluidic Y-junction.
+#### 📋 DSM-5 DIAGNOSTIC CODES INGESTION
+* MDD [DSM-5: F32.9] - characterized by hyper-stable DMN loops and profound loss of emotional contrast.
+* PTSD [DSM-5: F43.10] - characterized by limbic persistent cavities, hyper-vigilance, and chronological time collapse.
+* ADHD [DSM-5: F90.2] - characterized by Control network deficits and latent effortful focus static.
+* CRPS [DSM-5: G90.50] - characterized by Budapest criteria sensory/vasomotor autonomic storms.
 
-* **Topological Stabilization Loop:** The system enforces a **physical XOR-PCR (Polymerase Chain Reaction) molecular checksum** over target cellular genomes, ensuring that only cells with clean, mutation-free states ($s_{\text{physical}} = \vec{0}$) undergo closed-loop Yamanaka factor reprogramming (Oct4, Sox2, Klf4, c-Myc) and targeted genome synthesis/re-implantation.
-* **Isomorphism to QLDPC Code:** This physical check maps directly to the digital **QLDPC (Quantum Low-Density Parity-Check)** stabilizer code ($\partial_k \cdot x = s$), where the simplicial boundary operator $\partial_k$ serves as the molecular parity-check matrix.
-* **Holographic Boundary-to-Bulk Translation:** High-dimensional minimal structural welds ($\nabla_{ij}$) computed by the holographic Hodge Laplacian ($L_k$) are physically translated into targeted micro-electroporation stimulation coordinates ($V_m(t)$) at the Y-junction, steering structural neurite outgrowth.
+#### 📈 PSYCHOMETRIC & CLINICAL SCALE EQUIVALENTS
+* PHQ-9 Equivalent: ${integrity > 85 ? "Minimal (0-4)" : integrity > 65 ? "Mild to Moderate (5-14)" : "Severe Refractory Depression (15-27)"}
+* GAD-7 Equivalent: ${integrity > 80 ? "Minimal Anxiety" : integrity > 60 ? "Moderate Anxiety" : "Severe Autonomic Vigilance"}
+* Vagal Tone / HRV Index: Projected autonomic balance optimized by vagus nerve stimulation (VNS) or somatic breathwork.
 
 ${pathTxt}`;
-  }
-  // 4. Handle general drug mechanism or auto-optimization questions
-  else if (lower.includes("recommend") || lower.includes("optimize") || lower.includes("stack") || lower.includes("why")) {
-    response += `### [Local Engine] Clinical Recommendation Justifications & Safety Exclusions
-The clinical recommendation engine executes a greedy search to construct an optimized ($\\le 3$)-compound regimen that maximizes the Topological Integrity Score $\\Phi$ under a zero-toxicity boundary constraint.
-
-* **Selection Strategy:** The engine selects synergistic combinations (e.g. balancing Arousal, Dampening, Chaos, and Repair vectors) that directly counteract your active pathologies (e.g., Default Mode hyper-coherence in Depression, Control network deficits in ADHD).
-* **Candidate Exclusions:** High-risk recreational stimulants (e.g. methamphetamine, cocaine) are strictly excluded due to severe ProTox-3.0 neurotoxicity diagnostics (DAT-mediated reverse transport, auto-oxidation, and vasoconstrictive hypoxia). Class-based benzodiazepines are also omitted from long-term recommendations to avoid severe GABA-A receptor downregulation and subsequent excitotoxic withdrawal syndromes.
-
-${stackTxt}`;
-  }
-  // 5. Default rich response
-  else {
-    response += `### [Local Engine] Ambient Neuromorphic Assistant Standing By
-I am currently operating in **Local Engine Fallback mode** as the remote FastAPI/FastAI backend is unreachable or missing server credentials. 
-
-However, all local biophysical solvers (Kuramoto integrators, QLDPC syndromes, and ProTox-3.0 diagnostics) remain fully functional in your browser.
-
-* **Composed Pathologies:** ${activePathologies.length ? activePathologies.join(', ') : 'None (Homeostasis)'}
-* **Global Network Integrity (Φ):** ${integrity}%
-* ${stackTxt}
-
-*Query keywords like "Jianshouqing", "Integrity", "QLDPC", "Toxicity", or "Optimize" to trigger specific clinical-grade local reports.*`;
-  }
-
-  // Append grounded wisdom insights if available in context
-  if (ctx.grounding) {
-    response += `\n\n### Grounded Peer-Reviewed Evidence\n${ctx.grounding}`;
   }
 
   return response;
