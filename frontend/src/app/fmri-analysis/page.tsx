@@ -89,6 +89,7 @@ export default function FMRIAnalysis() {
 
     const formData = new FormData();
     formData.append("file", file);
+    formData.append("pathologies", JSON.stringify(activePathologies));
 
     try {
       const backendUrl =
@@ -125,7 +126,7 @@ export default function FMRIAnalysis() {
         if (file.name.toLowerCase().endsWith(".csv") || file.name.toLowerCase().endsWith(".tsv") || file.name.toLowerCase().endsWith(".txt") || file.name.toLowerCase().endsWith(".json")) {
           csvText = await file.text();
         }
-        const ds = localFmriAnalyze(file.name, csvText);
+        const ds = localFmriAnalyze(file.name, csvText, activePathologies);
         setFmriDataset(ds);
 
         const knownSet = new Set<string>(PATHOLOGIES as readonly string[]);
@@ -931,7 +932,7 @@ function localCountEdges(m: number[][], threshold = 0.35): number {
   return count;
 }
 
-function localFmriAnalyze(filename: string, fileText?: string): FmriDataset {
+function localFmriAnalyze(filename: string, fileText?: string, activePathologies: string[] = []): FmriDataset {
   const parcels = localBuildParcels();
   const tr = 2.0;
   const n_tr = 150;
@@ -1013,10 +1014,14 @@ function localFmriAnalyze(filename: string, fileText?: string): FmriDataset {
     }
   }
   
-  const pathologies = ["depression", "anxiety", "adhd", "ptsd", "ocd", "addiction"];
-  const detectedPathologies = pathologies
-    .sort(() => 0.5 - Math.random())
-    .slice(0, Math.floor(Math.random() * 2) + 1);
+  const detectedPathologies = activePathologies && activePathologies.length > 0
+    ? activePathologies.map(p => p.toLowerCase())
+    : (() => {
+        const pathologies = ["depression", "anxiety", "adhd", "ptsd", "ocd", "addiction"];
+        return pathologies
+          .sort(() => 0.5 - Math.random())
+          .slice(0, Math.floor(Math.random() * 2) + 1);
+      })();
 
   if (!timeSeries) {
     timeSeries = localSynthesizeBold(parcels, n_tr, tr, detectedPathologies);

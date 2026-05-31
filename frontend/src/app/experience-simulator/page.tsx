@@ -372,6 +372,7 @@ const DRUG_METADATA_LIST: DrugMetadata[] = [
   { id: "dr02", keywords: ["dr02", "dr-02", "dr 02", "dopareg"], defaultDose: 10, unit: "mg" },
   { id: "nx44", keywords: ["nx44", "nx-44", "nx 44", "neurox"], defaultDose: 10, unit: "mg" },
   { id: "psilo", keywords: ["psilocybin", "shroom", "mushroom", "psilocin"], defaultDose: 15, unit: "mg" },
+  { id: "ibogaine", keywords: ["ibogaine", "iboga", "noribogaine", "tabernanthe"], defaultDose: 15, unit: "mg" },
   { id: "lsd", keywords: ["lsd", "acid"], defaultDose: 0.15, unit: "mg" },
   { id: "jianshouqing", keywords: ["jianshouqing", "yunnan mushroom", "little people", "little green men", "variegatic acid", "boletaceae", "boletus"], defaultDose: 50, unit: "g" },
   { id: "mdma", keywords: ["mdma", "ecstasy", "molly", "empathogen"], defaultDose: 100, unit: "mg" },
@@ -592,6 +593,16 @@ const ARCHETYPES: Archetype[] = [
     label: "Oneirogenic Reversible Coordinate Transformation",
     desc: "Oxidation kinetics of Variegatic Acid and structural HT2A/M1 receptor displacements drive dynamic default network dissolution and precise coordinate alterations in the primary visual cortex (V1-V4).",
     subj: "Highly structured, repetitive, and playful tiny-person animations ('little green men' or 'gentle people' hallucinations) with a deep, dreamlike state of oneirogenic awareness and parasympathetic autonomic shifts."
+  },
+  {
+    keywords: ["ibogaine", "iboga", "noribogaine", "tabernanthe"],
+    arousal: 0.2,
+    dampening: 0.5,
+    chaos: 0.8,
+    repair: 3.0,
+    label: "Atypical Oneirogenic Neurogenesis",
+    desc: "Ibogaine and its active metabolite noribogaine act as multi-target ligands (NMDA antagonist, KOR agonist, sigma agonist), driving robust GDNF/BDNF expression in the mesolimbic pathway to remodel addiction circuitry.",
+    subj: "Deep dreamlike oneirogenic review of personal history, somatic resets, and the complete elimination of substance cravings."
   }
 ];
 

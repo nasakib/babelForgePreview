@@ -4,7 +4,7 @@ import os
 import io
 import csv
 import google.generativeai as genai
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional, Any, Dict, Tuple
@@ -243,7 +243,8 @@ def get_pharma_data():
         {"id": "AMP", "name": "Amphetamine", "class": "Conventional", "target": "Global Monoamine Release"},
         {"id": "THC", "name": "Delta-9-THC", "class": "Recreational", "target": "CB1 Agonism (Entropy Inc.)"},
         {"id": "CBD", "name": "Cannabidiol", "class": "Functional", "target": "CB Modulation / 5-HT1A"},
-        {"id": "NIC", "name": "Nicotine", "class": "Recreational", "target": "nAChR Agonism (Transient FP)"}
+        {"id": "NIC", "name": "Nicotine", "class": "Recreational", "target": "nAChR Agonism (Transient FP)"},
+        {"id": "IBO", "name": "Ibogaine", "class": "Precision", "target": "Mesolimbic GDNF/BDNF Upregulation"}
     ]
 
     return {
@@ -284,7 +285,8 @@ def simulate_experience(req: SimulateRequest):
             "- SynaptoStim (SS-20) (Targeted DRI): arousal: 1.5, dampening: 0.0, chaos: -0.2, repair: 0.5\n"
             "- DopaReg (DR-02) (Precision Antagonist): arousal: -0.5, dampening: 1.2, chaos: -0.4, repair: 0.2\n"
             "- NeuroX (NX-44) (BDNF Enhancer): arousal: 0.2, dampening: 0.1, chaos: -0.5, repair: 2.5\n"
-            "- Jianshouqing Mushroom (Oneirogenic Hallucinogen): arousal: 0.1, dampening: 0.3, chaos: 1.8, repair: 0.8\n\n"
+            "- Jianshouqing Mushroom (Oneirogenic Hallucinogen): arousal: 0.1, dampening: 0.3, chaos: 1.8, repair: 0.8\n"
+            "- Ibogaine (GDNF/BDNF Neurogenesis): arousal: 0.2, dampening: 0.5, chaos: 0.8, repair: 3.0\n\n"
             "You must also provide a short 'label' (e.g. 'Acute Stress Response'), a 'desc' (objective topological description), "
             "and a 'subj' (projected subjective feeling). "
             f"User Experience: {req.experience}\n"
@@ -361,7 +363,7 @@ def chat_endpoint(req: ChatRequest):
         return {"response": f"Error communicating with AI: {str(e)}"}
 
 @app.post("/api/fmri/analyze")
-async def analyze_fmri(file: UploadFile = File(...)):
+async def analyze_fmri(file: UploadFile = File(...), pathologies: Optional[str] = Form(None)):
     """
     Accept an fMRI upload and return a structured dataset the frontend
     engines can apply functions to.
@@ -470,10 +472,21 @@ async def analyze_fmri(file: UploadFile = File(...)):
     n_parcels = len(parcels)
 
     # ----- Decide pathologies ------------------------------------------------
-    detected_pathologies = random.sample(
-        ["depression", "anxiety", "adhd", "ptsd", "ocd", "addiction"],
-        random.randint(1, 2),
-    )
+    detected_pathologies = None
+    if pathologies:
+        try:
+            import json
+            parsed_paths = json.loads(pathologies)
+            if isinstance(parsed_paths, list):
+                detected_pathologies = [str(p).lower() for p in parsed_paths]
+        except Exception:
+            pass
+            
+    if not detected_pathologies:
+        detected_pathologies = random.sample(
+            ["depression", "anxiety", "adhd", "ptsd", "ocd", "addiction"],
+            random.randint(1, 2),
+        )
 
     # ----- Build BOLD time series -------------------------------------------
     tr = 2.0

@@ -265,6 +265,23 @@ export const molecules = [
       }
     },
     {
+      id: 'ibogaine',
+      name: 'Ibogaine',
+      class: 'novel',
+      classLabel: 'Atypical Psychedelic',
+      isBabelForge: true,
+      svg: svgIndole,
+      halfLife: 'long',
+      effects: { arousal: 0.2, dampening: 0.5, chaos: 0.8, repair: 3.0 },
+      smilesPhysics: {
+        bioavailabilityF: 0.65,
+        volumeOfDistributionLkg: 4.5,
+        canonicalSmiles: "CN1CC2CCC1C(C2)C3=CN4C(=C3)C5=C(CC4)C=C(C=C5)OC",
+        mw: 310.43,
+        tpsa: 29.5
+      }
+    },
+    {
       id: 'lsd',
       name: 'LSD',
       class: 'novel',
