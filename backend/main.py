@@ -263,7 +263,7 @@ class SimulateRequest(BaseModel):
     experience: str
     context: Dict[str, Any]
 
-def call_openrouter(prompt: str, model: str = "google/gemini-2.0-flash") -> str:
+def call_openrouter(prompt: str, model: str = "google/gemini-2.5-pro") -> str:
     api_key = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("GEMINI_API_KEY")
     if not api_key:
         raise ValueError("API key not configured.")
@@ -331,7 +331,7 @@ def simulate_experience(req: SimulateRequest):
 
     if use_openrouter:
         try:
-            text = call_openrouter(prompt, model="google/gemini-2.0-flash").strip()
+            text = call_openrouter(prompt, model="google/gemini-2.5-pro").strip()
             if text.startswith("```json"): text = text[7:]
             if text.startswith("```"): text = text[3:]
             if text.endswith("```"): text = text[:-3]
@@ -407,7 +407,7 @@ def chat_endpoint(req: ChatRequest):
 
     if use_openrouter:
         try:
-            text = call_openrouter(prompt, model="google/gemini-2.0-flash")
+            text = call_openrouter(prompt, model="google/gemini-2.5-pro")
             return {"response": text}
         except Exception as e:
             return {"response": f"Error communicating with OpenRouter: {str(e)}"}
