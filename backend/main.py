@@ -263,104 +263,166 @@ class SimulateRequest(BaseModel):
     experience: str
     context: Dict[str, Any]
 
+def call_openrouter(prompt: str, model: str = "google/gemini-2.0-flash") -> str:
+    api_key = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        raise ValueError("API key not configured.")
+    
+    import urllib.request
+    import json
+    
+    url = "https://openrouter.ai/api/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://github.com/google-gemini/antigravity",
+    }
+    
+    data = {
+        "model": model,
+        "messages": [
+            {"role": "user", "content": prompt}
+        ]
+    }
+    
+    req = urllib.request.Request(
+        url,
+        data=json.dumps(data).encode("utf-8"),
+        headers=headers,
+        method="POST"
+    )
+    
+    with urllib.request.urlopen(req, timeout=30) as response:
+        res_data = json.loads(response.read().decode("utf-8"))
+        if "choices" in res_data and len(res_data["choices"]) > 0:
+            return res_data["choices"][0]["message"]["content"]
+        elif "error" in res_data:
+            raise ValueError(f"OpenRouter Error: {res_data['error']}")
+        else:
+            raise ValueError(f"Unexpected OpenRouter response: {res_data}")
+
 @app.post("/api/simulate")
 def simulate_experience(req: SimulateRequest):
-    api_key = os.environ.get("GEMINI_API_KEY")
-    if not api_key:
-        return {"error": "GEMINI_API_KEY not configured."}
-    
-    genai.configure(api_key=api_key)
-    try:
-        model = genai.GenerativeModel('gemini-1.5-flash-latest')
+    openrouter_key = os.environ.get("OPENROUTER_API_KEY")
+    gemini_key = os.environ.get("GEMINI_API_KEY")
+    use_openrouter = bool(openrouter_key or (gemini_key and gemini_key.startswith("sk-or-")))
+
+    prompt = (
+        "You are babelForge's simulation engine. The user has described a subjective experience, intervention, or state. "
+        "You must map this experience into exactly 4 pharmacological/topological vectors (arousal, dampening, chaos, repair) "
+        "each ranging from -2.0 to 3.0.\n\n"
+        "Here is the canonical reference specification of our proprietary compounds to guide your vector mapping:\n"
+        "- Seriphadine (Oneirogenic Anxiolytic): arousal: -0.4, dampening: 1.2, chaos: 0.8, repair: 0.4\n"
+        "- SPUR-MTDL (Epigenetic Neuroplastogen): arousal: -0.2, dampening: 0.5, chaos: -1.8, repair: 3.5\n"
+        "- ZenBud (ZB-01) (Anxiolytic Ligand): arousal: -0.4, dampening: 1.0, chaos: -0.5, repair: 0.6\n"
+        "- LimbicLink (LL-07) (DMN Modulator): arousal: -0.2, dampening: 0.3, chaos: 0.4, repair: 1.2\n"
+        "- SynaptoStim (SS-20) (Targeted DRI): arousal: 1.5, dampening: 0.0, chaos: -0.2, repair: 0.5\n"
+        "- DopaReg (DR-02) (Precision Antagonist): arousal: -0.5, dampening: 1.2, chaos: -0.4, repair: 0.2\n"
+        "- NeuroX (NX-44) (BDNF Enhancer): arousal: 0.2, dampening: 0.1, chaos: -0.5, repair: 2.5\n"
+        "- Jianshouqing Mushroom (Oneirogenic Hallucinogen): arousal: 0.1, dampening: 0.3, chaos: 1.8, repair: 0.8\n"
+        "- Ibogaine (GDNF/BDNF Neurogenesis): arousal: 0.2, dampening: 0.5, chaos: 0.8, repair: 3.0\n\n"
+        "You must also provide a short 'label' (e.g. 'Acute Stress Response'), a 'desc' (objective topological description), "
+        "and a 'subj' (projected subjective feeling). "
+        f"User Experience: {req.experience}\n"
+        f"Current Baseline Pathologies: {req.context.get('pathologies', [])}\n"
+        "Return ONLY a valid JSON object with the following exact keys: "
+        '{"arousal": float, "dampening": float, "chaos": float, "repair": float, "label": "string", "desc": "string", "subj": "string"}'
+    )
+
+    if use_openrouter:
+        try:
+            text = call_openrouter(prompt, model="google/gemini-2.0-flash").strip()
+            if text.startswith("```json"): text = text[7:]
+            if text.startswith("```"): text = text[3:]
+            if text.endswith("```"): text = text[:-3]
+            
+            import json
+            data = json.loads(text.strip())
+            return data
+        except Exception as e:
+            return {"error": f"OpenRouter simulation error: {str(e)}"}
+    else:
+        api_key = gemini_key
+        if not api_key:
+            return {"error": "GEMINI_API_KEY not configured."}
         
-        prompt = (
-            "You are babelForge's simulation engine. The user has described a subjective experience, intervention, or state. "
-            "You must map this experience into exactly 4 pharmacological/topological vectors (arousal, dampening, chaos, repair) "
-            "each ranging from -2.0 to 3.0.\n\n"
-            "Here is the canonical reference specification of our proprietary compounds to guide your vector mapping:\n"
-            "- Seriphadine (Oneirogenic Anxiolytic): arousal: -0.4, dampening: 1.2, chaos: 0.8, repair: 0.4\n"
-            "- SPUR-MTDL (Epigenetic Neuroplastogen): arousal: -0.2, dampening: 0.5, chaos: -1.8, repair: 3.5\n"
-            "- ZenBud (ZB-01) (Anxiolytic Ligand): arousal: -0.4, dampening: 1.0, chaos: -0.5, repair: 0.6\n"
-            "- LimbicLink (LL-07) (DMN Modulator): arousal: -0.2, dampening: 0.3, chaos: 0.4, repair: 1.2\n"
-            "- SynaptoStim (SS-20) (Targeted DRI): arousal: 1.5, dampening: 0.0, chaos: -0.2, repair: 0.5\n"
-            "- DopaReg (DR-02) (Precision Antagonist): arousal: -0.5, dampening: 1.2, chaos: -0.4, repair: 0.2\n"
-            "- NeuroX (NX-44) (BDNF Enhancer): arousal: 0.2, dampening: 0.1, chaos: -0.5, repair: 2.5\n"
-            "- Jianshouqing Mushroom (Oneirogenic Hallucinogen): arousal: 0.1, dampening: 0.3, chaos: 1.8, repair: 0.8\n"
-            "- Ibogaine (GDNF/BDNF Neurogenesis): arousal: 0.2, dampening: 0.5, chaos: 0.8, repair: 3.0\n\n"
-            "You must also provide a short 'label' (e.g. 'Acute Stress Response'), a 'desc' (objective topological description), "
-            "and a 'subj' (projected subjective feeling). "
-            f"User Experience: {req.experience}\n"
-            f"Current Baseline Pathologies: {req.context.get('pathologies', [])}\n"
-            "Return ONLY a valid JSON object with the following exact keys: "
-            '{"arousal": float, "dampening": float, "chaos": float, "repair": float, "label": "string", "desc": "string", "subj": "string"}'
-        )
-        
-        response = model.generate_content(prompt)
-        text = response.text.strip()
-        if text.startswith("```json"): text = text[7:]
-        if text.startswith("```"): text = text[3:]
-        if text.endswith("```"): text = text[:-3]
-        
-        import json
-        data = json.loads(text)
-        return data
-    except Exception as e:
-        return {"error": str(e)}
+        genai.configure(api_key=api_key)
+        try:
+            model = genai.GenerativeModel('gemini-1.5-flash-latest')
+            response = model.generate_content(prompt)
+            text = response.text.strip()
+            if text.startswith("```json"): text = text[7:]
+            if text.startswith("```"): text = text[3:]
+            if text.endswith("```"): text = text[:-3]
+            
+            import json
+            data = json.loads(text)
+            return data
+        except Exception as e:
+            return {"error": str(e)}
 
 @app.post("/api/chat")
 def chat_endpoint(req: ChatRequest):
-    api_key = os.environ.get("GEMINI_API_KEY")
-    if not api_key:
-        return {"response": "GEMINI_API_KEY not configured on server. Please configure it in GitHub Secrets."}
-    
-    genai.configure(api_key=api_key)
-    
-    try:
-        model = genai.GenerativeModel('gemini-1.5-flash-latest')
+    openrouter_key = os.environ.get("OPENROUTER_API_KEY")
+    gemini_key = os.environ.get("GEMINI_API_KEY")
+    use_openrouter = bool(openrouter_key or (gemini_key and gemini_key.startswith("sk-or-")))
 
-        system_instruction = (
-            "You are babelAI, a clinical computational neuroscience assistant. "
-            "You explain and answer based on the proprietary science of babelForge "
-            "(algebraic topology, multi-dimensional cliques, Kuramoto phase-locking) "
-            "and the latest peer-reviewed literature. Be concise, clinical, precise. "
-            "When grounding evidence is provided below, CITE the listed sources by "
-            "their labels in your response and DO NOT invent citations. If a claim "
-            "is not supported by the grounding or by widely accepted clinical "
-            "consensus, explicitly mark it as a model inference rather than fact."
-        )
+    system_instruction = (
+        "You are babelAI, a clinical computational neuroscience assistant. "
+        "You explain and answer based on the proprietary science of babelForge "
+        "(algebraic topology, multi-dimensional cliques, Kuramoto phase-locking) "
+        "and the latest peer-reviewed literature. Be concise, clinical, precise. "
+        "When grounding evidence is provided below, CITE the listed sources by "
+        "their labels in your response and DO NOT invent citations. If a claim "
+        "is not supported by the grounding or by widely accepted clinical "
+        "consensus, explicitly mark it as a model inference rather than fact."
+    )
 
-        ctx = req.context or {}
-        grounding = ctx.get("grounding", "")
-        grounding_block = f"\n\n{grounding}\n" if grounding else ""
-        brain_tokens = ctx.get("brainTokens", "")
-        tokens_block = f"\n\n{brain_tokens}\n" if brain_tokens else ""
-        has_dataset = bool(ctx.get("hasDataset"))
-        dataset_block = (
-            "\nAn uploaded fMRI dataset is loaded. When the user asks about regions, "
-            "FC, networks, or scale-equivalents, reference the brain tokens above by "
-            "their canonical handles (e.g. R:HPC, M:5HT, X:meanFC).\n"
-            if has_dataset
-            else ""
-        )
+    ctx = req.context or {}
+    grounding = ctx.get("grounding", "")
+    grounding_block = f"\n\n{grounding}\n" if grounding else ""
+    brain_tokens = ctx.get("brainTokens", "")
+    tokens_block = f"\n\n{brain_tokens}\n" if brain_tokens else ""
+    has_dataset = bool(ctx.get("hasDataset"))
+    dataset_block = (
+        "\nAn uploaded fMRI dataset is loaded. When the user asks about regions, "
+        "FC, networks, or scale-equivalents, reference the brain tokens above by "
+        "their canonical handles (e.g. R:HPC, M:5HT, X:meanFC).\n"
+        if has_dataset
+        else ""
+    )
 
-        prompt = (
-            f"{system_instruction}\n\n"
-            f"System Context:\n"
-            f"Module: {ctx.get('module', 'None')}\n"
-            f"Pathologies: {ctx.get('pathologies', [])}\n"
-            f"Stack: {ctx.get('stack', [])}\n"
-            f"Baseline Alignment Score: {ctx.get('integrityScore', 'N/A')}%"
-            f"{grounding_block}"
-            f"{tokens_block}"
-            f"{dataset_block}\n"
-            f"User Query: {req.message}"
-        )
+    prompt = (
+        f"{system_instruction}\n\n"
+        f"System Context:\n"
+        f"Module: {ctx.get('module', 'None')}\n"
+        f"Pathologies: {ctx.get('pathologies', [])}\n"
+        f"Stack: {ctx.get('stack', [])}\n"
+        f"Baseline Alignment Score: {ctx.get('integrityScore', 'N/A')}%"
+        f"{grounding_block}"
+        f"{tokens_block}"
+        f"{dataset_block}\n"
+        f"User Query: {req.message}"
+    )
 
-        response = model.generate_content(prompt)
-
-        return {"response": response.text}
-    except Exception as e:
-        return {"response": f"Error communicating with AI: {str(e)}"}
+    if use_openrouter:
+        try:
+            text = call_openrouter(prompt, model="google/gemini-2.0-flash")
+            return {"response": text}
+        except Exception as e:
+            return {"response": f"Error communicating with OpenRouter: {str(e)}"}
+    else:
+        api_key = gemini_key
+        if not api_key:
+            return {"response": "GEMINI_API_KEY not configured on server. Please configure it in GitHub Secrets."}
+        
+        genai.configure(api_key=api_key)
+        try:
+            model = genai.GenerativeModel('gemini-1.5-flash-latest')
+            response = model.generate_content(prompt)
+            return {"response": response.text}
+        except Exception as e:
+            return {"response": f"Error communicating with AI: {str(e)}"}
 
 @app.post("/api/fmri/analyze")
 async def analyze_fmri(file: UploadFile = File(...), pathologies: Optional[str] = Form(None)):
