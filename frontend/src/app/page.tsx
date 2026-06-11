@@ -29,6 +29,7 @@ import SEEResultsPanel from "@/components/palantir/SEEResultsPanel";
 import { evaluateSubstanceToxicity, analyzeNeurotoxicity, type ProTox3Profile } from "@/lib/engines/toxicology";
 import { citationUrl } from "@/lib/wisdom/select";
 import { computeTherapyProjection } from "@/lib/engine/therapy";
+import { babelforgeApi } from "@/lib/api/client";
 
 const VIEW_MODES = [
   { id: "topology", label: "Topology", desc: "Region tint · amplitude pulse" },
@@ -202,32 +203,59 @@ export default function ConsolePage() {
     runReport({ silent: true });
   }, [runReport]);
 
-  const handleAutoOptimize = useCallback(() => {
+  const handleAutoOptimize = useCallback(async () => {
     setComputing(true);
     setLog((l) => [
       `[${ts()}] Auto-optimizer engaged · generating dual clinical pathways…`,
       ...l,
     ]);
-    setTimeout(() => {
-      const patientParams = {
-        weightKg: weight,
-        toleranceMonths: tolerance,
-        ageYears: age,
-        simulationTimeMonths: simulationTimeMonths,
-        profile: profile,
-      };
-      const ideal = autoOptimizeIdeal(activePathologies as Pathology[], patientParams);
-      const least = autoOptimizeLeastResistance(activePathologies as Pathology[], patientParams);
+
+    const patientParams = {
+      weightKg: weight,
+      toleranceMonths: tolerance,
+      ageYears: age,
+      simulationTimeMonths: simulationTimeMonths,
+    };
+
+    try {
+      const data = await babelforgeApi.optimize(activePathologies, patientParams);
+      
+      const idealRegimen: RegimenItem[] = (data.greedy_optimal_stack || []).map((item: any) => ({
+        id: item.id,
+        name: item.name,
+        classLabel: item.classLabel || "Precision Compound",
+        isBabelForge: item.isBabelForge,
+        dose: item.dose,
+      }));
+      
+      const localLeast = autoOptimizeLeastResistance(activePathologies as Pathology[], { ...patientParams, profile });
+
+      setRecommendations({
+        ideal: {
+          regimen: idealRegimen,
+          integrity: data.projected_greedy_integrity || 100,
+          reasoning: data.greedy_reasoning || [],
+        },
+        least: localLeast,
+      });
+
+      setLog((l) => [
+        `[${ts()}] Auto-optimization (Cloud API) complete. Gradient Descent target solved.`,
+        ...l,
+      ]);
+    } catch (err) {
+      console.warn("Backend optimization failed, falling back to local client-side solver:", err);
+      const ideal = autoOptimizeIdeal(activePathologies as Pathology[], { ...patientParams, profile });
+      const least = autoOptimizeLeastResistance(activePathologies as Pathology[], { ...patientParams, profile });
       setRecommendations({ ideal, least });
 
-      setLog((l) =>
-        [
-          `[${ts()}] Auto-optimization complete. Pathways generated.`,
-          ...l,
-        ].slice(0, 60)
-      );
+      setLog((l) => [
+        `[${ts()}] Auto-optimization (Local Fallback) complete.`,
+        ...l,
+      ]);
+    } finally {
       setComputing(false);
-    }, 1500);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activePathologies, weight, tolerance, age, simulationTimeMonths, profile]);
 

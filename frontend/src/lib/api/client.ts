@@ -93,6 +93,16 @@ export const BABELFORGE_ENDPOINTS: ApiEndpointDoc[] = [
     responseShape: '{ "arousal": float, "dampening": float, "chaos": float, "repair": float, "label": string, "desc": string, "subj": string }',
     requiresSecret: true,
   },
+  {
+    method: "POST",
+    path: "/api/optimize",
+    title: "Dual-Pathway Auto-Optimizer",
+    description:
+      "Accepts the active pathology state names and patient metrics. Runs both a categorical greedy search over the compound database and a continuous 4D vector space gradient descent solver to locate the mathematically ideal intervention vectors.",
+    requestExample:
+      'POST /api/optimize\n{\n  "states": ["depression", "adhd"],\n  "weightKg": 70,\n  "ageYears": 35\n}',
+    responseShape: '{ "greedy_optimal_stack": [{ id, name, dose }], "greedy_reasoning": string[], "projected_greedy_integrity": float, "continuous_mathematical_solver": { target_vectors, recommended_match } }',
+  },
 ];
 
 export class ApiError extends Error {
@@ -159,6 +169,13 @@ export const babelforgeApi = {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ experience, context }),
+    }),
+
+  optimize: (states: string[], patient: { weightKg?: number; ageYears?: number; toleranceMonths?: number; simulationTimeMonths?: number } = {}) =>
+    request<any>("/api/optimize", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ states, ...patient }),
     }),
 
   fmri: async (file: File) => {
