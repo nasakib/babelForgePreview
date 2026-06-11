@@ -9,7 +9,7 @@
  * persistent homology landscapes, and 3D WebGL brain projections of the Schaefer 200-ROI.
  */
 
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { useAI } from "@/context/AIContext";
 import { useAuth } from "@/context/AuthContext";
 import TimeEnginePanel from "@/components/palantir/TimeEnginePanel";
@@ -334,9 +334,13 @@ export default function HolographicDashboard() {
   };
 
   // --- 3D WebGL Canvas Projection ---
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [canvasElement, setCanvasElement] = useState<HTMLCanvasElement | null>(null);
+  const canvasRef = useCallback((node: HTMLCanvasElement | null) => {
+    setCanvasElement(node);
+  }, []);
+
   useEffect(() => {
-    const canvas = canvasRef.current;
+    const canvas = canvasElement;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
@@ -457,7 +461,7 @@ export default function HolographicDashboard() {
     
     render();
     return () => cancelAnimationFrame(animId);
-  }, [rois, timeStep, activeTargetEdges, boundaryCollapse, effectiveAge, activeVectors]);
+  }, [canvasElement, rois, timeStep, activeTargetEdges, boundaryCollapse, effectiveAge, activeVectors]);
 
   return (
     <div className="w-full h-full relative lg:overflow-hidden overflow-y-auto bg-canvas p-6 space-y-6">
