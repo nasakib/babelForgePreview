@@ -8,14 +8,33 @@ PROJECT_ID = os.getenv('GOOGLE_CLOUD_PROJECT', 'spotlight-local-4whxz')
 SUBSCRIPTION_NAME = 'local-resource-flows-sub'
 PUBLISH_TOPIC_NAME = 'harmonic-state-vectors'
 
+# Moving average state for Harmony Score
+recent_volumes = []
+MAX_HISTORY = 10
+
 # We simulate the Pharmacological Topology Forge computation here
 def compute_harmonic_state(flow_data):
     """
     Ingests local resource flow data (volume, geohash, velocity) and uses
     Graph Neural Networks to compute persistence diagrams. 
-    Outputs a frequency domain vector (harmonic state).
+    Outputs a frequency domain vector (harmonic state) and a harmony_score.
     """
+    global recent_volumes
     volume = flow_data.get('volumeUsd', 0)
+    
+    # Update state
+    recent_volumes.append(volume)
+    if len(recent_volumes) > MAX_HISTORY:
+        recent_volumes.pop(0)
+        
+    avg_vol = sum(recent_volumes) / len(recent_volumes)
+    
+    # Map average volume to a harmony score between 0.0 and 1.0
+    # High volume = high harmony (simplified heuristic for MVP)
+    harmony_score = min(1.0, avg_vol / 100.0)
+    # Give it a baseline of 0.2 so it doesn't stay completely dead
+    harmony_score = max(0.2, harmony_score)
+
     # The more volume/activity in a geohash, the higher the frequency state
     harmonic_shift = volume * 0.14  
     
@@ -23,6 +42,7 @@ def compute_harmonic_state(flow_data):
         "geohash": flow_data.get('geohash'),
         "harmonic_frequency": 432.0 + harmonic_shift,
         "resonance_factor": 0.8 + (volume * 0.01),
+        "harmony_score": harmony_score,
         "timestamp": time.time()
     }
 
