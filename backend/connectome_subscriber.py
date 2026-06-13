@@ -19,6 +19,10 @@ PUBLISH_TOPIC_NAME = 'harmonic-state-vectors'
 recent_volumes = []
 MAX_HISTORY = 10
 
+# Global planetary pulse tracking
+recent_harmony_scores = []
+MAX_GLOBAL_HISTORY = 100
+
 # We simulate the Pharmacological Topology Forge computation here
 def compute_harmonic_state(flow_data):
     """
@@ -84,6 +88,17 @@ def callback(message):
         data_bytes = json.dumps(harmonic_state).encode('utf-8')
         future = publisher.publish(topic_path, data=data_bytes)
         print(f"[Connectome] Emitted harmonic state vector: {future.result()}")
+        
+        # Calculate Global Planetary Pulse (Global Harmony Index)
+        recent_harmony_scores.append(harmonic_state['harmony_score'])
+        if len(recent_harmony_scores) > MAX_GLOBAL_HISTORY:
+            recent_harmony_scores.pop(0)
+            
+        if len(recent_harmony_scores) > 0:
+            global_harmony_index = sum(recent_harmony_scores) / len(recent_harmony_scores)
+            if len(recent_harmony_scores) % 10 == 0:
+                print(f"[BabelForge] 🌍 PLANETARY PULSE: Global Harmony Index is currently {global_harmony_index:.3f}")
+        
         
     except Exception as e:
         print(f"[Error] Failed to process vector: {e}")
