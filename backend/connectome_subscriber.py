@@ -3,6 +3,13 @@ import json
 import time
 from google.cloud import pubsub_v1
 
+# Import the EdgeModerator
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+from core.moderator import moderator
+
+
 # Vector Core Connectome Topics
 PROJECT_ID = os.getenv('GOOGLE_CLOUD_PROJECT', 'spotlight-local-4whxz')
 SUBSCRIPTION_NAME = 'local-resource-flows-sub'
@@ -52,6 +59,15 @@ def callback(message):
         # Parse incoming vector from Spotlight Local
         flow_data = json.loads(message.data.decode('utf-8'))
         
+        # Edge Moderation (if text payload exists)
+        text_payload = flow_data.get('text', '')
+        if text_payload:
+            mod_result = moderator.analyze_shoutout(text_payload)
+            if not mod_result['is_approved']:
+                print(f"[Moderation] Blocked toxic/spam flow: {mod_result['flags']}")
+                message.ack()
+                return
+
         # Pass through the Forge
         harmonic_state = compute_harmonic_state(flow_data)
         print(f"[Forge] Computed Harmonic State: {harmonic_state}")
