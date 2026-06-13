@@ -20,6 +20,13 @@ class EdgeModerator:
             re.compile(r'\b\d{10}\b'), # Phone numbers
             re.compile(r'\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b', re.IGNORECASE) # Emails
         ]
+        
+        # Telemetry
+        self.stats = {
+            "total_processed": 0,
+            "total_blocked": 0,
+            "reasons": {}
+        }
 
     def analyze_shoutout(self, text: str) -> dict:
         """
@@ -52,11 +59,25 @@ class EdgeModerator:
         is_approved = len(flags) == 0
         confidence = 1.0 if is_approved else 0.8 # Mock confidence for heuristic
         
+        # Update Telemetry
+        self.stats["total_processed"] += 1
+        if not is_approved:
+            self.stats["total_blocked"] += 1
+            for flag in flags:
+                self.stats["reasons"][flag] = self.stats["reasons"].get(flag, 0) + 1
+        
         return {
             "is_approved": is_approved,
             "confidence": confidence,
             "flags": flags
         }
+        
+    def emit_telemetry(self):
+        """Emits telemetry log of spam caught without leaking PII or message content"""
+        if self.stats["total_processed"] > 0:
+            block_rate = (self.stats["total_blocked"] / self.stats["total_processed"]) * 100
+            print(f"[Moderator Telemetry] Processed: {self.stats['total_processed']} | Blocked: {self.stats['total_blocked']} ({block_rate:.1f}%) | Top Reasons: {self.stats['reasons']}")
+
 
 # Singleton instance
 moderator = EdgeModerator()

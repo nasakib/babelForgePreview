@@ -63,6 +63,11 @@ def callback(message):
         text_payload = flow_data.get('text', '')
         if text_payload:
             mod_result = moderator.analyze_shoutout(text_payload)
+            
+            # Emit telemetry every 10 moderation events
+            if moderator.stats["total_processed"] % 10 == 0:
+                moderator.emit_telemetry()
+                
             if not mod_result['is_approved']:
                 print(f"[Moderation] Blocked toxic/spam flow: {mod_result['flags']}")
                 message.ack()
