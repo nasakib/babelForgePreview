@@ -65,8 +65,10 @@ def callback(message):
         
         # Edge Moderation (if text payload exists)
         text_payload = flow_data.get('text', '')
+        vibe = "neutral"
         if text_payload:
             mod_result = moderator.analyze_shoutout(text_payload)
+            vibe = mod_result.get('vibe', 'neutral')
             
             # Emit telemetry every 10 moderation events
             if moderator.stats["total_processed"] % 10 == 0:
@@ -79,6 +81,7 @@ def callback(message):
 
         # Pass through the Forge
         harmonic_state = compute_harmonic_state(flow_data)
+        harmonic_state['vibe'] = vibe
         print(f"[Forge] Computed Harmonic State: {harmonic_state}")
         
         # Publish to the output topic for Codex Babel

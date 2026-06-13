@@ -21,6 +21,14 @@ class EdgeModerator:
             re.compile(r'\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b', re.IGNORECASE) # Emails
         ]
         
+        # Vibe Topography Lexicon
+        self.vibe_lexicon = {
+            "hype": set(["let's go", "fire", "hype", "crazy", "party", "wild", "energy", "lit", "amazing"]),
+            "chill": set(["vibes", "chill", "relax", "coffee", "sunset", "breeze", "quiet", "peace"]),
+            "romantic": set(["date", "love", "beautiful", "romantic", "cute", "sweet", "dinner"]),
+            "urgent": set(["help", "now", "quick", "hurry", "lost", "found", "emergency", "asap"])
+        }
+        
         # Telemetry
         self.stats = {
             "total_processed": 0,
@@ -40,6 +48,20 @@ class EdgeModerator:
         """
         text_lower = text.lower()
         flags = []
+        vibe = "neutral"
+        
+        # Vibe Extraction
+        words = set(re.findall(r'\b\w+\b', text_lower))
+        
+        vibe_scores = {}
+        for v_name, v_set in self.vibe_lexicon.items():
+            score = len(words.intersection(v_set))
+            if score > 0:
+                vibe_scores[v_name] = score
+                
+        if vibe_scores:
+            # Get the vibe with the highest score
+            vibe = max(vibe_scores, key=vibe_scores.get)
         
         # 1. Token Match
         words = set(re.findall(r'\b\w+\b', text_lower))
@@ -69,7 +91,8 @@ class EdgeModerator:
         return {
             "is_approved": is_approved,
             "confidence": confidence,
-            "flags": flags
+            "flags": flags,
+            "vibe": vibe
         }
         
     def emit_telemetry(self):
